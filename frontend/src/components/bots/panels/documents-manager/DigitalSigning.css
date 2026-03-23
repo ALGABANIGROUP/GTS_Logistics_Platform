@@ -1,0 +1,466 @@
+/* DigitalSigning.css */
+.digital-signing {
+    padding: 20px;
+}
+
+.signing-header {
+    margin-bottom: 30px;
+}
+
+.signing-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+}
+
+.signing-header p {
+    color: #a0aec0;
+    font-size: 14px;
+}
+
+.signing-methods {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.signing-methods h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #f1f5f9;
+}
+
+.methods-tabs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.method-btn {
+    padding: 10px 16px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    color: #a0aec0;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.method-btn.active {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #60a5fa;
+}
+
+.method-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.signature-canvas-section,
+.signature-type-section,
+.signature-upload-section {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.signature-canvas-section h3,
+.signature-type-section h3,
+.signature-upload-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #f1f5f9;
+}
+
+.signature-canvas {
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    width: 100%;
+    max-width: 500px;
+    height: 200px;
+    cursor: crosshair;
+    margin-bottom: 15px;
+}
+
+.canvas-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.clear-btn,
+.save-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-btn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.clear-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.save-btn {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.save-btn:hover {
+    background: rgba(16, 185, 129, 0.3);
+}
+
+.signature-input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.signature-preview {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px dashed rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    margin-bottom: 15px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.signature-text {
+    font-size: 32px;
+    font-style: italic;
+    color: #64748b;
+}
+
+.upload-area {
+    border: 2px dashed rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.5);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-area:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.upload-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.upload-area p {
+    color: #a0aec0;
+    margin-bottom: 10px;
+}
+
+.file-input {
+    opacity: 0;
+    position: absolute;
+}
+
+.certificates-section {
+    margin-bottom: 30px;
+}
+
+.certificates-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #f1f5f9;
+}
+
+.certificates-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.cert-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.cert-icon {
+    font-size: 32px;
+}
+
+.cert-info {
+    flex: 1;
+}
+
+.cert-issuer {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+}
+
+.cert-validity {
+    font-size: 12px;
+    color: #a0aec0;
+}
+
+.cert-status {
+    display: flex;
+    gap: 10px;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.status-badge.inactive {
+    background: rgba(107, 114, 128, 0.2);
+    color: #9ca3af;
+}
+
+.cert-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.cert-actions .action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    color: #60a5fa;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cert-actions .action-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+.pending-signatures,
+.signed-documents {
+    margin-bottom: 30px;
+}
+
+.pending-signatures h3,
+.signed-documents h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #f1f5f9;
+}
+
+.pending-table table,
+.signed-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pending-table th,
+.signed-table th {
+    text-align: left;
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.8);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pending-table td,
+.signed-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    color: #e2e8f0;
+    font-size: 13px;
+}
+
+.doc-icon {
+    margin-right: 8px;
+}
+
+.verify-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.verify-badge.verified {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.verify-badge.unverified {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.status-badge.pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+}
+
+.status-badge.completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.signed-row.unverified {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.verification-logs {
+    margin-bottom: 30px;
+}
+
+.verification-logs h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #f1f5f9;
+}
+
+.logs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.log-item {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-left: 3px solid rgba(16, 185, 129, 0.5);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.log-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.log-content {
+    flex: 1;
+}
+
+.log-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 5px;
+}
+
+.log-timestamp {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.log-hash {
+    font-size: 11px;
+    color: #64748b;
+    font-family: monospace;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.signing-stats {
+    margin-top: 30px;
+}
+
+.signing-stats h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #f1f5f9;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #a0aec0;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.action-btn.small {
+    padding: 6px 10px;
+    font-size: 11px;
+    margin-right: 4px;
+}
+
+.action-btn.small.cancel {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}

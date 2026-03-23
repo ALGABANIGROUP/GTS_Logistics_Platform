@@ -1,0 +1,350 @@
+.sec-control {
+  --sec-primary: #1d4ed8;
+  --sec-secondary: #7c3aed;
+  --sec-success: #10b981;
+  --sec-warning: #f59e0b;
+  --sec-danger: #ef4444;
+  --sec-surface: rgba(15, 23, 42, 0.72);
+  --sec-border: rgba(148, 163, 184, 0.2);
+  --sec-text: #e2e8f0;
+  --sec-muted: #94a3b8;
+  color: var(--sec-text);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sec-control-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sec-control-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 11px;
+  color: var(--sec-muted);
+  margin-bottom: 6px;
+}
+
+.sec-control-header h1 {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+
+.sec-control-subtitle {
+  margin: 0;
+  color: var(--sec-muted);
+}
+
+.sec-control-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sec-control-status,
+.sec-control-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--sec-border);
+  background: var(--sec-surface);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.sec-control-status.online {
+  color: var(--sec-success);
+}
+
+.sec-control-status.forbidden {
+  color: var(--sec-danger);
+}
+
+.sec-control-status.offline {
+  color: var(--sec-warning);
+}
+
+.sec-control-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.sec-control-card {
+  background: var(--sec-surface);
+  border: 1px solid var(--sec-border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+}
+
+.sec-control-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.sec-control-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--sec-primary), var(--sec-secondary));
+}
+
+.sec-control-info h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.sec-control-info p {
+  margin: 0;
+  color: var(--sec-muted);
+  font-size: 12px;
+}
+
+.sec-control-botid {
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--sec-border);
+}
+
+.sec-control-statuscard,
+.sec-control-configcard {
+  background: var(--sec-surface);
+  border: 1px solid var(--sec-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.sec-control-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sec-control-card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sec-control-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sec-border);
+}
+
+.sec-control-badge.online {
+  color: var(--sec-success);
+}
+
+.sec-control-badge.offline {
+  color: var(--sec-warning);
+}
+
+.sec-control-badge.forbidden {
+  color: var(--sec-danger);
+}
+
+.sec-control-list {
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.sec-control-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sec-control-list span {
+  color: var(--sec-muted);
+}
+
+.sec-control-config {
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.sec-control-config div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sec-control-config span {
+  color: var(--sec-muted);
+}
+
+.sec-control-light-btn {
+  border: 1px solid var(--sec-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sec-text);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.sec-control-panel,
+.sec-control-response {
+  background: var(--sec-surface);
+  border: 1px solid var(--sec-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.sec-control-label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: var(--sec-muted);
+}
+
+.sec-control-panel textarea,
+.sec-control-panel .sec-control-json {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--sec-border);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--sec-text);
+  padding: 12px;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.sec-control-context-toggle {
+  margin-top: 12px;
+  border: none;
+  background: transparent;
+  color: var(--sec-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sec-control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.sec-control-primary,
+.sec-control-secondary,
+.sec-control-ghost {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sec-control-primary {
+  background: var(--sec-primary);
+  color: #fff;
+}
+
+.sec-control-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--sec-text);
+  border: 1px solid var(--sec-border);
+}
+
+.sec-control-ghost {
+  background: transparent;
+  color: var(--sec-muted);
+  border: 1px dashed var(--sec-border);
+}
+
+.sec-control-response-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sec-control-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--sec-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sec-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.sec-control-response-body {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  border: 1px solid var(--sec-border);
+  padding: 14px;
+  min-height: 220px;
+  max-height: 420px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.sec-control-response-body pre {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--sec-text);
+}
+
+.sec-control-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--sec-muted);
+  text-align: center;
+  min-height: 180px;
+}
+
+.sec-control-muted {
+  font-size: 12px;
+  color: var(--sec-muted);
+}
+
+.sec-control-error {
+  color: var(--sec-danger);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 720px) {
+  .sec-control-botid {
+    margin-left: 0;
+  }
+  .sec-control-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

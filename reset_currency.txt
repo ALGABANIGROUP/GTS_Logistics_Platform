@@ -1,0 +1,7 @@
+// Run this in browser console (F12):
+localStorage.removeItem('gts-currency-storage');
+localStorage.setItem('gts-currency-storage', JSON.stringify({
+  state: { currency: 'CAD', country: 'CA', exchangeRates: {}, lastUpdated: null },
+  version: 0
+}));
+location.reload();

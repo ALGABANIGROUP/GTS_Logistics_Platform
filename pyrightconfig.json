@@ -1,0 +1,19 @@
+{
+  "include": ["backend"],
+  "typeCheckingMode": "basic",
+  "stubPath": "typings",
+  "extraPaths": [
+    "backend",
+    "backend/routes",
+    "backend/models",
+    "backend/services",
+    "backend/database"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "frontend/node_modules"
+  ]
+}

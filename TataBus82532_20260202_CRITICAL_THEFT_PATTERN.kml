@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Tata Bus 82532-12 - CRITICAL - R1 - Camp→Hotspot→Camp Pattern</name>
+    <Style id="alertMarker">
+      <IconStyle>
+        <color>ff0000ff</color>
+        <scale>1.5</scale>
+      </IconStyle>
+    </Style>
+    <Style id="campMarker">
+      <IconStyle>
+        <color>ff00ff00</color>
+        <scale>1.2</scale>
+      </IconStyle>
+    </Style>
+    <Style id="hotspotMarker">
+      <IconStyle>
+        <color>ffff0000</color>
+        <scale>1.5</scale>
+      </IconStyle>
+    </Style>
+    
+    <!-- Camp DIC (Safe Zone) -->
+    <Placemark>
+      <name>Camp DIC (Safe Zone)</name>
+      <styleUrl>#campMarker</styleUrl>
+      <Point>
+        <coordinates>55.079113,24.8292503,0</coordinates>
+      </Point>
+      <description>Safe Zone - Radius: 350m</description>
+    </Placemark>
+    
+    <!-- Theft Hotspot (Danger Zone) -->
+    <Placemark>
+      <name>Theft Hotspot DIC - ALERT!</name>
+      <styleUrl>#hotspotMarker</styleUrl>
+      <Point>
+        <coordinates>55.0900841,24.8440838,0</coordinates>
+      </Point>
+      <description>CRITICAL: Tata Bus 82532-12 detected - CRITICAL</description>
+    </Placemark>
+    
+    <!-- Current Vehicle Position -->
+    <Placemark>
+      <name>Tata Bus 82532-12 (CURRENT)</name>
+      <styleUrl>#alertMarker</styleUrl>
+      <Point>
+        <coordinates>55.0900841,24.8440838,0</coordinates>
+      </Point>
+      <description>
+        Asset: Tata Bus 82532-12
+        Driver: Ahmed Al-Mansoori
+        Time: 2026-02-02T17:58:42+04:00
+        Rule: R1 - Camp to Hotspot to Camp Pattern
+        Risk: 5 points
+        Status: CRITICAL ALERT
+      </description>
+    </Placemark>
+    
+    <!-- Route Line (Camp Hotspot) -->
+    <Placemark>
+      <name>Suspicious Route</name>
+      <LineString>
+        <coordinates>
+          55.079113,24.8292503,0
+          55.0900841,24.8440838,0
+        </coordinates>
+      </LineString>
+      <description>Route from Camp DIC to Theft Hotspot - 6 minutes</description>
+    </Placemark>
+  </Document>
+</kml>

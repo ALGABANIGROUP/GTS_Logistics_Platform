@@ -1,0 +1,163 @@
+"""
+Database models for unified system
+"""
+
+from sqlalchemy import Column, String, Boolean, DateTime, JSON, ForeignKey, Integer, UUID
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from backend.database.base import Base
+import uuid
+
+
+class UnifiedUser(Base):
+    """Unified user model"""
+    __tablename__ = "unified_users"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(500), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    phone = Column(String(20), nullable=True)
+    company_name = Column(String(255), nullable=True)
+    country = Column(String(100), nullable=True)
+    is_active = Column(Boolean, default=True)
+    email_verified = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    systems_access = relationship("UserSystemsAccess", back_populates="user")
+    audit_logs = relationship("AuthAuditLog", back_populates="user")
+    
+    def __repr__(self):
+        return f"<UnifiedUser {self.email}>"
+
+
+class UserSystemsAccess(Base):
+    """User access mapping to platform systems and plans."""
+    __tablename__ = "user_systems_access"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("unified_users.id"), nullable=False)
+    system_type = Column(String(50), nullable=False)  # 'gts_main', 'tms'
+    access_level = Column(String(50), nullable=False)  # 'user', 'admin', 'super_admin'
+    subscription_plan = Column(String(50), nullable=True)  # TMS plan
+    is_active = Column(Boolean, default=True)
+    
+    granted_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationship
+    user = relationship("UnifiedUser", back_populates="systems_access")
+    
+    __table_args__ = (
+        __import__('sqlalchemy').UniqueConstraint('user_id', 'system_type', name='uq_user_system'),
+    )
+    
+    def __repr__(self):
+        return f"<UserSystemsAccess {self.user_id} -> {self.system_type}>"
+
+
+class AuthAuditLog(Base):
+    """Authentication and system access audit records."""
+    __tablename__ = "auth_audit_log"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("unified_users.id"), nullable=True)
+    action = Column(String(100), nullable=False)  # 'login', 'logout', 'system_switch'
+    system_type = Column(String(50), nullable=True)
+    ip_address = Column(String(50), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    success = Column(Boolean, default=False)
+    details = Column(JSON, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    
+    # Relationship
+    user = relationship("UnifiedUser", back_populates="audit_logs")
+    
+    def __repr__(self):
+        return f"<AuthAuditLog {self.action} - {self.user_id}>"
+
+
+class TMSSubscription(Base):
+    """TMS subscription records for tenant companies."""
+    __tablename__ = "tms_subscriptions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    plan_name = Column(String(50), nullable=False)  # 'starter', 'professional', 'enterprise'
+    plan_tier = Column(String(50), nullable=False)
+    is_active = Column(Boolean, default=True)
+    
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    auto_renew = Column(Boolean, default=True)
+    
+    features = Column(JSON, nullable=True)
+    max_shipments_per_month = Column(Integer, default=-1)  # -1 = unlimited
+    max_team_members = Column(Integer, default=-1)
+    
+    def __repr__(self):
+        return f"<TMSSubscription {self.company_id} - {self.plan_name}>"
+
+
+class TMSRegistrationRequest(Base):
+    """Registration requests for TMS access workflow."""
+    __tablename__ = "tms_registration_requests"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("unified_users.id"), nullable=True)
+    
+    # Company Information
+    company_name = Column(String(255), nullable=False)
+    contact_name = Column(String(255), nullable=False)
+    contact_email = Column(String(255), nullable=False)
+    contact_phone = Column(String(50), nullable=True)
+    company_website = Column(String(255), nullable=True)
+    industry_type = Column(String(100), nullable=True)  # 'freight_broker', 'carrier', '3pl'
+    
+    # Location & Geo Data
+    country_code = Column(String(10), nullable=True)  # 'US', 'CA', 'MX'
+    state_province = Column(String(100), nullable=True)
+    city = Column(String(100), nullable=True)
+    request_ip = Column(String(50), nullable=True)
+    
+    # Request Details
+    requested_plan = Column(String(50), default='starter')  # 'starter', 'professional', 'enterprise'
+    company_data = Column(JSON, nullable=True)  # Extra data submitted
+    notes = Column(String(1000), nullable=True)  # Admin notes
+    
+    # Status
+    status = Column(String(20), default='pending')  # 'pending', 'approved', 'rejected'
+    reviewed_by = Column(UUID(as_uuid=True), ForeignKey("unified_users.id"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    rejection_reason = Column(String(500), nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    def __repr__(self):
+        return f"<TMSRegistrationRequest {self.company_name} - {self.status}>"
+
+
+class GeoRestriction(Base):
+    """Geo-restriction rules for region-limited platform features."""
+    __tablename__ = "geo_restrictions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    feature_name = Column(String(100), nullable=False, unique=True)  # 'load_board', 'dat_api'
+    allowed_countries = Column(JSON, nullable=False)  # ['US', 'CA']
+    is_active = Column(Boolean, default=True)
+    
+    restriction_message = Column(String(500), nullable=True)
+    fallback_behavior = Column(String(50), default='block')  # 'block', 'limited', 'redirect'
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    def __repr__(self):
+        return f"<GeoRestriction {self.feature_name}>"
+

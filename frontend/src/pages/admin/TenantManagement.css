@@ -1,0 +1,836 @@
+.tenant-management {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: #ffffff;
+}
+
+.tenant-management .tm-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.tenant-management .tm-page-header h1 {
+  margin: 0 0 8px 0;
+  color: #ffffff;
+  font-size: 28px;
+}
+
+.tenant-management .tm-subtitle {
+  color: #b0b0b0;
+  font-size: 16px;
+  margin: 0;
+}
+
+.tenant-management .tm-error {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(220, 53, 69, 0.4);
+  background: rgba(220, 53, 69, 0.08);
+  color: #b21f2d;
+  font-weight: 600;
+}
+
+.tenant-management .tm-feedback {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.tenant-management .tm-feedback-success {
+  border-color: rgba(22, 163, 74, 0.35);
+  background: rgba(22, 163, 74, 0.12);
+  color: #d1fae5;
+}
+
+.tenant-management .tm-feedback-error {
+  border-color: rgba(220, 53, 69, 0.4);
+  background: rgba(220, 53, 69, 0.12);
+  color: #fecaca;
+}
+
+.tenant-management .tm-feedback-dismiss {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tenant-management .tm-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.05s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.tenant-management .tm-btn:active {
+  transform: scale(0.98);
+}
+
+.tenant-management .tm-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.tenant-management .tm-btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.tenant-management .tm-btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.tenant-management .tm-btn-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.tenant-management .tm-btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.tenant-management .tm-btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.tenant-management .tm-btn-danger:hover {
+  background-color: #c82333;
+}
+
+.tenant-management .tm-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.tenant-management .tm-stat-card {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.tenant-management .tm-stat-icon.total {
+  background: rgba(227, 242, 253, 0.3);
+}
+
+.tenant-management .tm-stat-icon.active {
+  background: rgba(232, 245, 233, 0.3);
+}
+
+.tenant-management .tm-stat-icon.new {
+  background: rgba(237, 231, 246, 0.3);
+}
+
+.tenant-management .tm-stat-icon.warning {
+  background: rgba(255, 235, 238, 0.3);
+}
+
+.tenant-management .tm-stat-info h3 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  color: #b0b0b0;
+  font-weight: 700;
+}
+
+.tenant-management .tm-stat-number {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.tenant-management .tm-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.tenant-management .tm-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 320px;
+}
+
+.tenant-management .tm-search-box input {
+  width: 100%;
+  padding: 12px 14px 12px 92px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 14px;
+  background: rgba(15, 23, 42, 0.35);
+  color: #ffffff;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-search-box input:focus {
+  outline: none;
+  border-color: rgba(0, 123, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+.tenant-management .tm-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b0b0b0;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.tenant-management .tm-filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tenant-management .tm-filters select {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-filters select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.tenant-management .tm-table-wrap {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-loading {
+  padding: 60px 20px;
+  text-align: center;
+  color: #b0b0b0;
+}
+
+.tenant-management .tm-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: tm-spin 1s linear infinite;
+  margin: 0 auto 18px;
+}
+
+@keyframes tm-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.tenant-management .tm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tenant-management .tm-table th {
+  background: rgba(15, 23, 42, 0.5);
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 800;
+  color: #ffffff;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.tenant-management .tm-table td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  vertical-align: middle;
+  color: #ffffff;
+}
+
+.tenant-management .tm-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tenant-management .tm-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tenant-management .tm-company {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tenant-management .tm-company-name {
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.tenant-management .tm-company-email {
+  font-size: 12px;
+  color: #b0b0b0;
+}
+
+.tenant-management .tm-domain-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.tenant-management .tm-domain-link:hover {
+  text-decoration: underline;
+}
+
+.tenant-management .tm-status {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+}
+
+.tenant-management .tm-status-active {
+  background: rgba(212, 237, 218, 0.3);
+  color: #155724;
+}
+
+.tenant-management .tm-status-inactive {
+  background: rgba(233, 236, 239, 0.3);
+  color: #b0b0b0;
+}
+
+.tenant-management .tm-status-suspended {
+  background: rgba(248, 215, 218, 0.3);
+  color: #721c24;
+}
+
+.tenant-management .tm-plan {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  display: inline-flex;
+}
+
+.tenant-management .tm-plan-enterprise {
+  background: rgba(232, 245, 233, 0.3);
+  color: #388e3c;
+}
+
+.tenant-management .tm-plan-starter {
+  background: rgba(227, 242, 253, 0.3);
+  color: #1976d2;
+}
+
+.tenant-management .tm-plan-growth {
+  background: rgba(224, 242, 254, 0.3);
+  color: #0369a1;
+}
+
+.tenant-management .tm-plan-professional {
+  background: rgba(243, 229, 245, 0.3);
+  color: #7b1fa2;
+}
+
+.tenant-management .tm-users-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tenant-management .tm-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.tenant-management .tm-progress-bar.big {
+  height: 10px;
+}
+
+.tenant-management .tm-progress-fill {
+  height: 100%;
+  background: #007bff;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.tenant-management .tm-users-count {
+  font-size: 12px;
+  color: #b0b0b0;
+  min-width: 64px;
+  text-align: right;
+}
+
+.tenant-management .tm-subscription {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tenant-management .tm-date {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.tenant-management .tm-days-left {
+  font-size: 12px;
+  color: #b0b0b0;
+}
+
+.tenant-management .tm-days-left.warning {
+  color: #dc3545;
+  font-weight: 900;
+}
+
+.tenant-management .tm-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tenant-management .tm-icon-btn {
+  min-width: 64px;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  transition: transform 0.05s ease, background-color 0.2s ease;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-icon-btn:active {
+  transform: scale(0.98);
+}
+
+.tenant-management .tm-icon-btn.edit:hover {
+  background: #007bff;
+  color: #fff;
+}
+
+.tenant-management .tm-icon-btn.delete:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.tenant-management .tm-icon-btn.toggle:hover {
+  background: #6c757d;
+  color: #fff;
+}
+
+.tenant-management .tm-empty {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.tenant-management .tm-empty-icon {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 14px;
+  opacity: 0.6;
+}
+
+.tenant-management .tm-empty h3 {
+  margin: 0 0 10px 0;
+  color: #ffffff;
+}
+
+.tenant-management .tm-empty p {
+  color: #b0b0b0;
+  margin: 0 0 18px 0;
+}
+
+.tenant-management .tm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 18px;
+}
+
+.tenant-management .tm-modal {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  animation: tm-modal-in 0.2s ease-out;
+}
+
+@keyframes tm-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tenant-management .tm-modal h2 {
+  margin: 0;
+  padding: 20px 20px 0;
+  color: #ffffff;
+  font-size: 22px;
+}
+
+.tenant-management .tm-modal-content {
+  padding: 20px;
+}
+
+.tenant-management .tm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.tenant-management .tm-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tenant-management .tm-form-group label {
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.tenant-management .tm-form-group input,
+.tenant-management .tm-form-group select {
+  padding: 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 14px;
+  background: rgba(15, 23, 42, 0.35);
+  color: #ffffff;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-form-group input:focus,
+.tenant-management .tm-form-group select:focus {
+  outline: none;
+  border-color: rgba(0, 123, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+.tenant-management .tm-domain-input {
+  display: flex;
+  align-items: center;
+}
+
+.tenant-management .tm-domain-input input {
+  border-radius: 12px 0 0 12px;
+  flex: 1;
+}
+
+.tenant-management .tm-domain-suffix {
+  padding: 12px 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  color: #b0b0b0;
+  font-weight: 900;
+  font-size: 13px;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-hint {
+  font-size: 12px;
+  color: #b0b0b0;
+  margin: 0;
+}
+
+.tenant-management .tm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.tenant-management .tm-details-modal {
+  max-width: 980px;
+}
+
+.tenant-management .tm-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tenant-management .tm-details-title {
+  margin: 0;
+  color: #333;
+  font-size: 22px;
+}
+
+.tenant-management .tm-details-sub {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.tenant-management .tm-close {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  color: #b0b0b0;
+  padding: 6px 10px;
+}
+
+.tenant-management .tm-close:hover {
+  color: #ffffff;
+}
+
+.tenant-management .tm-details-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.tenant-management .tm-tab {
+  border: none;
+  background: rgba(15, 23, 42, 0.35);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #ffffff;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-tab.active {
+  background: #007bff;
+  color: #fff;
+}
+
+.tenant-management .tm-details-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+}
+
+.tenant-management .tm-detail-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.35);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.tenant-management .tm-detail-card h3 {
+  margin: 0 0 12px 0;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.tenant-management .tm-kv {
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-management .tm-kv>div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.tenant-management .tm-kv span {
+  color: #b0b0b0;
+  font-weight: 900;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tenant-management .tm-kv b,
+.tenant-management .tm-kv a {
+  color: #ffffff;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.tenant-management .tm-kv a:hover {
+  text-decoration: underline;
+}
+
+.tenant-management .tm-usage-block {
+  margin-top: 14px;
+}
+
+.tenant-management .tm-usage-block label {
+  display: block;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.tenant-management .tm-usage-text {
+  margin-top: 8px;
+  color: #b0b0b0;
+  font-weight: 800;
+}
+
+.tenant-management .tm-muted {
+  color: #b0b0b0;
+  margin: 0 0 12px 0;
+}
+
+.tenant-management .tm-placeholder {
+  display: grid;
+  gap: 10px;
+}
+
+.tenant-management .tm-placeholder-row {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tenant-management .tm-details-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+@media (max-width: 1024px) {
+  .tenant-management .tm-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .tenant-management .tm-search-box {
+    min-width: 100%;
+  }
+
+  .tenant-management .tm-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .tenant-management .tm-table th,
+  .tenant-management .tm-table td {
+    white-space: nowrap;
+  }
+
+  .tenant-management .tm-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tenant-management .tm-modal-actions,
+  .tenant-management .tm-details-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tenant-management .tm-btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,1 @@
+export default function SystemMonitor() { return <div>System Monitor Page</div>; }

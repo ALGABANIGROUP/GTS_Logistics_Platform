@@ -1,0 +1,72 @@
+/* DocumentsDashboard.css */
+/* Inherits from DocumentsManagerPanel.css */
+
+.documents-dashboard {
+    padding: 32px;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 25px 60px rgba(3, 7, 18, 0.4);
+}
+
+.documents-dashboard .section-card {
+    margin-bottom: 20px;
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(148, 163, 184, 0.2);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-title h3 {
+    margin: 0;
+}
+
+.section-title p {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(226, 232, 240, 0.6);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.dashboard-header h2 {
+    margin: 0;
+    padding: 0;
+    font-size: 24px;
+    color: white;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.dashboard-header h2::selection {
+    background: transparent !important;
+    color: white !important;
+}
+
+.dashboard-header h2::-moz-selection {
+    background: transparent !important;
+    color: white !important;
+}

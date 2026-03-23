@@ -1,0 +1,333 @@
+/* src/components/bots/panels/customer-service/CustomerServicePanel.css */
+
+.customer-service-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    color: #e2e8f0;
+}
+
+/* Panel Header */
+.panel-header {
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-title h1 {
+    margin: 0;
+    font-size: 24px;
+    background: linear-gradient(135deg, #60a5fa, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-badge.inactive {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.status-badge.paused {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+/* Header Stats */
+.header-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.stat-icon {
+    font-size: 18px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #60a5fa;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-left: 4px;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    padding: 0;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: #cbd5e1;
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.tab-btn.active {
+    color: #60a5fa;
+    border-bottom-color: #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.tab-icon {
+    font-size: 16px;
+}
+
+.tab-name {
+    font-size: 14px;
+}
+
+/* Notifications Container */
+.notifications-container {
+    padding: 8px 24px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(59, 130, 246, 0.05);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.notification {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notif-icon {
+    font-size: 14px;
+}
+
+.notif-message {
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
+.notif-time {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-left: auto;
+}
+
+/* Tab Content */
+.tab-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Loading State */
+.loading-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 18px;
+    color: #94a3b8;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .panel-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .header-stats {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .tab-navigation {
+        overflow-x: auto;
+    }
+
+    .tab-btn {
+        padding: 12px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .panel-header {
+        padding: 16px;
+    }
+
+    .header-title h1 {
+        font-size: 18px;
+    }
+
+    .header-stats {
+        gap: 12px;
+    }
+
+    .stat {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .stat-value {
+        font-size: 14px;
+    }
+
+    .tab-btn {
+        padding: 12px 12px;
+        font-size: 12px;
+    }
+
+    .tab-icon {
+        font-size: 14px;
+    }
+
+    .tab-name {
+        display: none;
+    }
+
+    .notifications-container {
+        padding: 6px 12px;
+        max-height: 60px;
+    }
+
+    .notification {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+
+/* Scrollbar Styling */
+.notifications-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.notifications-container::-webkit-scrollbar-track {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.notifications-container::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+}
+
+.notifications-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+.tab-navigation::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tab-navigation::-webkit-scrollbar-track {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.tab-navigation::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+}
+
+.tab-navigation::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .customer-service-panel {
+        background: linear-gradient(135deg, #0a0e27 0%, #15202b 50%, #0a0e27 100%);
+    }
+
+    .panel-header,
+    .tab-navigation {
+        background: linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(21, 32, 43, 0.9) 100%);
+    }
+}

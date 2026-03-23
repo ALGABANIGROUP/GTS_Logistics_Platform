@@ -1,0 +1,426 @@
+/* ComplianceChecker.css */
+.compliance-checker {
+    padding: 0;
+}
+
+.compliance-header {
+    margin-bottom: 24px;
+}
+
+.compliance-header h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    color: white;
+}
+
+.compliance-header p {
+    margin: 0;
+    color: rgba(226, 232, 240, 0.7);
+    font-size: 14px;
+}
+
+/* Compliance Rules */
+.compliance-rules {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.compliance-rules h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: white;
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.rule-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.rule-card:hover {
+    border-color: rgba(148, 163, 184, 0.3);
+    transform: translateY(-2px);
+}
+
+.rule-card.required {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.rule-card.optional {
+    border-color: rgba(148, 163, 184, 0.1);
+}
+
+.rule-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.rule-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 6px;
+}
+
+.rule-type {
+    font-size: 11px;
+    color: rgba(226, 232, 240, 0.6);
+}
+
+/* Document Selection */
+.document-selection {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.document-selection h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: white;
+}
+
+.doc-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.doc-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.doc-checkbox:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.doc-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.doc-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #e2e8f0;
+    flex: 1;
+}
+
+/* Compliance Actions */
+.compliance-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.check-btn,
+.report-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+    font-size: 14px;
+}
+
+.check-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.check-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+}
+
+.check-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.report-btn {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #3b82f6;
+}
+
+.report-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+/* Compliance Results */
+.compliance-results {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.compliance-results h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: white;
+}
+
+.results-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.summary-card:hover {
+    border-color: rgba(148, 163, 184, 0.3);
+    transform: translateY(-2px);
+}
+
+.summary-card.compliant {
+    border-color: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.summary-card.non-compliant {
+    border-color: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.summary-card.average {
+    border-color: rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: rgba(226, 232, 240, 0.7);
+}
+
+/* Results Details */
+.results-details {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.result-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.result-item:hover {
+    border-color: rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.result-header .doc-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.score {
+    font-size: 14px;
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+/* Checks */
+.result-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.check-item.pass {
+    border-left: 3px solid var(--success-color);
+    color: #e2e8f0;
+}
+
+.check-item.fail {
+    border-left: 3px solid var(--danger-color);
+    color: #e2e8f0;
+}
+
+.check-icon {
+    font-size: 16px;
+    min-width: 20px;
+}
+
+.check-name {
+    flex: 1;
+}
+
+.check-type {
+    font-size: 11px;
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning-color);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Compliance History */
+.compliance-history {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.compliance-history h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: white;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 30px 20px;
+    color: rgba(226, 232, 240, 0.6);
+    font-size: 14px;
+}
+
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    border-color: rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.item-header .doc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: white;
+}
+
+.item-date {
+    font-size: 12px;
+    color: rgba(226, 232, 240, 0.6);
+}
+
+@media (max-width: 1024px) {
+    .rules-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .results-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .compliance-actions {
+        flex-direction: column;
+    }
+
+    .compliance-actions button {
+        width: 100%;
+    }
+
+    .rules-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    .results-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .result-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

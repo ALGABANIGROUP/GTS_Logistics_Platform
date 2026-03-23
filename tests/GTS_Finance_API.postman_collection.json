@@ -1,0 +1,189 @@
+{
+  "info": {
+    "name": "GTS Logistics Finance API",
+    "_postman_id": "153cb0ac-9442-4b31-98b8-649688322ea1",
+    "description": "Basic collection for finance routes.\nNote: Set the 'baseUrl' collection variable.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"yassir\", \"role\": \"admin\", \"expires_minutes\": 60}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/token",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "token"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Finance Health",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/finance/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "finance",
+            "health"
+          ]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create Expense",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"category\": \"fuel\", \"amount\": 25.75, \"description\": \"postman\", \"vendor\": \"cli\", \"status\": \"PENDING\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/finance/expenses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "finance",
+            "expenses"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List Expenses",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/finance/expenses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "finance",
+            "expenses"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Toggle Status",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/finance/expenses/:id/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "finance",
+            "expenses",
+            ":id",
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Summary",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/finance/summary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "finance",
+            "summary"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete Expense",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/finance/expenses/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "finance",
+            "expenses",
+            ":id"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8001"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

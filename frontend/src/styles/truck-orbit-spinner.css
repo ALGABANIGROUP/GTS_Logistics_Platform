@@ -1,0 +1,83 @@
+.truck-orbit-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+}
+
+.truck-orbit-text{
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.truck-orbit{
+  position:relative;
+  border-radius:999px;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.35));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+  box-shadow: var(--glass-shadow, 0 10px 30px rgba(0,0,0,0.35));
+  -webkit-backdrop-filter: var(--glass-blur, blur(18px));
+  backdrop-filter: var(--glass-blur, blur(18px));
+  overflow:hidden;
+}
+
+.truck-orbit-ring{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:.4;
+}
+.truck-orbit-ring circle{
+  fill:none;
+  stroke: rgba(56,189,248,.55);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 46 16;
+}
+
+.truck-orbit-glow{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 24px rgba(56,189,248,.35);
+  opacity:.25;
+}
+
+.truck-orbit-carrier{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:0;
+  height:0;
+  transform: translate(-50%, -50%);
+  animation: orbit-spin var(--orbit-duration, 1.2s) linear infinite;
+}
+
+.truck-orbit-truck{
+  width:42%;
+  height:42%;
+  transform: translateX(var(--orbit-radius, 24px)) rotate(90deg);
+  transform-origin: center;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.35));
+}
+
+.truck-orbit-truck svg{
+  width:100%;
+  height:100%;
+  fill: rgba(248,250,252,.92);
+}
+
+@keyframes orbit-spin{
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .truck-orbit-carrier{ animation: none; }
+}

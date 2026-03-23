@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTS Profile Test - Database Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #0b1220 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 24px;
+            backdrop-filter: blur(14px);
+        }
+
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: #10b981;
+        }
+
+        .info {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: #38bdf8;
+        }
+
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎯 GTS Profile - Database Integration Test</h1>
+
+        <div class="test-result success">
+            <h3>✅ API Endpoint Available</h3>
+            <p><strong>GET /api/v1/auth/me</strong> - Returns complete user data from database</p>
+            <div class="code">
+                {
+                "ok": true,
+                "user": {
+                "id": 123,
+                "email": "user@example.com",
+                "name": "John Doe",
+                "role": "admin",
+                "is_active": true,
+                "permissions": ["read", "write", "admin"]
+                },
+                "tenant": {
+                "id": 456,
+                "name": "Company ABC",
+                "plan_key": "enterprise",
+                "status": "active"
+                },
+                "plan": {
+                "name": "Enterprise Plan",
+                "description": "Full access plan",
+                "modules": {"tms": true, "ai": true},
+                "limits": {"users": 100}
+                },
+                "features": ["ai.core", "tms.admin", "reports"],
+                "modules": {"tms": true, "ai": true, "admin": true}
+                }
+            </div>
+        </div>
+
+        <div class="test-result info">
+            <h3>🔄 Updated UserSettings.jsx</h3>
+            <ul>
+                <li>✅ Fetches real data from <code>/api/v1/auth/me</code></li>
+                <li>✅ Displays actual user role from database</li>
+                <li>✅ Shows tenant and plan information</li>
+                <li>✅ Lists user features and permissions</li>
+                <li>✅ Glass theme applied throughout</li>
+                <li>✅ Loading states and error handling</li>
+            </ul>
+        </div>
+
+        <div class="test-result success">
+            <h3>🎨 Account Type Display</h3>
+            <p>Now shows real role from database with proper formatting:</p>
+            <ul>
+                <li><strong>owner</strong> → "Owner (Super Admin)" 👑</li>
+                <li><strong>admin</strong> → "Admin" 🛡️</li>
+                <li><strong>finance</strong> → "Finance" 💰</li>
+                <li><strong>user</strong> → "User" 👤</li>
+            </ul>
+        </div>
+
+        <div class="test-result info">
+            <h3>🚀 Test the Updated Profile Page</h3>
+            <ol>
+                <li>Open <a href="http://localhost:5173/profile"
+                        style="color: #38bdf8;">http://localhost:5173/profile</a></li>
+                <li>Login with any user account</li>
+                <li>See real data from database instead of placeholder text</li>
+                <li>Check Account Type shows actual role</li>
+                <li>View features and permissions list</li>
+            </ol>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,2 @@
+c73a9fe1 (HEAD -> chore/prod-hardening-auth-cors-logs) Normalize billing and translation text to English
+2b8c551d Stabilize billing migrations, Alembic loading, and pre-commit lint scope

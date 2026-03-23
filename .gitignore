@@ -1,0 +1,109 @@
+# ===========================
+# GTS Logistics - .gitignore
+# ===========================
+
+# --- Python Environments ---
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Local Environment Variables ---
+.env
+.env.*
+!*.env.template
+!.env.example
+.envrc
+*.local
+
+# --- Databases / Logs / Cache ---
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.out
+*.err
+logs/
+cache/
+.tmp/
+.cache/
+*.bak
+
+# --- Alembic / Migrations ---
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
+alembic/versions/*.bak
+alembic/__pycache__/
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+build/
+*.map
+.vite/
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Reports / Generated files ---
+*.pdf
+*.csv
+*.xlsx
+*.zip
+*.tar
+*.gz
+
+# --- OS / System files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Render / Neon / Host-specific ---
+*.render.log
+*.neon.log
+.neon/
+.render/
+.deploy/
+
+# --- Local Dev Tools ---
+tools/gts_profile.ps1
+tools/auto_activate_gts.ps1
+Desktop/
+Documents/
+*.lnk
+
+# --- Test & Coverage ---
+.coverage
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.tox/
+
+# --- Temporary files ---
+~$*
+*.swp
+*.swo
+*.tmp
+# --- Compiled / Runtime artifacts ---
+*.exe
+*.pem
+*.key
+*.crt
+*.pfx
+secrets/
+
+# --- Backups / Dumps ---
+backups/
+*.sql
+
+# --- Uploads ---
+uploads/
+backend/uploads/
+frontend/uploads/
+
+# --- Python cache anywhere ---
+**/__pycache__/
+**/*.pyc

@@ -1,0 +1,3347 @@
+﻿
+from __future__ import annotations
+# Register TMS Unified API (new)
+# Register TMS Unified API (new)
+try:
+    from backend.routes.tms_unified_api import router as tms_unified_router
+    app.include_router(tms_unified_router)
+    print("[main] tms_unified_api router mounted at /api/v1/tms-unified")
+except Exception as e:
+    print(f"[main] WARN: tms_unified_api router not available: {e}")
+# backend/main.py  (GTS Logistics Backend â€“ unified main)
+
+from pathlib import Path
+from dotenv import load_dotenv
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(_REPO_ROOT / ".env", override=True)
+
+import os
+import logging
+from backend.database.session import wrap_session_factory
+
+# -----------------------------------------------------------------------------
+# Environment
+# -----------------------------------------------------------------------------
+def _is_prod() -> bool:
+    env = (os.getenv("ENV") or "").strip().lower()
+    if env:
+        if env in ("prod", "production"):
+            return True
+        if env in ("dev", "development", "staging", "test"):
+            return False
+
+    render_flag = (os.getenv("RENDER") or "").strip().lower()
+    if render_flag in ("1", "true", "yes"):
+        return True
+
+    is_prod_env = os.getenv("IS_PRODUCTION")
+    if is_prod_env is not None:
+        flag = is_prod_env.strip().lower()
+        if flag in ("1", "true", "yes", "prod", "production"):
+            return True
+        if flag in ("0", "false", "no", "dev", "development", "staging", "test"):
+            return False
+
+    env2 = (os.getenv("ENVIRONMENT") or os.getenv("APP_ENV") or "").strip().lower()
+    if env2 in ("prod", "production"):
+        return True
+
+    return False
+
+
+def _is_dev() -> bool:
+    env = (os.getenv("ENV") or os.getenv("ENVIRONMENT") or os.getenv("APP_ENV") or "").strip().lower()
+    if not env:
+        return True
+    return env in ("dev", "development", "local")
+
+
+ENVIRONMENT = (os.getenv("ENVIRONMENT") or os.getenv("ENV") or "development").lower().strip()
+IS_PRODUCTION = _is_prod()
+INTERNAL_CRON_KEY = (os.getenv("INTERNAL_CRON_KEY") or "").strip()
+
+logger = logging.getLogger("backend.main")
+
+DEPRECATION_REMOVAL_DATE = "2026-03-31"
+DEPRECATION_SUNSET = "Tue, 31 Mar 2026 00:00:00 GMT"
+_deprecated_ai_counters = {
+    "run": {},
+    "status": {},
+    "config": {},
+}
+_deprecated_ai_warned = set()
+
+
+def _record_deprecated_ai_call(action: str, bot_key: str) -> None:
+    counts = _deprecated_ai_counters.get(action)
+    if counts is None:
+        return
+    counts[bot_key] = int(counts.get(bot_key, 0)) + 1
+    warn_key = (action, bot_key)
+    if warn_key not in _deprecated_ai_warned:
+        _deprecated_ai_warned.add(warn_key)
+        logger.warning(
+            "[DEPRECATED] /ai/%s/%s is deprecated. Use /api/v1/ai/bots/%s/%s instead. Removal date: %s.",
+            bot_key,
+            action,
+            bot_key,
+            action,
+            DEPRECATION_REMOVAL_DATE,
+        )
+
+import sys
+import asyncio
+import inspect
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional, List, Protocol, Callable
+
+from fastapi import FastAPI, Request, APIRouter, HTTPException, Depends, Response, status, Body
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.routing import APIRoute
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+try:
+   from backend.database.config import get_db_async  # type: ignore
+except Exception:
+    try:
+        from core.db_config import get_async_db as get_db_async  # type: ignore
+    except Exception:
+        async def get_db_async():  # type: ignore
+            raise RuntimeError("DB dependency is not available")
+
+from backend.ai.policy import bot_access_policy
+from backend.ai.roles import bot_permissions
+from backend.ai.errors import ai_forbidden
+from backend.ai.operations_snapshot import build_coo_snapshot
+from backend.security.webhook_hmac import parse_webhook_secrets
+
+
+try:
+    from schedulers.ai_report_scheduler import start_ai_report_scheduler  # type: ignore
+except Exception:
+    start_ai_report_scheduler = None  # type: ignore
+
+try:
+    from schedulers.load_board_scheduler import start_load_board_scheduler  # type: ignore
+except Exception:
+    start_load_board_scheduler = None  # type: ignore
+
+try:
+    from backend.services.email_scheduler import email_polling_loop  # type: ignore
+except Exception:
+    email_polling_loop = None  # type: ignore
+
+try:
+    from backend.services.email_provisioner import ensure_system_mailboxes  # type: ignore
+except Exception:
+    ensure_system_mailboxes = None  # type: ignore
+
+from backend.services.sources import init_sources
+from backend.services.scheduler import start_scheduler, stop_scheduler
+
+# unified AI bots router
+try:
+   from backend.routes.ai_bots_routes import router as ai_bots_router  # type: ignore
+except Exception:
+    ai_bots_router = None  # type: ignore
+
+# Executive Intelligence Bot router
+try:
+   from backend.routes.executive_intelligence_routes import router as executive_intelligence_router  # type: ignore
+except Exception:
+    executive_intelligence_router = None  # type: ignore
+
+# System Architect Bot router
+try:
+   from backend.routes.system_architect_routes import router as system_architect_router  # type: ignore
+except Exception:
+    system_architect_router = None  # type: ignore
+
+# MapleLoad Canada Bot router
+try:
+    from backend.routes.mapleload_canada_routes import router as mapleload_canada_router  # type: ignore
+except Exception:
+    mapleload_canada_router = None  # type: ignore
+
+try:
+    from backend.routes.ops_llm import router as ops_llm_router  # type: ignore
+except Exception:
+    ops_llm_router = None  # type: ignore
+
+try:
+    from backend.routes.external_data import router as external_data_router  # type: ignore
+except Exception:
+    external_data_router = None  # type: ignore
+
+# Social Media Management router
+try:
+    from backend.routes.social_media_routes import router as social_media_admin_router  # type: ignore
+    from backend.routes.social_media_routes import public_router as social_media_public_router  # type: ignore
+except Exception:
+    social_media_admin_router = None  # type: ignore
+    social_media_public_router = None  # type: ignore
+
+try:
+    from backend.routes.support_routes import router as support_router  # type: ignore
+except Exception:
+    support_router = None  # type: ignore
+
+# bot capabilities (read-only)
+try:
+    from backend.routes.bot_capabilities_routes import router as bot_capabilities_router  # type: ignore
+except Exception:
+    bot_capabilities_router = None  # type: ignore
+
+# email/bot registry
+try:
+    from backend.services.bot_registry import ensure_bot_identities  # type: ignore
+except Exception:
+    ensure_bot_identities = None  # type: ignore
+
+try:
+    from backend.database.session import get_async_session as _get_async_session  # type: ignore
+    from backend.database.session import async_session as _async_session_ctx  # type: ignore
+except Exception:
+    try:
+       from backend.database.session import get_async_session as _get_async_session  # type: ignore
+       from backend.database.session import async_session as _async_session_ctx  # type: ignore
+    except Exception:
+        _get_async_session = None  # type: ignore
+        _async_session_ctx = None  # type: ignore
+
+# -----------------------------------------------------------------------------
+# PATH BOOTSTRAP
+# -----------------------------------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # .../backend
+PROJECT_ROOT = os.path.dirname(BASE_DIR)  # repo root
+
+for p in (
+    PROJECT_ROOT,
+    BASE_DIR,
+    os.path.join(BASE_DIR, "routes"),
+    os.path.join(BASE_DIR, "database"),
+    os.path.join(BASE_DIR, "models"),
+    os.path.join(BASE_DIR, "security"),
+    os.path.join(BASE_DIR, "services"),
+    os.path.join(BASE_DIR, "ai"),
+):
+    if os.path.exists(p) and p not in sys.path:
+        sys.path.insert(0, p)
+
+# optional DB dependency (not strictly needed here)
+try:
+    from backend.database.connection import get_db as _get_db_connection  # type: ignore  # noqa: F401
+except Exception:
+    try:
+       from backend.database.connection import get_db as _get_db_connection  # type: ignore  # noqa: F401
+    except Exception:
+        _get_db_connection = None  # type: ignore
+
+# .env
+try:
+    from dotenv import load_dotenv as _load_dotenv  # type: ignore
+
+    _load_dotenv(override=False)
+except Exception:
+    pass
+
+# unified DB init (Render / local dual engine)
+try:
+    from backend.database.config import init_engines as _init_unified_engines  # type: ignore
+except Exception:
+    _init_unified_engines = None  # type: ignore
+
+# -----------------------------------------------------------------------------
+# DB URL HELPERS
+# -----------------------------------------------------------------------------
+CANDIDATE_DB_KEYS = [
+    "ASYNC_DATABASE_URL",
+    "DATABASE_URL",
+    "SQLALCHEMY_DATABASE_URL",
+    "DB_URL",
+]
+
+
+def _ensure_ssl(url: str) -> str:
+    def _has_qs(u: str) -> bool:
+        return "?" in u
+
+    def _append(u: str, part: str) -> str:
+        sep = "&" if _has_qs(u) else "?"
+        return f"{u}{sep}{part}"
+
+    def _strip_flags(u: str) -> str:
+        for token in ("ssl=true", "ssl=false"):
+            u = (
+                u.replace(f"&{token}", "")
+                .replace(f"?{token}&", "?")
+                .replace(f"?{token}", "?")
+            )
+        import re as _re
+
+        if _has_qs(u):
+            base, qs = u.split("?", 1)
+            parts = [p for p in qs.split("&") if p and not _re.match(r"^sslmode=", p, flags=_re.I)]
+            qs = "&".join(parts)
+            u = base + (f"?{qs}" if qs else "")
+        if u.endswith("?") or u.endswith("&"):
+            u = u[:-1]
+        return u
+
+    url = _strip_flags(url)
+
+    if url.startswith("postgresql+asyncpg://"):
+        if "ssl=" not in url:
+            url = _append(url, "ssl=require")
+        return url
+
+    if url.startswith("postgresql+psycopg://") or url.startswith("postgresql://"):
+        if "sslmode=" not in url:
+            url = _append(url, "sslmode=require")
+        return url
+
+    return url
+
+
+def _mk_async(url: str) -> str:
+    if url.startswith("postgresql+asyncpg://"):
+        return _ensure_ssl(url)
+    if url.startswith("postgresql+psycopg://"):
+        core = url[len("postgresql+psycopg://") :]
+        async_url = "postgresql+asyncpg://" + core
+        return _ensure_ssl(async_url)
+    if url.startswith("postgresql://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://") :]
+        return _ensure_ssl(url)
+    return url
+
+
+def _resolve_db_url() -> Optional[str]:
+    db_url: Optional[str] = None
+    for k in CANDIDATE_DB_KEYS:
+        v = os.getenv(k)
+        if v and v.strip():
+            db_url = v.strip()
+            break
+    if not db_url:
+        return None
+    if db_url.startswith("postgresql"):
+        db_url = _ensure_ssl(db_url)
+        if db_url.startswith("postgresql://") or db_url.startswith("postgresql+psycopg://"):
+            db_url = _mk_async(db_url)
+    return db_url
+
+
+def _normalize_db_env() -> None:
+    async_url = os.getenv("ASYNC_DATABASE_URL", "").strip()
+    sync_url = os.getenv("DATABASE_URL", "").strip()
+
+    if (not async_url) and sync_url:
+        if sync_url.startswith("postgresql://"):
+            os.environ["ASYNC_DATABASE_URL"] = _mk_async(sync_url)
+        elif sync_url.startswith("postgresql+psycopg://"):
+            base_sync = "postgresql://" + sync_url[len("postgresql+psycopg://") :]
+            os.environ["ASYNC_DATABASE_URL"] = _mk_async(base_sync)
+
+    if os.getenv("ASYNC_DATABASE_URL"):
+        os.environ["ASYNC_DATABASE_URL"] = _ensure_ssl(os.environ["ASYNC_DATABASE_URL"])
+        if os.environ["ASYNC_DATABASE_URL"].startswith("postgresql://") or os.environ[
+            "ASYNC_DATABASE_URL"
+        ].startswith("postgresql+psycopg://"):
+            os.environ["ASYNC_DATABASE_URL"] = _mk_async(os.environ["ASYNC_DATABASE_URL"])
+
+    if os.getenv("DATABASE_URL"):
+        os.environ["DATABASE_URL"] = _ensure_ssl(os.environ["DATABASE_URL"])
+
+
+def _mask_dsn(dsn: Optional[str]) -> str:
+    """
+    Return a masked DSN that never prints secrets.
+    Examples:
+      postgresql+asyncpg://user:****@host:5432/db?ssl=require
+      SET
+      NOT SET
+    """
+    if not dsn:
+        return "NOT SET"
+    dsn = str(dsn).strip()
+    if not dsn:
+        return "NOT SET"
+    if "://" not in dsn:
+        return "SET"
+    try:
+        scheme, rest = dsn.split("://", 1)
+        if "@" not in rest:
+            return "SET"
+        creds, host = rest.split("@", 1)
+        if ":" in creds:
+            user = creds.split(":", 1)[0]
+            return f"{scheme}://{user}:****@{host}"
+        return f"{scheme}://****@{host}"
+    except Exception:
+        return "SET"
+
+
+# -----------------------------------------------------------------------------
+# Vizion Eye / SQLite shim
+# -----------------------------------------------------------------------------
+class _SQLiteProviderShim:
+    def __init__(self, conn: Any) -> None:
+        self.db = conn
+
+    def connect(self) -> Any:
+        return self.db
+
+    def log_event(
+        self,
+        name: str = "",
+        message: str = "",
+        meta: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> None:
+        meta = (meta or {}) | (kwargs.get("meta", {}) if isinstance(kwargs.get("meta"), dict) else {})
+        event = kwargs.get("event") or kwargs.get("name") or name
+        try:
+            cur = self.db.cursor()
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS events (
+                    id INTEGER PRIMARY KEY,
+                    event TEXT, task_id INTEGER, task_title TEXT,
+                    meta TEXT, ts TEXT DEFAULT (datetime('now'))
+                )"""
+            )
+            import json
+
+            cur.execute(
+                "INSERT INTO events(event, task_id, task_title, meta) VALUES (?, ?, ?, ?)",
+                (event, None, None, json.dumps({**(meta or {}), "message": message})),
+            )
+            self.db.commit()
+        except Exception as e:
+            print(f"[SQLiteShim][{event}] {message} | {meta} (err={e})")
+
+
+def _try_import_vizion_db() -> Optional[Any]:
+    enable = os.getenv("VIZION_EYE_ENABLE", "0").lower() in ("1", "true", "yes")
+    if not enable:
+        print("[main] INFO: vizion_eye disabled via VIZION_EYE_ENABLE")
+        return None
+    try:
+        from vizion_eye import db as _db  # type: ignore
+
+        print("[main] INFO: vizion_eye provider found")
+        return _db
+    except Exception as e:
+        print(f"[main] WARN: vizion_eye provider not available: {e}")
+        try:
+            import sqlite3
+
+            sqlite_path = os.getenv("VIZION_EYE_SQLITE_PATH", "").strip()
+            if sqlite_path:
+                conn = sqlite3.connect(sqlite_path)
+                shim = _SQLiteProviderShim(conn)
+                print("[main] INFO: using SQLite shim for vizion_eye")
+                return shim
+        except Exception as e2:
+            print(f"[main] WARN: SQLite shim unavailable: {e2}")
+        return None
+
+
+vizion_db = _try_import_vizion_db()
+_vdb: Optional[Any] = None
+
+# -----------------------------------------------------------------------------
+# Router import helpers
+# -----------------------------------------------------------------------------
+def _try_import_router(abs_mod: str, rel_mod: str):
+    try:
+        mod = __import__(abs_mod, fromlist=["router"])
+        return getattr(mod, "router")
+    except Exception as e_abs:
+        try:
+            mod = __import__(rel_mod, fromlist=["router"])
+            return getattr(mod, "router")
+        except Exception as e_rel:
+            print(f"[main] WARN: failed to import {abs_mod} and {rel_mod}: {e_abs} | {e_rel}")
+            return None
+    # Router assignment moved below CORS setup to avoid import-time execution
+    # (actual router imports will occur after middleware is configured)
+
+# public portal access requests
+portal_requests_router = _try_import_router(
+    "backend.routes.portal_requests",
+    "routes.portal_requests",
+)
+
+# frontend compatibility router
+frontend_compat_router = _try_import_router(
+    "backend.routes.frontend_compat_routes",
+    "routes.frontend_compat_routes",
+)
+
+# admin users CRUD
+admin_users_router = _try_import_router(
+    "backend.routes.user",
+    "routes.user",
+)
+
+# admin control panel (org/users/roles/sessions/audit/alerts)
+admin_control_router = _try_import_router(
+    "backend.admin_control.routes",
+    "admin_control.routes",
+)
+
+# system routes (legacy)
+legacy_system_router = _try_import_router(
+    "backend.routes.system_routes",
+    "routes.system_routes",
+)
+
+# bot operating system routes
+bot_os_router = _try_import_router(
+    "backend.routes.bot_os",
+    "routes.bot_os",
+)
+
+# platform infrastructure expenses
+platform_infra_router = _try_import_router(
+    "backend.routes.platform_infrastructure_routes",
+    "routes.platform_infrastructure_routes",
+)
+
+# ---- Open Web Leads (DISABLED) ----
+open_web_leads_router = None  # type: ignore
+
+# -----------------------------------------------------------------------------
+# Security: RBAC dependency + token creation + auth router
+# - RBAC should come from backend.security.rbac (preferred)
+# - create_access_token + auth_router live in backend.security.auth
+# -----------------------------------------------------------------------------
+auth_router = None  # type: ignore
+create_access_token = None  # type: ignore
+get_current_user = None  # type: ignore
+_auth_import_error: Optional[Exception] = None
+
+# RBAC dependency (preferred module)
+try:
+    from backend.security.rbac import require_roles  # type: ignore
+except Exception:
+    try:
+        from backend.security.rbac import require_roles  # type: ignore
+    except Exception:
+        # Fallback to auth.py if RBAC module not available
+        try:
+            from backend.security.auth import require_roles  # type: ignore
+        except Exception:
+            try:
+                from backend.security.auth import require_roles  # type: ignore
+            except Exception:
+
+                def require_roles(_roles: list[str]) -> Callable[..., Any]:  # type: ignore
+                    async def _dep(request: Request) -> bool:
+                        return True
+
+                    return _dep
+
+# Token creation + auth router
+try:
+    from backend.security.auth import (  # type: ignore
+        create_access_token as _create_access_token,
+        get_current_user as _get_current_user,
+        router as _auth_router,
+    )
+
+    create_access_token = _create_access_token
+    get_current_user = _get_current_user
+    auth_router = _auth_router
+except Exception as exc_abs:
+    _auth_import_error = exc_abs
+    try:
+        from backend.security.auth import (  # type: ignore
+            create_access_token as _create_access_token,
+            get_current_user as _get_current_user,
+            router as _auth_router,
+        )
+
+        create_access_token = _create_access_token
+        get_current_user = _get_current_user
+        auth_router = _auth_router
+    except Exception as exc_rel:
+        _auth_import_error = exc_rel
+        auth_router = None  # type: ignore
+        if not IS_PRODUCTION:
+            def create_access_token(*_args: Any, **_kwargs: Any) -> str:  # type: ignore
+                return "dev-token"
+
+if IS_PRODUCTION and auth_router is None:
+    raise RuntimeError("security.auth router failed to load in production") from _auth_import_error
+
+if get_current_user is None:
+    async def get_current_user(request: Request) -> Dict[str, Any]:  # type: ignore
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+
+# -----------------------------------------------------------------------------
+# DEV TOKEN ROUTER
+# -----------------------------------------------------------------------------
+DEV_MODE = _is_dev()
+DEV_SECRET = os.getenv("GTS_DEV_SECRET", "dev-secret")
+DEV_SUPER_ADMIN_ID = int(os.getenv("DEV_SUPER_ADMIN_ID", "6"))
+_DEV_ALLOWED_ROLES = ("user", "manager", "admin", "partner", "system_admin", "super_admin")
+dev_auth_router = APIRouter(tags=["Auth"])
+
+
+async def _create_session_id(user_id: int, user_agent: str) -> Optional[int]:
+    try:
+        from backend.database.connection import SessionLocal  # type: ignore
+        from backend.admin_control.models import Session as AdminSession  # type: ignore
+
+        async with SessionLocal() as session:
+            obj = AdminSession(
+                user_id=int(user_id),
+                last_seen_at=datetime.now(timezone.utc),
+                ip=None,
+                user_agent=user_agent,
+                revoked_at=None,
+            )
+            session.add(obj)
+            await session.commit()
+            await session.refresh(obj)
+            return int(obj.id)
+    except Exception:
+        return None
+
+
+async def _resolve_dev_role(requested: Optional[str]) -> str:
+    if requested:
+        normalized = str(requested).strip().lower()
+        if normalized in _DEV_ALLOWED_ROLES:
+            return normalized
+        raise HTTPException(
+            status_code=400,
+            detail="role must be one of: " + "|".join(_DEV_ALLOWED_ROLES),
+        )
+    try:
+        from backend.database.connection import SessionLocal  # type: ignore
+        from backend.models.user import User  # type: ignore
+
+        async with SessionLocal() as session:  # type: ignore
+            res = await session.execute(select(User.role).where(User.id == DEV_SUPER_ADMIN_ID))
+            role = res.scalar_one_or_none()
+            if role and isinstance(role, str):
+                normalized = role.strip().lower()
+                if normalized in _DEV_ALLOWED_ROLES:
+                    return normalized
+    except Exception:
+        pass
+    return "super_admin"
+
+
+@dev_auth_router.get("/auth/dev-token")
+async def _dev_token(role: Optional[str] = None, secret: Optional[str] = None):
+    if not DEV_MODE:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    if secret is not None and secret not in (DEV_SECRET, "dev-secret"):
+        raise HTTPException(status_code=401, detail="invalid dev secret")
+    effective_role = await _resolve_dev_role(role)
+
+    session_id = await _create_session_id(1, "dev-token")
+
+    token = create_access_token(
+        subject=1,
+        email=f"dev+{effective_role}@local.invalid",
+        role=effective_role,
+        expires_delta=timedelta(minutes=60 * 24),
+        session_id=session_id,
+    )
+    return {"access_token": token, "token_type": "bearer", "role": effective_role}
+
+
+# -----------------------------------------------------------------------------
+# Rate Limiting (slowapi)
+# -----------------------------------------------------------------------------
+try:
+    import importlib as _importlib
+
+    slowapi = _importlib.import_module("slowapi")
+    Limiter = getattr(slowapi, "Limiter")
+    util = _importlib.import_module("slowapi.util")
+    get_remote_address = getattr(util, "get_remote_address")
+    errors = _importlib.import_module("slowapi.errors")
+    RateLimitExceeded = getattr(errors, "RateLimitExceeded")
+    middleware = _importlib.import_module("slowapi.middleware")
+    SlowAPIMiddleware = getattr(middleware, "SlowAPIMiddleware")
+    try:
+        _rate_limit_exceeded_handler = getattr(slowapi, "_rate_limit_exceeded_handler")
+    except Exception:
+        _rate_limit_exceeded_handler = None
+except Exception:
+    Limiter = None
+    _rate_limit_exceeded_handler = None  # type: ignore
+    if IS_PRODUCTION:
+        raise RuntimeError("slowapi is required in production for rate limiting")
+
+
+# -----------------------------------------------------------------------------
+# App + CORS
+# -----------------------------------------------------------------------------
+def generate_unique_id(route: APIRoute) -> str:
+    tag = route.tags[0] if route.tags else "default"
+    methods = "-".join(sorted((route.methods or [])))
+    return f"{tag}:{route.name}:{methods}:{route.path}".replace("/", "_").replace("{", "").replace("}", "")
+
+
+app = FastAPI(
+    title="GTS Logistics Backend",
+    version="1.7.7",
+    generate_unique_id_function=generate_unique_id,
+    docs_url=None if IS_PRODUCTION else "/docs",
+    redoc_url=None if IS_PRODUCTION else "/redoc",
+    openapi_url=None if IS_PRODUCTION else "/openapi.json",
+)
+
+
+@app.middleware("http")
+async def _block_auth_token_in_prod(request: Request, call_next):
+    if _is_prod():
+        path = request.url.path.rstrip("/")
+        if path == "/auth/token":
+            return JSONResponse(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                content={
+                    "detail": "Auth token endpoint disabled in production for security containment.",
+                },
+            )
+    return await call_next(request)
+
+_allowed = os.getenv("GTS_CORS_ORIGINS") or os.getenv("ALLOWED_ORIGINS")
+_default_dev_origins = ["http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:5174", "http://localhost:5174"]
+if IS_PRODUCTION:
+    allow_origins = [o.strip() for o in (_allowed or "").split(",") if o.strip()]
+    if (not allow_origins) or ("*" in allow_origins):
+        raise RuntimeError("Production CORS requires explicit ALLOWED_ORIGINS without '*'")
+else:
+    allow_origins = [o.strip() for o in _allowed.split(",") if o.strip()] if _allowed else _default_dev_origins
+    for origin in _default_dev_origins:
+        if origin not in allow_origins:
+            allow_origins.append(origin)
+allow_credentials = (os.getenv("GTS_CORS_ALLOW_CREDENTIALS") or os.getenv("CORS_ALLOW_CREDENTIALS") or "0").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+print(f"[main] CORS allow_origins -> {allow_origins}")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=allow_credentials,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Cache webhook secret store for HMAC verification
+app.state.webhook_secrets = parse_webhook_secrets(os.getenv("WEBHOOK_SECRETS", ""))
+
+# Attach Rate Limiting middleware (graceful if missing)
+try:
+    from backend.middleware.rate_limit import RateLimitMiddleware  # type: ignore
+    app.add_middleware(RateLimitMiddleware)
+    print("[main] RateLimitMiddleware enabled")
+except Exception as _rate_exc:
+    print(f"[main] RateLimitMiddleware unavailable: {_rate_exc}")
+
+# Attach Tenant resolver + minimal RBAC middleware (graceful if missing)
+try:
+    from backend.security.tenant_rbac_middleware import TenantRBACMiddleware  # type: ignore
+    app.add_middleware(TenantRBACMiddleware)
+    print("[main] TenantRBACMiddleware enabled")
+except Exception as _ten_exc:
+    print(f"[main] TenantRBACMiddleware unavailable: {_ten_exc}")
+
+# --- Import route modules AFTER CORS middleware is configured to avoid
+# import-time execution running before middleware setup (prevents
+# missing CORS headers when route modules perform work on import).
+# WebSocket routes (live monitor)
+ws_router = _try_import_router("backend.routes.ws_routes", "routes.ws_routes")
+
+from backend.routes.tms_unified_api import router as tms_unified_router
+from backend.tms.auth_routes import tms_auth_bp
+
+app.include_router(tms_unified_router)
+print("âœ… TMS API registered at /api/v1/tms-unified")
+try:
+    app.include_router(tms_auth_bp)
+    print("âœ… TMS Auth API registered at /api/tms/auth")
+except Exception as e:
+    print(f"[main] WARN: tms_auth_bp not available: {e}")
+vizion_router = _try_import_router("backend.routes.vizion_routes", "routes.vizion_routes")
+health_router = _try_import_router("backend.routes.health_routes", "routes.health_routes")
+shipments_router = _try_import_router("backend.routes.shipments_pg_api", "routes.shipments_pg_api")
+shipments_import_router = _try_import_router(
+    "backend.routes.shipments_import_routes",
+    "routes.shipments_import_routes",
+)
+reports_router = _try_import_router("backend.routes.reports", "routes.reports")
+ai_reports_router = _try_import_router("backend.routes.ai_reports", "routes.ai_reports")
+loadboards_router = _try_import_router("backend.routes.loadboards_routes", "routes.loadboards_routes")
+truckerpath_router = _try_import_router("backend.routes.truckerpath_routes", "routes.truckerpath_routes")
+tp_webhook_router = _try_import_router("backend.routes.truckerpath_webhook", "routes.truckerpath_webhook")
+dispatch_router = _try_import_router("backend.routes.dispatch_routes", "routes.dispatch_routes")
+driver_router = _try_import_router("backend.routes.driver_routes", "routes.driver_routes")
+email_center_router = _try_import_router("backend.routes.email_center", "routes.email_center")
+monitoring_router = _try_import_router("backend.routes.monitoring", "routes.monitoring")
+webhook_router = _try_import_router("backend.routes.webhooks", "routes.webhooks")
+safety_router = _try_import_router("backend.routes.safety", "routes.safety")
+tenant_admin_router = _try_import_router("backend.routes.tenant_admin", "routes.tenant_admin")
+
+# Quo (OpenPhone) integration
+quo_webhook_router = _try_import_router("backend.routes.quo_webhooks", "routes.quo_webhooks")
+ai_calls_router = _try_import_router("backend.routes.ai_calls_api", "routes.ai_calls_api")
+tms_router = _try_import_router("backend.routes.tms_api", "routes.tms_api")
+
+weekly_reports_router = _try_import_router(
+    "backend.routes.reports_routes",
+    "routes.reports_routes",
+)
+ai_general_router = _try_import_router(
+    "backend.routes.ai_general_routes",
+    "routes.ai_general_routes",
+)
+
+# governance routes (admin-only)
+governance_router = _try_import_router(
+    "backend.routes.bot_governance_routes",
+    "routes.bot_governance_routes",
+)
+
+# documents
+try:
+    from backend.routes.documents_routes import (  # type: ignore
+        router as documents_router,
+        ai_router as documents_ai_router,
+        internal_router as documents_internal_router,
+    )
+except Exception:
+    try:
+       from backend.routes.documents_routes import (  # type: ignore
+            router as documents_router,
+            ai_router as documents_ai_router,
+            internal_router as documents_internal_router,
+        )
+    except Exception:
+        documents_router = None
+        documents_ai_router = None
+        documents_internal_router = None
+
+# documents upload (real file uploads)
+documents_upload_router = _try_import_router(
+    "backend.routes.documents_upload_routes",
+    "routes.documents_upload_routes",
+)
+
+# extended auth (register + reset password)
+auth_extended_router = _try_import_router("backend.routes.auth_extended", "routes.auth_extended")
+
+# Unified System Routers (System Switcher + Admin Dashboard)
+system_switcher_router = _try_import_router(
+    "backend.routes.system_switcher",
+    "routes.system_switcher"
+)
+admin_unified_router = _try_import_router(
+    "backend.routes.admin_unified",
+    "routes.admin_unified"
+)
+
+# users
+users_router = _try_import_router("backend.routes.users_routes", "routes.users_routes")
+
+ai_gateway_router = _try_import_router("backend.routes.ai_gateway", "routes.ai_gateway")
+finance_router = _try_import_router("backend.routes.finance_routes", "routes.finance_routes")
+
+ENABLE_FINANCE_REPORTS = os.getenv("ENABLE_FINANCE_REPORTS", "0").lower() in ("1", "true", "yes")
+finance_reports = (
+    _try_import_router("backend.routes.finance_reports", "routes.finance_reports")
+    if ENABLE_FINANCE_REPORTS
+    else None
+)
+finance_ai_router = _try_import_router("backend.routes.finance_ai_routes", "routes.finance_ai_routes")
+
+# partner system (admin + partner-facing api)
+try:
+    from backend.api.v1.partners import (  # type: ignore
+        admin_router as partners_admin_router,
+        partner_router as partners_router,
+    )
+except Exception:
+    try:
+        from api.v1.partners import (  # type: ignore
+            admin_router as partners_admin_router,
+            partner_router as partners_router,
+        )
+    except Exception:
+        partners_admin_router = None  # type: ignore
+        partners_router = None  # type: ignore
+
+# admin portal
+admin_portal_router = _try_import_router(
+    "backend.routes.admin_portal_requests",
+    "routes.admin_portal_requests",
+)
+
+# admin platform settings
+admin_platform_settings_router = _try_import_router(
+    "backend.routes.admin_platform_settings",
+    "routes.admin_platform_settings",
+)
+
+# admin TMS access control
+admin_tms_access_router = _try_import_router(
+    "backend.routes.admin_tms_access",
+    "routes.admin_tms_access",
+)
+
+limiter = None  # type: ignore
+if Limiter is not None:
+    RATE_LIMIT = os.getenv("GTS_RATE_LIMIT", "60/minute")
+    limiter = Limiter(key_func=get_remote_address, default_limits=[RATE_LIMIT])
+    app.state.limiter = limiter
+    if _rate_limit_exceeded_handler is not None:
+        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
+    app.add_middleware(SlowAPIMiddleware)
+else:
+    print("[main] WARN: slowapi not installed; rate limiting disabled")
+
+OFFLINE = os.getenv("OFFLINE", "true").lower() in ("1", "true", "yes")
+HEARTBEAT_INTERVAL_SEC = int(os.getenv("VIZION_HEARTBEAT_SEC", "30"))
+INTERNAL_BASE_URL = os.getenv("INTERNAL_BASE_URL", "http://localhost:8000").rstrip("/")
+
+OPS_MONITOR_ENABLED = os.getenv("OPS_MONITOR_ENABLED", "0").lower() in ("1", "true", "yes")
+OPS_MONITOR_INTERVAL_SEC = max(5, int(os.getenv("OPS_MONITOR_INTERVAL_SEC", "120")))
+
+DOCS_SCHEDULER_DISABLED = os.getenv("DISABLE_SCHEDULER", "false").lower() in ("1", "true", "yes")
+DOCS_SCHEDULER_INTERVAL_SEC = max(60, int(os.getenv("DOCS_SCHEDULER_INTERVAL_SEC", "86400")))
+
+# -----------------------------------------------------------------------------
+# RBAC policy (unified)
+# -----------------------------------------------------------------------------
+RBAC_AUTHENTICATED = Depends(
+    require_roles(["user", "manager", "admin", "system_admin", "super_admin", "owner", "partner"])
+)
+RBAC_MANAGER = Depends(require_roles(["manager", "admin", "system_admin", "super_admin", "owner"]))
+RBAC_ADMIN = Depends(require_roles(["admin", "system_admin", "super_admin", "owner"]))
+RBAC_PARTNER = Depends(require_roles(["partner"]))
+RBAC_PARTNER_OR_ADMIN = Depends(require_roles(["partner", "admin", "system_admin", "super_admin", "owner"]))
+
+
+async def _get_optional_db():
+    try:
+        async for session in get_db_async():  # type: ignore[misc]
+            yield session
+    except Exception:
+        yield None
+
+# -----------------------------------------------------------------------------
+# Vizion helpers
+# -----------------------------------------------------------------------------
+async def _vdb_call(func_name: str, *args, **kwargs):
+    if not _vdb or not hasattr(_vdb, func_name):
+        return None
+    fn = getattr(_vdb, func_name)
+    if asyncio.iscoroutinefunction(fn):
+        return await fn(*args, **kwargs)
+    return fn(*args, **kwargs)
+
+
+async def vizion_log_event(event: str, message: str = "", **extra: Any) -> None:
+    try:
+        if _vdb and hasattr(_vdb, "log_event"):
+            fn = getattr(_vdb, "log_event")
+            for call in (
+                lambda: fn(event, message, extra),
+                lambda: fn(name=event, message=message, meta=extra),
+                lambda: fn(event=event, message=message, meta=extra),
+                lambda: fn(event),
+            ):
+                try:
+                    return call()
+                except TypeError:
+                    continue
+    except Exception as e:
+        print(f"[VIZION][ERR] failed to log event '{event}': {e}")
+
+
+# -----------------------------------------------------------------------------
+# AI BOTS & REGISTRY
+# -----------------------------------------------------------------------------
+class AIBot(Protocol):
+    name: str
+
+    async def run(self, payload: dict) -> dict: ...
+    async def status(self) -> dict: ...
+    async def config(self) -> dict: ...
+    async def process_message(self, message: str, context: Optional[dict] = None) -> dict: ...
+
+
+class BaseBot:
+    async def run(self, payload: dict) -> dict:
+        """Default run stub â€” subclasses should override."""
+        raise NotImplementedError("Bot must implement run(payload: dict) -> dict")
+
+    async def status(self) -> dict:
+        """Default status stub â€” subclasses may override."""
+        return {"ok": True, "role": getattr(self, "name", "base_bot")}
+
+    async def config(self) -> dict:
+        """Default config stub â€” subclasses may override."""
+        return {}
+
+    async def process_message(self, message: str, context: Optional[dict] = None) -> dict:
+        payload = {"message": message, "context": context or {}}
+        return await self.run(payload)
+
+
+class _AIRegistry:
+    def __init__(self) -> None:
+        self._bots: Dict[str, AIBot] = {}
+
+    def register(self, bot: AIBot) -> None:
+        self._bots[bot.name] = bot
+
+    def get(self, name: str) -> AIBot:
+        if name not in self._bots:
+            raise KeyError(name)
+        return self._bots[name]
+
+    def list(self) -> Dict[str, str]:
+        return {k: v.__class__.__name__ for k, v in self._bots.items()}
+
+
+ai_registry = _AIRegistry()
+
+from sqlalchemy import select as _select, func as _func
+
+try:
+    from backend.database.session import get_async_session as _get_session  # type: ignore
+    from backend.database.session import get_async_session  # type: ignore
+except Exception:
+    try:
+       from backend.database.session import get_async_session as _get_session  # type: ignore
+       from backend.database.session import get_async_session  # type: ignore
+    except Exception:
+        _get_session = None  # type: ignore
+        get_async_session = None  # type: ignore
+        _async_session_ctx = None  # type: ignore
+        _get_session = None  # type: ignore
+
+try:
+    from backend.models.financial import Expense, ExpenseStatus  # type: ignore
+except Exception:
+    try:
+        from models.financial import Expense, ExpenseStatus  # type: ignore
+    except Exception:
+        Expense = None
+        ExpenseStatus = None
+
+try:
+    from backend.models.email_center import BotAuditEvent  # type: ignore
+except Exception:
+    BotAuditEvent = None
+
+
+class FinanceBot(BaseBot):
+    name = "finance_bot"
+
+    async def run(self, payload: dict) -> dict:
+        if _get_session is None or Expense is None:
+            return {
+                "ok": True,
+                "summary": {
+                    "total_expenses": 0.0,
+                    "total_revenue": 120000.0,
+                    "net_profit": 120000.0,
+                },
+            }
+        async with wrap_session_factory(_get_session) as session:
+            total_q = await session.execute(_select(_func.coalesce(_func.sum(Expense.amount), 0.0)))
+            total_expenses = float(total_q.scalar() or 0.0)
+
+            by_status_q = await session.execute(
+                _select(Expense.status, _func.coalesce(_func.sum(Expense.amount), 0.0)).group_by(Expense.status)
+            )
+            by_status = {str(s): float(a) for (s, a) in by_status_q.all()}
+
+            by_vendor_q = await session.execute(
+                _select(Expense.vendor, _func.coalesce(_func.sum(Expense.amount), 0.0)).group_by(Expense.vendor)
+            )
+            by_vendor = {str(v or "Unknown"): float(a) for (v, a) in by_vendor_q.all()}
+
+            total_revenue = 120000.0
+            net_profit = total_revenue - total_expenses
+
+        return {
+            "ok": True,
+            "summary": {
+                "total_expenses": round(total_expenses, 2),
+                "total_revenue": round(total_revenue, 2),
+                "net_profit": round(net_profit, 2),
+                "by_status": by_status,
+                "by_vendor": by_vendor,
+            },
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": "finance_bot"}
+
+    async def config(self) -> dict:
+        return {"source": "db/expenses", "routes": ["/finance/summary", "/finance/reports/summary"]}
+
+
+class FreightBrokerBot(BaseBot):
+    name = "freight_broker"
+
+    def __init__(self) -> None:
+        self.base_url = INTERNAL_BASE_URL
+        self.integration_disabled = os.getenv("DISABLE_EXTERNAL_LOAD_INTEGRATION", "1").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+
+    async def _fetch_loads(self, limit: int, prefs: Dict[str, Any]) -> List[Dict[str, Any]]:
+        if self.integration_disabled:
+            return []
+
+        params: Dict[str, Any] = {"limit": limit}
+        if prefs.get("origin"):
+            params["origin"] = prefs["origin"]
+        if prefs.get("destination"):
+            params["destination"] = prefs["destination"]
+        if prefs.get("equipment"):
+            params["equipment"] = prefs["equipment"]
+
+        import httpx
+
+        url = f"{self.base_url}/truckerpath/loads"
+        async with httpx.AsyncClient(timeout=20) as client:
+            r = await client.get(url, params=params)
+            if r.status_code // 100 != 2:
+                raise HTTPException(status_code=502, detail=f"/truckerpath/loads -> {r.status_code}")
+            data = r.json()
+            return list(data.get("loads") or [])
+
+    async def _create_shipment(self, payload: Dict[str, Any]) -> Optional[int]:
+        import httpx
+
+        urls = [
+            f"{self.base_url}/api/v1/shipments/shipments/",
+            f"{self.base_url}/shipments/",
+        ]
+        async with httpx.AsyncClient(timeout=30) as client:
+            for url in urls:
+                try:
+                    r = await client.post(url, json=payload)
+                    if r.status_code // 100 == 2:
+                        data = r.json()
+                        sid = data.get("id") or data.get("shipment_id") or data.get("data", {}).get("id")
+                        if sid:
+                            return int(sid)
+                except Exception:
+                    continue
+        return None
+
+    def _payload_from_load(self, load: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+        def _s(v):
+            return str(v or "").strip()
+
+        def _f(v):
+            if v is None:
+                return None
+            try:
+                return float(str(v).replace(",", "").strip())
+            except Exception:
+                return None
+
+        pickup = _s(load.get("origin") or load.get("pickup") or load.get("pickup_location") or load.get("pickup_city") or "Unknown Pickup")
+        dropoff = _s(load.get("destination") or load.get("dropoff") or load.get("dropoff_location") or load.get("dropoff_city") or "Unknown Dropoff")
+        equip = _s(load.get("equipment_type") or load.get("equipment") or load.get("trailer_type") or "")
+        notes = _s(load.get("description") or load.get("notes") or "")
+        price = _f(load.get("rate") or load.get("price") or load.get("rate_usd"))
+        weight = _s(load.get("weight") or "")
+        length = _s(load.get("length") or "")
+
+        lat = load.get("pickup_latitude") or load.get("latitude")
+        lng = load.get("pickup_longitude") or load.get("longitude")
+        try:
+            lat = float(lat) if lat not in (None, "") else None
+            lng = float(lng) if lng not in (None, "") else None
+        except Exception:
+            lat = None
+            lng = None
+
+        return {
+            "user_id": int(user_id),
+            "pickup_location": pickup,
+            "dropoff_location": dropoff,
+            "trailer_type": (equip or None),
+            "rate": price,
+            "weight": (weight or None),
+            "length": (length or None),
+            "load_size": _s(load.get("load_size") or ""),
+            "description": (notes or None),
+            "status": "Imported",
+            "latitude": lat,
+            "longitude": lng,
+            "recurring_type": None,
+            "days": None,
+        }
+
+    async def _post_to_truckerpath(self, load_payload: Dict[str, Any]) -> bool:
+        if self.integration_disabled:
+            return False
+
+        import httpx
+
+        url = f"{self.base_url}/truckerpath/post-load"
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(url, json=load_payload)
+            if r.status_code // 100 != 2:
+                return False
+            data = r.json()
+            return bool(data.get("ok"))
+
+    async def run(self, payload: dict) -> dict:
+        user_id = int((payload or {}).get("user_id") or 1)
+        limit = int((payload or {}).get("max_loads") or 10)
+        prefs = (payload or {}).get("preferences", {}) or {}
+        auto_post = bool((payload or {}).get("auto_post_truckerpath", False))
+
+        if self.integration_disabled:
+            return {
+                "ok": True,
+                "message": "External load board integration is DISABLED. Please enter shipments manually or via Excel import.",
+                "shipment_ids": [],
+                "posted_to_truckerpath": 0,
+                "failed_postings": 0,
+                "preferences": prefs,
+                "integration_disabled": True,
+            }
+
+        loads = await self._fetch_loads(limit=limit, prefs=prefs)
+        if not loads:
+            return {"ok": False, "message": "No loads returned from external provider", "shipment_ids": [], "integration_disabled": False}
+
+        created_ids: List[int] = []
+        posted_ok = 0
+        posted_fail = 0
+
+        for item in loads:
+            shipment_payload = self._payload_from_load(item, user_id=user_id)
+            sid = await self._create_shipment(shipment_payload)
+            if sid:
+                created_ids.append(sid)
+                if auto_post:
+                    ok = await self._post_to_truckerpath(
+                        {
+                            "company_id": os.getenv("TRUCKERPATH_COMPANY_ID"),
+                            "contact_info": {
+                                "contact_email": os.getenv("TRUCKERPATH_CONTACT_EMAIL"),
+                                "contact_first_name": os.getenv("TRUCKERPATH_CONTACT_FIRST", "Ops"),
+                                "contact_last_name": os.getenv("TRUCKERPATH_CONTACT_LAST", "Team"),
+                                "contact_phone_number": os.getenv("TRUCKERPATH_CONTACT_PHONE"),
+                                "contact_phone_ext": os.getenv("TRUCKERPATH_CONTACT_EXT", ""),
+                            },
+                            "shipment_info": {
+                                "equipment": [shipment_payload.get("trailer_type") or "Dry Van"],
+                                "load_size": shipment_payload.get("load_size") or "FULL",
+                                "description": shipment_payload.get("description"),
+                                "shipment_weight": shipment_payload.get("weight"),
+                                "shipment_dimensions": {},
+                                "requirements": None,
+                                "stop_list": [
+                                    {"type": "PICKUP", "city": shipment_payload.get("pickup_location"), "lat": shipment_payload.get("latitude"), "lng": shipment_payload.get("longitude")},
+                                    {"type": "DROPOFF", "city": shipment_payload.get("dropoff_location")},
+                                ],
+                            },
+                        }
+                    )
+                    if ok:
+                        posted_ok += 1
+                    else:
+                        posted_fail += 1
+
+        return {
+            "ok": True,
+            "message": f"Created {len(created_ids)} shipments. Posted {posted_ok} to TruckerPath ({posted_fail} failed).",
+            "shipment_ids": created_ids,
+            "posted_to_truckerpath": posted_ok,
+            "failed_postings": posted_fail,
+            "preferences": prefs,
+            "integration_disabled": False,
+        }
+
+    async def status(self) -> dict:
+        return {
+            "ok": True,
+            "role": "freight_broker",
+            "source": "truckerpath_routes",
+            "integration_disabled": self.integration_disabled,
+        }
+
+    async def config(self) -> dict:
+        return {
+            "routes": ["/truckerpath/loads", "/truckerpath/post-load"],
+            "default_limit": 10,
+            "input_modes": {"manual_excel": True, "external_loadboard_api": not self.integration_disabled},
+        }
+
+
+DocsClient = None
+_parse_command = None
+try:
+    from backend.ai.roles.bot_documents import DocsClient as _DocsClient, _parse_command as _CMD  # type: ignore
+
+    DocsClient = _DocsClient
+    _parse_command = _CMD
+except Exception:
+    try:
+        from ai.roles.bot_documents import DocsClient as _DocsClient, _parse_command as _CMD  # type: ignore
+
+        DocsClient = _DocsClient
+        _parse_command = _CMD
+    except Exception:
+        DocsClient = None
+        _parse_command = None
+
+
+class DocumentsManagerBot(BaseBot):
+    name = "documents_manager"
+
+    async def run(self, payload: dict) -> dict:
+        if DocsClient is None:
+            return {"ok": False, "error": "DocsClient not available", "hint": "backend/ai/roles/bot_documents.py"}
+
+        api = DocsClient(base_url=INTERNAL_BASE_URL)
+        text_cmd = (payload or {}).get("command")
+
+        if isinstance(text_cmd, str) and text_cmd.strip() and _parse_command is not None:
+            cmd, args = _parse_command(text_cmd)
+            if cmd == "status":
+                return {"ok": True, "data": await api.get_status()}
+            if cmd == "list_expiring":
+                return {"ok": True, "data": await api.list_expiring()}
+            if cmd == "extend":
+                rid_val = args.get("id")
+                days_val = args.get("days")
+                if rid_val is None:
+                    raise HTTPException(status_code=400, detail="extend requires 'id' argument")
+                if days_val is None:
+                    raise HTTPException(status_code=400, detail="extend requires 'days' argument")
+                return {"ok": True, "data": await api.extend(int(rid_val), int(days_val))}
+            if cmd == "notify":
+                return {"ok": True, "data": await api.notify_expiring()}
+            return {"ok": True, "help": ["status", "list expiring", "extend <id> <days>", "notify"]}
+
+        action = (payload or {}).get("action")
+        if action == "status":
+            return {"ok": True, "data": await api.get_status()}
+        if action == "list_expiring":
+            return {"ok": True, "data": await api.list_expiring()}
+        if action == "extend":
+            rid = int((payload or {}).get("id") or 0)
+            days = int((payload or {}).get("days") or 0)
+            if rid <= 0 or days <= 0:
+                raise HTTPException(status_code=400, detail="extend requires id > 0 and days > 0")
+            return {"ok": True, "data": await api.extend(rid, days)}
+        if action == "notify":
+            return {"ok": True, "data": await api.notify_expiring()}
+
+        return {"ok": True, "data": await api.get_status()}
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": "documents_manager", "client": bool(DocsClient)}
+
+    async def config(self) -> dict:
+        return {"expiring_endpoint": "/documents/notify-expiring/", "list_endpoint": "/documents/"}
+
+
+try:
+    from backend.services.report_service import compile_system_report  # type: ignore
+except Exception:
+    try:
+        from backend.services.report_service import compile_system_report  # type: ignore
+    except Exception:
+        compile_system_report = None  # type: ignore
+
+
+class GeneralManagerBot(BaseBot):
+    name = "general_manager"
+
+    async def run(self, payload: dict) -> dict:
+        if compile_system_report is None:
+            freight_task = asyncio.create_task(ai_registry.get("freight_broker").run({"max_loads": int((payload or {}).get("max_loads") or 3)}))
+            finance_task = asyncio.create_task(ai_registry.get("finance_bot").run({}))
+            docs_task = asyncio.create_task(ai_registry.get("documents_manager").run({"action": "status"}))
+            freight, finance, docs = await asyncio.gather(freight_task, finance_task, docs_task)
+            return {"ok": True, "report": {"freight": freight, "finance": finance, "documents": docs}, "fallback": True}
+
+        period = (payload or {}).get("period", "week")
+        start_date = (payload or {}).get("start_date")
+        end_date = (payload or {}).get("end_date")
+        fmt = (payload or {}).get("format", "json")
+        include_kpis = bool((payload or {}).get("include_kpis", True))
+
+        kwargs: Dict[str, Any] = {}
+        try:
+            sig = inspect.signature(compile_system_report)  # type: ignore
+            supported = set(sig.parameters.keys())
+            candidate = {
+                "period": period,
+                "start_date": start_date,
+                "end_date": end_date,
+                "fmt": fmt,
+                "format": fmt,
+                "include_kpis": include_kpis,
+            }
+            for k, v in candidate.items():
+                if k in supported:
+                    kwargs[k] = v
+        except Exception:
+            kwargs = {"period": period, "format": fmt}
+
+        try:
+            result = await compile_system_report(**kwargs)  # type: ignore
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Report generation failed: {e}")
+
+        return {"ok": True, "report": result, "period": period, "format": fmt}
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": "general_manager", "report_service": compile_system_report is not None}
+
+    async def config(self) -> dict:
+        return {"inputs": ["period", "start_date", "end_date", "format", "include_kpis"]}
+
+
+class OperationsManagerBot(BaseBot):
+    name = "operations_manager"
+
+    async def run(self, payload: dict) -> dict:
+        workflow_name = str((payload or {}).get("workflow_name") or "").strip().lower()
+        if workflow_name:
+            if workflow_name == "email_intake":
+                subject = str((payload or {}).get("subject") or "").lower()
+                sender = str((payload or {}).get("sender") or "")
+                assigned_bot = "customer_service" if any(k in subject for k in ["support", "help", "issue"]) else "operations_manager"
+                return {
+                    "ok": True,
+                    "workflow_name": workflow_name,
+                    "workflow_id": f"email_{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+                    "assigned_bot": assigned_bot,
+                    "action_plan": [
+                        {"step": "classify", "status": "done"},
+                        {"step": "assign", "status": "done"},
+                    ],
+                    "reply_draft": f"Thanks for contacting GTS. We received your message from {sender} and will follow up shortly.",
+                }
+            return {"ok": False, "error": f"Unsupported workflow: {workflow_name}"}
+        steps: List[Dict[str, Any]] = []
+        prefs = (payload or {}).get("freight_preferences", {}) or {}
+
+        steps.append({"step": "fetch_loads", "status": "started"})
+        fb = await ai_registry.get("freight_broker").run(
+            {"source": (payload or {}).get("source", "mock"), "preferences": prefs, "max_loads": int((payload or {}).get("max_loads") or 5)}
+        )
+        steps[-1]["status"] = "done"
+
+        steps.append({"step": "finance_snapshot", "status": "started"})
+        fin = await ai_registry.get("finance_bot").run({})
+        steps[-1]["status"] = "done"
+
+        await vizion_log_event("ops_orchestration", "ran ops manager", loads=fb.get("count", 0), expenses=fin.get("summary", {}).get("total_expenses", 0))
+
+        return {"ok": True, "steps": steps, "loads_taken": fb.get("count", 0), "finance": fin.get("summary", {})}
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": "operations_manager"}
+
+    async def config(self) -> dict:
+        return {"orchestrates": ["freight_broker", "finance_bot"]}
+
+
+class AIMaintenanceDevBot(BaseBot):
+    name = "maintenance_dev"
+
+    def __init__(self) -> None:
+        self._tasks: List[Dict[str, Any]] = []
+
+    def _enabled(self) -> bool:
+        return os.getenv("MAINT_DEV_ENABLED", "1") in ("1", "true", "True", "yes", "on")
+
+    def _now(self) -> str:
+        return datetime.now(timezone.utc).isoformat()
+
+    def _components(self) -> List[str]:
+        targets = os.getenv("MAINT_TARGETS", "api,db,ai,frontend")
+        return [t.strip() for t in targets.split(",") if t.strip()]
+
+    def _health_snapshot(self) -> Dict[str, Any]:
+        components = self._components()
+        checks = [{"component": name, "status": "ok"} for name in components]
+        summary = {name: "ok" for name in components}
+        return {
+            "components": checks,
+            "summary": summary,
+            "performance": {
+                "cpu_load": "normal",
+                "memory": "normal",
+                "latency_ms": 0,
+            },
+        }
+
+    def _normalize_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        due_at = str(task.get("due_at") or "")
+        return {
+            "title": str(task.get("title") or "Maintenance task"),
+            "component": str(task.get("component") or "api"),
+            "severity": str(task.get("severity") or "low"),
+            "status": str(task.get("status") or "scheduled"),
+            "due_at": due_at,
+            "created_at": self._now(),
+        }
+
+    def _task_stats(self) -> Dict[str, Any]:
+        overdue = 0
+        for task in self._tasks:
+            due_at = task.get("due_at") or ""
+            try:
+                if due_at:
+                    due_dt = datetime.fromisoformat(due_at)
+                    if due_dt.tzinfo is None:
+                        due_dt = due_dt.replace(tzinfo=timezone.utc)
+                    if due_dt < datetime.now(timezone.utc):
+                        overdue += 1
+            except Exception:
+                continue
+        return {
+            "total": len(self._tasks),
+            "overdue": overdue,
+            "critical": sum(1 for t in self._tasks if t.get("severity") == "critical"),
+        }
+
+    async def run(self, payload: dict) -> dict:
+        action = str((payload or {}).get("action") or "scan").lower()
+        params = (payload or {}).get("params") or {}
+        if action == "scan":
+            snapshot = self._health_snapshot()
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "scan",
+                "checklist": snapshot["components"],
+                "timestamp": self._now(),
+            }
+        if action == "health_check":
+            snapshot = self._health_snapshot()
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "health_check",
+                "timestamp": self._now(),
+                "summary": snapshot["summary"],
+                "components": snapshot["components"],
+                "performance": snapshot["performance"],
+            }
+        if action == "health_monitor":
+            snapshot = self._health_snapshot()
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "health_monitor",
+                "timestamp": self._now(),
+                "summary": snapshot["summary"],
+                "components": snapshot["components"],
+                "performance": snapshot["performance"],
+                "notes": ["Proactive monitoring is simulated in this environment."],
+            }
+        if action == "diagnostics":
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "diagnostics",
+                "timestamp": self._now(),
+                "result": {
+                    "checks": [
+                        {"name": "config_validation", "ok": True},
+                        {"name": "runtime_dependencies", "ok": True},
+                        {"name": "resource_thresholds", "ok": True},
+                    ],
+                    "findings": [],
+                    "note": "Diagnostics are simulated.",
+                },
+            }
+        if action == "log_analysis":
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "log_analysis",
+                "timestamp": self._now(),
+                "result": {
+                    "patterns": [],
+                    "note": "Log analysis is simulated; connect a log store to enable real analysis.",
+                },
+            }
+        if action == "register_task":
+            t = (payload or {}).get("task") or {}
+            normalized = self._normalize_task(t)
+            self._tasks.append(normalized)
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "register_task",
+                "task": normalized,
+                "stats": self._task_stats(),
+            }
+        if action == "list_tasks":
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "list_tasks",
+                "timestamp": self._now(),
+                "tasks": list(self._tasks),
+                "stats": self._task_stats(),
+            }
+        if action == "report":
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "report",
+                "timestamp": self._now(),
+                "summary": {
+                    "health": self._health_snapshot()["summary"],
+                    "tasks": self._task_stats(),
+                    "alerts": [],
+                },
+                "notes": ["Reporting is simulated; connect metrics for live analytics."],
+            }
+        if action == "auto_config":
+            env_checks = {
+                "ENV": bool(os.getenv("ENV")),
+                "INTERNAL_BASE_URL": bool(os.getenv("INTERNAL_BASE_URL")),
+                "ASYNC_DATABASE_URL": bool(os.getenv("ASYNC_DATABASE_URL")),
+            }
+            suggestions = []
+            if not env_checks["ASYNC_DATABASE_URL"]:
+                suggestions.append("Set ASYNC_DATABASE_URL for async database connectivity.")
+            if not env_checks["INTERNAL_BASE_URL"]:
+                suggestions.append("Set INTERNAL_BASE_URL to match the running API host.")
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "auto_config",
+                "timestamp": self._now(),
+                "environment": env_checks,
+                "suggestions": suggestions,
+            }
+        if action == "cto_review":
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "cto_review",
+                "timestamp": self._now(),
+                "focus": ["strategy", "scalability", "risk", "team_process"],
+                "recommendations": [
+                    "Stabilize observability and alerting for all core services.",
+                    "Plan incremental scaling with clear SLO targets.",
+                    "Reduce operational risk by formalizing runbooks.",
+                ],
+            }
+        if action == "dev_review":
+            return {
+                "ok": True,
+                "role": self.name,
+                "action": "dev_review",
+                "timestamp": self._now(),
+                "checks": ["code_quality", "security_hygiene", "performance_baseline", "ci_cd"],
+                "recommendations": [
+                    "Add targeted regression tests for critical flows.",
+                    "Review dependency vulnerabilities monthly.",
+                    "Track performance budgets in CI.",
+                ],
+            }
+        return {"ok": False, "role": self.name, "action": action, "reason": "unknown_action"}
+
+    async def status(self) -> dict:
+        enabled = self._enabled()
+        cron = os.getenv("MAINT_SCHEDULE_CRON", "0 3 * * *")
+        targets = self._components()
+        return {
+            "ok": True,
+            "role": self.name,
+            "mode": "online" if enabled else "offline",
+            "enabled": enabled,
+            "cron": cron,
+            "targets": targets,
+            "tasks": self._task_stats(),
+        }
+
+    async def config(self) -> dict:
+        return {
+            "actions": [
+                "scan",
+                "health_check",
+                "health_monitor",
+                "diagnostics",
+                "log_analysis",
+                "register_task",
+                "list_tasks",
+                "report",
+                "auto_config",
+                "cto_review",
+                "dev_review",
+            ],
+            "roles": ["maintenance_engineer", "virtual_cto", "senior_dev_engineer"],
+            "env": ["MAINT_DEV_ENABLED", "MAINT_SCHEDULE_CRON", "MAINT_TARGETS"],
+        }
+
+
+class SecurityBot(BaseBot):
+    name = "security"
+
+    async def run(self, payload: dict) -> dict:
+        action = str((payload or {}).get("action") or "scan").lower()
+        summary: Dict[str, Any] = {"counts": {}, "recent_events": []}
+        if _get_session is not None and BotAuditEvent is not None:
+            async with wrap_session_factory(_get_session) as session:
+                counts_q = await session.execute(
+                    _select(BotAuditEvent.event_type, _func.count())
+                    .where(BotAuditEvent.bot_name == "security")
+                    .group_by(BotAuditEvent.event_type)
+                )
+                summary["counts"] = {str(k): int(v) for (k, v) in counts_q.all()}
+                recent_q = await session.execute(
+                    _select(BotAuditEvent)
+                    .where(BotAuditEvent.bot_name == "security")
+                    .order_by(BotAuditEvent.created_at.desc())
+                    .limit(10)
+                )
+                summary["recent_events"] = [
+                    {"event_type": e.event_type, "payload": e.payload, "created_at": str(e.created_at)}
+                    for e in recent_q.scalars().all()
+                ]
+        return {"ok": True, "role": self.name, "action": action, "summary": summary}
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name, "mode": "online"}
+
+    async def config(self) -> dict:
+        return {"actions": ["scan", "report"], "requires_human_approval": True}
+
+
+class PartnerBot(BaseBot):
+    name = "partner"
+
+    async def run(self, payload: dict) -> dict:
+        action = str((payload or {}).get("action") or "report").lower()
+        summary: Dict[str, Any] = {"counts": {}, "recent_events": []}
+        if _get_session is not None and BotAuditEvent is not None:
+            async with wrap_session_factory(_get_session) as session:
+                counts_q = await session.execute(
+                    _select(BotAuditEvent.event_type, _func.count())
+                    .where(BotAuditEvent.bot_name == "partner")
+                    .group_by(BotAuditEvent.event_type)
+                )
+                summary["counts"] = {str(k): int(v) for (k, v) in counts_q.all()}
+                recent_q = await session.execute(
+                    _select(BotAuditEvent)
+                    .where(BotAuditEvent.bot_name == "partner")
+                    .order_by(BotAuditEvent.created_at.desc())
+                    .limit(10)
+                )
+                summary["recent_events"] = [
+                    {"event_type": e.event_type, "payload": e.payload, "created_at": str(e.created_at)}
+                    for e in recent_q.scalars().all()
+                ]
+        return {"ok": True, "role": self.name, "action": action, "summary": summary}
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name, "mode": "online"}
+
+    async def config(self) -> dict:
+        return {"actions": ["report", "onboarding_check"], "requires_human_approval": False}
+
+
+class SystemAdminBot(BaseBot):
+    name = "system_admin"
+
+    async def run(self, payload: dict) -> dict:
+        action = str((payload or {}).get("action") or "review").lower()
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": action,
+            "notes": ["Review pending approvals", "Verify role changes", "Check policy context health"],
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["review", "health_check", "approve_request"], "requires_human_approval": True}
+
+
+class CustomerServiceBot(BaseBot):
+    name = "customer_service"
+
+    async def run(self, payload: dict) -> dict:
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": "triage",
+            "summary": {
+                "sla_targets": ["respond_under_2h", "resolve_under_24h"],
+                "channels": ["email", "portal"],
+            },
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["triage", "draft_reply", "escalate"], "requires_human_approval": False}
+
+
+class SafetyBot(BaseBot):
+    name = "safety"
+
+    async def run(self, payload: dict) -> dict:
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": "monitor",
+            "alerts": [],
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["monitor", "incident_report"], "requires_human_approval": True}
+
+
+class SalesBot(BaseBot):
+    name = "sales"
+
+    async def run(self, payload: dict) -> dict:
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": "score_leads",
+            "recommendations": ["Follow up with high intent leads", "Offer demo slot"],
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["score_leads", "draft_outreach"], "requires_human_approval": False}
+
+
+class StrategyAdvisorBot(BaseBot):
+    name = "strategy_advisor"
+
+    async def run(self, payload: dict) -> dict:
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": "market_summary",
+            "insights": ["Focus on GCC contract carriers", "Expand partner onboarding funnel"],
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["market_summary", "risk_brief"], "requires_human_approval": False}
+
+
+class LegalConsultantBot(BaseBot):
+    name = "legal_consultant"
+
+    async def run(self, payload: dict) -> dict:
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": "compliance_check",
+            "notes": ["Verify contract templates", "Review regional regulations"],
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["compliance_check", "draft_clause"], "requires_human_approval": True}
+
+
+class InformationCoordinatorBot(BaseBot):
+    name = "information_coordinator"
+
+    async def run(self, payload: dict) -> dict:
+        return {
+            "ok": True,
+            "role": self.name,
+            "action": "signal_scan",
+            "signals": [],
+        }
+
+    async def status(self) -> dict:
+        return {"ok": True, "role": self.name}
+
+    async def config(self) -> dict:
+        return {"actions": ["signal_scan", "compose_digest"], "requires_human_approval": False}
+
+
+def register_core_bots() -> None:
+    ai_registry.register(GeneralManagerBot())
+    ai_registry.register(FreightBrokerBot())
+    try:
+        from backend.ai.roles.mapleload import MapleLoadBot  # type: ignore
+
+        ai_registry.register(MapleLoadBot())
+    except Exception as exc:
+        print(f"[startup] WARN: MapleLoadBot not available: {exc}")
+    ai_registry.register(OperationsManagerBot())
+    ai_registry.register(FinanceBot())
+    ai_registry.register(DocumentsManagerBot())
+    ai_registry.register(AIMaintenanceDevBot())
+    try:
+        from backend.ai.roles.security import SecurityBot as RoleSecurityBot  # type: ignore
+
+        ai_registry.register(RoleSecurityBot())
+        print("[startup] Registered: SecurityBot")
+    except Exception as exc:
+        print(f"[startup] WARN: SecurityBot not available: {exc}")
+    try:
+        from backend.ai.roles.partner import PartnerBot as RolePartnerBot  # type: ignore
+
+        ai_registry.register(RolePartnerBot())
+        print("[startup] Registered: PartnerBot")
+    except Exception as exc:
+        print(f"[startup] WARN: PartnerBot not available: {exc}")
+    try:
+        from backend.ai.roles.partner_manager import PartnerManagerBot  # type: ignore
+
+        ai_registry.register(PartnerManagerBot())
+        print("[startup] Registered: PartnerManagerBot")
+    except Exception as exc:
+        print(f"[startup] WARN: PartnerManagerBot not available: {exc}")
+    try:
+        from backend.ai.roles.system_admin import SystemAdminBot as RoleSystemAdminBot  # type: ignore
+
+        ai_registry.register(RoleSystemAdminBot())
+        print("[startup] Registered: SystemAdminBot")
+    except Exception as exc:
+        ai_registry.register(SystemAdminBot())
+        print(f"[startup] WARN: RoleSystemAdminBot not available: {exc}")
+    ai_registry.register(CustomerServiceBot())
+    ai_registry.register(SafetyBot())
+    ai_registry.register(SalesBot())
+    ai_registry.register(StrategyAdvisorBot())
+    ai_registry.register(LegalConsultantBot())
+    ai_registry.register(InformationCoordinatorBot())
+    
+    # New intelligence mode bots (Phase 2)
+    try:
+        from backend.bots.safe_manager import SafeManagerBot  # type: ignore
+        ai_registry.register(SafeManagerBot())
+        print("[startup] Registered: SafeManagerBot (Intelligence Mode)")
+    except Exception as exc:
+        print(f"[startup] WARN: SafeManagerBot not available: {exc}")
+    
+    try:
+        from backend.bots.sales_intelligence import SalesIntelligenceBot  # type: ignore
+        ai_registry.register(SalesIntelligenceBot())
+        print("[startup] Registered: SalesIntelligenceBot (Intelligence Mode)")
+    except Exception as exc:
+        print(f"[startup] WARN: SalesIntelligenceBot not available: {exc}")
+    
+    try:
+        from backend.bots.legal_counsel import LegalCounselBot  # type: ignore
+        ai_registry.register(LegalCounselBot())
+        print("[startup] Registered: LegalCounselBot (Intelligence Mode)")
+    except Exception as exc:
+        print(f"[startup] WARN: LegalCounselBot not available: {exc}")
+    
+    # Phase 3: Core Business & Infrastructure Bots
+    try:
+        from backend.bots.executive_intelligence import ExecutiveIntelligenceBot  # type: ignore
+        ai_registry.register(ExecutiveIntelligenceBot())
+        print("[startup] Registered: ExecutiveIntelligenceBot (GIT)")
+    except Exception as exc:
+        print(f"[startup] WARN: ExecutiveIntelligenceBot not available: {exc}")
+    
+    try:
+        from backend.bots.system_architect import SystemArchitectBot  # type: ignore
+        ai_registry.register(SystemArchitectBot())
+        print("[startup] Registered: SystemArchitectBot (SYS-ARCH)")
+    except Exception as exc:
+        print(f"[startup] WARN: SystemArchitectBot not available: {exc}")
+    
+    try:
+        from backend.bots.system_intelligence import SystemIntelligenceBot  # type: ignore
+        ai_registry.register(SystemIntelligenceBot())
+        print("[startup] Registered: SystemIntelligenceBot (SYS)")
+    except Exception as exc:
+        print(f"[startup] WARN: SystemIntelligenceBot not available: {exc}")
+    
+    try:
+        from backend.bots.freight_bookings import FreightBookingsBot  # type: ignore
+        ai_registry.register(FreightBookingsBot())
+        print("[startup] Registered: FreightBookingsBot (IT-Freight)")
+    except Exception as exc:
+        print(f"[startup] WARN: FreightBookingsBot not available: {exc}")
+    
+    try:
+        from backend.bots.finance_intelligence import FinanceIntelligenceBot  # type: ignore
+        ai_registry.register(FinanceIntelligenceBot())
+        print("[startup] Registered: FinanceIntelligenceBot (IT-Finance)")
+    except Exception as exc:
+        print(f"[startup] WARN: FinanceIntelligenceBot not available: {exc}")
+    
+    try:
+        from backend.bots.operations_management import OperationsManagementBot  # type: ignore
+        ai_registry.register(OperationsManagementBot())
+        print("[startup] Registered: OperationsManagementBot (GPG)")
+    except Exception as exc:
+        print(f"[startup] WARN: OperationsManagementBot not available: {exc}")
+    
+    try:
+        from backend.bots.security_bot import SecurityBot as SecurityIntelBot  # type: ignore
+        ai_registry.register(SecurityIntelBot())
+        print("[startup] Registered: SecurityBot (SEC)")
+    except Exception as exc:
+        print(f"[startup] WARN: SecurityBot not available: {exc}")
+    
+    try:
+        from backend.bots.mapleload_canada import MapleLoadCanadaBot  # type: ignore
+        ai_registry.register(MapleLoadCanadaBot())
+        print("[startup] Registered: MapleLoadCanadaBot (MDP)")
+    except Exception as exc:
+        print(f"[startup] WARN: MapleLoadCanadaBot not available: {exc}")
+    
+    try:
+        from backend.bots.partner_management import PartnerManagementBot as PartnerMgmtBot  # type: ignore
+        ai_registry.register(PartnerMgmtBot())
+        print("[startup] Registered: PartnerManagementBot (PART)")
+    except Exception as exc:
+        print(f"[startup] WARN: PartnerManagementBot not available: {exc}")
+
+
+# -----------------------------------------------------------------------------
+# AI Router
+# -----------------------------------------------------------------------------
+ai_router = APIRouter(prefix="/ai", tags=["AI"])
+
+
+def _policy_context(user: Dict[str, Any]) -> tuple[str, set[str]]:
+    if not isinstance(user, dict):
+        role = getattr(user, "effective_role", None) or getattr(user, "role", None) or "user"
+        features = getattr(user, "features", None) or []
+    else:
+        role = user.get("effective_role") or user.get("role") or "user"
+        features = user.get("features") or []
+
+    if isinstance(role, str):
+        role = role.lower()
+
+    if isinstance(features, str):
+        features_set = {features}
+    else:
+        features_set = set(features)
+
+    return role, features_set
+
+
+def _bot_display_name(bot_key: str, bot: AIBot) -> str:
+    return getattr(bot, "display_name", None) or getattr(bot, "name", None) or bot_key.replace("_", " ").title()
+
+# -----------------------------------------------------------------------------
+# Unified AI Bots Router (policy + registry)
+# -----------------------------------------------------------------------------
+bots_unified_router = APIRouter(prefix="/api/v1/ai/bots", tags=["AI"])
+
+
+def _raise_forbidden(decision: Dict[str, Any], bot_key: str) -> None:
+    details = {k: v for k, v in decision.items() if k != "allowed"}
+    error = details.pop("reason", "role_not_allowed")
+    raise ai_forbidden(error, bot_key, **details)
+
+
+def _ensure_can_see(bot_key: str, user: Dict[str, Any]) -> None:
+    role, features = _policy_context(user)
+    decision = bot_access_policy.can_see_bot(role, features, bot_key)
+    if not decision.get("allowed"):
+        _raise_forbidden(decision, bot_key)
+
+
+def _ensure_can_run(bot_key: str, user: Dict[str, Any]) -> None:
+    role, features = _policy_context(user)
+    decision = bot_access_policy.can_run_bot(role, features, bot_key)
+    if not decision.get("allowed"):
+        _raise_forbidden(decision, bot_key)
+
+
+@bots_unified_router.get("")
+@bots_unified_router.get("/")
+async def list_bots_unified(user: Dict[str, Any] = Depends(get_current_user)):
+    bots: List[Dict[str, Any]] = []
+    for bot_key in ai_registry.list().keys():
+        role, features = _policy_context(user)
+        decision = bot_access_policy.can_see_bot(role, features, bot_key)
+        if not decision.get("allowed"):
+            continue
+        bot = _get_bot_or_404(bot_key)
+        meta = bot_permissions.get_bot_capabilities(bot_key) or {}
+        bots.append(
+            {
+                "bot_key": bot_key,
+                "display_name": _bot_display_name(bot_key, bot),
+                "name": meta.get("name", _bot_display_name(bot_key, bot)),
+                "description": meta.get("description", ""),
+                "category": meta.get("category", ""),
+                "icon": meta.get("icon", ""),
+                "color": meta.get("color", ""),
+                "enabled": True,
+            }
+        )
+    bots_by_key = {bot["bot_key"]: bot for bot in bots}
+    return {"bots": bots, "bots_by_key": bots_by_key}
+
+
+@bots_unified_router.post("/{bot_key}/run")
+async def run_bot_unified(
+    bot_key: str,
+    payload: Optional[Dict[str, Any]] = Body(default=None),
+    user: Dict[str, Any] = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+):
+    _ensure_can_run(bot_key, user)
+    bot = _get_bot_or_404(bot_key)
+    return await bot.run(payload or {})
+
+
+@bots_unified_router.get("/{bot_key}/status")
+async def bot_status_unified(
+    bot_key: str,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    _ensure_can_see(bot_key, user)
+    bot = _get_bot_or_404(bot_key)
+    return await bot.status()
+
+
+@bots_unified_router.get("/{bot_key}/config")
+async def bot_config_unified(
+    bot_key: str,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    _ensure_can_see(bot_key, user)
+    bot = _get_bot_or_404(bot_key)
+    return await bot.config()
+
+# -----------------------------------------------------------------------------
+# System readiness (UI gate)
+# -----------------------------------------------------------------------------
+system_status_router = APIRouter(prefix="/api/v1/system", tags=["System"])
+system_public_router = APIRouter(prefix="/api/v1/system", tags=["System"])
+
+
+async def _check_tables(db: AsyncSession, tables: List[str]) -> Dict[str, Any]:
+    try:
+        from sqlalchemy import inspect
+
+        def _inspect_sync(session_or_conn):
+            try:
+                bind = session_or_conn.get_bind()
+            except Exception:
+                bind = session_or_conn
+            inspector = inspect(bind)
+            return set(inspector.get_table_names())
+
+        if hasattr(db, "run_sync"):
+            existing = await db.run_sync(_inspect_sync)  # type: ignore[call-arg]
+        else:
+            existing = _inspect_sync(db)
+        missing = sorted(set(tables) - existing)
+        return {"ok": len(missing) == 0, "missing": missing}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
+def _is_system_admin(user: Dict[str, Any]) -> bool:
+    role = str(user.get("effective_role") or user.get("role") or "").strip().lower()
+    return role in {"admin", "system_admin", "super_admin", "owner"}
+
+
+async def _compute_readiness(
+    db: Optional[AsyncSession],
+):
+    checks: Dict[str, Any] = {}
+
+    # DB check
+    if db is None:
+        checks["db"] = {"ok": False, "error": "DB session unavailable"}
+    else:
+        try:
+            from sqlalchemy import text
+
+            res = db.execute(text("SELECT 1"))
+            if asyncio.iscoroutine(res):
+                res = await res
+            checks["db"] = {"ok": res.scalar() == 1}
+        except Exception as exc:
+            checks["db"] = {"ok": False, "error": str(exc)}
+
+    # Bots check
+    try:
+        expected = set(bot_permissions.BOT_POLICIES.keys())
+        registered = set(ai_registry.list().keys())
+        missing = sorted(expected - registered)
+        checks["bots"] = {"ok": len(missing) == 0, "missing": missing}
+    except Exception as exc:
+        checks["bots"] = {"ok": False, "error": str(exc)}
+
+    # Email tables check
+    email_tables = [
+        "mailboxes",
+        "mailbox_credentials",
+        "email_threads",
+        "email_messages",
+        "email_attachments",
+        "email_audit_logs",
+        "mailbox_requests",
+    ]
+    if db is None:
+        checks["email"] = {"ok": False, "error": "DB session unavailable"}
+    else:
+        checks["email"] = await _check_tables(db, email_tables)
+
+    ok = all(bool(v.get("ok")) for v in checks.values())
+    return {"ok": ok, "checks": checks}
+
+
+@system_public_router.get("/readiness")
+async def system_readiness_public(
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+):
+    return await _compute_readiness(db)
+
+
+@system_status_router.get("/readiness/auth")
+async def system_readiness_auth(
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    return await _compute_readiness(db)
+
+
+@system_status_router.get("/health")
+async def system_health(
+    user: Dict[str, Any] = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+):
+    if not _is_system_admin(user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    readiness = await _compute_readiness(db)
+    return {"ok": readiness.get("ok"), "details": readiness.get("checks")}
+
+
+@system_status_router.get("/database/stats")
+async def database_stats(
+    user: Dict[str, Any] = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+):
+    if not _is_system_admin(user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    try:
+        from sqlalchemy import inspect
+
+        def _inspect(conn):
+            inspector = inspect(conn)
+            return inspector.get_table_names()
+
+        if db is None:
+            return {"status": "unavailable", "reason": "db session unavailable", "details": None}
+        tables = await asyncio.wait_for(db.run_sync(_inspect), timeout=2.0)
+        return {
+            "status": "ok",
+            "engine": str(db.get_bind().dialect.name),
+            "total_tables": len(tables),
+        }
+    except asyncio.TimeoutError:
+        return {"status": "unavailable", "reason": "db timeout", "details": None}
+    except Exception:
+        return {"status": "unavailable", "reason": "db error", "details": None}
+
+
+@system_status_router.get("/metrics")
+async def system_metrics(user: Dict[str, Any] = Depends(get_current_user)):
+    if not _is_system_admin(user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return {
+        "metrics": {
+            "env": ENVIRONMENT,
+            "bots_registered": len(ai_registry.list().keys()),
+        }
+    }
+
+
+@system_status_router.get("/bots/status")
+async def bots_status(
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    if not _is_system_admin(user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    bots: Dict[str, Any] = {}
+    for bot_key in ai_registry.list().keys():
+        try:
+            bot = ai_registry.get(bot_key)
+            if hasattr(bot, "status"):
+                bots[bot_key] = await bot.status()
+            else:
+                bots[bot_key] = {"status": "ok"}
+        except Exception as exc:
+            bots[bot_key] = {"status": "error", "error": str(exc)}
+    return {"bots": bots}
+
+# -----------------------------------------------------------------------------
+# Partner Agreement Router (simple reader for v1 markdown template)
+# NOTE: Signatures are stored in-memory for now.
+_PARTNER_AGREEMENT_SIGNATURES: Dict[str, Dict[str, Any]] = {}
+# -----------------------------------------------------------------------------
+agreement_router = APIRouter(prefix="/api/v1/partner", tags=["Partner Agreement"])
+
+
+@agreement_router.get("/agreement/current")
+async def get_current_partner_agreement():
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(backend_dir, "legal", "partner_agreement_v1.md"),
+        os.path.join(os.path.dirname(backend_dir), "backend", "legal", "partner_agreement_v1.md"),
+    ]
+
+    content = ""
+    for path in candidates:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            break
+
+    if not content:
+        raise HTTPException(status_code=500, detail="Partner agreement template not found on server")
+
+    return {"version": "v1.0", "slug": "partner-agreement-v1", "format": "markdown", "body": content}
+
+
+@agreement_router.post("/agreement/sign")
+async def sign_partner_agreement(
+    payload: Dict[str, Any] = Body(default_factory=dict),
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    role = (user.get("effective_role") or user.get("role") or "").strip().lower()
+    admin_roles = {"admin", "system_admin", "super_admin", "owner"}
+
+    agreement_version = payload.get("agreementVersion") or payload.get("agreement_version")
+    signature_name = (payload.get("signatureName") or payload.get("signature_name") or "").strip()
+
+    if not agreement_version:
+        raise HTTPException(status_code=400, detail="Missing agreementVersion")
+    if not signature_name:
+        raise HTTPException(status_code=400, detail="Missing signatureName")
+
+    if role == "partner":
+        if not payload.get("checkboxRevenue"):
+            raise HTTPException(status_code=400, detail="Missing checkboxRevenue")
+        if not payload.get("checkboxConfidentiality"):
+            raise HTTPException(status_code=400, detail="Missing checkboxConfidentiality")
+        if not payload.get("checkboxMisuse"):
+            raise HTTPException(status_code=400, detail="Missing checkboxMisuse")
+
+    if role not in admin_roles and role != "partner":
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    record = _PARTNER_AGREEMENT_SIGNATURES.setdefault(
+        agreement_version,
+        {"version": agreement_version, "partner_signature": None, "admin_signature": None},
+    )
+    signature = {
+        "name": signature_name,
+        "user_id": user.get("id"),
+        "email": user.get("email"),
+        "role": role,
+        "signed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    if role in admin_roles:
+        record["admin_signature"] = signature
+    else:
+        record["partner_signature"] = signature
+
+    activated = bool(record.get("partner_signature") and record.get("admin_signature"))
+
+    return {
+        "ok": True,
+        "activated": activated,
+        "agreementVersion": agreement_version,
+        "signatures": {
+            "partner": record.get("partner_signature"),
+            "admin": record.get("admin_signature"),
+        },
+    }
+
+
+@ai_router.get("/bots")
+async def list_bots(
+    request: Request,
+    user: Dict[str, Any] = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+):
+    bots: List[Dict[str, Any]] = []
+    role, features = _policy_context(user)
+    for bot_key in ai_registry.list().keys():
+        decision = bot_access_policy.can_see_bot(role, features, bot_key)
+        if not decision.get("allowed"):
+            continue
+        bot = _get_bot_or_404(bot_key)
+        bots.append({"bot_key": bot_key, "display_name": _bot_display_name(bot_key, bot), "enabled": True})
+    bots_by_key = {bot["bot_key"]: bot for bot in bots}
+    return {"bots": bots, "bots_by_key": bots_by_key}
+
+
+@ai_router.get("/bots/capabilities")
+async def list_bot_capabilities(
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    visible: Dict[str, Any] = {}
+    role, features = _policy_context(user)
+    for bot_key, meta in bot_permissions.BOT_CAPABILITIES.items():
+        decision = bot_access_policy.can_see_bot(role, features, bot_key)
+        if decision.get("allowed"):
+            visible[bot_key] = meta
+    return {"bots": visible}
+
+
+@ai_router.get("/bots/capabilities/{bot_key}")
+async def get_bot_capabilities(
+    bot_key: str,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    meta = bot_permissions.BOT_CAPABILITIES.get(bot_key)
+    if meta is None:
+        raise HTTPException(status_code=404, detail="Bot capabilities not found")
+    role, features = _policy_context(user)
+    decision = bot_access_policy.can_see_bot(role, features, bot_key)
+    if not decision.get("allowed"):
+        details = {k: v for k, v in decision.items() if k != "allowed"}
+        error = details.pop("reason", "role_not_allowed")
+        raise ai_forbidden(error, bot_key, **details)
+    return {"bot_key": bot_key, "capabilities": meta}
+
+
+def _get_bot_or_404(name: str) -> AIBot:
+    try:
+        return ai_registry.get(name)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Bot '{name}' not found")
+
+
+@ai_router.post("/{name}/run")
+async def run_bot(
+    name: str,
+    payload: dict,
+    request: Request,
+    response: Response,
+    user: Dict[str, Any] = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(_get_optional_db),
+):
+    _record_deprecated_ai_call("run", name)
+    response.headers["X-Deprecated-Route"] = "true"
+    response.headers["X-Use-Instead"] = f"/api/v1/ai/bots/{name}/run"
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = DEPRECATION_SUNSET
+    return await run_bot_unified(bot_key=name, payload=payload, user=user, db=db)
+
+
+@ai_router.get("/{name}/status")
+async def bot_status(
+    name: str,
+    response: Response,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    _record_deprecated_ai_call("status", name)
+    response.headers["X-Deprecated-Route"] = "true"
+    response.headers["X-Use-Instead"] = f"/api/v1/ai/bots/{name}/status"
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = DEPRECATION_SUNSET
+    return await bot_status_unified(bot_key=name, user=user)
+
+
+@ai_router.get("/{name}/config")
+async def bot_config(
+    name: str,
+    response: Response,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    _record_deprecated_ai_call("config", name)
+    response.headers["X-Deprecated-Route"] = "true"
+    response.headers["X-Use-Instead"] = f"/api/v1/ai/bots/{name}/config"
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = DEPRECATION_SUNSET
+    return await bot_config_unified(bot_key=name, user=user)
+
+
+# ---------------------------------------------------------------------------
+# AI Policy API (read-only)
+# ---------------------------------------------------------------------------
+@app.get("/api/v1/ai/bots/available")
+async def api_ai_available_bots(current_user: Dict[str, Any] = Depends(get_current_user)):
+    role, features = _policy_context(current_user)
+    return {"success": True, "data": bot_access_policy.list_available_bots(role, features)}
+
+
+@app.get("/api/v1/ai/bots/{bot_key}/check-access")
+async def api_ai_check_access(
+    bot_key: str,
+    action: str = "run",
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    role, features = _policy_context(current_user)
+    if action == "see":
+        data = bot_access_policy.can_see_bot(role, features, bot_key)
+    else:
+        data = bot_access_policy.can_run_bot(role, features, bot_key, action=action)
+    return {"success": bool(data.get("allowed")), "data": data}
+
+
+@app.get("/api/v1/ai/reporting/flows")
+async def api_ai_reporting_flows(current_user: Dict[str, Any] = Depends(get_current_user)):
+    role, features = _policy_context(current_user)
+    return {"success": True, "data": bot_access_policy.get_report_flows_for_user(role, features)}
+
+
+# -----------------------------------------------------------------------------
+# AI General Manager HTTP Endpoint (for frontend dashboard)
+# -----------------------------------------------------------------------------
+@app.get("/ai/general-manager/report", tags=["AI General Manager"], include_in_schema=False)
+async def get_general_manager_report():
+    if IS_PRODUCTION:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    return {
+        "title": "AI General Manager â€“ Backend Report",
+        "backend": {
+            "status": "healthy",
+            "details": [
+                "Backend /healthz returns ok: true.",
+                "Finance and Documents services are loaded and responding.",
+                "Auth /auth/dev-token is issuing valid JWT tokens (role=admin).",
+            ],
+        },
+        "frontend": {
+            "status": "partially_connected",
+            "details": [
+                "Vite frontend is running on http://localhost:5175.",
+                "Some API calls may still be pointing to port 5175 instead of backend 8000.",
+                "WebSocket and Shipments endpoints should use VITE_API_BASE_URL / VITE_WS_BASE_URL.",
+            ],
+        },
+        "ai_bots": {
+            "status": "registered",
+            "details": [
+                "AI core bots registered on startup (general_manager, freight_broker, operations_manager, finance_bot, documents_manager, maintenance_dev).",
+                "This endpoint is currently returning a static summary (no real AI pipeline wired yet).",
+            ],
+        },
+        "next_actions": [
+            "Refine frontend API URLs to all use VITE_API_BASE_URL / VITE_WS_BASE_URL.",
+            "Wire this endpoint to the actual GeneralManagerBot for dynamic analysis.",
+            "Gradually phase out the demo fallback in the frontend once this is stable.",
+        ],
+    }
+
+
+# -----------------------------------------------------------------------------
+# Background loops (ops + docs scheduler)
+# -----------------------------------------------------------------------------
+_ops_task: Optional[asyncio.Task] = None
+_docs_task: Optional[asyncio.Task] = None
+_email_poll_task: Optional[asyncio.Task] = None
+
+
+async def _ops_monitor_loop():
+    await vizion_log_event("ops_monitor_started", "Ops monitor loop started", enabled=OPS_MONITOR_ENABLED)
+    while True:
+        try:
+            payload = {"max_loads": 5, "source": "mock"}
+            res = await ai_registry.get("operations_manager").run(payload)
+            await vizion_log_event("ops_monitor_tick", "Ops run completed", created=res.get("loads_taken", 0))
+        except Exception as e:
+            await vizion_log_event("ops_monitor_error", f"loop error: {e}")
+        await asyncio.sleep(OPS_MONITOR_INTERVAL_SEC)
+
+
+async def _docs_scheduler_loop():
+    import httpx
+
+    while True:
+        try:
+            if not INTERNAL_CRON_KEY:
+                await vizion_log_event("docs_scheduler_warn", "missing INTERNAL_CRON_KEY; skipping notify-expiring")
+                await asyncio.sleep(DOCS_SCHEDULER_INTERVAL_SEC)
+                continue
+            headers = {"X-INTERNAL-KEY": INTERNAL_CRON_KEY}
+            url = f"{INTERNAL_BASE_URL}/documents/notify-expiring/internal"
+            async with httpx.AsyncClient(timeout=30) as client:
+                await client.post(url, headers=headers)
+            await vizion_log_event("docs_scheduler", "notified expiring documents", endpoint=url)
+        except Exception as e:
+            await vizion_log_event("docs_scheduler_error", f"loop error: {e}")
+        await asyncio.sleep(DOCS_SCHEDULER_INTERVAL_SEC)
+
+
+# -----------------------------------------------------------------------------
+# STARTUP / SHUTDOWN
+# -----------------------------------------------------------------------------
+async def _warn_missing_auth_tables() -> None:
+    if IS_PRODUCTION:
+        return
+
+    expected = {"sessions", "refresh_tokens"}
+    try:
+        session_factory = _async_session_ctx or get_async_session
+        if session_factory is None:
+            print("[startup] WARN: DB session helper missing; auth table check skipped.")
+            return
+        async with wrap_session_factory(session_factory) as session:
+            res = await session.execute(
+                text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+            )
+            found = {row[0] for row in res.fetchall() if row and row[0]}
+            missing = sorted(expected - found)
+            if missing:
+                print(f"[startup] WARN: auth tables missing: {missing}. Run Alembic upgrade.")
+    except Exception as exc:
+        print(f"[startup] WARN: auth table check failed: {exc}")
+
+
+@app.on_event("startup")
+async def on_startup():
+    global _vdb, _ops_task, _docs_task, _email_poll_task
+
+    _normalize_db_env()
+    db_url = _resolve_db_url()
+    if db_url:
+        os.environ["ASYNC_DATABASE_URL"] = db_url
+
+    # SECURITY: never print raw DSN (it may include credentials)
+    print(f"[startup] ASYNC_DATABASE_URL -> {_mask_dsn(os.getenv('ASYNC_DATABASE_URL'))}")
+
+    try:
+        if _init_unified_engines is not None:
+            _init_unified_engines()
+            print("[startup] unified DB engines initialized")
+        else:
+            print("[startup] unified DB engines not available (config.py not updated yet)")
+    except Exception as e:
+        print(f"[startup] WARN: init_engines failed: {e}")
+
+    await _warn_missing_auth_tables()
+
+    provider = _try_import_vizion_db()
+    if provider is not None:
+        prov = provider
+        try:
+            if hasattr(prov, "connect") and callable(getattr(prov, "connect")):
+                maybe_conn = prov.connect()
+                conn = await maybe_conn if asyncio.iscoroutine(maybe_conn) else maybe_conn
+                try:
+                    setattr(prov, "db", conn)
+                except Exception:
+                    pass
+                _vdb = prov
+                app.state.vdb = prov
+                await vizion_log_event("vizion_eye", "connected", enabled=True, provider="vizion_eye.module")
+            elif hasattr(prov, "db"):
+                _vdb = prov
+                app.state.vdb = prov
+                await vizion_log_event("vizion_eye", "connected (shim)", enabled=True, provider="vizion_eye.shim")
+        except Exception as e:
+            print(f"[startup] WARN: provider.connect() failed: {e}")
+
+    register_core_bots()
+    print("[startup] AI core bots registered:", ai_registry.list())
+    try:
+        registry_bots = set(ai_registry.list().keys())
+        policy_bots = set(bot_permissions.BOT_POLICIES.keys())
+        missing_in_registry = sorted(policy_bots - registry_bots)
+        missing_in_policy = sorted(registry_bots - policy_bots)
+        if missing_in_registry:
+            logger.warning("[bots] In policy but NOT registered: %s", missing_in_registry)
+        if missing_in_policy:
+            logger.warning("[bots] Registered but NOT in policy: %s", missing_in_policy)
+    except Exception as e:
+        logger.debug("[bots] registry/policy check skipped: %s", e)
+
+    session_factory = _async_session_ctx or _get_async_session
+    if ensure_bot_identities is not None and session_factory is not None:
+        try:
+            async with wrap_session_factory(session_factory) as session:
+                await ensure_bot_identities(session)
+            print("[startup] bot identities ensured")
+        except Exception as e:
+            print(f"[startup] WARN: ensure_bot_identities failed: {e}")
+
+    try:
+        from backend.bots import init_bot_os  # type: ignore
+
+        if session_factory is not None:
+            bot_os = init_bot_os(
+                bot_names_provider=lambda: list(ai_registry.list().keys()),
+                bot_getter=ai_registry.get,
+                session_factory=session_factory,
+            )
+            await bot_os.start()
+            app.state.bot_os = bot_os
+            print("[startup] bot_os started")
+    except Exception as e:
+        print(f"[startup] WARN: bot_os init failed: {e}")
+
+    # TODO: email mailbox provisioning disabled for now (fixing startup hang)
+    # if ensure_system_mailboxes is not None and session_factory is not None:
+    #     try:
+    #         async with wrap_session_factory(session_factory) as session:
+    #             summary = await ensure_system_mailboxes(session)
+    #         print(f"[startup] email mailboxes provisioned: {summary}")
+    #     except Exception as e:
+    #         print(f"[startup] WARN: email mailbox provisioning failed: {e}")
+
+    if start_ai_report_scheduler is not None:
+        try:
+            start_ai_report_scheduler()
+            print("[startup] AI report scheduler started")
+        except Exception as e:
+            print(f"[startup] WARN: AI report scheduler failed to start: {e}")
+
+    if start_load_board_scheduler is not None:
+        try:
+            start_load_board_scheduler()
+            print("[startup] load board scheduler started")
+        except Exception as e:
+            print(f"[startup] WARN: load board scheduler failed to start: {e}")
+
+    if OPS_MONITOR_ENABLED:
+        _ops_task = asyncio.create_task(_ops_monitor_loop())
+    if not DOCS_SCHEDULER_DISABLED or True:  # DISABLED: causing startup hang
+        pass
+        # _docs_task = asyncio.create_task(_docs_scheduler_loop())
+    # if email_polling_loop is not None:
+    #     autostart = (os.getenv("EMAIL_POLL_AUTOSTART", "1") or "").strip().lower() not in {
+    #         "0",
+    #         "false",
+    #         "no",
+    #         "off",
+    #     }
+    #     if autostart:
+    #         _email_poll_task = asyncio.create_task(email_polling_loop())
+    #         print("[startup] email poller started")
+
+    # try:
+    #     init_sources()
+    #     print("[startup] external sources initialized")
+    # except Exception as exc:
+    #     print(f"[startup] WARN: external sources init failed: {exc}")
+    # start_scheduler()  # DISABLED: causing startup hang by calling init_sources()
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    global _ops_task, _docs_task, _email_poll_task
+    try:
+        from backend.bots import get_bot_os  # type: ignore
+
+        bot_os = get_bot_os()
+        await bot_os.shutdown()
+    except Exception:
+        pass
+    if _ops_task:
+        _ops_task.cancel()
+        try:
+            await _ops_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+    if _docs_task:
+        _docs_task.cancel()
+        try:
+            await _docs_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+    if _email_poll_task:
+        _email_poll_task.cancel()
+        try:
+            await _email_poll_task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+    stop_scheduler()
+
+
+# -----------------------------------------------------------------------------
+# ROUTERS (Unified RBAC)
+# -----------------------------------------------------------------------------
+if auth_router:
+    app.include_router(auth_router)
+    print("[main] security.auth router mounted")
+else:
+    print("[main] WARN: security.auth router not available")
+
+if auth_extended_router:
+    app.include_router(auth_extended_router)
+    print("[main] auth_extended router mounted")
+
+# Public Signup Router (Multi-tenant registration)
+try:
+    from backend.routes.public_signup import router as public_signup_router
+    app.include_router(public_signup_router)
+    print("[main] public_signup router mounted at /api/v1/signup")
+except Exception as e:
+    print(f"[main] WARN: public_signup router not available: {e}")
+
+# Unified System Routers (System Switcher + Admin Dashboard + TMS Requests)
+if system_switcher_router:
+    app.include_router(system_switcher_router)
+    print("[main] system_switcher router mounted at /api/v1/systems")
+else:
+    print("[main] WARN: system_switcher router not available")
+
+if admin_unified_router:
+    app.include_router(admin_unified_router, dependencies=[RBAC_ADMIN])
+    print("[main] admin_unified router mounted at /api/v1/admin (admin-only)")
+else:
+    print("[main] WARN: admin_unified router not available")
+
+# TMS Registration Requests (Admin Panel)
+tms_requests_router = _try_import_router("backend.routes.tms_requests_admin", "routes.tms_requests_admin")
+if tms_requests_router:
+    app.include_router(tms_requests_router)
+    print("[main] tms_requests_admin router mounted at /api/v1/admin/tms-requests")
+else:
+    print("[main] WARN: tms_requests_admin router not available")
+
+if DEV_MODE:
+    app.include_router(dev_auth_router)
+
+# WebSocket (live monitor)
+if ws_router:
+    app.include_router(ws_router, prefix="/api/v1/ws", tags=["WebSocket"])
+    print("[main] ws_routes mounted at /api/v1/ws")
+else:
+    print("[main] WARN: ws_routes not available")
+
+# Public-ish / infra
+if vizion_router:
+    app.include_router(vizion_router, prefix="/vizion", tags=["VIZION"])
+if health_router:
+    app.include_router(health_router, tags=["Health"])
+    if shipments_router:
+        app.include_router(shipments_router)
+
+    @app.api_route(
+        "/api/v1/shipments/shipments/{rest:path}",
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        include_in_schema=False,
+    )
+    async def _shim_v1_double(rest: str, request: Request):
+        target = request.url.path.replace("/api/v1/shipments/shipments", "/api/v1/shipments", 1)
+        qs = request.url.query
+        return RedirectResponse(url=target + (("?" + qs) if qs else ""), status_code=307)
+
+    @app.api_route(
+        "/shipments/shipments/{rest:path}",
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        include_in_schema=False,
+    )
+    async def _shim_double(rest: str, request: Request):
+        target = request.url.path.replace("/shipments/shipments", "/shipments", 1)
+        qs = request.url.query
+        return RedirectResponse(url=target + (("?" + qs) if qs else ""), status_code=307)
+
+if shipments_import_router:
+    app.include_router(shipments_import_router)
+
+if dispatch_router:
+    app.include_router(dispatch_router)
+
+if driver_router:
+    app.include_router(driver_router)
+
+if tenant_admin_router:
+    app.include_router(tenant_admin_router)
+
+# Support System Router
+if support_router:
+    app.include_router(support_router, prefix="/api/v1/support", tags=["Support"])
+    print("[main] support_routes mounted at /api/v1/support")
+else:
+    print("[main] WARN: support_routes not available")
+
+if email_center_router:
+    app.include_router(email_center_router)
+if monitoring_router:
+    app.include_router(monitoring_router)
+
+# Reports: manager+
+if reports_router:
+    app.include_router(reports_router, dependencies=[RBAC_MANAGER])
+if ai_reports_router:
+    app.include_router(ai_reports_router, dependencies=[RBAC_MANAGER])
+if weekly_reports_router:
+    app.include_router(weekly_reports_router, dependencies=[RBAC_MANAGER])
+if ai_general_router:
+    app.include_router(ai_general_router, dependencies=[RBAC_AUTHENTICATED])
+
+# Social Media Management: admin-only routes
+if social_media_admin_router:
+    app.include_router(social_media_admin_router, prefix="/api/v1/admin/social-media", dependencies=[RBAC_ADMIN], tags=["Social Media Admin"])
+    print("[main] social_media_admin router mounted at /api/v1/admin/social-media (admin-only)")
+else:
+    print("[main] WARN: social_media_admin router not available")
+
+# Social Media Management: public routes (open access)
+if social_media_public_router:
+    app.include_router(social_media_public_router, prefix="/api/v1/social-media", tags=["Social Media Public"])
+    print("[main] social_media_public router mounted at /api/v1/social-media")
+else:
+    print("[main] WARN: social_media_public router not available")
+
+# Loadboards/Truckerpath (leave as-is now; can be gated later by region flags)
+if loadboards_router:
+    app.include_router(loadboards_router, dependencies=[RBAC_AUTHENTICATED])
+if truckerpath_router:
+    app.include_router(truckerpath_router, dependencies=[RBAC_AUTHENTICATED])
+if tp_webhook_router:
+    app.include_router(tp_webhook_router)
+if webhook_router:
+    app.include_router(webhook_router)
+
+# Quo (OpenPhone) integration routers
+if quo_webhook_router:
+    # mounted under /api/v1/webhooks/quo/*
+    app.include_router(quo_webhook_router, prefix="/api/v1/webhooks/quo", tags=["Quo Webhooks"])
+    print("[main] quo_webhooks mounted at /api/v1/webhooks/quo")
+if ai_calls_router:
+    # mounted under /api/v1/ai-calls/* and restricted to admin/system roles
+    app.include_router(
+        ai_calls_router,
+        prefix="/api/v1/ai-calls",
+        tags=["AI Calls"],
+        dependencies=[RBAC_ADMIN],
+    )
+    print("[main] ai_calls_api mounted at /api/v1/ai-calls (admin-only)")
+
+# TMS (Transport Management System) routes (manager+)
+if tms_router:
+    app.include_router(
+        tms_router,
+        prefix="/api/v1/tms",
+        tags=["TMS"],
+        dependencies=[RBAC_MANAGER],
+    )
+    print("[main] tms_api mounted at /api/v1/tms (manager+) ")
+
+# Governance API
+if governance_router:
+    app.include_router(governance_router, dependencies=[RBAC_ADMIN])
+
+# Users: authenticated
+if users_router:
+    app.include_router(users_router, dependencies=[RBAC_AUTHENTICATED])
+    print("[main] users_routes mounted")
+else:
+    print("[main] WARN: users_routes not available")
+
+# Documents: manager+
+if documents_router:
+    app.include_router(documents_router, dependencies=[RBAC_MANAGER])
+    if documents_ai_router:
+        app.include_router(documents_ai_router, dependencies=[RBAC_MANAGER])
+else:
+    print("[main] WARN: documents_routes not available")
+
+if documents_internal_router:
+    app.include_router(documents_internal_router)
+
+# Documents Upload: authenticated users
+if documents_upload_router:
+    app.include_router(documents_upload_router)
+    print("[main] documents_upload_routes mounted")
+else:
+    print("[main] WARN: documents_upload_routes not available")
+
+# AI Gateway (if any): authenticated
+if ai_gateway_router:
+    app.include_router(ai_gateway_router, dependencies=[Depends(get_current_user)])
+
+# Finance: admin+ (this is the key RBAC correction)
+if finance_router:
+    app.include_router(finance_router, dependencies=[RBAC_ADMIN])
+    print("[main] finance_routes mounted")
+else:
+    print("[main] WARN: finance_routes not available")
+
+# Platform Infrastructure Expenses: admin+
+if platform_infra_router:
+    app.include_router(platform_infra_router, dependencies=[RBAC_ADMIN])
+    print("[main] platform_infrastructure_routes mounted")
+else:
+    print("[main] WARN: platform_infrastructure_routes not available")
+
+if finance_reports:
+    app.include_router(finance_reports, dependencies=[RBAC_ADMIN])
+    print("[main] finance_reports mounted")
+else:
+    print("[main] WARN: finance_reports not available (disabled or import failed)")
+
+if finance_ai_router:
+    app.include_router(finance_ai_router, dependencies=[RBAC_ADMIN])
+    print("[main] finance_ai_routes mounted")
+else:
+    print("[main] WARN: finance_ai_routes not available")
+
+# Partners
+if partners_admin_router:
+    app.include_router(partners_admin_router, dependencies=[RBAC_ADMIN])
+    print("[main] partners admin routes mounted")
+else:
+    print("[main] WARN: partners admin routes not available")
+
+if partners_router:
+    app.include_router(partners_router, dependencies=[RBAC_PARTNER])
+    print("[main] partners routes mounted")
+else:
+    print("[main] WARN: partners routes not available")
+
+# Open web leads (disabled)
+if open_web_leads_router:
+    app.include_router(open_web_leads_router, dependencies=[RBAC_AUTHENTICATED])
+    print("[main] open_web_leads router mounted")
+else:
+    print("[main] INFO: open_web_leads router is currently DISABLED")
+
+# Portal access requests (public)
+if portal_requests_router:
+    app.include_router(portal_requests_router)
+    print("[main] portal_requests mounted")
+else:
+    print("[main] WARN: portal_requests not available")
+    try:
+        from fastapi import Form, File, UploadFile, Depends, Request, HTTPException  # type: ignore
+        from sqlalchemy.ext.asyncio import AsyncSession  # type: ignore
+        from backend.database.config import get_db_async  # type: ignore
+        from backend.crud.portal_access_requests import create_portal_request  # type: ignore
+        from backend.services.portal_requests_store import check_duplicate_email  # type: ignore
+        from backend.utils.email_utils import send_email  # type: ignore
+        from backend.config import settings  # type: ignore
+
+        @app.post("/portal/requests", tags=["portal"])
+        async def portal_requests_fallback(
+            request: Request,
+            full_name: str = Form(...),
+            company: str = Form(...),
+            email: str = Form(...),
+            mobile: str = Form(...),
+            comment: Optional[str] = Form(None),
+            country: str = Form(...),
+            user_type: str = Form(...),
+            us_state: Optional[str] = Form(None),
+            dot_number: Optional[str] = Form(None),
+            mc_number: Optional[str] = Form(None),
+            us_business_address: Optional[str] = Form(None),
+            ca_province: Optional[str] = Form(None),
+            ca_registered_address: Optional[str] = Form(None),
+            ca_company_number: Optional[str] = Form(None),
+            document: UploadFile | None = File(None),
+            db: AsyncSession = Depends(get_db_async),
+        ):
+            email_clean = (email or "").strip()
+            if not email_clean:
+                raise HTTPException(status_code=400, detail="Email is required")
+            if await check_duplicate_email(email_clean, session=db):
+                raise HTTPException(
+                    status_code=400,
+                    detail="This email was already submitted. If you need changes, contact support.",
+                )
+
+            document_name: Optional[str] = document.filename if document else None
+
+            portal_request = await create_portal_request(
+                db=db,
+                full_name=full_name,
+                company=company,
+                email=email_clean,
+                mobile=mobile,
+                comment=comment,
+                country=country,
+                user_type=user_type,
+                us_state=us_state,
+                dot_number=dot_number,
+                mc_number=mc_number,
+                us_business_address=us_business_address,
+                ca_province=ca_province,
+                ca_registered_address=ca_registered_address,
+                ca_company_number=ca_company_number,
+                document_name=document_name,
+            )
+
+            subject = f"[GTS Portal] New access request from {full_name}"
+            body_lines = [
+                "A new enterprise access request has been submitted.",
+                "",
+                f"ID: {portal_request.id}",
+                f"Name: {full_name}",
+                f"Company: {company}",
+                f"Email: {email_clean}",
+                f"Mobile: {mobile}",
+                f"Country: {country}",
+                f"User type: {user_type}",
+                f"Document: {document_name or '-'}",
+                "",
+                "Comment:",
+                comment or "-",
+            ]
+            body = "\n".join(body_lines)
+
+            send_email(subject=subject, body=body, to=[getattr(settings, "ADMIN_EMAIL", "")])
+
+            return {"id": portal_request.id, "status": portal_request.status}
+    except Exception as exc:
+        print(f"[main] WARN: portal_requests fallback not available: {exc}")
+
+# Admin portal: admin+ (RBAC correction)
+if admin_portal_router:
+    app.include_router(admin_portal_router, dependencies=[RBAC_ADMIN])
+
+if admin_platform_settings_router:
+    app.include_router(admin_platform_settings_router, dependencies=[RBAC_ADMIN])
+
+if admin_tms_access_router:
+    app.include_router(admin_tms_access_router, dependencies=[RBAC_ADMIN])
+
+if admin_users_router:
+    app.include_router(admin_users_router, dependencies=[RBAC_ADMIN])
+    print("[main] admin_portal_routes mounted")
+else:
+    print("[main] WARN: admin_users_routes not available; installing fallback /admin/users")
+    try:
+        from sqlalchemy import select as _select  # type: ignore
+        from backend.models.user import User as _User  # type: ignore
+
+        @app.get("/admin/users", include_in_schema=False)
+        @app.get("/admin/users/", include_in_schema=False)
+        async def _list_users_fallback(
+            db: AsyncSession = Depends(get_db_async),
+            admin: dict = Depends(require_roles(["admin"])),
+        ):
+            result = await db.execute(_select(_User).order_by(_User.id))
+            users = result.scalars().all()
+            return [
+                {
+                    "id": u.id,
+                    "email": u.email,
+                    "full_name": u.full_name,
+                    "username": u.username,
+                    "company": u.company,
+                    "country": u.country,
+                    "user_type": u.user_type,
+                    "phone_number": u.phone_number,
+                    "role": u.role,
+                    "is_active": u.is_active,
+                }
+                for u in users
+            ]
+    except Exception as exc:
+        print(f"[main] WARN: admin users fallback not available: {exc}")
+
+if admin_control_router:
+    app.include_router(admin_control_router)
+    print("[main] admin_control_routes mounted")
+else:
+    print("[main] WARN: admin_control_routes not available")
+
+# System routes (admin only)
+if legacy_system_router:
+    app.include_router(
+        legacy_system_router,
+        dependencies=[Depends(get_current_user)],
+        include_in_schema=False,
+        deprecated=True,
+    )
+    print("[main] system_routes mounted (authenticated)")
+else:
+    print("[main] WARN: system_routes not available")
+
+if system_public_router:
+    app.include_router(system_public_router)
+    print("[main] system_public_routes mounted")
+
+if system_status_router:
+    app.include_router(system_status_router, dependencies=[Depends(get_current_user)])
+    print("[main] system_status_routes mounted (authenticated)")
+else:
+    print("[main] WARN: system_status_routes not available")
+
+# Bot OS routes: authenticated
+if bot_os_router:
+    app.include_router(bot_os_router, dependencies=[Depends(get_current_user)])
+    print("[main] bot_os routes mounted")
+else:
+    print("[main] WARN: bot_os routes not available")
+
+# Safety Management routes: authenticated
+if safety_router:
+    app.include_router(safety_router, dependencies=[Depends(get_current_user)])
+    print("[main] safety routes mounted")
+else:
+    print("[main] WARN: safety routes not available")
+
+# Frontend compatibility: authenticated
+if frontend_compat_router:
+    app.include_router(frontend_compat_router, dependencies=[RBAC_AUTHENTICATED])
+    print("[main] frontend_compat_routes mounted")
+else:
+    print("[main] WARN: frontend_compat_routes not available")
+
+# AI generic routes: authenticated (policy enforced per endpoint)
+if ai_bots_router:
+    app.include_router(ai_bots_router, dependencies=[Depends(get_current_user)])
+if executive_intelligence_router:
+    app.include_router(executive_intelligence_router)  # Auth on individual endpoints
+    print("[main] Executive Intelligence Bot router mounted")
+if system_architect_router:
+    app.include_router(system_architect_router)  # Auth on individual endpoints
+    print("[main] System Architect Bot router mounted")
+if mapleload_canada_router:
+    app.include_router(mapleload_canada_router)  # Auth on individual endpoints
+    print("[main] MapleLoad Canada Bot router mounted")
+if bot_capabilities_router:
+    app.include_router(bot_capabilities_router, prefix="/api/v1")
+if ops_llm_router:
+    app.include_router(ops_llm_router)
+app.include_router(
+    ai_router,
+    dependencies=[Depends(get_current_user)],
+    include_in_schema=False,
+    deprecated=True,
+)
+
+if external_data_router:
+    app.include_router(external_data_router)
+    print("[main] external_data router mounted")
+else:
+    print("[main] WARN: external_data router not available")
+
+# Partner agreement: partner + admin + super_admin
+app.include_router(agreement_router, dependencies=[RBAC_PARTNER_OR_ADMIN])
+
+
+# -----------------------------------------------------------------------------
+# DEBUG + ROOT + LEGACY HEALTHZ
+# -----------------------------------------------------------------------------
+@app.get("/_debug/routes", include_in_schema=False)
+async def _list_routes():
+    if IS_PRODUCTION:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    routes: List[Dict[str, Any]] = []
+    for r in app.router.routes:
+        try:
+            routes.append({"path": getattr(r, "path", ""), "name": getattr(r, "name", ""), "methods": list(getattr(r, "methods", []))})
+        except Exception:
+            pass
+    return JSONResponse({"count": len(routes), "routes": routes})
+
+
+@app.get("/_debug/headers", include_in_schema=False)
+async def debug_headers(request: Request):
+    if IS_PRODUCTION:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    return {"headers": dict(request.headers)}
+
+
+@app.get("/")
+async def root():
+    return {"ok": True, "name": "GTS Logistics Backend", "offline": OFFLINE}
+
+
+@app.get("/healthz")
+async def healthz_redirect():
+    return RedirectResponse(url="/health/full")
+
+
+@app.get("/dev/token", include_in_schema=False)
+async def get_dev_token(role: str = "user", secret: Optional[str] = None):
+    if IS_PRODUCTION:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    if not DEV_MODE:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+    if secret is not None and secret not in (DEV_SECRET, "dev-secret"):
+        raise HTTPException(status_code=401, detail="invalid dev secret")
+    if role not in ("user", "manager", "admin", "partner"):
+        raise HTTPException(status_code=400, detail="role must be one of: user|manager|admin|partner")
+
+    session_id = await _create_session_id(1, "dev-token")
+    token = create_access_token(
+        subject=1,
+        email="dev@gts.local",
+        role=role,
+        expires_delta=timedelta(minutes=60 * 24),
+        session_id=session_id,
+    )
+    return {"access_token": token, "token_type": "bearer", "role": role}
+
+
+@app.get("/healthz/db", include_in_schema=False)
+async def healthz_db():
+    session_factory = _async_session_ctx or get_async_session
+    if session_factory is None:
+        raise HTTPException(status_code=500, detail="Database session not available")
+    async with wrap_session_factory(session_factory) as session:
+        try:
+            result = await session.execute(text("SELECT 1"))
+            val = result.scalar()
+            if val != 1:
+                raise Exception("DB returned unexpected value")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB health check failed: {e}")
+    return {"ok": True, "detail": "database connection healthy"}
+
+
+@app.get("/healthz/vizion", include_in_schema=False)
+async def healthz_vizion():
+    if _vdb is None:
+        raise HTTPException(status_code=500, detail="Vizion DB provider not available")
+    try:
+        maybe_result = _vdb.ping()
+        result = await maybe_result if asyncio.iscoroutine(maybe_result) else maybe_result
+        if not result.get("ok", False):
+            raise Exception("Vizion ping returned not ok")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Vizion health check failed: {e}")
+    return {"ok": True, "detail": "vizion eye connection healthy"}
+
+

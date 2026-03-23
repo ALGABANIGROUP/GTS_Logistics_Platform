@@ -1,0 +1,350 @@
+.aid-control {
+  --aid-primary: #1d4ed8;
+  --aid-secondary: #7c3aed;
+  --aid-success: #10b981;
+  --aid-warning: #f59e0b;
+  --aid-danger: #ef4444;
+  --aid-surface: rgba(15, 23, 42, 0.72);
+  --aid-border: rgba(148, 163, 184, 0.2);
+  --aid-text: #e2e8f0;
+  --aid-muted: #94a3b8;
+  color: var(--aid-text);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.aid-control-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.aid-control-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 11px;
+  color: var(--aid-muted);
+  margin-bottom: 6px;
+}
+
+.aid-control-header h1 {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+
+.aid-control-subtitle {
+  margin: 0;
+  color: var(--aid-muted);
+}
+
+.aid-control-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.aid-control-status,
+.aid-control-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--aid-border);
+  background: var(--aid-surface);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.aid-control-status.online {
+  color: var(--aid-success);
+}
+
+.aid-control-status.forbidden {
+  color: var(--aid-danger);
+}
+
+.aid-control-status.offline {
+  color: var(--aid-warning);
+}
+
+.aid-control-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.aid-control-card {
+  background: var(--aid-surface);
+  border: 1px solid var(--aid-border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+}
+
+.aid-control-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.aid-control-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--aid-primary), var(--aid-secondary));
+}
+
+.aid-control-info h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.aid-control-info p {
+  margin: 0;
+  color: var(--aid-muted);
+  font-size: 12px;
+}
+
+.aid-control-botid {
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--aid-border);
+}
+
+.aid-control-statuscard,
+.aid-control-configcard {
+  background: var(--aid-surface);
+  border: 1px solid var(--aid-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.aid-control-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.aid-control-card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.aid-control-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--aid-border);
+}
+
+.aid-control-badge.online {
+  color: var(--aid-success);
+}
+
+.aid-control-badge.offline {
+  color: var(--aid-warning);
+}
+
+.aid-control-badge.forbidden {
+  color: var(--aid-danger);
+}
+
+.aid-control-list {
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.aid-control-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.aid-control-list span {
+  color: var(--aid-muted);
+}
+
+.aid-control-config {
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.aid-control-config div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.aid-control-config span {
+  color: var(--aid-muted);
+}
+
+.aid-control-light-btn {
+  border: 1px solid var(--aid-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--aid-text);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.aid-control-panel,
+.aid-control-response {
+  background: var(--aid-surface);
+  border: 1px solid var(--aid-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.aid-control-label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: var(--aid-muted);
+}
+
+.aid-control-panel textarea,
+.aid-control-panel .aid-control-json {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--aid-border);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--aid-text);
+  padding: 12px;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.aid-control-context-toggle {
+  margin-top: 12px;
+  border: none;
+  background: transparent;
+  color: var(--aid-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.aid-control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.aid-control-primary,
+.aid-control-secondary,
+.aid-control-ghost {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.aid-control-primary {
+  background: var(--aid-primary);
+  color: #fff;
+}
+
+.aid-control-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--aid-text);
+  border: 1px solid var(--aid-border);
+}
+
+.aid-control-ghost {
+  background: transparent;
+  color: var(--aid-muted);
+  border: 1px dashed var(--aid-border);
+}
+
+.aid-control-response-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.aid-control-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--aid-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--aid-text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.aid-control-response-body {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  border: 1px solid var(--aid-border);
+  padding: 14px;
+  min-height: 220px;
+  max-height: 420px;
+  overflow: auto;
+  font-size: 12px;
+}
+
+.aid-control-response-body pre {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--aid-text);
+}
+
+.aid-control-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--aid-muted);
+  text-align: center;
+  min-height: 180px;
+}
+
+.aid-control-muted {
+  font-size: 12px;
+  color: var(--aid-muted);
+}
+
+.aid-control-error {
+  color: var(--aid-danger);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 720px) {
+  .aid-control-botid {
+    margin-left: 0;
+  }
+  .aid-control-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

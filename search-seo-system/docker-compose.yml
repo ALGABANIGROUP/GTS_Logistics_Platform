@@ -1,0 +1,173 @@
+version: '3.8'
+
+services:
+  # Elasticsearch - Full-text search engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: gts-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - gts-network
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Kibana - Elasticsearch visualization (optional)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: gts-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - gts-network
+    healthcheck:
+      test: curl -s http://localhost:5601/api/status >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis - Caching and job queue
+  redis:
+    image: redis:7-alpine
+    container_name: gts-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gts-network
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL - Optional database for metadata
+  postgres:
+    image: postgres:16-alpine
+    container_name: gts-postgres
+    environment:
+      POSTGRES_DB: gts_search
+      POSTGRES_USER: gts_user
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - gts-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gts_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Search Engine
+  search-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: gts-search-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://gts_user:changeme@postgres:5432/gts_search
+      - LOG_LEVEL=info
+      - ENV=production
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./api:/app/api
+      - ./search:/app/search
+      - ./seo:/app/seo
+    networks:
+      - gts-network
+    healthcheck:
+      test: curl -s http://localhost:8000/health >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Web Crawler Service
+  crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile.crawler
+    container_name: gts-crawler
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=info
+      - CRAWL_DEPTH=3
+      - CONCURRENT_REQUESTS=2
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./crawler:/app/crawler
+      - ./logs:/app/logs
+      - crawl_data:/data
+    networks:
+      - gts-network
+    restart: unless-stopped
+
+  # Nginx - Reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: gts-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - search-api
+    networks:
+      - gts-network
+    restart: unless-stopped
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  crawl_data:
+    driver: local
+
+networks:
+  gts-network:
+    driver: bridge

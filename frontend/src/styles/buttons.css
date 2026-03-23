@@ -1,0 +1,300 @@
+/* Unified Button Styles - Glassmorphism Design */
+
+/* Primary Button (Blue Gradient) */
+.glass-btn-primary {
+    background: linear-gradient(135deg, #4a90e2 0%, #63b3ed 100%);
+    border: none;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.glass-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(74, 144, 226, 0.4);
+    background: linear-gradient(135deg, #5a9ff2 0%, #73c3fd 100%);
+}
+
+.glass-btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Secondary Button (Dark Glass) */
+.glass-btn-secondary {
+    background: var(--glass-bg-light, rgba(15, 23, 42, 0.35));
+    -webkit-backdrop-filter: var(--glass-blur, blur(8px));
+    backdrop-filter: var(--glass-blur, blur(8px));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+    color: #e2e8f0;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.glass-btn-secondary:hover {
+    background: var(--glass-bg, rgba(15, 23, 42, 0.45));
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+}
+
+/* Success Button (Green) */
+.glass-btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    border: none;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.glass-btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+}
+
+/* Danger Button (Red) */
+.glass-btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    border: none;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.glass-btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+}
+
+/* Small Button Variant */
+.glass-btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Large Button Variant */
+.glass-btn-lg {
+    padding: 14px 28px;
+    font-size: 16px;
+}
+
+/* Icon Button */
+.glass-btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+/* Tab Button (Filter Style) */
+.glass-tab {
+    background: var(--glass-bg-light, rgba(15, 23, 42, 0.35));
+    -webkit-backdrop-filter: var(--glass-blur, blur(8px));
+    backdrop-filter: var(--glass-blur, blur(8px));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+    color: #94a3b8;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.glass-tab:hover {
+    background: var(--glass-bg, rgba(15, 23, 42, 0.45));
+    color: #e2e8f0;
+}
+
+.glass-tab.active {
+    background: linear-gradient(135deg, #4a90e2 0%, #63b3ed 100%);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+/* Status Badges */
+.glass-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+}
+
+.glass-badge-sent {
+    background: rgba(74, 144, 226, 0.2);
+    border: 1px solid rgba(74, 144, 226, 0.4);
+    color: #63b3ed;
+}
+
+.glass-badge-paid {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+.glass-badge-overdue {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+.glass-badge-due {
+    background: rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    color: #fbbf24;
+}
+
+.glass-badge-draft {
+    background: rgba(148, 163, 184, 0.2);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #94a3b8;
+}
+
+/* Connected Status Badge */
+.glass-status-badge {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.glass-status-badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Dropdown/Select with Glass Effect */
+.glass-select {
+    background: rgba(30, 41, 59, 0.5);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23e2e8f0' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.glass-select:hover {
+    border-color: rgba(148, 163, 184, 0.4);
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+.glass-select:focus {
+    outline: none;
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* Input with Glass Effect */
+.glass-input {
+    background: rgba(30, 41, 59, 0.5);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.glass-input::placeholder {
+    color: #64748b;
+}
+
+.glass-input:hover {
+    border-color: rgba(148, 163, 184, 0.4);
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+/* Button Group */
+.glass-btn-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Disabled State */
+.glass-btn-primary:disabled,
+.glass-btn-secondary:disabled,
+.glass-btn-success:disabled,
+.glass-btn-danger:disabled,
+.glass-tab:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.glass-btn-primary:disabled:hover,
+.glass-btn-secondary:disabled:hover,
+.glass-btn-success:disabled:hover,
+.glass-btn-danger:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}

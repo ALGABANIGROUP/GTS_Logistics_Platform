@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTS Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .container {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #60a5fa;
+            margin-top: 0;
+        }
+        h2 {
+            color: #38bdf8;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .test-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .status.success {
+            background: #22c55e;
+            color: white;
+        }
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+        .status.info {
+            background: #3b82f6;
+            color: white;
+        }
+        .status.warning {
+            background: #f59e0b;
+            color: white;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .output {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+        .output.hidden {
+            display: none;
+        }
+        .output.details-margin {
+            margin-top: 5px;
+            max-height: 150px;
+        }
+        .success-text {
+            color: #22c55e;
+        }
+        .error-text {
+            color: #ef4444;
+        }
+        .info-text {
+            color: #60a5fa;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        .endpoint-select {
+            background: #334155;
+            color: #e2e8f0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        label {
+            margin-right: 10px;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+        }
+        .proxy-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 GTS Frontend-Backend Connection Test</h1>
+        <p>This page tests the connection between the Frontend (Vite) and Backend (FastAPI) servers.</p>
+    </div>
+    <div class="container">
+        <h2>System Information</h2>
+        <div class="test-item">
+            <strong>Frontend URL:</strong> <span id="frontend-url">http://127.0.0.1:5173</span>
+        </div>
+        <div class="test-item">
+            <strong>Backend URL:</strong> <span id="backend-url">http://127.0.0.1:8000</span>
+        </div>
+        <div class="test-item">
+            <strong>Current Origin:</strong> <span id="current-origin"></span>
+        </div>
+        <div class="test-item">
+            <strong>Connection Mode:</strong> <span id="connection-mode"></span>
+        </div>
+    </div>
+    <div class="container">
+        <h2>Connection Tests</h2>
+        <div id="tests-container"></div>
+        <button onclick="runAllTests()">🚀 Run All Tests</button>
+        <button onclick="clearTests()">🗑️ Clear Results</button>
+    </div>
+    <div class="container">
+        <h2>Manual API Test</h2>
+        <div class="test-item">
+            <div class="form-group">
+                <label for="test-endpoint">Test Endpoint:</label>
+                <select id="test-endpoint" class="endpoint-select" title="Select an API endpoint to test">
+                    <option value="health">/api/v1/system/health</option>
+                    <option value="health-check">/api/v1/system/actions/health-check</option>
+                    <option value="performance">/api/v1/system/actions/performance-profile</option>
+                    <option value="ai-chat">/api/v1/ai/maintenance/chat/ask</option>
+                    <option value="auth-me">/api/v1/auth/me (🔐 Authenticated)</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="testCustomEndpoint()">🔍 Test Endpoint</button>
+        <div id="custom-output" class="output hidden"></div>
+    </div>
+    <script>
+        const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+            ? ""
+            : "http://127.0.0.1:8000";
+        const FRONTEND_URL = window.location.origin;
+        const IS_USING_PROXY = BACKEND_URL === "";
+
+        document.getElementById("current-origin").textContent = window.location.origin;
+        document.getElementById("frontend-url").textContent = FRONTEND_URL;
+        if (IS_USING_PROXY) {
+            document.getElementById("backend-url").innerHTML = `<span class="proxy-badge">PROXY</span> /api → http://127.0.0.1:8000`;
+            document.getElementById("connection-mode").innerHTML = `<span class="success-text">✅ Same-Origin (via Vite Proxy)</span>`;
+        } else {
+            document.getElementById("backend-url").textContent = BACKEND_URL;
+            document.getElementById("connection-mode").innerHTML = `<span class="warning">⚠️ Cross-Origin (Direct)</span>`;
+        }
+
+        const tests = [
+            {
+                name: "Backend Health Check",
+                url: `${BACKEND_URL}/api/v1/system/health`,
+                method: "GET",
+                headers: {}
+            },
+            {
+                name: "CORS Preflight Check",
+                url: `${BACKEND_URL}/api/v1/system/health`,
+                method: "OPTIONS",
+                headers: {
+                    "Origin": window.location.origin,
+                    "Access-Control-Request-Method": "POST"
+                }
+            },
+            {
+                name: "Health Check Action",
+                url: `${BACKEND_URL}/api/v1/system/actions/health-check`,
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: {}
+            },
+            {
+                name: "Performance Profile Action",
+                url: `${BACKEND_URL}/api/v1/system/actions/performance-profile`,
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: {}
+            },
+            {
+                name: "AI Chat Endpoint",
+                url: `${BACKEND_URL}/api/v1/ai/maintenance/chat/ask`,
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: { message: "Hello, test message", context: {} }
+            },
+            {
+                name: "🔐 Authenticated Request (Real Preflight Test)",
+                url: `${BACKEND_URL}/api/v1/auth/me`,
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer test-token-for-preflight-validation"
+                },
+                expectError: true
+            }
+        ];
+
+        function addTestResult(name, success, message, details = "") {
+            const container = document.getElementById("tests-container");
+            const item = document.createElement("div");
+            item.className = "test-item";
+            const statusClass = success ? "success" : "error";
+            const statusText = success ? "✅ PASS" : "❌ FAIL";
+            item.innerHTML = `
+                <div>
+                    <span class="status ${statusClass}">${statusText}</span>
+                    <strong>${name}</strong>
+                </div>
+                <div>${message}</div>
+                ${details ? `<div class="output details-margin">${details}</div>` : ""}
+            `;
+            container.appendChild(item);
+        }
+
+        async function runTest(test) {
+            try {
+                const fetchOptions = {
+                    method: test.method,
+                    headers: test.headers,
+                };
+                if (test.body && (test.method === "POST" || test.method === "PUT")) {
+                    fetchOptions.body = JSON.stringify(test.body);
+                }
+                const response = await fetch(test.url, fetchOptions);
+                const isSuccess = test.expectError
+                    ? (response.status === 401 || response.ok)
+                    : (response.ok || response.status < 500);
+                let details = `Status: ${response.status} ${response.statusText}\n`;
+                details += `CORS Headers:\n`;
+                details += `  Access-Control-Allow-Origin: ${response.headers.get("Access-Control-Allow-Origin") || "Not set"}\n`;
+                details += `  Access-Control-Allow-Headers: ${response.headers.get("Access-Control-Allow-Headers") || "Not set"}\n`;
+                details += `  Access-Control-Allow-Credentials: ${response.headers.get("Access-Control-Allow-Credentials") || "Not set"}\n`;
+                details += `  Access-Control-Allow-Methods: ${response.headers.get("Access-Control-Allow-Methods") || "Not set"}\n`;
+                if (test.expectError && response.status === 401) {
+                    details += `\n✅ Authentication failed as expected.\n`;
+                    details += `✅ Important: Request reached server (CORS/Preflight worked!)\n`;
+                    details += `✅ No "Network Error" or "CORS blocked" - this is correct behavior.\n`;
+                }
+                try {
+                    const data = await response.json();
+                    details += `\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                } catch {
+                    const text = await response.text();
+                    if (text) details += `\nResponse: ${text.substring(0, 200)}`;
+                }
+                addTestResult(test.name, isSuccess, `Status ${response.status}`, details);
+            } catch (error) {
+                const isCorsError = error.message.includes("CORS") || error.message.includes("Network") || error.message.includes("Failed to fetch");
+                const errorDetails = `Error Type: ${error.name}\nError Message: ${error.message}\n\n`;
+                const troubleshooting = isCorsError
+                    ? `⚠️ This appears to be a CORS/Network error.\n\nPossible causes:\n1. Backend not running on port 8000\n2. CORS headers not configured correctly\n3. Preflight (OPTIONS) request blocked\n4. Authorization header not explicitly allowed\n5. Using direct URL instead of proxy\n\n`
+                    : "";
+                addTestResult(test.name, false, error.message, errorDetails + troubleshooting + `Full Stack:\n${error.stack}`);
+            }
+        }
+
+        async function runAllTests() {
+            const container = document.getElementById("tests-container");
+            container.innerHTML = '<div class="test-item"><span class="status info">🔄 RUNNING</span> Running tests...</div>';
+            for (const test of tests) {
+                await runTest(test);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        async function testCustomEndpoint() {
+            const endpointSelect = document.getElementById("test-endpoint");
+            const outputDiv = document.getElementById("custom-output");
+            const endpoint = endpointSelect.value;
+            let url, method, body, headers;
+            switch (endpoint) {
+                case "health":
+                    url = `${BACKEND_URL}/api/v1/system/health`;
+                    method = "GET";
+                    headers = {};
+                    break;
+                case "health-check":
+                    url = `${BACKEND_URL}/api/v1/system/actions/health-check`;
+                    method = "POST";
+                    body = {};
+                    headers = { "Content-Type": "application/json" };
+                    break;
+                case "performance":
+                    url = `${BACKEND_URL}/api/v1/system/actions/performance-profile`;
+                    method = "POST";
+                    body = {};
+                    headers = { "Content-Type": "application/json" };
+                    break;
+                case "ai-chat":
+                    url = `${BACKEND_URL}/api/v1/ai/maintenance/chat/ask`;
+                    method = "POST";
+                    body = { message: "What is the system status?", context: {} };
+                    headers = { "Content-Type": "application/json" };
+                    break;
+                case "auth-me":
+                    url = `${BACKEND_URL}/api/v1/auth/me`;
+                    method = "GET";
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer test-token-for-preflight-validation"
+                    };
+                    break;
+            }
+            try {
+                outputDiv.classList.remove("hidden");
+                outputDiv.innerHTML = '<span class="info-text">🔄 Sending request...</span>';
+                const options = {
+                    method,
+                    headers
+                };
+                if (body) options.body = JSON.stringify(body);
+                const response = await fetch(url, options);
+                const data = await response.json();
+                const corsInfo = `<strong>Response Header Info:</strong>\nAccess-Control-Allow-Origin: ${response.headers.get("Access-Control-Allow-Origin") || "Not set"}\nAccess-Control-Allow-Methods: ${response.headers.get("Access-Control-Allow-Methods") || "Not set"}\nAccess-Control-Allow-Headers: ${response.headers.get("Access-Control-Allow-Headers") || "Not set"}\nAccess-Control-Allow-Credentials: ${response.headers.get("Access-Control-Allow-Credentials") || "Not set"}`;
+                const statusColor = response.ok ? 'success-text' : (response.status === 401 ? 'warning' : 'error-text');
+                outputDiv.innerHTML = `<span class="${statusColor}">${response.ok ? '✅' : '⚠️'} Status ${response.status}</span>\n${corsInfo}\n<strong>Response Body:</strong>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                outputDiv.classList.remove("hidden");
+                outputDiv.innerHTML = `<span class="error-text">❌ Error: ${error.message}</span>\n<strong>Details:</strong>\nError Name: ${error.name}\nError Type: ${error.constructor.name}\n<strong>Troubleshooting:</strong>\n1. Is the backend running on port 8000?\n2. Try: curl http://127.0.0.1:8000/api/v1/system/health\n3. Check backend logs for errors\n4. Verify CORS configuration includes Authorization header\n5. Check browser DevTools → Network tab for preflight OPTIONS request\n6. Are you using the Vite proxy? (should see "PROXY" badge above)\n<strong>Full Stack:</strong>\n${error.stack}`;
+            }
+        }
+
+        function clearTests() {
+            document.getElementById("tests-container").innerHTML = "";
+            document.getElementById("custom-output").classList.add("hidden");
+        }
+
+        window.addEventListener("load", () => {
+            console.log("🧪 Connection test page loaded. You can click 'Run All Tests' to begin.");
+            console.log(`Using ${IS_USING_PROXY ? 'Vite Proxy (same-origin)' : 'Direct Connection (cross-origin)'}`);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+List of all backend TMS files moved for safe deletion:
+
+backend/tms/
+- auth_routes.py
+- config/bots_config.py
+- core.py
+- core/__init__.py
+- core/tms_core.py
+- integration_layer.py
+- permissions.py
+- shipment_lifecycle.py
+- unified_api.py
+- __init__.py

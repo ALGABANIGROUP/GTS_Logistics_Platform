@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GTS Runtime Smoke Report</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 32px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .hero {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95));
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .status {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #16a34a22;
+      color: #16a34a;
+      border: 1px solid #16a34a55;
+      font-weight: 700;
+    }
+    .card {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(15,23,42,0.9);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #020617;
+      border-radius: 14px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: auto;
+    }
+    code {
+      font-family: Consolas, "Courier New", monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>GTS Runtime Smoke Report</h1>
+      <p>Generated at 2026-03-20 12:16:06</p>
+      <p>Executed targets: <code>backend/tests/test_runtime_smoke_suite.py, backend/tests/test_live_shell_smoke.py</code></p>
+      <div class="status">Passed</div>
+    </section>
+    <section class="card">
+      <h2>Pytest Summary</h2>
+      <p>11 passed in 11.29s</p>
+    </section>
+    <section class="card">
+      <h2>Standard Output</h2>
+      <pre>...........                                                              [100%]
+11 passed in 11.29s</pre>
+    </section>
+    <section class="card">
+      <h2>Standard Error</h2>
+      <pre>No stderr captured.</pre>
+    </section>
+  </div>
+</body>
+</html>

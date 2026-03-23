@@ -1,0 +1,55 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "checks": [
+    {
+      "name": "env",
+      "ok": true,
+      "missing": []
+    },
+    {
+      "name": "health_ping",
+      "ok": true
+    },
+    {
+      "name": "auth_token",
+      "ok": true
+    },
+    {
+      "name": "routes",
+      "ok": true,
+      "count": 38
+    },
+    {
+      "name": "documents",
+      "ok": [],
+      "fail": [
+        "/documents/_debug/db",
+        "/documents/"
+      ],
+      "skipped": [
+        "/documents/expiring-soon/",
+        "/documents/notify-expiring/"
+      ]
+    },
+    {
+      "name": "finance",
+      "ok": [],
+      "fail": [
+        "/finance/health",
+        "/finance/expenses",
+        "/finance/summary",
+        "/finance/reports/summary",
+        "/ai/finance-analysis"
+      ],
+      "skipped": []
+    }
+  ],
+  "summary": {
+    "overall_ok": false,
+    "env_ok": true,
+    "ping_ok": true,
+    "auth_ok": true,
+    "routes_ok": true,
+    "bots_warnings": []
+  }
+}

@@ -1,0 +1,160 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-solid: #0e1c2d;
+  --navy-glass-15: rgba(15, 23, 42, 0.35);
+  --navy-border-10: rgba(255, 255, 255, 0.1);
+  --gts-bg: #0e1c2d;
+  --text-main: #ffffff;
+}
+
+.glass-15 {
+  background: var(--glass-bg, var(--navy-glass-15));
+  -webkit-backdrop-filter: var(--glass-blur, blur(14px));
+  backdrop-filter: var(--glass-blur, blur(14px));
+  border: 1px solid var(--glass-border, var(--navy-border-10));
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Select element styling */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background: #0e1c2d;
+  color: #ffffff;
+  border: none;
+}
+
+select option:checked {
+  background: linear-gradient(#228BE6, #228BE6);
+  background-color: #228BE6 !important;
+  color: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", "Tahoma", sans-serif;
+  background: var(--gts-bg);
+  color: var(--text-main);
+}
+
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  line-height: 1.5;
+  text-rendering: optimizeSpeed;
+}
+
+/* ...rest of CSS as above... */
+.gts-app .border-slate-100 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.gts-app .text-slate-900,
+.gts-app .text-slate-800,
+.gts-app .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+.gts-app .text-slate-600,
+.gts-app .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Footer Styles */
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.social-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.social-links-title {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.social-links-icons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.social-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.social-link:active {
+  transform: translateY(0);
+}
+
+/* Responsive footer */
+@media (min-width: 768px) {
+  .footer-content {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .social-links {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .social-links-title {
+    margin-right: 0.5rem;
+  }
+}

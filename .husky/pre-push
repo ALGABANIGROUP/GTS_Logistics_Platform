@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Enforce English-only code policy on push
+npm run lint:arabic
+npm --prefix frontend run test:coverage
+./.venv/Scripts/python.exe -m pytest backend/tests -q --maxfail=1

@@ -1,0 +1,331 @@
+{
+  "frontend/src/pages/tms/shipper/index.js": {
+    "imported_by_count": 2,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/strategy-advisor/StrategyAdvisor.jsx",
+      "frontend/src/pages/support/routes.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/routes/IntelligentRouter.jsx": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/services/adminService.js": {
+    "imported_by_count": 5,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/system-admin/DataManagement.jsx",
+      "frontend/src/components/bots/panels/system-admin/HealthMonitoring.jsx",
+      "frontend/src/components/bots/panels/system-admin/SecurityAudit.jsx",
+      "frontend/src/components/bots/panels/system-admin/SystemAdminPanel.jsx",
+      "frontend/src/components/bots/panels/system-admin/UserManagement.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/api.js": {
+    "imported_by_count": 96,
+    "imported_by_samples": [
+      "frontend/src/api.js",
+      "frontend/src/hooks/useApi.js",
+      "frontend/src/hooks/tms/useTMSData.js",
+      "frontend/src/services/adminService.js",
+      "frontend/src/services/billingApi.js",
+      "frontend/src/services/customerService.js",
+      "frontend/src/services/dispatchApi.js",
+      "frontend/src/services/documentsService.js",
+      "frontend/src/services/driverApi.js",
+      "frontend/src/services/emailCenterApi.js",
+      "frontend/src/services/informationService.js",
+      "frontend/src/services/legalService.js",
+      "frontend/src/services/salesService.js",
+      "frontend/src/services/securityService.js",
+      "frontend/src/services/shipmentsApi.js",
+      "frontend/src/services/socialMediaService.js",
+      "frontend/src/services/strategyService.js",
+      "frontend/src/components/AgentDashboard.jsx",
+      "frontend/src/components/AIBotPage.jsx",
+      "frontend/src/components/AIBotsDashboard.jsx",
+      "frontend/src/components/AIBotsDashboardEnhanced.jsx",
+      "frontend/src/components/BrokerDashboard.jsx",
+      "frontend/src/components/FixedReportsDashboard.jsx",
+      "frontend/src/components/KnowledgeBase.jsx",
+      "frontend/src/components/SupportTickets.jsx",
+      "frontend/src/components/UploadExcel.jsx",
+      "frontend/src/components/admin/SocialMediaDashboard.jsx",
+      "frontend/src/components/admin/TMSRequestsPanel.jsx",
+      "frontend/src/components/bos/BotStatusPanel.jsx",
+      "frontend/src/components/bos/CommandGateway.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/billingApi.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/pages/Pricing.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/customerService.js": {
+    "imported_by_count": 6,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/customer-service/CallManager.jsx",
+      "frontend/src/components/bots/panels/customer-service/ConversationManager.jsx",
+      "frontend/src/components/bots/panels/customer-service/CustomerDashboard.jsx",
+      "frontend/src/components/bots/panels/customer-service/CustomerServicePanel.jsx",
+      "frontend/src/components/bots/panels/customer-service/MessageCenter.jsx",
+      "frontend/src/components/bots/panels/customer-service/TicketSystem.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/dispatchApi.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/pages/Dispatch.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/documentService.js": {
+    "imported_by_count": 2,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/documents-manager/DocumentLibrary.jsx",
+      "frontend/src/components/bots/panels/documents-manager/DocumentUploader.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/documentsService.js": {
+    "imported_by_count": 3,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/documents-manager/ComplianceChecker.jsx",
+      "frontend/src/components/bots/panels/documents-manager/DocumentsDashboard.jsx",
+      "frontend/src/components/bots/panels/documents-manager/OCRProcessor.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/driverApi.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/pages/DriverHome.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/emailCenterApi.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/pages/Emails.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/http.ts": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/services/partnerApi.ts"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/informationService.js": {
+    "imported_by_count": 5,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/information-coordinator/AnalyticsPanel.jsx",
+      "frontend/src/components/bots/panels/information-coordinator/InformationCoordinator.jsx",
+      "frontend/src/components/bots/panels/information-coordinator/OperationalDashboard.jsx",
+      "frontend/src/components/bots/panels/information-coordinator/PredictionsView.jsx",
+      "frontend/src/components/bots/panels/information-coordinator/ReportsManager.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/legalService.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/legal-consultant/LegalConsultant.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/partnerApi.ts": {
+    "imported_by_count": 10,
+    "imported_by_samples": [
+      "frontend/src/pages/admin/PartnerDetailsPage.jsx",
+      "frontend/src/pages/admin/PartnersListPage.jsx",
+      "frontend/src/pages/partner/PartnerAgreementPage.jsx",
+      "frontend/src/pages/partner/PartnerClientsPage.jsx",
+      "frontend/src/pages/partner/PartnerOrdersPage.jsx",
+      "frontend/src/pages/partner/PartnerPayoutsPage.jsx",
+      "frontend/src/pages/partner/PartnerRevenuePage.jsx",
+      "frontend/src/pages/partner/PartnerSettingsPage.jsx",
+      "frontend/src/pages/partner/PartnerAgreementPage.tsx",
+      "frontend/src/pages/partner/PartnerDashboardPage.tsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/salesService.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/pages/SalesTeam.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/securityService.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/components/bots/AISecurityManager.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/shipmentsApi.js": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/services/socialMediaService.js": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/customer-service/SocialCampaignManager.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/strategyService.js": {
+    "imported_by_count": 5,
+    "imported_by_samples": [
+      "frontend/src/components/bots/panels/strategy-advisor/CompetitorIntel.jsx",
+      "frontend/src/components/bots/panels/strategy-advisor/ConsultationPanel.jsx",
+      "frontend/src/components/bots/panels/strategy-advisor/MarketAnalysis.jsx",
+      "frontend/src/components/bots/panels/strategy-advisor/RecommendationsPanel.jsx",
+      "frontend/src/components/bots/panels/strategy-advisor/StrategyAdvisor.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/userApi.ts": {
+    "imported_by_count": 1,
+    "imported_by_samples": [
+      "frontend/src/pages/ProfilePage.tsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/services/vite-env.d.ts": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": "ts/vite typings file"
+  },
+  "frontend/src/types/partner.ts": {
+    "imported_by_count": 11,
+    "imported_by_samples": [
+      "frontend/src/pages/admin/PartnerDetailsPage.jsx",
+      "frontend/src/pages/admin/PartnersListPage.jsx",
+      "frontend/src/pages/partner/PartnerAgreementPage.jsx",
+      "frontend/src/pages/partner/PartnerClientsPage.jsx",
+      "frontend/src/pages/partner/PartnerOrdersPage.jsx",
+      "frontend/src/pages/partner/PartnerPayoutsPage.jsx",
+      "frontend/src/pages/partner/PartnerRevenuePage.jsx",
+      "frontend/src/pages/partner/PartnerSettingsPage.jsx",
+      "frontend/src/services/partnerApi.ts",
+      "frontend/src/pages/partner/PartnerAgreementPage.tsx",
+      "frontend/src/pages/partner/PartnerDashboardPage.tsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/utils/ProtectedRoute.jsx": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/RoleProtectedRoute.jsx": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/apiClient.js": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/hooks/useLiveWS.js": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/tms/api.js": {
+    "imported_by_count": 96,
+    "imported_by_samples": [
+      "frontend/src/api.js",
+      "frontend/src/hooks/useApi.js",
+      "frontend/src/hooks/tms/useTMSData.js",
+      "frontend/src/services/adminService.js",
+      "frontend/src/services/billingApi.js",
+      "frontend/src/services/customerService.js",
+      "frontend/src/services/dispatchApi.js",
+      "frontend/src/services/documentsService.js",
+      "frontend/src/services/driverApi.js",
+      "frontend/src/services/emailCenterApi.js",
+      "frontend/src/services/informationService.js",
+      "frontend/src/services/legalService.js",
+      "frontend/src/services/salesService.js",
+      "frontend/src/services/securityService.js",
+      "frontend/src/services/shipmentsApi.js",
+      "frontend/src/services/socialMediaService.js",
+      "frontend/src/services/strategyService.js",
+      "frontend/src/components/AgentDashboard.jsx",
+      "frontend/src/components/AIBotPage.jsx",
+      "frontend/src/components/AIBotsDashboard.jsx",
+      "frontend/src/components/AIBotsDashboardEnhanced.jsx",
+      "frontend/src/components/BrokerDashboard.jsx",
+      "frontend/src/components/FixedReportsDashboard.jsx",
+      "frontend/src/components/KnowledgeBase.jsx",
+      "frontend/src/components/SupportTickets.jsx",
+      "frontend/src/components/UploadExcel.jsx",
+      "frontend/src/components/admin/SocialMediaDashboard.jsx",
+      "frontend/src/components/admin/TMSRequestsPanel.jsx",
+      "frontend/src/components/bos/BotStatusPanel.jsx",
+      "frontend/src/components/bos/CommandGateway.jsx"
+    ],
+    "note": ""
+  },
+  "frontend/src/utils/tms/constants.js": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/tms/mapBridge.js": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/tms/mockData.js": {
+    "imported_by_count": 0,
+    "imported_by_samples": [],
+    "note": ""
+  },
+  "frontend/src/utils/ws.ts": {
+    "imported_by_count": 9,
+    "imported_by_samples": [
+      "frontend/src/hooks/useTruckWS.js",
+      "frontend/src/utils/wsClient.js",
+      "frontend/src/utils/hooks/useLiveWS.js",
+      "frontend/src/components/UnifiedShipmentMap.jsx",
+      "frontend/src/components/bots/panels/documents-manager/DocumentsManagerPanel.jsx",
+      "frontend/src/pages/Operations.jsx",
+      "frontend/src/pages/Shipments.jsx",
+      "frontend/src/pages/admin/AutomaticDashboard.jsx",
+      "frontend/src/hooks/useWS.ts"
+    ],
+    "note": ""
+  },
+  "frontend/src/utils/wsClient.js": {
+    "imported_by_count": 2,
+    "imported_by_samples": [
+      "frontend/src/hooks/useTruckWS.js",
+      "frontend/src/utils/hooks/useLiveWS.js"
+    ],
+    "note": ""
+  },
+  "frontend/src/utils/wsHelpers.js": {
+    "imported_by_count": 5,
+    "imported_by_samples": [
+      "frontend/src/utils/wsClient.js",
+      "frontend/src/components/UnifiedShipmentMap.jsx",
+      "frontend/src/pages/Operations.jsx",
+      "frontend/src/pages/Shipments.jsx",
+      "frontend/src/pages/admin/AutomaticDashboard.jsx"
+    ],
+    "note": ""
+  }
+}

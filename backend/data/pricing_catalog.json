@@ -1,0 +1,281 @@
+{
+  "GLOBAL": {
+    "country": "GLOBAL",
+    "plans": [
+      {
+        "code": "FREE",
+        "name": "Free",
+        "description": "GPS tracking, invoicing, and a basic dashboard for a single operator.",
+        "currency": "USD",
+        "price_amount": 0,
+        "limits": {
+          "vehicles": 0,
+          "users": 0
+        },
+        "highlights": [
+          "1 vehicle",
+          "1 user",
+          "GPS tracking",
+          "Basic invoicing",
+          "Basic dashboard"
+        ],
+        "suitable_for": [
+          "Solo drivers",
+          "Very small fleets"
+        ],
+        "is_demo": false,
+        "is_free": true,
+        "addons": []
+      },
+      {
+        "code": "STARTER",
+        "name": "Starter",
+        "description": "Trip operations and live visibility for small transport teams.",
+        "currency": "USD",
+        "price_amount": 9,
+        "limits": {
+          "vehicles": 0,
+          "users": 0
+        },
+        "highlights": [
+          "5 vehicles",
+          "3 users",
+          "Trip management",
+          "Real-time tracking",
+          "Invoicing",
+          "Basic reports"
+        ],
+        "suitable_for": [
+          "Small transport companies"
+        ],
+        "is_demo": false,
+        "is_free": false,
+        "addons": []
+      },
+      {
+        "code": "GROWTH",
+        "name": "Growth",
+        "description": "Driver coordination, alerts, and finance visibility for growing fleets.",
+        "currency": "USD",
+        "price_amount": 19,
+        "limits": {
+          "vehicles": 0,
+          "users": 0
+        },
+        "highlights": [
+          "15 vehicles",
+          "7 users",
+          "Driver management",
+          "Smart alerts",
+          "Financial reports"
+        ],
+        "suitable_for": [
+          "Mid-size transport companies"
+        ],
+        "is_demo": false,
+        "is_free": false,
+        "addons": []
+      },
+      {
+        "code": "PROFESSIONAL",
+        "name": "Professional",
+        "description": "Advanced analytics and document control for high-volume logistics teams.",
+        "currency": "USD",
+        "price_amount": 39,
+        "limits": {
+          "vehicles": 0,
+          "users": 0
+        },
+        "highlights": [
+          "40 vehicles",
+          "15 users",
+          "Advanced analytics",
+          "Document management",
+          "API integration"
+        ],
+        "suitable_for": [
+          "Large transport companies"
+        ],
+        "is_demo": false,
+        "is_free": false,
+        "addons": []
+      },
+      {
+        "code": "ENTERPRISE",
+        "name": "Enterprise",
+        "description": "Full platform access with bots and marketplace support for enterprise logistics.",
+        "currency": "USD",
+        "price_amount": 79,
+        "limits": {
+          "vehicles": 0,
+          "users": 0
+        },
+        "highlights": [
+          "Unlimited vehicles",
+          "Unlimited users",
+          "All features",
+          "Full Bots Package",
+          "Freight Marketplace"
+        ],
+        "suitable_for": [
+          "Large enterprises",
+          "Brokerages",
+          "Logistics companies"
+        ],
+        "is_demo": false,
+        "is_free": false,
+        "addons": []
+      }
+    ],
+    "addons": [],
+    "vehicle_pricing": [
+      {
+        "code": "VEHICLE_UP_TO_5",
+        "name": "Up to 5 vehicles",
+        "price_amount": 3,
+        "currency": "USD",
+        "unit": "vehicle / month"
+      },
+      {
+        "code": "VEHICLE_6_TO_20",
+        "name": "6 - 20 vehicles",
+        "price_amount": 2,
+        "currency": "USD",
+        "unit": "vehicle / month"
+      },
+      {
+        "code": "VEHICLE_OVER_20",
+        "name": "More than 20 vehicles",
+        "price_amount": 1.5,
+        "currency": "USD",
+        "unit": "vehicle / month"
+      }
+    ],
+    "user_pricing": [
+      {
+        "code": "ADDITIONAL_USER",
+        "name": "Additional User",
+        "price_amount": 2,
+        "currency": "USD",
+        "unit": "user / month"
+      },
+      {
+        "code": "ADMIN_USER",
+        "name": "Administrative User",
+        "price_amount": 3,
+        "currency": "USD",
+        "unit": "user / month"
+      }
+    ],
+    "bot_pricing": [
+      {
+        "code": "FREIGHT_BOT",
+        "name": "Freight Bot (Freight optimization)",
+        "price_amount": 3,
+        "currency": "USD",
+        "unit": "month"
+      },
+      {
+        "code": "FINANCE_BOT",
+        "name": "Finance Bot (Billing & payments)",
+        "price_amount": 3,
+        "currency": "USD",
+        "unit": "month"
+      },
+      {
+        "code": "DISPATCHER_BOT",
+        "name": "Dispatcher Bot (Load dispatching)",
+        "price_amount": 3,
+        "currency": "USD",
+        "unit": "month"
+      },
+      {
+        "code": "DOCUMENTS_BOT",
+        "name": "Documents Bot (Document management)",
+        "price_amount": 2,
+        "currency": "USD",
+        "unit": "month"
+      },
+      {
+        "code": "CUSTOMER_SERVICE_BOT",
+        "name": "Customer Service Bot",
+        "price_amount": 2,
+        "currency": "USD",
+        "unit": "month"
+      },
+      {
+        "code": "SAFETY_BOT",
+        "name": "Safety Bot",
+        "price_amount": 2,
+        "currency": "USD",
+        "unit": "month"
+      },
+      {
+        "code": "SYSTEM_MONITOR_BOT",
+        "name": "System Monitor Bot",
+        "price_amount": 2,
+        "currency": "USD",
+        "unit": "month"
+      }
+    ],
+    "bot_bundle": {
+      "code": "BOTS_FULL_BUNDLE",
+      "name": "Full Bots Package",
+      "price_amount": 12,
+      "currency": "USD",
+      "unit": "month"
+    },
+    "extra_services": {
+      "automation": [
+        {
+          "code": "AUTO_INVOICING",
+          "name": "Automated Invoicing",
+          "price_amount": 2,
+          "currency": "USD",
+          "unit": "month"
+        },
+        {
+          "code": "ADVANCED_FINANCIAL_REPORTS",
+          "name": "Advanced Financial Reports",
+          "price_amount": 2,
+          "currency": "USD",
+          "unit": "month"
+        }
+      ],
+      "analytics": [
+        {
+          "code": "ROUTE_ANALYTICS",
+          "name": "Route Analytics",
+          "price_amount": 2,
+          "currency": "USD",
+          "unit": "month"
+        },
+        {
+          "code": "FUEL_ANALYTICS",
+          "name": "Fuel Analytics",
+          "price_amount": 2,
+          "currency": "USD",
+          "unit": "month"
+        }
+      ],
+      "integrations": [
+        {
+          "code": "API_INTEGRATION",
+          "name": "API Integration",
+          "price_amount": 5,
+          "currency": "USD",
+          "unit": "month"
+        }
+      ]
+    },
+    "transaction_fees": {
+      "platform_fee_percent": 1,
+      "supported_gateways": [
+        "Stripe"
+      ],
+      "notes": [
+        "Payments can be processed through gateways such as Stripe."
+      ]
+    }
+  }
+}

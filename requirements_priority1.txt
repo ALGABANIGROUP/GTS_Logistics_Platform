@@ -1,0 +1,11 @@
+# Priority 1 Implementation - Additional Requirements
+# Add these to your existing requirements.txt
+
+# Error Tracking & Monitoring
+sentry-sdk[fastapi]==1.40.0
+
+# Already installed (verify):
+# psutil  # for system monitoring
+# python-dotenv  # for environment variables
+
+# Note: All other dependencies for backup and security are in Python stdlib

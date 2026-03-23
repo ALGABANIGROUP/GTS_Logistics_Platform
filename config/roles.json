@@ -1,0 +1,136 @@
+{
+    "roles": [
+        {
+            "key": "owner",
+            "name_ar": "EN",
+            "name_en": "Owner",
+            "permissions": [
+                "*"
+            ],
+            "features": [
+                "*"
+            ],
+            "data_scope": "global",
+            "is_system": true
+        },
+        {
+            "key": "admin",
+            "name_ar": "EN",
+            "name_en": "System Admin",
+            "permissions": [
+                "manage_users",
+                "manage_settings",
+                "view_reports",
+                "manage_bots",
+                "access_tms",
+                "access_loadboard",
+                "access_dispatcher"
+            ],
+            "features": [
+                "admin_dashboard",
+                "user_management",
+                "system_settings",
+                "all_bots",
+                "all_emails",
+                "all_modules"
+            ],
+            "data_scope": "global",
+            "is_system": true
+        },
+        {
+            "key": "operations_manager",
+            "name_ar": "EN",
+            "name_en": "Operations Manager",
+            "permissions": [
+                "manage_shipments",
+                "manage_loads",
+                "run_dispatcher",
+                "view_analytics",
+                "access_operations_bots"
+            ],
+            "features": [
+                "operations_dashboard",
+                "shipment_management",
+                "loadboard_access",
+                "dispatcher_bot",
+                "analytics_view"
+            ],
+            "data_scope": "tenant_only",
+            "is_system": false
+        },
+        {
+            "key": "dispatcher",
+            "name_ar": "Dispatcher",
+            "name_en": "Dispatcher",
+            "permissions": [
+                "view_shipments",
+                "assign_drivers",
+                "run_dispatcher_bot",
+                "track_operations"
+            ],
+            "features": [
+                "dispatcher_dashboard",
+                "shipment_tracking",
+                "driver_assignment",
+                "dispatcher_bot"
+            ],
+            "data_scope": "tenant_only",
+            "is_system": false
+        },
+        {
+            "key": "finance",
+            "name_ar": "EN",
+            "name_en": "Finance",
+            "permissions": [
+                "manage_invoices",
+                "view_financial_reports",
+                "run_finance_bot",
+                "approve_payments"
+            ],
+            "features": [
+                "finance_dashboard",
+                "finance_bot",
+                "financial_reports",
+                "invoice_management"
+            ],
+            "data_scope": "tenant_only",
+            "is_system": false
+        },
+        {
+            "key": "viewer",
+            "name_ar": "EN",
+            "name_en": "Viewer",
+            "permissions": [
+                "view_dashboard",
+                "view_shipments",
+                "view_loads"
+            ],
+            "features": [
+                "basic_dashboard",
+                "shipment_view",
+                "loadboard_view"
+            ],
+            "data_scope": "tenant_only",
+            "is_system": false
+        },
+        {
+            "key": "system_admin",
+            "name_ar": "EN",
+            "name_en": "Technical System Admin",
+            "permissions": [
+                "manage_system",
+                "access_system_bots",
+                "view_system_logs",
+                "manage_maintenance"
+            ],
+            "features": [
+                "system_admin_dashboard",
+                "system_bots",
+                "system_logs",
+                "maintenance_tools"
+            ],
+            "data_scope": "global",
+            "is_system": true
+        }
+    ]
+}

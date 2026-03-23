@@ -1,0 +1,74 @@
+﻿{
+    "frontend/src/utils/tms/mapBridge.js":  {
+                                                "key":  "utils/tms/mapBridge",
+                                                "imported_by_count":  0,
+                                                "imported_by_samples":  [
+
+                                                                        ],
+                                                "exists":  true
+                                            },
+    "frontend/src/services/shipmentsApi.js":  {
+                                                  "key":  "services/shipmentsApi",
+                                                  "imported_by_count":  0,
+                                                  "imported_by_samples":  [
+
+                                                                          ],
+                                                  "exists":  true
+                                              },
+    "frontend/src/utils/hooks/useLiveWS.js":  {
+                                                  "key":  "utils/hooks/useLiveWS",
+                                                  "imported_by_count":  0,
+                                                  "imported_by_samples":  [
+
+                                                                          ],
+                                                  "exists":  true
+                                              },
+    "frontend/src/utils/RoleProtectedRoute.jsx":  {
+                                                      "key":  "utils/RoleProtectedRoute",
+                                                      "imported_by_count":  0,
+                                                      "imported_by_samples":  [
+
+                                                                              ],
+                                                      "exists":  true
+                                                  },
+    "frontend/src/utils/apiClient.js":  {
+                                            "key":  "utils/apiClient",
+                                            "imported_by_count":  0,
+                                            "imported_by_samples":  [
+
+                                                                    ],
+                                            "exists":  true
+                                        },
+    "frontend/src/utils/tms/constants.js":  {
+                                                "key":  "utils/tms/constants",
+                                                "imported_by_count":  0,
+                                                "imported_by_samples":  [
+
+                                                                        ],
+                                                "exists":  true
+                                            },
+    "frontend/src/utils/ProtectedRoute.jsx":  {
+                                                  "key":  "utils/ProtectedRoute",
+                                                  "imported_by_count":  0,
+                                                  "imported_by_samples":  [
+
+                                                                          ],
+                                                  "exists":  true
+                                              },
+    "frontend/src/utils/tms/mockData.js":  {
+                                               "key":  "utils/tms/mockData",
+                                               "imported_by_count":  0,
+                                               "imported_by_samples":  [
+
+                                                                       ],
+                                               "exists":  true
+                                           },
+    "frontend/src/routes/IntelligentRouter.jsx":  {
+                                                      "key":  "routes/IntelligentRouter",
+                                                      "imported_by_count":  0,
+                                                      "imported_by_samples":  [
+
+                                                                              ],
+                                                      "exists":  true
+                                                  }
+}

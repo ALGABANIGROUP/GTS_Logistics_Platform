@@ -1,0 +1,21 @@
+from fastapi import APIRouter
+from pathlib import Path
+
+# Create a test REST file inside the backend folder
+file_path = Path("/mnt/data/test_analyze_document.rest")
+
+# Define the content of the test file
+rest_content = """### Test Analyze Document Endpoint
+POST http://127.0.0.1:8000/analyze_document/
+Content-Type: application/json
+
+{
+  "document": "This logistics contract outlines the responsibilities of both the carrier and shipper including insurance terms."
+}
+"""
+
+# Write the content to the file
+file_path.write_text(rest_content)
+
+# Return the file name
+file_path.name

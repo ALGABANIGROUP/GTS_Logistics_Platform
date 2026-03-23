@@ -1,0 +1,448 @@
+.ops-panel-wrapper {
+    padding: 8px;
+}
+
+.ops-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: #e5ecf5;
+}
+
+.ops-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ops-section-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.ops-section-sub {
+    font-size: 13px;
+    color: #9fb2d3;
+}
+
+.ops-select,
+.ops-input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(108, 139, 180, 0.25);
+    color: #e5ecf5;
+    padding: 8px 10px;
+    border-radius: 10px;
+}
+
+.ops-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.ops-grid-quick {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.ops-grid-workflows {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.ops-grid-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.ops-grid-config {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.ops-quick-btn {
+    background: linear-gradient(135deg, #3b82f6, #22d3ee);
+    border: none;
+    color: #0b1625;
+    font-weight: 700;
+    padding: 14px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.ops-quick-btn:hover {
+    transform: translateY(-2px);
+}
+
+.ops-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(93, 115, 150, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.ops-card-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.ops-workflow-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(93, 115, 150, 0.25);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ops-workflow-head,
+.ops-workflow-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.ops-workflow-name {
+    font-weight: 700;
+}
+
+.ops-status-badge {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid rgba(93, 115, 150, 0.5);
+    text-transform: capitalize;
+}
+
+.ops-status-badge.running {
+    border-color: rgba(34, 211, 238, 0.7);
+    color: #8be9ff;
+}
+
+.ops-status-badge.paused {
+    border-color: rgba(250, 204, 21, 0.7);
+    color: #fcd34d;
+}
+
+.ops-status-badge.completed {
+    border-color: rgba(52, 211, 153, 0.7);
+    color: #a7f3d0;
+}
+
+.ops-progress {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 18px;
+    border: 1px solid rgba(93, 115, 150, 0.2);
+}
+
+.ops-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #0b1625;
+    font-weight: 700;
+}
+
+.ops-chip {
+    border: 1px solid rgba(93, 115, 150, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+    padding: 6px 10px;
+    color: #e5ecf5;
+    font-size: 12px;
+}
+
+.ops-grid-metrics .ops-metric-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(93, 115, 150, 0.25);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ops-metric-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ops-metric-name {
+    font-weight: 600;
+}
+
+.ops-metric-value {
+    font-weight: 700;
+}
+
+.ops-metric-value.ok {
+    color: #6ee7b7;
+}
+
+.ops-metric-value.warn {
+    color: #fbbf24;
+}
+
+.ops-metric-target {
+    color: #9fb2d3;
+    font-size: 13px;
+}
+
+.ops-progress-lite {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    overflow: hidden;
+    height: 10px;
+}
+
+.ops-progress-lite-bar {
+    height: 10px;
+    background: linear-gradient(90deg, #22d3ee, #3b82f6);
+}
+
+.ops-activities {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ops-activity-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(93, 115, 150, 0.25);
+}
+
+.ops-activity-icon {
+    font-size: 16px;
+}
+
+.ops-activity-main {
+    font-weight: 600;
+}
+
+.ops-activity-time {
+    color: #9fb2d3;
+    font-size: 12px;
+}
+
+.ops-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.ops-column {
+    flex: 1;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ops-list-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(93, 115, 150, 0.25);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ops-list-item:hover {
+    border-color: rgba(88, 179, 255, 0.5);
+}
+
+.ops-list-item.selected {
+    border-color: rgba(88, 179, 255, 0.8);
+    background: rgba(88, 179, 255, 0.1);
+}
+
+.ops-list-head,
+.ops-list-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ops-list-name {
+    font-weight: 700;
+}
+
+.ops-chip.automated {
+    color: #8be9ff;
+}
+
+.ops-chip.scheduled {
+    color: #fbbf24;
+}
+
+.ops-chip.manual {
+    color: #f87171;
+}
+
+.ops-priority {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    text-transform: capitalize;
+    border: 1px solid rgba(93, 115, 150, 0.35);
+}
+
+.ops-priority.high {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.5);
+}
+
+.ops-priority.medium {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.5);
+}
+
+.ops-priority.low {
+    color: #a7f3d0;
+    border-color: rgba(52, 211, 153, 0.5);
+}
+
+.ops-muted {
+    color: #9fb2d3;
+    font-size: 13px;
+}
+
+.ops-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ops-btn {
+    border: 1px solid rgba(93, 115, 150, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+    color: #e5ecf5;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ops-btn.primary {
+    background: linear-gradient(135deg, #3b82f6, #22d3ee);
+    border-color: rgba(88, 179, 255, 0.7);
+    color: #0b1625;
+    font-weight: 700;
+}
+
+.ops-btn.danger {
+    border-color: rgba(239, 68, 68, 0.7);
+    color: #fecdd3;
+}
+
+.ops-btn.ghost {
+    background: transparent;
+}
+
+.ops-task-bar input,
+.ops-task-bar select {
+    flex: 1;
+}
+
+.ops-task-check {
+    width: 14px;
+    height: 14px;
+    border: 1px solid rgba(93, 115, 150, 0.4);
+    border-radius: 4px;
+}
+
+.ops-status-tag {
+    padding: 4px 8px;
+    border-radius: 8px;
+    text-transform: capitalize;
+    border: 1px solid rgba(93, 115, 150, 0.35);
+}
+
+.ops-status-tag.pending {
+    color: #fbbf24;
+}
+
+.ops-status-tag.in-progress {
+    color: #8be9ff;
+}
+
+.ops-status-tag.completed {
+    color: #a7f3d0;
+}
+
+.ops-status-tag {
+    border-color: rgba(93, 115, 150, 0.35);
+}
+
+.ops-card-ghost {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(93, 115, 150, 0.35);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ops-toggle {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.ops-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.ops-metric-row {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.ops-metric-number {
+    color: #8be9ff;
+}
+
+.ops-actions-bar {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ops-list-item.ops-log {
+    cursor: default;
+}
+
+.ops-log-level {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #9fb2d3;
+}
+
+.ops-list-item.ops-log.success {
+    border-color: rgba(52, 211, 153, 0.4);
+}
+
+.ops-list-item.ops-log.warning {
+    border-color: rgba(251, 191, 36, 0.5);
+}
+
+.ops-list-item.ops-log.info {
+    border-color: rgba(88, 179, 255, 0.4);
+}

@@ -1,0 +1,275 @@
+.lc-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px
+}
+
+/* Neutral info banner (kept for potential future notices) */
+.lc-banner {
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, .25);
+    background: rgba(15, 23, 42, .4);
+    color: #cbd5e1;
+    padding: 10px 12px;
+    font-size: 12px
+}
+
+.lc-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+}
+
+.lc-title {
+    display: flex;
+    align-items: center;
+    gap: 12px
+}
+
+.lc-icon {
+    height: 52px;
+    width: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .08);
+    color: #fff;
+    font-size: 26px
+}
+
+.lc-h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff
+}
+
+.lc-sub {
+    font-size: 12px;
+    color: rgba(226, 232, 240, .8)
+}
+
+.lc-tabs {
+    display: flex;
+    gap: 8px
+}
+
+.lc-tabs>button {
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .08);
+    color: #cbd5e1;
+    font-weight: 600;
+    font-size: 12px;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px)
+}
+
+.lc-tabs>button.active {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .18);
+    color: #fff
+}
+
+.lc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+}
+
+.lc-card {
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(255, 255, 255, .06);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    padding: 14px
+}
+
+.lc-section-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 10px
+}
+
+.lc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px
+}
+
+.lc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px
+}
+
+.lc-field>label {
+    font-size: 12px;
+    color: #94a3b8
+}
+
+.lc-field>input,
+.lc-field>select,
+.lc-field>textarea {
+    background: rgba(2, 6, 23, .6);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 10px;
+    padding: 8px
+}
+
+.lc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px
+}
+
+.lc-actions>button {
+    background: rgba(255, 255, 255, .08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-weight: 600
+}
+
+.lc-actions>button:disabled {
+    opacity: .6
+}
+
+.lc-error {
+    border-radius: 10px;
+    border: 1px solid rgba(239, 68, 68, .3);
+    background: rgba(239, 68, 68, .1);
+    color: #fca5a5;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-top: 10px
+}
+
+.lc-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .08);
+    color: #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.2s
+}
+
+.lc-file:hover {
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .15)
+}
+
+.lc-file>input {
+    display: none
+}
+
+.lc-pre {
+    max-height: 420px;
+    overflow: auto;
+    background: rgba(2, 6, 23, .6);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 10px;
+    color: #cbd5e1;
+    font-size: 12px;
+    padding: 10px;
+    margin-top: 10px
+}
+
+.lc-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px
+}
+
+.lc-muted {
+    color: #94a3b8;
+    font-size: 12px
+}
+
+.lc-result-box {
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, .25);
+    background: rgba(2, 6, 23, .5);
+    padding: 12px;
+    margin-top: 12px
+}
+
+.lc-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08)
+}
+
+.lc-result-badge {
+    background: rgba(255, 255, 255, .08);
+    color: #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase
+}
+
+.lc-result-id {
+    font-size: 11px;
+    color: #94a3b8;
+    font-family: monospace
+}
+
+.lc-assessment {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, .2);
+    border-radius: 8px
+}
+
+.lc-assessment-score,
+.lc-assessment-status {
+    font-size: 13px;
+    color: #cbd5e1
+}
+
+.lc-assessment-score strong,
+.lc-assessment-status strong {
+    color: #fff;
+    font-weight: 700
+}
+
+.lc-details {
+    cursor: pointer
+}
+
+.lc-details>summary {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 6px 0;
+    -webkit-user-select: none;
+    user-select: none
+}
+
+.lc-details>summary:hover {
+    color: #cbd5e1
+}
+
+@media (max-width:900px) {
+    .lc-grid {
+        grid-template-columns: 1fr
+    }
+}

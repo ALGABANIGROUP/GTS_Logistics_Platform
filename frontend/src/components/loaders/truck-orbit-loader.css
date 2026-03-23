@@ -1,0 +1,56 @@
+/* truck-orbit-loader.css */
+.truckLoaderWrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: rgba(255, 255, 255, .85);
+}
+
+.truckOrbit {
+    width: 44px;
+    height: 44px;
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.orbitRing {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: rgba(255, 255, 255, .06);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.truckDot {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    transform-origin: 50% 50%;
+    animation: orbit 1.2s linear infinite;
+}
+
+.truckDot svg {
+    color: rgba(140, 200, 255, .95);
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35));
+}
+
+@keyframes orbit {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.truckLoaderText {
+    font-size: 14px;
+    opacity: .9;
+}

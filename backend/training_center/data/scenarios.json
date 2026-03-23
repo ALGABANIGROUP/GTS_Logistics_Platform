@@ -1,0 +1,106 @@
+[
+  {
+    "id": "SC-SEC-001",
+    "name": "Targeted Phishing Chain",
+    "specialization": "security",
+    "difficulty": 8,
+    "duration_minutes": 20,
+    "required_skills": ["incident_detection", "threat_analysis", "containment"],
+    "template_steps": [
+      {"type": "phishing", "description": "Review a suspicious message with spoofed sender details."},
+      {"type": "credential_steal", "description": "Contain a fake login capture attempt."},
+      {"type": "phishing", "description": "Communicate safe handling guidance to the impacted operator."}
+    ]
+  },
+  {
+    "id": "SC-SEC-002",
+    "name": "Platform DDoS Escalation",
+    "specialization": "security",
+    "difficulty": 9,
+    "duration_minutes": 25,
+    "required_skills": ["threat_analysis", "response_quality", "containment"],
+    "template_steps": [
+      {"type": "ddos", "description": "Identify abnormal traffic patterns against core services."},
+      {"type": "mitigation_test", "description": "Apply mitigation and confirm service recovery."},
+      {"type": "ddos", "description": "Rebalance protections as the attack shifts to backup paths."}
+    ]
+  },
+  {
+    "id": "SC-LOG-001",
+    "name": "Cold Chain Delay Cluster",
+    "specialization": "logistics",
+    "difficulty": 8,
+    "duration_minutes": 30,
+    "required_skills": ["routing", "recovery_planning", "shipment_visibility"],
+    "template_steps": [
+      {"type": "delay", "description": "Recalculate ETA for temperature-sensitive shipments."},
+      {"type": "delay", "description": "Coordinate rerouting for the highest-risk loads."},
+      {"type": "delay", "description": "Publish stakeholder updates with revised delivery windows."}
+    ]
+  },
+  {
+    "id": "SC-LOG-002",
+    "name": "Carrier Capacity Shortfall",
+    "specialization": "logistics",
+    "difficulty": 9,
+    "duration_minutes": 35,
+    "required_skills": ["recovery_planning", "resource_balancing", "exception_handling"],
+    "template_steps": [
+      {"type": "delay", "description": "Rebalance loads after a major carrier withdrawal."},
+      {"type": "delay", "description": "Prioritize contractual and critical shipments."},
+      {"type": "delay", "description": "Document fallback capacity decisions under time pressure."}
+    ]
+  },
+  {
+    "id": "SC-CS-001",
+    "name": "Escalated Service Complaint",
+    "specialization": "customer_service",
+    "difficulty": 8,
+    "duration_minutes": 18,
+    "required_skills": ["communication", "de_escalation", "issue_resolution"],
+    "template_steps": [
+      {"type": "angry_customer", "description": "Stabilize a customer threatening immediate churn."},
+      {"type": "angry_customer", "description": "Clarify the root service failure without escalating tension."},
+      {"type": "angry_customer", "description": "Confirm a recovery path and next checkpoint."}
+    ]
+  },
+  {
+    "id": "SC-CS-002",
+    "name": "Public Complaint Recovery",
+    "specialization": "customer_service",
+    "difficulty": 9,
+    "duration_minutes": 25,
+    "required_skills": ["de_escalation", "issue_resolution", "judgement"],
+    "template_steps": [
+      {"type": "angry_customer", "description": "Handle a complaint amplified by public visibility."},
+      {"type": "angry_customer", "description": "Decide on compensation boundaries and escalation."},
+      {"type": "angry_customer", "description": "Close the incident with a credible follow-up plan."}
+    ]
+  },
+  {
+    "id": "SC-OPS-001",
+    "name": "Workflow Queue Saturation",
+    "specialization": "operations",
+    "difficulty": 8,
+    "duration_minutes": 22,
+    "required_skills": ["workflow_coordination", "resource_balancing", "exception_handling"],
+    "template_steps": [
+      {"type": "delay", "description": "Prioritize the highest-risk blocked workflows."},
+      {"type": "delay", "description": "Reassign available capacity across the operation."},
+      {"type": "delay", "description": "Confirm recovery checkpoints with downstream owners."}
+    ]
+  },
+  {
+    "id": "SC-OPS-002",
+    "name": "Cross-Team Escalation Storm",
+    "specialization": "operations",
+    "difficulty": 9,
+    "duration_minutes": 28,
+    "required_skills": ["workflow_coordination", "resource_balancing", "decision_quality"],
+    "template_steps": [
+      {"type": "delay", "description": "Consolidate duplicate escalations into one incident flow."},
+      {"type": "delay", "description": "Sequence decisions across customer, finance, and dispatch teams."},
+      {"type": "delay", "description": "Maintain service continuity while restoring normal queue flow."}
+    ]
+  }
+]

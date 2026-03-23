@@ -1,0 +1,140 @@
+/* src/styles/theme.css */
+
+:root {
+    /* Dark theme variables */
+    --bg-0: #0b1220;
+    --bg-1: #0f172a;
+    --bg-2: #111c33;
+
+    --glass-bg: rgba(15, 23, 42, 0.35);
+    --glass-bg-strong: rgba(15, 23, 42, 0.52);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-border-strong: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --glass-blur: blur(14px);
+
+    --text-main: #fff;
+    --text-muted: rgba(255, 255, 255, 0.68);
+
+    --accent-blue: #38bdf8;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+
+    --radius-lg: 18px;
+    --radius-md: 12px;
+}
+
+/* Light theme variables */
+[data-theme="light"] {
+    --bg-0: #f8fafc;
+    --bg-1: #ffffff;
+    --bg-2: #f1f5f9;
+
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-bg-strong: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-border-strong: rgba(0, 0, 0, 0.12);
+    --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --glass-blur: blur(14px);
+
+    --text-main: #1e293b;
+    --text-muted: rgba(30, 41, 59, 0.68);
+
+    --accent-blue: #0ea5e9;
+    --accent-purple: #7c3aed;
+    --accent-green: #059669;
+    --accent-amber: #d97706;
+    --accent-red: #dc2626;
+}
+
+/* Background must be set on body and #root */
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    color: var(--text-main);
+    background:
+        radial-gradient(900px 600px at 20% 10%, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(800px 500px at 80% 25%, rgba(139, 92, 246, 0.16), transparent 60%),
+        radial-gradient(900px 650px at 50% 90%, rgba(16, 185, 129, 0.10), transparent 55%),
+        linear-gradient(135deg, var(--bg-1) 0%, var(--bg-0) 55%, var(--bg-2) 100%);
+}
+
+/* Light theme background adjustments */
+[data-theme="light"] body {
+    background:
+        radial-gradient(900px 600px at 20% 10%, rgba(14, 165, 233, 0.08), transparent 55%),
+        radial-gradient(800px 500px at 80% 25%, rgba(124, 58, 237, 0.06), transparent 60%),
+        radial-gradient(900px 650px at 50% 90%, rgba(5, 150, 105, 0.05), transparent 55%),
+        linear-gradient(135deg, var(--bg-1) 0%, var(--bg-0) 55%, var(--bg-2) 100%);
+}
+
+/* ===== Glass primitives ===== */
+.glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    position: relative;
+    overflow: hidden;
+    transition: 180ms ease;
+}
+
+.glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
+    pointer-events: none;
+}
+
+.glass-card:hover {
+    background: var(--glass-bg-strong);
+    border-color: var(--glass-border-strong);
+    transform: translateY(-2px);
+}
+
+.glass-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: rgba(15, 23, 42, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: var(--text-main);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: 160ms ease;
+}
+
+.glass-button:hover {
+    background: rgba(15, 23, 42, 0.35);
+    border-color: rgba(255, 255, 255, 0.24);
+    transform: translateY(-1px);
+}
+
+.glass-button.primary {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: rgba(56, 189, 248, 0.35);
+}
+
+.glass-button.primary:hover {
+    background: rgba(56, 189, 248, 0.24);
+    border-color: rgba(56, 189, 248, 0.45);
+}
+
+/* Important: any white wrapper breaks the glass effect */
+.bg-white,
+.background-white {
+    background: transparent !important;
+}

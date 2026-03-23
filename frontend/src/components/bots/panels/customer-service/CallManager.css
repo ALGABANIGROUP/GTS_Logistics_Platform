@@ -1,0 +1,557 @@
+/* src/components/bots/panels/customer-service/CallManager.css */
+
+.call-manager {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    color: #e2e8f0;
+}
+
+.call-manager-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    height: 100%;
+    min-height: 600px;
+}
+
+/* Calls Panel */
+.calls-panel {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 16px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.new-call-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(10, 160, 115, 0.3) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #10b981;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.new-call-btn:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(10, 160, 115, 0.4) 100%);
+    transform: translateY(-2px);
+}
+
+/* Active Calls List */
+.active-calls-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.call-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.call-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.call-item.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-left: 3px solid #3b82f6;
+}
+
+.call-item.dialing .call-info::before {
+    content: 'CALL';
+    animation: pulse-ring 1.5s infinite;
+}
+
+.call-item.connected .call-info::before {
+    content: 'LIVE';
+    color: #10b981;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.call-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.call-number {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.call-status {
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: capitalize;
+}
+
+.call-duration {
+    font-size: 12px;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.end-call-btn {
+    padding: 6px 10px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.end-call-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+/* Dialer Modal */
+.dialer-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.dialer-content {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 300px;
+}
+
+.dialer-content h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    text-align: center;
+}
+
+.dialer-input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.dialer-input:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dialer-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.call-btn,
+.cancel-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.call-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.call-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.call-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cancel-btn {
+    background: rgba(59, 130, 246, 0.2);
+    color: #e2e8f0;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.cancel-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+/* Call Stats */
+.call-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 6px;
+}
+
+.stat .label {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.stat .value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #60a5fa;
+}
+
+/* Call Controls Panel */
+.call-controls-panel {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 16px;
+}
+
+.current-call {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.current-call h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+}
+
+.call-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.detail .label {
+    color: #94a3b8;
+}
+
+.detail .value {
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.detail .value.connected {
+    color: #10b981;
+}
+
+.detail .value.dialing {
+    color: #f59e0b;
+}
+
+/* Controls Section */
+.controls-section {
+    margin-bottom: 16px;
+}
+
+.controls-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.control-btn {
+    padding: 12px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.6);
+    transform: translateY(-2px);
+}
+
+.control-btn.active {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.7);
+}
+
+.control-btn.danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.control-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+/* DTMF Section */
+.dtmf-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.dtmf-toggle {
+    width: 100%;
+    padding: 10px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.dtmf-toggle:hover {
+    background: rgba(59, 130, 246, 0.25);
+}
+
+.dtmf-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.dtmf-row {
+    display: contents;
+}
+
+.dtmf-btn {
+    aspect-ratio: 1;
+    padding: 0;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.dtmf-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+    transform: scale(1.05);
+}
+
+.dtmf-btn:active {
+    transform: scale(0.95);
+}
+
+/* Call History Panel */
+.call-history-panel {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.call-history-panel h3 {
+    margin: 0;
+    padding: 16px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    font-size: 16px;
+}
+
+.history-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+}
+
+.history-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.history-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.history-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-number {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.history-time {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.history-duration {
+    font-size: 12px;
+    color: #10b981;
+    margin-top: 2px;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #94a3b8;
+}
+
+.empty-state .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+/* Scrollbar */
+.active-calls-list::-webkit-scrollbar,
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.active-calls-list::-webkit-scrollbar-track,
+.history-list::-webkit-scrollbar-track {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.active-calls-list::-webkit-scrollbar-thumb,
+.history-list::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 3px;
+}
+
+.active-calls-list::-webkit-scrollbar-thumb:hover,
+.history-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .call-manager-grid {
+        grid-template-columns: 1fr 1fr;
+        height: auto;
+    }
+
+    .call-history-panel {
+        grid-column: 1 / -1;
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .call-manager-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+        min-height: 0;
+    }
+
+    .dtmf-pad {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+}

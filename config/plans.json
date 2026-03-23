@@ -1,0 +1,121 @@
+{
+    "plans": [
+        {
+            "key": "loadboard_basic",
+            "name_ar": "EN",
+            "name_en": "Loadboard Basic",
+            "description": "EN",
+            "price_monthly": 299,
+            "price_yearly": 2999,
+            "features": [
+                "loadboard.core",
+                "ai.basic",
+                "freight_broker.access",
+                "documents_manager.access",
+                "email.core",
+                "email.outbound"
+            ],
+            "limits": {
+                "users": 5,
+                "loads_per_month": 100,
+                "storage_gb": 10,
+                "bot_runs_per_day": 50,
+                "emails_per_day": 100
+            }
+        },
+        {
+            "key": "tms_pro",
+            "name_ar": "EN",
+            "name_en": "TMS Pro",
+            "description": "EN",
+            "price_monthly": 599,
+            "price_yearly": 5999,
+            "features": [
+                "tms.core",
+                "ai.core",
+                "dispatcher.access",
+                "finance_bot.access",
+                "operations_manager.access",
+                "safety_manager.access",
+                "email.byod_smtp",
+                "email.outbound",
+                "email.inbound"
+            ],
+            "limits": {
+                "users": 10,
+                "shipments_per_month": 500,
+                "storage_gb": 50,
+                "bot_runs_per_day": 200,
+                "emails_per_day": 500
+            }
+        },
+        {
+            "key": "unified_pro",
+            "name_ar": "EN",
+            "name_en": "Unified Pro",
+            "description": "EN TMS ENLoadboard ENDispatcher",
+            "price_monthly": 999,
+            "price_yearly": 9999,
+            "features": [
+                "tms.core",
+                "loadboard.core",
+                "dispatcher.core",
+                "ai.premium",
+                "finance_bot.access",
+                "freight_broker.access",
+                "operations_manager.access",
+                "strategy_advisor.access",
+                "mapleload_ai.access",
+                "all_user_bots",
+                "email.byod_smtp",
+                "email.managed_domain",
+                "email.outbound",
+                "email.inbound",
+                "email.aliases"
+            ],
+            "limits": {
+                "users": 25,
+                "shipments_per_month": 1000,
+                "loads_per_month": 500,
+                "storage_gb": 100,
+                "bot_runs_per_day": 500,
+                "emails_per_day": 1000
+            }
+        },
+        {
+            "key": "enterprise",
+            "name_ar": "EN",
+            "name_en": "Enterprise",
+            "description": "EN",
+            "price_monthly": 1999,
+            "price_yearly": 19999,
+            "features": [
+                "tms.core",
+                "loadboard.core",
+                "dispatcher.core",
+                "ai.enterprise",
+                "system.admin",
+                "all_user_bots",
+                "all_system_bots",
+                "custom_integrations",
+                "dedicated_support",
+                "white_label",
+                "email.byod_smtp",
+                "email.managed_domain",
+                "email.mailboxes",
+                "email.outbound",
+                "email.inbound",
+                "email.aliases",
+                "email.custom_domain"
+            ],
+            "limits": {
+                "users": 100,
+                "shipments_per_month": 10000,
+                "loads_per_month": 5000,
+                "storage_gb": 500,
+                "bot_runs_per_day": 5000,
+                "emails_per_day": 5000
+            }
+        }
+    ]
+}

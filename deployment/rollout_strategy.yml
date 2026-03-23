@@ -1,0 +1,13 @@
+rollout_strategy:
+  phase_1:
+    percentage: 10
+    duration: 1h
+    monitor_metrics: ["error_rate", "response_time", "cpu_usage"]
+  phase_2:
+    percentage: 50
+    duration: 2h
+    conditions: ["error_rate < 1%", "response_time < 2s"]
+  phase_3:
+    percentage: 100
+    duration: 24h
+    conditions: ["all_metrics_normal"]

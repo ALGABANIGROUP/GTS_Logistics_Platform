@@ -1,0 +1,715 @@
+/* Pricing Management Styles */
+
+.pricing-management {
+    width: 100%;
+    min-height: 100vh;
+    background: transparent;
+    padding: 2rem;
+}
+
+.pricing-management.unauthorized {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-box {
+    text-align: center;
+    background: rgba(15, 23, 42, 0.4);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    max-width: 500px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.error-box h1 {
+    color: #fca5a5;
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.error-box p {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0.5rem 0;
+}
+
+/* Header */
+.pm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    background: rgba(15, 23, 42, 0.3);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.pm-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pm-header-content h1 {
+    color: white;
+    font-size: 2.1rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.pm-header-content p {
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.pm-structure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.pm-structure-card {
+    background: rgba(15, 23, 42, 0.34);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.15rem 1.2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.pm-structure-card h3 {
+    margin: 0.2rem 0 0.45rem;
+    color: white;
+    font-size: 1.05rem;
+}
+
+.pm-structure-card p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.55;
+    font-size: 0.92rem;
+}
+
+.pm-structure-kicker,
+.pm-block-kicker {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.14);
+    border: 1px solid rgba(96, 165, 250, 0.22);
+    color: #bfdbfe;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Language Toggle */
+.language-toggle {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lang-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.lang-btn.active {
+    background: #60a5fa;
+    border-color: #60a5fa;
+    color: white;
+}
+
+/* Plans Grid */
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.plan-card {
+    background: rgba(15, 23, 42, 0.4);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.plan-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(15, 23, 42, 0.5);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.plan-card.selected {
+    border-color: #60a5fa;
+    background: rgba(96, 165, 250, 0.15);
+    box-shadow: 0 12px 40px rgba(96, 165, 250, 0.3);
+}
+
+.pm-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    border-radius: 0.6rem;
+    padding: 0.7rem 0.85rem;
+    outline: none;
+    margin-bottom: 0.75rem;
+}
+
+.pm-input:focus {
+    border-color: rgba(147, 197, 253, 0.9);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+.pm-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.pm-textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+.pm-textarea-lg {
+    min-height: 160px;
+}
+
+.pm-block {
+    margin-bottom: 2rem;
+}
+
+.pm-block-header {
+    margin-bottom: 1rem;
+}
+
+.pm-block-header h2 {
+    margin: 0.45rem 0 0.25rem;
+    color: white;
+    font-size: 1.45rem;
+}
+
+.pm-section-copy {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.68);
+    line-height: 1.55;
+    max-width: 760px;
+}
+
+.pm-two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pm-field-label {
+    display: block;
+    margin-bottom: 0.55rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.pm-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 0.7rem 0.85rem;
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    min-height: 46px;
+}
+
+.pm-checkbox input {
+    margin: 0;
+}
+
+.plan-header {
+    margin-bottom: 1rem;
+}
+
+.pm-plan-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.pm-plan-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pm-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #dbeafe;
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.pm-badge-success {
+    color: #dcfce7;
+    background: rgba(34, 197, 94, 0.18);
+    border-color: rgba(74, 222, 128, 0.35);
+}
+
+.pm-price-row {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr 1fr;
+    gap: 0.75rem;
+    align-items: stretch;
+    margin-bottom: 0.25rem;
+}
+
+.pm-plan-footnote {
+    margin-top: 0.3rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.plan-info {
+    margin-bottom: 1rem;
+}
+
+.bot-count {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.plan-features {
+    margin-bottom: 1rem;
+}
+
+.plan-features h4 {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-features li {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.plan-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-btn {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+}
+
+.edit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pm-secondary-btn,
+.pm-danger-btn {
+    padding: 0.7rem 1rem;
+    border-radius: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.pm-secondary-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.pm-secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.pm-danger-btn {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fecaca;
+    border-color: rgba(248, 113, 113, 0.25);
+}
+
+.pm-danger-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: white;
+}
+
+/* Plan Details */
+.plan-details {
+    background: rgba(15, 23, 42, 0.5);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.details-header h2 {
+    color: white;
+    margin: 0;
+}
+
+.bots-list h3 {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1rem;
+}
+
+.pm-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1rem;
+}
+
+.pm-list-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.9rem;
+    padding: 1rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.pm-list-card-wide {
+    max-width: 560px;
+}
+
+.pm-list-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pm-list-fields .pm-input {
+    margin-bottom: 0;
+}
+
+.pm-form-shell {
+    width: 100%;
+}
+
+.pm-form-panel {
+    width: min(100%, 980px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.95rem;
+    padding: 1.15rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.pm-form-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.pm-form-panel .pm-input {
+    margin-bottom: 0;
+}
+
+.pm-inline-remove {
+    align-self: flex-start;
+    padding: 0.65rem 0.95rem;
+    border-radius: 0.7rem;
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    background: rgba(239, 68, 68, 0.12);
+    color: #fecaca;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.pm-inline-remove:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: white;
+}
+
+.bots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.bot-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: left;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.bot-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.bot-name {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #60a5fa;
+}
+
+.checkbox input {
+    cursor: pointer;
+}
+
+.details-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.save-btn,
+.cancel-btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background: #60a5fa;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #3b82f6;
+}
+
+.cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+/* Stats */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: rgba(15, 23, 42, 0.4);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.stat-value {
+    color: #60a5fa;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    word-break: break-all;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.pm-bottom-bar {
+    position: sticky;
+    bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(96, 165, 250, 0.22);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    margin-top: 1rem;
+}
+
+.pm-bottom-bar strong {
+    display: block;
+    color: #fff;
+    margin-bottom: 0.2rem;
+}
+
+.pm-bottom-bar p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.92rem;
+}
+
+.pm-bottom-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pricing-management {
+        padding: 1rem;
+    }
+
+    .pm-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pm-toolbar,
+    .pm-plan-heading,
+    .pm-bottom-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pm-header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .plans-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pm-list-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pm-list-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .pm-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .plan-details {
+        padding: 1.5rem;
+    }
+
+    .pm-two-col,
+    .pm-price-row {
+        grid-template-columns: 1fr;
+    }
+}

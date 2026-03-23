@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glass Test</title>
+    <style>
+        /* Copy theme here for testing */
+        :root {
+            --bg-0: #0b1220;
+            --bg-1: #0f172a;
+            --bg-2: #111c33;
+            --glass-bg: rgba(15, 23, 42, 0.35);
+            --glass-bg-strong: rgba(15, 23, 42, 0.52);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-border-strong: rgba(255, 255, 255, 0.18);
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            --glass-blur: blur(14px);
+            --text-main: #fff;
+            --text-muted: rgba(255, 255, 255, 0.68);
+            --accent-blue: #38bdf8;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+        }
+
+        html,
+        body,
+        #root {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text-main);
+            background:
+                radial-gradient(900px 600px at 20% 10%, rgba(56, 189, 248, 0.18), transparent 55%),
+                radial-gradient(800px 500px at 80% 25%, rgba(139, 92, 246, 0.16), transparent 60%),
+                radial-gradient(900px 650px at 50% 90%, rgba(16, 185, 129, 0.10), transparent 55%),
+                linear-gradient(135deg, var(--bg-1) 0%, var(--bg-0) 55%, var(--bg-2) 100%);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            position: relative;
+            overflow: hidden;
+            transition: 180ms ease;
+        }
+
+        .glass-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
+            pointer-events: none;
+        }
+
+        .glass-card:hover {
+            background: var(--glass-bg-strong);
+            border-color: var(--glass-border-strong);
+            transform: translateY(-2px);
+        }
+
+        .test-container {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .test-card {
+            padding: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <div class="glass-card test-card">
+            <h2>Glass Test ✅</h2>
+            <p>If you see transparent glass with blur and gradient background behind it, it means the theme worked!</p>
+            <p>Glass effect is working if you see transparent blur with gradient background.</p>
+        </div>
+
+        <div class="glass-card test-card">
+            <h2>RBAC Test</h2>
+            <p>SUPER_ADMIN sees everything</p>
+            <p>Finance sees only finance features</p>
+        </div>
+
+        <div class="glass-card test-card">
+            <h2>Navigation Test</h2>
+            <p>Profile, Settings, Emails links should work</p>
+            <p>AI Bots, Finance Bot should show based on features</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+.portal-background {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+.portal-background__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      180deg,
+      rgba(7, 15, 27, 0.85),
+      rgba(7, 15, 27, 0.95)
+    ),
+    rgba(0, 0, 0, 0.4);
+  z-index: 0;
+}
+
+.portal-background__content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem 3rem;
+  color: #f8fafc;
+}

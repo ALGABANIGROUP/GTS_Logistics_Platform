@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTS Profile API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        input {
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin: 5px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>GTS Profile API Test</h1>
+
+    <div class="container">
+        <h2>Test /api/v1/auth/me Endpoint</h2>
+        <p>This endpoint should return user profile data including role, features, tenant, and plan information.</p>
+
+        <div>
+            <label for="token">Bearer Token:</label>
+            <input type="text" id="token" placeholder="Enter JWT token" style="width: 400px;">
+        </div>
+
+        <button onclick="testAuthMe()">Test /api/v1/auth/me</button>
+        <button onclick="testWithStoredToken()">Test with Stored Token</button>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h2>Instructions</h2>
+        <ol>
+            <li>Get a JWT token by logging into the application</li>
+            <li>Paste the token in the input field above</li>
+            <li>Click "Test /api/v1/auth/me" to see the profile data</li>
+            <li>The response should include: user info, role, features, tenant, plan</li>
+        </ol>
+    </div>
+
+    <script>
+        const backendUrl = 'http://127.0.0.1:8000';
+
+        function showResult(data, error = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.style.backgroundColor = error ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)';
+            resultDiv.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        async function testAuthMe() {
+            const token = document.getElementById('token').value.trim();
+            if (!token) {
+                showResult('Please enter a JWT token', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${backendUrl}/api/v1/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                showResult(data);
+
+                // Store token for future use
+                localStorage.setItem('test_token', token);
+
+            } catch (error) {
+                showResult(`Error: ${error.message}`, true);
+            }
+        }
+
+        function testWithStoredToken() {
+            const token = localStorage.getItem('test_token');
+            if (token) {
+                document.getElementById('token').value = token;
+                testAuthMe();
+            } else {
+                showResult('No stored token found. Please enter a token manually.', true);
+            }
+        }
+
+        // Check if there's a token in URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            document.getElementById('token').value = tokenFromUrl;
+        }
+    </script>
+</body>
+
+</html>

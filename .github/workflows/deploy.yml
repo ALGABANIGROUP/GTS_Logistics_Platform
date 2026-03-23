@@ -1,0 +1,324 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [main, production]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # TEST STAGE
+  # ============================================================================
+
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_gts
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+
+      - name: 🔐 Run security tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost/test_gts
+          PYTEST_CURRENT_TEST: true
+        run: |
+          pytest tests/test_security.py -v --tb=short --cov=backend
+
+      - name: ✅ Run functional tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost/test_gts
+        run: |
+          pytest backend/tests/ -v --tb=short --cov=backend --cov-report=term-missing
+
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # ============================================================================
+  # BUILD STAGE
+  # ============================================================================
+
+  build:
+    name: 🏗️ Build Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: 🔑 Log in to GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${{ github.sha }}
+
+  # ============================================================================
+  # DEPLOY TO STAGING
+  # ============================================================================
+
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.gts.example.com
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY_STAGING }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H staging.gts.example.com >> ~/.ssh/known_hosts
+
+      - name: 🚀 Deploy to Staging
+        run: |
+          ssh -i ~/.ssh/deploy_key deploy@staging.gts.example.com \
+            'cd /app && bash scripts/deploy.sh staging deploy'
+
+      - name: ✅ Verify Staging Deployment
+        run: |
+          for i in {1..30}; do
+            if curl -sf https://staging.gts.example.com/health > /dev/null; then
+              echo "✅ Staging deployment verified"
+              exit 0
+            fi
+            echo "Health check attempt $i/30..."
+            sleep 2
+          done
+          echo "❌ Staging deployment verification failed"
+          exit 1
+
+      - name: 💬 Slack Notification (Staging)
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "🎯 Staging Deployment",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🚀 Staging Deployment*\n*Status:* ${{ job.status }}\n*Branch:* ${{ github.ref_name }}\n*Commit:* ${{ github.event.head_commit.message }}\n*By:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+
+  # ============================================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================================
+
+  deploy-production:
+    name: 🚀 Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    environment:
+      name: production
+      url: https://gts.example.com
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY_PRODUCTION }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H gts.example.com >> ~/.ssh/known_hosts
+
+      - name: 🚀 Deploy to Production
+        run: |
+          ssh -i ~/.ssh/deploy_key deploy@gts.example.com \
+            'cd /app && bash scripts/deploy.sh production deploy'
+
+      - name: ✅ Verify Production Deployment
+        run: |
+          for i in {1..30}; do
+            if curl -sf https://gts.example.com/health > /dev/null; then
+              echo "✅ Production deployment verified"
+              exit 0
+            fi
+            echo "Health check attempt $i/30..."
+            sleep 2
+          done
+          echo "❌ Production deployment verification failed"
+          exit 1
+
+      - name: 💬 Slack Notification (Success)
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "✅ Production Deployment Successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*✅ Production Deployment Successful*\n*URL:* https://gts.example.com\n*Commit:* ${{ github.event.head_commit.message }}\n*By:* ${{ github.actor }}\n*Time:* $(date)"
+                  }
+                }
+              ]
+            }
+
+      - name: 💬 Slack Notification (Failure)
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "❌ Production Deployment Failed",
+              "attachments": [
+                {
+                  "color": "danger",
+                  "fields": [
+                    {
+                      "title": "Status",
+                      "value": "Deployment failed",
+                      "short": true
+                    },
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "${{ github.event.head_commit.message }}",
+                      "short": false
+                    }
+                  ]
+                }
+              ]
+            }
+
+  # ============================================================================
+  # CLEANUP
+  # ============================================================================
+
+  cleanup:
+    name: 🧹 Clean up old images
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: 🔑 Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🧹 Delete old images
+        run: |
+          # Keep only last 5 images
+          images=$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -s "https://api.github.com/repos/${{ github.repository }}/packages/container/${{ env.IMAGE_NAME }}/versions" \
+            | jq -r '.[] | .id' | tail -n +6)
+
+          for image_id in $images; do
+            curl -X DELETE \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/packages/container/${{ env.IMAGE_NAME }}/versions/$image_id"
+          done

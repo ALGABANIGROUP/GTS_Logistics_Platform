@@ -1,0 +1,97 @@
+"""harden expenses: add category/description/vendor/status/dedupe_key and indexes
+
+Revision ID: 20250826_01_harden_expenses
+Revises: 99ede8b3ddc7
+Create Date: 2025-08-26
+
+This migration is **idempotent**. It checks for existing columns/indexes and only creates what's missing.
+"""
+
+from alembic import op
+import sqlalchemy as sa
+
+# revision identifiers, used by Alembic.
+revision = "20250826_01_harden_expenses"
+down_revision = "99ede8b3ddc7"
+branch_labels = None
+depends_on = None
+
+
+def _col_exists(conn, table: str, column: str, schema: str = "public") -> bool:
+    res = conn.execute(
+        sa.text(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = :schema
+              AND table_name   = :table
+              AND column_name  = :column
+            """
+        ),
+        {"schema": schema, "table": table, "column": column},
+    ).first()
+    return bool(res)
+
+
+def _index_exists(conn, index_name: str) -> bool:
+    # works for PostgreSQL; checks by index relname
+    res = conn.execute(
+        sa.text(
+            "SELECT 1 FROM pg_class WHERE relkind = 'i' AND relname = :name"
+        ),
+        {"name": index_name},
+    ).first()
+    return bool(res)
+
+
+def upgrade():
+    conn = op.get_bind()
+
+    # ---- Columns (create only if missing)
+    if not _col_exists(conn, "expenses", "category"):
+        op.add_column("expenses", sa.Column("category", sa.String(length=120), nullable=True))
+
+    if not _col_exists(conn, "expenses", "description"):
+        op.add_column("expenses", sa.Column("description", sa.Text(), nullable=True))
+
+    if not _col_exists(conn, "expenses", "vendor"):
+        op.add_column("expenses", sa.Column("vendor", sa.String(length=120), nullable=True))
+
+    if not _col_exists(conn, "expenses", "status"):
+        # Keep it simple: store status as VARCHAR; app enforces Enum (PENDING/PAID)
+        op.add_column(
+            "expenses",
+            sa.Column("status", sa.String(length=16), nullable=False, server_default="PENDING"),
+        )
+        # Drop server_default after backfilling existing rows (no-op if empty)
+        op.alter_column("expenses", "status", server_default=None)
+
+    if not _col_exists(conn, "expenses", "dedupe_key"):
+        op.add_column("expenses", sa.Column("dedupe_key", sa.String(length=128), nullable=True))
+
+    # ---- Indexes (create only if missing)
+    if not _index_exists(conn, "ix_expenses_vendor"):
+        op.create_index("ix_expenses_vendor", "expenses", ["vendor"])
+
+    if not _index_exists(conn, "ix_expenses_status"):
+        op.create_index("ix_expenses_status", "expenses", ["status"])
+
+    if not _index_exists(conn, "uq_expenses_dedupe_key"):
+        op.create_unique_constraint("uq_expenses_dedupe_key", "expenses", ["dedupe_key"])
+
+
+def downgrade():
+    conn = op.get_bind()
+
+    # Drop constraints/indexes if they exist
+    if _index_exists(conn, "uq_expenses_dedupe_key"):
+        op.drop_constraint("uq_expenses_dedupe_key", "expenses", type_="unique")
+    if _index_exists(conn, "ix_expenses_status"):
+        op.drop_index("ix_expenses_status", table_name="expenses")
+    if _index_exists(conn, "ix_expenses_vendor"):
+        op.drop_index("ix_expenses_vendor", table_name="expenses")
+
+    # Drop columns if they exist
+    for col in ("dedupe_key", "status", "vendor", "description", "category"):
+        if _col_exists(conn, "expenses", col):
+            op.drop_column("expenses", col)

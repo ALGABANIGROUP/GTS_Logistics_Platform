@@ -1,0 +1,99 @@
+# Multi-stage Dockerfile for GTS Production
+# Stage 1: Build
+# Stage 2: Runtime
+
+FROM python:3.11-slim as builder
+
+# Set working directory
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY backend/requirements.txt .
+
+# Build wheels
+RUN python -m pip install --no-cache-dir --upgrade pip && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+
+# ============================================================================
+
+FROM python:3.11-slim
+
+# Build arguments
+ARG ENVIRONMENT=production
+ARG BUILD_DATE
+ARG VCS_REF=main
+
+# Labels for Docker metadata
+LABEL org.opencontainers.image.title="GTS - Global Transport Solutions"
+LABEL org.opencontainers.image.description="AI-powered freight forwarding and logistics platform"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.created=$BUILD_DATE
+LABEL org.opencontainers.image.revision=$VCS_REF
+LABEL org.opencontainers.image.vendor="GTS Team"
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    ENVIRONMENT=$ENVIRONMENT \
+    PATH="/opt/venv/bin:$PATH"
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python dependencies from builder
+COPY --from=builder /build/wheels /wheels
+COPY --from=builder /build/requirements.txt .
+
+# Create virtual environment
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/venv/bin/pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && \
+    rm -rf /wheels
+
+# Copy application code
+COPY backend/ ./backend/
+COPY frontend/ ./frontend/
+COPY frontend/package*.json ./ 
+COPY README.md .
+
+# Copy configuration files
+COPY alembic.ini .
+COPY backend/alembic ./backend/alembic
+
+# Create necessary directories with correct permissions
+RUN mkdir -p /app/logs /app/data && \
+    chown -R appuser:appuser /app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Run migrations and start application
+CMD ["sh", "-c", "\
+    echo '[startup] Starting GTS application in $ENVIRONMENT mode' && \
+    python -m alembic -c /app/alembic.ini upgrade head && \
+    echo '[startup] Database migrations completed' && \
+    exec uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4 --timeout-keep-alive 65 && \
+    echo '[startup] GTS application started successfully' \
+    "]

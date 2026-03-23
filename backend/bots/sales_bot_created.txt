@@ -1,0 +1,3 @@
+# AI Sales Team Bot created successfully
+# Access at: http://localhost:5173/ai-bots/control?bot=sales_bot
+# Status: Ready for demo

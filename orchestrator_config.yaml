@@ -1,0 +1,33 @@
+database:
+  host: "dpg-cuicq2qj1k6c73asm5c0-a.oregon-postgres.render.com"
+  name: "gabani_transport_solutions"
+  user: "gabani_transport_solutions_user"
+  password: "__SET_IN_SECRET_MANAGER__"
+  pool:
+    min_size: 5
+    max_size: 20
+    max_queries: 50000
+    max_inactive_connection_lifetime: 300.0
+
+cache:
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    max_connections: 50
+  default_ttl: 300
+  cleanup_interval: 60
+
+batch:
+  max_size: 100
+  flush_interval: 300
+  max_retries: 3
+  retry_delay: 5
+
+monitoring:
+  health_check_interval: 60
+  metrics_log_interval: 300
+  alert_thresholds:
+    response_time: 1.0
+    error_rate: 0.01
+    cache_hit_rate: 0.7

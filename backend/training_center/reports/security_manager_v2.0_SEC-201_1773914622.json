@@ -1,0 +1,16 @@
+{
+  "session_id": "security_manager_v2.0_SEC-201_1773914622",
+  "bot_name": "Security Manager v2.0",
+  "course_id": "SEC-201",
+  "course_name": "Advanced Attack Response",
+  "course_level": "Advanced",
+  "started_at": "2026-03-19T10:03:42.901790+00:00",
+  "completed_at": "2026-03-19T10:03:42.905823+00:00",
+  "final_score": 65.31,
+  "grade": "Pass",
+  "recommendations": [
+    "Review foundational concepts and retry high-difficulty scenarios.",
+    "Increase supervised practice under time pressure."
+  ],
+  "trainer_name": "Trainer Bot v1.0"
+}

@@ -1,0 +1,25 @@
+# Additional requirements for enhanced features
+# Add these to your main requirements.txt or install separately
+
+# Redis caching support
+redis[hiredis]>=5.0.0
+redis-om>=0.2.0
+
+# Async file operations
+aiofiles>=23.0.0
+
+# 2FA/TOTP support
+pyotp>=2.9.0
+qrcode[pil]>=7.4.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+
+# Monitoring (optional)
+sentry-sdk[fastapi]>=1.40.0
+
+# OAuth2 clients (optional)
+authlib>=1.3.0
+httpx>=0.27.0

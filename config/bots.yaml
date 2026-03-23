@@ -1,0 +1,102 @@
+# GTS Bot Operating System Configuration
+# This file defines bot schedules and automation settings for BOS
+
+bots:
+  # Core Business Bots
+  customer_service:
+    schedule: "0 8 * * *" # Daily at 8 AM
+    automation_level: manual
+    description: "Customer inquiry handling and support"
+
+  documents_manager:
+    schedule: "0 */2 * * *" # Every 2 hours
+    automation_level: auto
+    description: "Document OCR and classification"
+
+  general_manager:
+    schedule: "0 6 * * 1" # Weekly on Monday at 6 AM
+    automation_level: manual
+    description: "Executive strategy and reporting"
+
+  information_coordinator:
+    schedule: "0 7 * * *" # Daily at 7 AM UTC
+    automation_level: auto
+    description: "IC - Information coordination and intelligence hub"
+
+  intelligence_bot:
+    schedule: "0 7 * * *" # Daily at 7 AM UTC
+    automation_level: auto
+    description: "GIT - Strategic analysis and executive insights"
+
+  legal_bot:
+    schedule: "0 10 * * 1" # Weekly on Monday at 10 AM
+    automation_level: manual
+    description: "Legal document review and compliance"
+
+  maintenance_dev:
+    schedule: "0 2 * * *" # Daily at 2 AM UTC
+    automation_level: auto
+    description: "System maintenance and health checks"
+
+  mapleload_bot:
+    schedule: "0 */4 * * *" # Every 4 hours
+    automation_level: auto
+    description: "Canadian market intelligence and load matching"
+
+  operations_manager_bot:
+    schedule: "*/5 * * * *" # Every 5 minutes
+    automation_level: auto
+    description: "Operational workflow management and coordination"
+
+  safety_manager_bot:
+    schedule: "0 8 * * *" # Daily at 8 AM UTC
+    automation_level: manual
+    description: "Safety incident tracking and compliance"
+
+  sales_bot:
+    schedule: "0 9 * * 1" # Weekly on Monday at 9 AM
+    automation_level: manual
+    description: "Sales analytics and forecasting"
+
+  security_manager_bot:
+    schedule: "*/15 * * * *" # Every 15 minutes
+    automation_level: auto
+    description: "Security monitoring and threat detection"
+
+  system_manager_bot:
+    schedule: "*/30 * * * *" # Every 30 minutes
+    automation_level: auto
+    description: "System health monitoring and optimization"
+
+  # AI Dispatcher - Task Distribution Bot
+  ai_dispatcher:
+    schedule: "*/2 * * * *" # Every 2 minutes
+    automation_level: auto
+    description: "AID - Intelligent task distribution and workflow orchestration"
+
+# Bot Network Architecture Layers
+layers:
+  intelligence_layer:
+    bots: ["general_manager", "intelligence_bot", "information_coordinator", "ai_dispatcher"]
+    function: "Strategic analysis, insights, and task distribution"
+
+  execution_layer:
+    bots: ["mapleload_bot", "operations_manager_bot"]
+    function: "Operational execution and workflow management"
+
+  support_layer:
+    bots: ["customer_service", "sales_bot"]
+    function: "Customer and partner support"
+
+  governance_layer:
+    bots: ["security_manager_bot", "legal_bot", "safety_manager_bot"]
+    function: "Compliance and security"
+
+  infrastructure_layer:
+    bots: ["maintenance_dev", "system_manager_bot", "documents_manager"]
+    function: "System maintenance and optimization"
+# Automation levels:
+# - auto: Fully automated execution
+# - manual: Requires human approval
+# - paused: Temporarily disabled
+# - human: Human-only operation

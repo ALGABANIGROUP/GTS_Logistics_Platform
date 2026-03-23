@@ -1,0 +1,84 @@
+alert_rules:
+  - alert: BotHighCPU
+    expr: bot_cpu_usage > 80
+    for: 5m
+    labels:
+      severity: warning
+      component: bots
+    annotations:
+      summary: "High CPU usage for bot {{ $labels.bot_name }}"
+      description: "Bot {{ $labels.bot_name }} using {{ $value }}% CPU"
+
+  - alert: BotMemoryLeak
+    expr: increase(bot_memory_usage[1h]) > 50
+    for: 10m
+    labels:
+      severity: critical
+      component: bots
+    annotations:
+      summary: "Potential memory leak in bot {{ $labels.bot_name }}"
+      description: "Memory usage increased by {{ $value }}% in the past hour"
+
+  - alert: FailedLoginAttempts
+    expr: rate(auth_failed_logins[5m]) > 10
+    for: 2m
+    labels:
+      severity: warning
+      component: security
+    annotations:
+      summary: "High rate of failed login attempts"
+      description: "{{ $value }} failed attempts per minute"
+
+  - alert: UnauthorizedAccessAttempt
+    expr: security_unauthorized_access > 0
+    labels:
+      severity: critical
+      component: security
+    annotations:
+      summary: "Unauthorized access attempt"
+      description: "From IP {{ $labels.source_ip }} to {{ $labels.resource }}"
+
+  - alert: DatabaseSlowQueries
+    expr: rate(db_slow_queries[5m]) > 5
+    for: 5m
+    labels:
+      severity: warning
+      component: database
+    annotations:
+      summary: "Slow database queries detected"
+      description: "{{ $value }} slow queries per minute"
+
+  - alert: HighNetworkLatency
+    expr: api_request_duration_seconds{quantile="0.95"} > 2
+    for: 5m
+    labels:
+      severity: warning
+      component: network
+    annotations:
+      summary: "High API response time"
+      description: "95th percentile response time is {{ $value }} seconds"
+
+  - alert: ServiceDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: critical
+      component: availability
+    annotations:
+      summary: "Service {{ $labels.service }} is down"
+      description: "Service unavailable for at least one minute"
+
+alert_channels:
+  email:
+    ops_team: "ops@company.com"
+    management: "management@company.com"
+    security_team: "security@company.com"
+  sms:
+    on_call_engineer: "+966500000001"
+    team_lead: "+966500000002"
+  slack:
+    channel: "#alerts-prod"
+    critical_channel: "#alerts-critical"
+  webhook:
+    pagerduty: "https://events.pagerduty.com/v2/enqueue"
+    opsgenie: "https://api.opsgenie.com/v2/alerts"

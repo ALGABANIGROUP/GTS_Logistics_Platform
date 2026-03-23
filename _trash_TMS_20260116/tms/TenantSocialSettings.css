@@ -1,0 +1,156 @@
+/* Tenant Social Settings Styles */
+.tenant-social-settings {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+    padding: 2rem 2.5rem;
+    font-size: 1rem;
+}
+
+.tenant-social-settings h2 {
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    color: #1e293b;
+}
+
+.security-note {
+    background: #f1f5f9;
+    color: #2563eb;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.health-row {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    color: #334155;
+}
+
+.health-row .error {
+    color: #dc2626;
+    margin-left: 1rem;
+    font-weight: 600;
+}
+
+.platforms-cards {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.platform-card {
+    flex: 1 1 220px;
+    min-width: 220px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-connected {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-expired,
+.status-invalid {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.status-not_connected {
+    background: #f3f4f6;
+    color: #64748b;
+}
+
+.platform-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2563eb;
+}
+
+.account-name {
+    font-size: 1rem;
+    color: #334155;
+    margin-bottom: 1rem;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: #2563eb;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.meta {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+.form-actions {
+    margin-top: 1.5rem;
+}
+
+.save-status {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #059669;
+}
+
+.save-status:empty {
+    display: none;
+}

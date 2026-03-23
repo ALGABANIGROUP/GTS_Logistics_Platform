@@ -1,0 +1,46 @@
+.ai-freight-broker-layout {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.ai-freight-broker-panel {
+    width: 260px;
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ai-freight-panel-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 12px;
+    margin-bottom: 6px;
+}
+
+.ai-freight-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ai-freight-broker-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.ai-freight-page {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+    .ai-freight-broker-layout {
+        flex-direction: column;
+    }
+
+    .ai-freight-broker-panel {
+        width: 100%;
+    }
+}

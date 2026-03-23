@@ -1,0 +1,784 @@
+/* src/components/bots/panels/customer-service/SocialCampaignManager.css */
+
+.social-campaign-manager {
+    padding: 24px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 16px;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header */
+.campaign-header {
+    margin-bottom: 32px;
+    border-bottom: 2px solid rgba(148, 163, 184, 0.2);
+    padding-bottom: 16px;
+}
+
+.campaign-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
+    background: linear-gradient(135deg, #38bdf8 0%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #cbd5e1;
+    padding: 8px 16px;
+    background: rgba(51, 65, 85, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    padding-bottom: 12px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: #38bdf8;
+}
+
+.tab-btn.active {
+    color: #38bdf8;
+    border-bottom-color: #38bdf8;
+}
+
+/* Platforms Section */
+.platforms-section {
+    margin-bottom: 32px;
+}
+
+.platforms-section h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: #f1f5f9;
+}
+
+.platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.platform-card {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.6) 0%, rgba(30, 41, 59, 0.8) 100%);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.platform-card:hover {
+    border-color: rgba(56, 189, 248, 0.5);
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(30, 41, 59, 1) 100%);
+}
+
+.platform-card.connected {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.platform-icon {
+    font-size: 32px;
+}
+
+.platform-info {
+    text-align: center;
+}
+
+.platform-name {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: #f1f5f9;
+}
+
+.platform-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+}
+
+.status-dot.connected {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.connect-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.connect-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(56, 189, 248, 0.3);
+}
+
+.connect-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Campaign Layout */
+.campaign-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 1400px) {
+    .campaign-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Campaign Creator Form */
+.campaign-creator-form {
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.4) 0%, rgba(30, 41, 59, 0.6) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+}
+
+.campaign-creator-form h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #f1f5f9;
+}
+
+.form-section {
+    margin-bottom: 16px;
+}
+
+.form-section label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.form-section input[type="text"],
+.form-section input[type="date"],
+.form-section input[type="time"],
+.form-section select {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.form-section input:focus,
+.form-section select:focus {
+    outline: none;
+    border-color: #38bdf8;
+    background: rgba(15, 23, 42, 0.8);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.platform-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.platform-btn {
+    padding: 8px 12px;
+    background: rgba(51, 65, 85, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.platform-btn:hover {
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+.platform-btn.selected {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+.objectives-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .objectives-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.objective-card {
+    padding: 12px;
+    background: rgba(51, 65, 85, 0.4);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.objective-card:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+}
+
+.objective-card.selected {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.objective-icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.objective-name {
+    font-weight: 600;
+    font-size: 12px;
+    color: #f1f5f9;
+    margin-bottom: 2px;
+}
+
+.objective-desc {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.budget-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.budget-control input[type="range"] {
+    flex: 1;
+}
+
+.budget-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.budget-amount {
+    font-weight: 700;
+    font-size: 16px;
+    color: #10b981;
+}
+
+.budget-period {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.content-templates {
+    margin-bottom: 12px;
+}
+
+.content-templates h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+}
+
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.template-card {
+    padding: 8px;
+    background: rgba(51, 65, 85, 0.4);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.template-card:hover {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.template-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 2px;
+}
+
+.template-preview {
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.3;
+}
+
+.content-editor {
+    width: 100%;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.content-editor:focus {
+    outline: none;
+    border-color: #38bdf8;
+    background: rgba(15, 23, 42, 0.8);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.schedule-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .schedule-controls {
+        grid-template-columns: 1fr;
+    }
+}
+
+.schedule-input {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.schedule-input label {
+    font-size: 11px;
+}
+
+.form-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.save-draft-btn,
+.schedule-btn,
+.publish-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-draft-btn {
+    background: rgba(100, 116, 139, 0.4);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.save-draft-btn:hover {
+    background: rgba(100, 116, 139, 0.6);
+}
+
+.schedule-btn {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.schedule-btn:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+.publish-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+    color: white;
+}
+
+.publish-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(56, 189, 248, 0.3);
+}
+
+.publish-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.info-text {
+    font-size: 12px;
+    color: #f59e0b;
+    margin-top: 4px;
+}
+
+/* Campaigns List */
+.campaigns-list-section {
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.4) 0%, rgba(30, 41, 59, 0.6) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.campaigns-list-section h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #f1f5f9;
+}
+
+.loading-text {
+    text-align: center;
+    color: #94a3b8;
+    padding: 20px;
+}
+
+.campaigns-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 800px;
+    overflow-y: auto;
+}
+
+.campaign-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+
+.campaign-item:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.campaign-item .campaign-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border: none;
+    padding: 0;
+}
+
+.campaign-platform {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.platform-icon {
+    font-size: 24px;
+}
+
+.platform-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.campaign-status {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.campaign-status.published {
+    background: rgba(16, 185, 129, 0.2);
+    color: #86efac;
+}
+
+.campaign-status.draft {
+    background: rgba(100, 116, 139, 0.2);
+    color: #cbd5e1;
+}
+
+.campaign-status.scheduled {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+.campaign-status.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #86efac;
+}
+
+.campaign-body {
+    margin-bottom: 12px;
+}
+
+.campaign-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 4px 0;
+}
+
+.campaign-objective {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 0 0 8px 0;
+}
+
+.campaign-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.campaign-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    background: rgba(51, 65, 85, 0.5);
+    border-radius: 6px;
+    border: none;
+    gap: 2px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.campaign-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 6px;
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 70px;
+}
+
+.action-btn:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+.action-btn.boost {
+    background: rgba(249, 158, 11, 0.2);
+    border-color: rgba(249, 158, 11, 0.4);
+    color: #fcd34d;
+}
+
+.action-btn.boost:hover:not(:disabled) {
+    background: rgba(249, 158, 11, 0.3);
+    border-color: rgba(249, 158, 11, 0.6);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Analytics Section */
+.analytics-section {
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.4) 0%, rgba(30, 41, 59, 0.6) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.analytics-section h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #f1f5f9;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.analytics-card {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 12px 24px rgba(56, 189, 248, 0.15);
+}
+
+.analytics-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.analytics-icon {
+    font-size: 28px;
+}
+
+.analytics-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.analytics-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 8px;
+}
+
+.analytics-trend {
+    font-size: 12px;
+    color: #86efac;
+}
+
+/* Scrollbar Styling */
+.campaigns-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.campaigns-list::-webkit-scrollbar-track {
+    background: rgba(51, 65, 85, 0.2);
+    border-radius: 10px;
+}
+
+.campaigns-list::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+}
+
+.campaigns-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.6);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .social-campaign-manager {
+        padding: 16px;
+    }
+
+    .campaign-header h2 {
+        font-size: 20px;
+    }
+
+    .header-stats {
+        gap: 12px;
+        font-size: 12px;
+    }
+
+    .platform-selector {
+        flex-direction: column;
+    }
+
+    .platform-btn {
+        width: 100%;
+    }
+
+    .objectives-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        grid-template-columns: 1fr;
+    }
+}

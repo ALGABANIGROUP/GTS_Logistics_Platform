@@ -1,0 +1,29 @@
+﻿"""merge heads: expenses + platform_expenses
+
+Revision ID: 99ede8b3ddc7
+Revises: 20250826_01_harden_expenses, 50c4360b8fbe
+Create Date: 2025-08-27 20:35:33.384373
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = '99ede8b3ddc7'
+down_revision: Union[str, Sequence[str], None] = ('20250826_01_harden_expenses', '50c4360b8fbe')
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    pass
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    pass
+

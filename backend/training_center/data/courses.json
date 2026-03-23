@@ -1,0 +1,90 @@
+[
+  {
+    "id": "SEC-101",
+    "name": "Security Incident Foundations",
+    "specialization": "security",
+    "level": "beginner",
+    "duration_hours": 4,
+    "topics": ["phishing analysis", "credential hygiene", "containment basics"],
+    "skills_improved": ["incident_detection", "containment", "threat_analysis"],
+    "prerequisites": [],
+    "passing_score": 70
+  },
+  {
+    "id": "SEC-201",
+    "name": "Coordinated Threat Response",
+    "specialization": "security",
+    "level": "advanced",
+    "duration_hours": 6,
+    "topics": ["ddos mitigation", "breach response", "escalation discipline"],
+    "skills_improved": ["threat_analysis", "containment", "response_quality"],
+    "prerequisites": ["SEC-101"],
+    "passing_score": 75
+  },
+  {
+    "id": "LOG-101",
+    "name": "Shipment Recovery Operations",
+    "specialization": "logistics",
+    "level": "beginner",
+    "duration_hours": 4,
+    "topics": ["eta recovery", "rerouting", "carrier coordination"],
+    "skills_improved": ["routing", "recovery_planning", "shipment_visibility"],
+    "prerequisites": [],
+    "passing_score": 70
+  },
+  {
+    "id": "LOG-201",
+    "name": "Network Disruption Management",
+    "specialization": "logistics",
+    "level": "advanced",
+    "duration_hours": 6,
+    "topics": ["capacity disruption", "priority loads", "contingency planning"],
+    "skills_improved": ["recovery_planning", "exception_handling", "resource_balancing"],
+    "prerequisites": ["LOG-101"],
+    "passing_score": 75
+  },
+  {
+    "id": "CS-101",
+    "name": "Customer Recovery Fundamentals",
+    "specialization": "customer_service",
+    "level": "beginner",
+    "duration_hours": 3,
+    "topics": ["de-escalation", "expectation setting", "service ownership"],
+    "skills_improved": ["communication", "de_escalation", "issue_resolution"],
+    "prerequisites": [],
+    "passing_score": 70
+  },
+  {
+    "id": "CS-201",
+    "name": "High-Pressure Customer Resolution",
+    "specialization": "customer_service",
+    "level": "advanced",
+    "duration_hours": 5,
+    "topics": ["angry customer handling", "retention", "complex complaint recovery"],
+    "skills_improved": ["de_escalation", "issue_resolution", "judgement"],
+    "prerequisites": ["CS-101"],
+    "passing_score": 75
+  },
+  {
+    "id": "OPS-101",
+    "name": "Operations Control Fundamentals",
+    "specialization": "operations",
+    "level": "beginner",
+    "duration_hours": 4,
+    "topics": ["queue balancing", "workflow oversight", "service continuity"],
+    "skills_improved": ["workflow_coordination", "resource_balancing", "exception_handling"],
+    "prerequisites": [],
+    "passing_score": 70
+  },
+  {
+    "id": "OPS-201",
+    "name": "Cross-System Incident Coordination",
+    "specialization": "operations",
+    "level": "advanced",
+    "duration_hours": 6,
+    "topics": ["cross-team escalation", "traffic recovery", "priority orchestration"],
+    "skills_improved": ["workflow_coordination", "resource_balancing", "decision_quality"],
+    "prerequisites": ["OPS-101"],
+    "passing_score": 75
+  }
+]

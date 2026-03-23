@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install requirements
+COPY requirements_orchestrator.txt
+
+RUN pip install --no-cache-dir -r requirements_orchestrator.txt
+
+# Copy code
+COPY database_orchestrator.py
+
+# Create logs folder
+RUN mkdir -p logs
+
+# Run bot
+CMD ["python", "database_orchestrator.py"]

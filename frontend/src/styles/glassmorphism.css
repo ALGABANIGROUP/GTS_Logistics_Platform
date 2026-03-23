@@ -1,0 +1,141 @@
+/* GTS Platform - Unified Glassmorphism Theme */
+/* Apply this theme across all bot panels for consistency */
+
+:root {
+    /* Glass Colors */
+    --glass-bg-primary: var(--glass-bg);
+    --glass-bg-secondary: var(--glass-bg);
+    --glass-bg-tertiary: var(--glass-bg-light);
+
+    /* Border Colors */
+    --glass-border-light: var(--glass-border);
+    --glass-border-medium: rgba(255, 255, 255, 0.2);
+    --glass-border-heavy: rgba(255, 255, 255, 0.3);
+
+    /* Text Colors */
+    --text-primary: #f1f5f9;
+    --text-secondary: #e2e8f0;
+    --text-muted: #cbd5e1;
+    --text-subtle: #94a3b8;
+
+    /* Accent Colors */
+    --accent-blue: #3b82f6;
+    --accent-cyan: #22d3ee;
+    --accent-green: #10b981;
+    --accent-yellow: #fbbf24;
+    --accent-red: #f87171;
+
+    /* Shadows */
+    --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.4);
+
+    /* Background Gradient */
+    --bg-gradient: linear-gradient(135deg, #0f1729 0%, #1a2332 50%, #0f1729 100%);
+}
+
+/* Legacy glass effect - kept for backwards compatibility */
+.glass-effect {
+    background: var(--glass-bg-primary);
+    /* Fallback for browsers without backdrop-filter support */
+    background: rgba(18, 24, 38, 0.85);
+    /* Vendor prefix for Safari */
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border-light);
+    box-shadow: var(--shadow-md);
+    border-radius: 12px;
+}
+
+/* Updated glass effects */
+.glass-input {
+    background: var(--glass-bg-primary);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border-light);
+    color: var(--text-secondary);
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.glass-input::placeholder {
+    color: var(--text-subtle);
+}
+
+.glass-input:hover {
+    border-color: var(--glass-border-heavy);
+}
+
+.glass-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.glass-button {
+    background: var(--glass-bg-primary);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border-medium);
+    color: var(--text-secondary);
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.glass-button:hover {
+    background: var(--glass-bg-tertiary);
+    border-color: var(--glass-border-heavy);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Fix for autofill in transparent inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-secondary);
+    -webkit-box-shadow: 0 0 0px 1000px var(--glass-bg) inset;
+    transition: background-color 5000s ease-in-out 0s;
+    border: 1px solid var(--glass-border-light);
+}
+
+/* Global Glass Container */
+.glass-container {
+    width: 100%;
+    min-height: 100vh;
+    background: var(--bg-gradient);
+    padding: 20px;
+}
+
+/* Glass Card */
+.glass-card {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    border-color: var(--glass-border-medium);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .glass-container {
+        padding: 12px;
+    }
+
+    .glass-card {
+        padding: 16px;
+    }
+}

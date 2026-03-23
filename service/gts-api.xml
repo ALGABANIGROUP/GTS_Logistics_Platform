@@ -1,0 +1,18 @@
+﻿<service>
+  <id>gts-api</id>
+  <name>GTS API</name>
+  <description>FastAPI (Uvicorn) for GTS</description>
+
+  <executable>E:\GTS Logistics\.venv\Scripts\python.exe</executable>
+  <arguments>-X dev -m uvicorn main:app --app-dir "E:\GTS Logistics\backend" --host 127.0.0.1 --port 8001 --proxy-headers --forwarded-allow-ips="*" --log-level info</arguments>
+  <workingdirectory>E:\GTS Logistics</workingdirectory>
+
+  <logpath>E:\GTS Logistics\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10485760</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+
+  <!-- Optional environment variables (do not put secrets here). It is enough to be configured in the system -->
+  <env name="PYTHONUNBUFFERED" value="1"/>
+</service>

@@ -1,0 +1,819 @@
+import React, { useEffect, useMemo, useState } from "react";
+import RequireAuth from '../../components/RequireAuth.jsx';
+import axiosClient from "@/api/axiosClient";
+import { getUserRole } from "../../utils/userRole";
+
+const DEFAULT_ROLES = [
+  "super_admin",
+  "owner",
+  "system_admin",
+  "admin",
+  "manager",
+  "user",
+  "partner",
+];
+
+const formatRole = (role) => {
+  if (!role) return "USER";
+  return String(role).replaceAll("_", " ").toUpperCase();
+};
+
+const normalizeRole = (role) => String(role || "").trim().toLowerCase();
+
+const emptyCreateForm = {
+  full_name: "",
+  email: "",
+  username: "",
+  phone_number: "",
+  password: "",
+  role: "user",
+  is_active: true,
+  company: "",
+  country: "",
+  user_type: "",
+  ban_reason: "",
+  banned_until: "",
+  manager_id: "",
+  is_banned: false,
+  is_deleted: false,
+};
+
+const emptyEditForm = {
+  full_name: "",
+  email: "",
+  username: "",
+  phone_number: "",
+  password: "",
+  role: "user",
+  is_active: true,
+  company: "",
+  country: "",
+  user_type: "",
+  ban_reason: "",
+  banned_until: "",
+  manager_id: "",
+  is_banned: false,
+  is_deleted: false,
+};
+
+export default function AdminUsers() {
+  return (
+    <RequireAuth roles={["admin", "super_admin"]}>
+      <AdminUsersContent />
+    </RequireAuth>
+  );
+}
+
+function AdminUsersContent() {
+  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [orgTree, setOrgTree] = useState([]);
+  const [orgError, setOrgError] = useState("");
+
+  const [moveUserId, setMoveUserId] = useState("");
+  const [moveManagerId, setMoveManagerId] = useState("");
+
+  const [error, setError] = useState("");
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [filterRole, setFilterRole] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const [roleForm, setRoleForm] = useState({ key: "", name_en: "", permissions: "" });
+  const [roleError, setRoleError] = useState("");
+  const [roleSaving, setRoleSaving] = useState(false);
+
+  const [createForm, setCreateForm] = useState({ ...emptyCreateForm });
+  const [editForm, setEditForm] = useState({ ...emptyEditForm });
+  const [editingUser, setEditingUser] = useState(null);
+
+  const roleOptions = useMemo(() => {
+    // roles can be strings or objects
+    const fromApi =
+      Array.isArray(roles) && roles.length
+        ? roles
+          .map((r) => {
+            if (typeof r === "string") return { value: normalizeRole(r), label: formatRole(r) };
+            const key = r.key || r.name || r.role || r.value;
+            if (!key) return null;
+            const label = r.name_en || r.name || formatRole(key);
+            return { value: normalizeRole(key), label };
+          })
+          .filter(Boolean)
+        : [];
+
+    const fallback = DEFAULT_ROLES.map((r) => ({ value: normalizeRole(r), label: formatRole(r) }));
+
+    const merged = (fromApi.length ? fromApi : fallback).reduce((acc, item) => {
+      if (!acc.some((x) => x.value === item.value)) acc.push(item);
+      return acc;
+    }, []);
+
+    return merged;
+  }, [roles]);
+
+  const buildPayload = (form, { includePassword }) => {
+    const payload = {
+      is_active: Boolean(form.is_active),
+      is_banned: Boolean(form.is_banned),
+      is_deleted: Boolean(form.is_deleted),
+    };
+
+    [
+      "full_name",
+      "email",
+      "username",
+      "phone_number",
+      "role",
+      "company",
+      "country",
+      "user_type",
+      "ban_reason",
+      "manager_id",
+    ].forEach((key) => {
+      const v = form[key];
+      if (typeof v === "string" && v.trim()) payload[key] = v.trim();
+    });
+
+    if (form.banned_until) payload.banned_until = form.banned_until;
+    if (includePassword && form.password) payload.password = form.password;
+
+    return payload;
+  };
+
+  const normalizeUsersResponse = (res) => {
+    const d = res?.data;
+    return d?.users || d?.data?.users || d?.data || d || [];
+  };
+
+  const loadUsers = async () => {
+    setLoadingUsers(true);
+    setError("");
+    try {
+      const res = await axiosClient.get("/api/v1/admin/users/management");
+      const list = normalizeUsersResponse(res);
+      setUsers(Array.isArray(list) ? list : []);
+    } catch (err) {
+      setError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to load users."
+      );
+      setUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const loadRoles = async () => {
+    setLoadingRoles(true);
+    try {
+      const res = await axiosClient.get("/api/v1/admin/users/roles");
+      const list = res?.data?.roles || res?.data?.data?.roles || res?.data?.data || res?.data || [];
+      setRoles(Array.isArray(list) ? list : []);
+    } catch (err) {
+      setRoles([]);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
+  const parsePermissions = (value) =>
+    String(value || "")
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+  const handleCreateRole = async () => {
+    const key = roleForm.key.trim().toLowerCase();
+    const name_en = roleForm.name_en.trim();
+    if (!key || !name_en) {
+      setRoleError("Role key and name are required.");
+      return;
+    }
+    setRoleSaving(true);
+    setRoleError("");
+    try {
+      await axiosClient.post("/api/v1/admin/users/roles", {
+        key,
+        name_en,
+        name_ar: name_en,
+        permissions: parsePermissions(roleForm.permissions),
+        is_system: false,
+      });
+      setRoleForm({ key: "", name_en: "", permissions: "" });
+      await loadRoles();
+    } catch (err) {
+      setRoleError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to create role."
+      );
+    } finally {
+      setRoleSaving(false);
+    }
+  };
+
+  const handleDeleteRole = async (roleKey) => {
+    const ok = window.confirm(`Delete role "${roleKey}"?`);
+    if (!ok) return;
+    setRoleSaving(true);
+    setRoleError("");
+    try {
+      await axiosClient.delete(`/api/v1/admin/users/roles/${roleKey}`);
+      await loadRoles();
+    } catch (err) {
+      setRoleError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to delete role."
+      );
+    } finally {
+      setRoleSaving(false);
+    }
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  const loadOrgTree = async () => {
+    setOrgError("");
+    try {
+      const res = await axiosClient.get("/api/v1/admin/org/tree");
+      const tree = res?.data?.data?.tree || res?.data?.tree || [];
+      setOrgTree(Array.isArray(tree) ? tree : []);
+    } catch (err) {
+      setOrgError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to load org chart."
+      );
+      setOrgTree([]);
+    }
+  };
+
+  const moveUser = async () => {
+    if (!moveUserId.trim()) return;
+    setIsSaving(true);
+    setError("");
+    try {
+      await axiosClient.post(`/api/v1/admin/org/units/${moveUserId.trim()}/move`, {
+        parent_id: moveManagerId.trim() ? Number(moveManagerId.trim()) : null,
+      });
+      setMoveUserId("");
+      setMoveManagerId("");
+      await loadOrgTree();
+      await loadUsers();
+    } catch (err) {
+      setError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to move user."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    const email = createForm.email.trim();
+    if (!email) return setError("Email is required.");
+    if (!createForm.password) return setError("Password is required.");
+
+    setIsSaving(true);
+    setError("");
+    try {
+      const payload = buildPayload({ ...createForm, email }, { includePassword: true });
+      await axiosClient.post("/api/v1/admin/users", payload);
+      setCreateForm({ ...emptyCreateForm });
+      await loadUsers();
+    } catch (err) {
+      setError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to create user."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEditStart = (user) => {
+    setEditingUser(user);
+    setEditForm({
+      full_name: user.full_name || "",
+      email: user.email || "",
+      username: user.username || "",
+      phone_number: user.phone_number || "",
+      password: "",
+      role: normalizeRole(getUserRole(user) || user.role || "user"),
+      is_active: Boolean(user.is_active),
+      company: user.company || "",
+      country: user.country || "",
+      user_type: user.user_type || "",
+      ban_reason: user.ban_reason || "",
+      banned_until: user.banned_until || "",
+      manager_id: user.manager_id || "",
+      is_banned: Boolean(user.is_banned),
+      is_deleted: Boolean(user.is_deleted),
+    });
+  };
+
+  const handleEditCancel = () => {
+    setEditingUser(null);
+    setEditForm({ ...emptyEditForm });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingUser) return;
+    const email = editForm.email.trim();
+    if (!email) return setError("Email is required.");
+
+    setIsSaving(true);
+    setError("");
+    try {
+      const payload = buildPayload({ ...editForm, email }, { includePassword: true });
+      await axiosClient.put(`/api/v1/admin/users/${editingUser.id}`, payload);
+      handleEditCancel();
+      await loadUsers();
+    } catch (err) {
+      setError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to update user."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (user) => {
+    setIsSaving(true);
+    setError("");
+    try {
+      await axiosClient.patch(`/api/v1/admin/users/${user.id}`, { is_active: !user.is_active });
+      await loadUsers();
+    } catch (err) {
+      setError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to update user status."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (user) => {
+    const ok = window.confirm(`Delete ${user.email}? This cannot be undone.`);
+    if (!ok) return;
+
+    setIsSaving(true);
+    setError("");
+    try {
+      await axiosClient.delete(`/api/v1/admin/users/${user.id}`);
+      if (editingUser?.id === user.id) handleEditCancel();
+      await loadUsers();
+    } catch (err) {
+      setError(
+        err?.normalized?.detail ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to delete user."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+    loadRoles();
+    loadOrgTree();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="p-6 space-y-10">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Users & Roles</h1>
+          <div className="text-sm text-slate-500">/admin/users</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setCreateForm({ ...emptyCreateForm });
+            setEditingUser(null);
+            setEditForm({ ...emptyEditForm });
+          }}
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"
+        >
+          Create
+        </button>
+      </div>
+
+      {error ? (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      <section className="rounded-xl border border-slate-200 p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Users & Roles</h2>
+          <div className="text-xs text-slate-500">
+            Roles: {loadingRoles ? "Loading..." : roleOptions.length}
+          </div>
+        </div>
+
+        {/* Advanced Filters */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          <select
+            value={filterRole || ""}
+            onChange={e => setFilterRole(e.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="">All Roles</option>
+            {roleOptions.map(r => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+          <select
+            value={filterStatus || "all"}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div className="grid gap-4">
+          {editingUser ? (
+            <div className="rounded-lg border border-slate-200 p-4 space-y-3">
+              <div className="text-sm font-semibold">
+                Edit: {editingUser.email || editingUser.id}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="Full name"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                  placeholder="Email"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={editForm.username}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, username: e.target.value }))}
+                  placeholder="Username"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  value={editForm.phone_number}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, phone_number: e.target.value }))}
+                  placeholder="Phone number"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, role: e.target.value }))}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                >
+                  {roleOptions.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={editForm.is_active ? "active" : "inactive"}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, is_active: e.target.value === "active" }))
+                  }
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={editForm.password}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, password: e.target.value }))}
+                  placeholder="New password (optional)"
+                  type="password"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  value={editForm.manager_id}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, manager_id: e.target.value }))}
+                  placeholder="Manager ID (optional)"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  disabled={isSaving}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEditCancel}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-slate-200 p-4 space-y-3">
+              <div className="text-sm font-semibold">Create user</div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={createForm.full_name}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="Full name"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
+                  placeholder="Email"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={createForm.username}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, username: e.target.value }))}
+                  placeholder="Username"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  value={createForm.phone_number}
+                  onChange={(e) =>
+                    setCreateForm((prev) => ({ ...prev, phone_number: e.target.value }))
+                  }
+                  placeholder="Phone number"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select
+                  value={createForm.role}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, role: e.target.value }))}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                >
+                  {roleOptions.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm((prev) => ({ ...prev, password: e.target.value }))}
+                  placeholder="Password"
+                  type="password"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  disabled={isSaving}
+                  className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+                >
+                  {isSaving ? "Saving..." : "Create"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-slate-200 overflow-hidden">
+          {loadingUsers ? (
+            <div className="p-4 text-sm text-slate-500">Loading users...</div>
+          ) : users.length === 0 ? (
+            <div className="p-4 text-sm text-slate-500">No users found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold">Name</th>
+                    <th className="px-4 py-3 text-left font-semibold">Email</th>
+                    <th className="px-4 py-3 text-left font-semibold">Role</th>
+                    <th className="px-4 py-3 text-left font-semibold">Status</th>
+                    <th className="px-4 py-3 text-left font-semibold">Joined</th>
+                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {users
+                    .filter((u) => {
+                      const roleMatch = filterRole
+                        ? normalizeRole(getUserRole(u) || u.role) === filterRole
+                        : true;
+                      const statusMatch =
+                        filterStatus === "all" ||
+                        (filterStatus === "active" ? u.is_active : !u.is_active);
+                      return roleMatch && statusMatch;
+                    })
+                    .map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-slate-800">{u.full_name || u.email}</div>
+                          <div className="text-xs text-slate-500">ID: {u.id}</div>
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{u.email}</td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                            {formatRole(getUserRole(u) || u.role)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${u.is_active
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-rose-50 text-rose-700"
+                              }`}
+                          >
+                            {u.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-700">{formatDate(u.created_at)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditStart(u)}
+                              className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleActive(u)}
+                              disabled={isSaving}
+                              className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50 disabled:opacity-60"
+                            >
+                              {u.is_active ? "Deactivate" : "Activate"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(u)}
+                              disabled={isSaving}
+                              className="rounded-md border border-rose-300 px-3 py-1 text-xs text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 p-4 space-y-3">
+        <h2 className="text-lg font-semibold">Move User</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input
+            value={moveUserId}
+            onChange={(e) => setMoveUserId(e.target.value)}
+            placeholder="User ID"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+          <input
+            value={moveManagerId}
+            onChange={(e) => setMoveManagerId(e.target.value)}
+            placeholder="Manager ID (optional)"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={moveUser}
+          disabled={isSaving}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+        >
+          {isSaving ? "Moving..." : "Move"}
+        </button>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Roles</h2>
+          <div className="text-sm text-slate-500">/admin/users</div>
+        </div>
+
+        {roleError ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            {roleError}
+          </div>
+        ) : null}
+
+        <div className="rounded-lg border border-slate-200 p-4 space-y-3">
+          <div className="text-sm font-semibold">Create role</div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <input
+              value={roleForm.key}
+              onChange={(e) => setRoleForm((prev) => ({ ...prev, key: e.target.value }))}
+              placeholder="Role key (e.g. dispatcher)"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+            <input
+              value={roleForm.name_en}
+              onChange={(e) => setRoleForm((prev) => ({ ...prev, name_en: e.target.value }))}
+              placeholder="Role name (English)"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+            <input
+              value={roleForm.permissions}
+              onChange={(e) => setRoleForm((prev) => ({ ...prev, permissions: e.target.value }))}
+              placeholder="Permissions (comma-separated)"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleCreateRole}
+            disabled={roleSaving}
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {roleSaving ? "Saving..." : "Create Role"}
+          </button>
+        </div>
+
+        {loadingRoles ? (
+          <div className="text-sm text-slate-500">Loading roles...</div>
+        ) : roleOptions.length ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {roleOptions.map((r) => (
+              <div
+                key={r.value}
+                className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+              >
+                <span className="text-xs text-slate-700">{r.label}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteRole(r.value)}
+                  disabled={roleSaving}
+                  className="rounded-md border border-rose-300 px-2 py-1 text-xs text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-slate-500">No roles found.</div>
+        )}
+      </section>
+    </div>
+  );
+}

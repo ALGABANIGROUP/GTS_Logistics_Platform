@@ -1,0 +1,22 @@
+@"
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vizion-eye"
+version = "0.1.0"
+description = "The VIZION – Project Eye (CLI/TUI + Session and Task Tracking)"
+readme = ""
+requires-python = ">=3.10"
+authors = [{name="GTS Logistics"}]
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vizion_eye*"]
+
+[project.scripts]
+viz = "vizion_eye.cli:main"
+vizion = "vizion_eye.cli:main"
+"@ | Set-Content -Encoding UTF8 pyproject.toml

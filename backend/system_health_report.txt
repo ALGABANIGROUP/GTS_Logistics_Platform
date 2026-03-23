@@ -1,0 +1,26 @@
+{
+  "database": {
+    "connection_test": "failed: cannot import name 'async_engine' from 'database.config' (D:\\GTS Logistics\\backend\\database\\config.py)"
+  },
+  "ai_bots": {
+    "error": "No module named 'backend.core'"
+  },
+  "api_routes": {
+    "error": "No module named 'backend.main'"
+  },
+  "config": {
+    "error": "No module named 'backend.core'"
+  },
+  "overall_status": "unhealthy",
+  "module_imports": {
+    "successful": [],
+    "failed": [
+      "backend.database.config: No module named 'backend.database'",
+      "backend.database.session: No module named 'backend.database'",
+      "backend.core.config: No module named 'backend.core'",
+      "backend.core.ai_core: No module named 'backend.core'",
+      "backend.routes.finance_routes: No module named 'backend.routes'",
+      "backend.routes.documents_routes: No module named 'backend.routes'"
+    ]
+  }
+}

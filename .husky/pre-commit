@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+node scripts/check_arabic_code.mjs --staged
+npm --prefix frontend run lint

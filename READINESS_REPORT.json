@@ -1,0 +1,384 @@
+{
+  "readiness_percentage": 100.0,
+  "scores": {
+    "backend": {
+      "score": 20,
+      "max": 20,
+      "percentage": 100.0
+    },
+    "frontend": {
+      "score": 15,
+      "max": 15,
+      "percentage": 100.0
+    },
+    "database": {
+      "score": 20,
+      "max": 20,
+      "percentage": 100.0
+    },
+    "auth": {
+      "score": 15,
+      "max": 15,
+      "percentage": 100.0
+    },
+    "routes": {
+      "score": 15,
+      "max": 15,
+      "percentage": 100.0
+    },
+    "config": {
+      "score": 10,
+      "max": 10,
+      "percentage": 100.0
+    },
+    "models": {
+      "score": 10,
+      "max": 10,
+      "percentage": 100.0
+    }
+  },
+  "detailed_checks": {
+    "timestamp": "2026-02-03T06:54:16.171356",
+    "project": "GTS SaaS",
+    "checks": {
+      "project_structure": {
+        "status": "healthy",
+        "directories": {
+          "backend": true,
+          "frontend": true,
+          "config": true,
+          "docs": true,
+          ".git": true
+        },
+        "key_files": {
+          "README.md": true,
+          "package.json": true,
+          "pyproject.toml": false,
+          "requirements.txt": true,
+          ".gitignore": true
+        },
+        "errors": []
+      },
+      "backend": {
+        "status": "healthy",
+        "exists": true,
+        "modules": {
+          "main.py": true,
+          "routes": true,
+          "models": true,
+          "database": true,
+          "security": true,
+          "bots": true
+        },
+        "files": {
+          "route_files": 126,
+          "routes": [
+            "admin_data_sources",
+            "admin_platform_settings",
+            "admin_portal_requests",
+            "admin_requests",
+            "admin_system",
+            "admin_tms_access",
+            "admin_unified",
+            "ai_bots_backend",
+            "ai_bots_routes",
+            "ai_bot_issues",
+            "ai_calls_api",
+            "ai_calls_websocket",
+            "ai_dev_bot",
+            "ai_dev_bot_analysis_api",
+            "ai_documents_manager",
+            "ai_email_router",
+            "ai_finance_bot",
+            "ai_freight_report",
+            "ai_gateway",
+            "ai_general_manager",
+            "ai_general_routes",
+            "ai_operations_api",
+            "ai_reports",
+            "ai_routes",
+            "api",
+            "auth",
+            "auth_extended",
+            "auth_me",
+            "auth_reset",
+            "auth_routes",
+            "bots_available",
+            "bot_capabilities_routes",
+            "bot_documents",
+            "bot_governance_routes",
+            "bot_os",
+            "call_manager_ws",
+            "carriers",
+            "carrier_qualification",
+            "chatbot",
+            "communications",
+            "create_admin",
+            "crud",
+            "dashboard_api",
+            "dev_maintenance",
+            "dispatch_routes",
+            "documents_routes",
+            "documents_upload_routes",
+            "drivers_management_routes",
+            "driver_routes",
+            "emails",
+            "email_api",
+            "email_bot_routes",
+            "email_center",
+            "email_logs",
+            "example_finance",
+            "excel_upload",
+            "executive_intelligence_routes",
+            "export_excel",
+            "external_data",
+            "external_services",
+            "finance_ai_routes",
+            "finance_reports",
+            "finance_routes",
+            "financial",
+            "freight_dashboard",
+            "frontend_compat_routes",
+            "general_manager_api",
+            "health_routes",
+            "invoice_extract",
+            "invoice_ocr",
+            "loadboards_routes",
+            "maintenance_ai",
+            "maintenance_center",
+            "mapleload_canada_routes",
+            "marketing_api",
+            "monitoring",
+            "notifications",
+            "notification_routes",
+            "ocr_invoice_extract",
+            "ops_llm",
+            "orchestration",
+            "platform_expenses_routes",
+            "platform_infrastructure_routes",
+            "policy_context",
+            "portal_requests",
+            "public_signup",
+            "quo_webhooks",
+            "reports",
+            "reports_routes",
+            "routes",
+            "routes___init__",
+            "safety",
+            "safety_api",
+            "shipments_import_routes",
+            "shipments_pg_api",
+            "social_media_routes",
+            "support_api",
+            "support_routes",
+            "support_ticket",
+            "system_admin_tools",
+            "system_architect_routes",
+            "system_monitor_api",
+            "system_routes",
+            "system_switcher",
+            "tenant_admin",
+            "test_seed",
+            "tms_api",
+            "tms_requests_admin",
+            "tms_unified_api",
+            "transport_laws",
+            "truckerpath_routes",
+            "truckerpath_webhook",
+            "truck_locations_api",
+            "user",
+            "users_routes",
+            "user_preferences",
+            "user_sessions",
+            "vizion_routes",
+            "webhooks",
+            "ws_admin_monitor",
+            "ws_marketing_updates",
+            "ws_notifications",
+            "ws_routes",
+            "ws_support",
+            "ws_system_admin"
+          ]
+        },
+        "errors": []
+      },
+      "frontend": {
+        "status": "healthy",
+        "exists": true,
+        "structure": {
+          "package.json": true,
+          "vite.config.js": true,
+          "src/main.jsx": true,
+          "src/contexts/AuthContext.jsx": true,
+          "src/routes/AppRoutes.jsx": true
+        },
+        "config": {
+          "name": "gts-tailwind-starter",
+          "version": "1.0.0",
+          "dependencies_count": 16,
+          "dev_dependencies_count": 8
+        },
+        "errors": []
+      },
+      "models": {
+        "status": "healthy",
+        "models": [
+          "ai_bot_issues",
+          "ai_reports",
+          "base",
+          "bot_os",
+          "carrier",
+          "customer",
+          "dispatch_models",
+          "document",
+          "email_center",
+          "external_data",
+          "financial",
+          "governance",
+          "init",
+          "invoices",
+          "message_log",
+          "mixins",
+          "models",
+          "monthly_report",
+          "news",
+          "notification",
+          "partner",
+          "partner_manager",
+          "platform_expense",
+          "platform_infrastructure_expense",
+          "portal_access_request",
+          "refresh_token",
+          "safety",
+          "safety_report",
+          "shipment_events",
+          "social_media",
+          "subscription",
+          "support_models",
+          "support_ticket",
+          "tenant",
+          "tenant_social_links",
+          "tracking_webhook",
+          "transport_laws",
+          "unified_models",
+          "user",
+          "ws_notifications"
+        ],
+        "total_models": 40,
+        "errors": []
+      },
+      "configuration": {
+        "status": "healthy",
+        "files": {
+          ".env": {
+            "exists": true,
+            "description": "Environment variables"
+          },
+          "alembic.ini": {
+            "exists": true,
+            "description": "Database migrations config"
+          },
+          "docker-compose.yml": {
+            "exists": false,
+            "description": "Docker compose"
+          },
+          "backend/alembic.ini": {
+            "exists": true,
+            "description": "Backend alembic config"
+          }
+        },
+        "database_configured": true,
+        "errors": []
+      },
+      "database": {
+        "status": "healthy",
+        "tables": {},
+        "users": {
+          "total": 25,
+          "active": 25,
+          "inactive": 0,
+          "by_role": {
+            "user": 7,
+            "system": 1,
+            "super_admin": 17
+          }
+        },
+        "errors": []
+      },
+      "auth_system": {
+        "status": "checking",
+        "auth_endpoints": {
+          "/api/v1/auth/token": {
+            "method": "POST",
+            "description": "Login endpoint",
+            "status": "available"
+          },
+          "/api/v1/auth/me": {
+            "method": "GET",
+            "description": "Get current user",
+            "status": "available"
+          },
+          "/auth/register": {
+            "method": "POST",
+            "description": "Register endpoint",
+            "status": "available"
+          }
+        },
+        "security": {},
+        "errors": []
+      },
+      "routes": {
+        "status": "healthy",
+        "total_routes": 171,
+        "by_prefix": {
+          "/openapi.json": 1,
+          "/docs": 1,
+          "/docs/oauth2-redirect": 1,
+          "/redoc": 1,
+          "/api/v1": 105,
+          "/users/me": 4,
+          "/system/status": 1,
+          "/system/database": 1,
+          "/system/metrics": 1,
+          "/system/health": 1,
+          "/system/bots": 1,
+          "/system/issues": 1,
+          "/api/transport-laws": 8,
+          "/users/users": 1,
+          "/users/test": 1,
+          "/vizion/vizion": 1,
+          "/health/ping": 2,
+          "/health/db": 2,
+          "/health/redis": 2,
+          "/health/external": 2,
+          "/health/full": 1,
+          "/health/sentry": 2,
+          "/reports/": 1,
+          "/ai/reports": 2,
+          "/loadboards/": 1,
+          "/truckerpath/status": 1,
+          "/truckerpath/loads": 1,
+          "/truckerpath/post-load": 1,
+          "/truckerpath/webhook": 1,
+          "/documents/healthz": 1,
+          "/documents/": 2,
+          "/documents/{doc_id}": 3,
+          "/documents/expiring-soon": 1,
+          "/documents/notify-expiring": 1,
+          "/ai/documents": 3,
+          "/ai/ask": 1,
+          "/finance/ai": 1,
+          "/ai/bots": 1,
+          "/ai/{name}": 3,
+          "/admin": 1,
+          "/admin/{rest:path}": 1,
+          "/healthz": 1,
+          "/_debug/routes": 1,
+          "/": 1
+        },
+        "errors": []
+      }
+    },
+    "summary": {}
+  }
+}

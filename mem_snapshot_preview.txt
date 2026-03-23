@@ -1,0 +1,32 @@
+=== File head preview ===
+Top 30 memory allocations by line:
+<frozen importlib._bootstrap_external>:729: size=34.4 MiB, count=294030, average=123 B
+<frozen abc>:106: size=3656 KiB, count=13314, average=281 B
+<frozen importlib._bootstrap>:241: size=2945 KiB, count=28918, average=104 B
+C:\Users\enjoy\AppData\Local\Programs\Python\Python311\Lib\functools.py:1003: size=2287 KiB, count=2139, average=1095 B
+C:\Users\enjoy\AppData\Local\Programs\Python\Python311\Lib\dataclasses.py:433: size=2272 KiB, count=3994, average=582 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\pydantic\fields.py:237: size=1067 KiB, count=7770, average=141 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\typing_extensions.py:1110: size=1016 KiB, count=4523, average=230 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\pydantic\fields.py:563: size=967 KiB, count=5119, average=193 B
+<frozen abc>:123: size=893 KiB, count=8806, average=104 B
+C:\Users\enjoy\AppData\Local\Programs\Python\Python311\Lib\typing.py:827: size=835 KiB, count=8748, average=98 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:1226: size=802 KiB, count=540, average=1520 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\fastapi\routing.py:591: size=778 KiB, count=1006, average=792 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\fastapi\dependencies\utils.py:141: size=752 KiB, count=5200, average=148 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\fastapi\routing.py:586: size=746 KiB, count=964, average=792 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\pydantic\fields.py:280: size=604 KiB, count=2864, average=216 B
+<frozen importlib._bootstrap_external>:123: size=580 KiB, count=3856, average=154 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\fastapi\routing.py:641: size=577 KiB, count=14775, average=40 B
+<frozen abc>:107: size=571 KiB, count=3587, average=163 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\pydantic_core\core_schema.py:4333: size=569 KiB, count=8342, average=70 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\typing_inspection\introspection.py:444: size=550 KiB, count=2608, average=216 B
+<frozen importlib._bootstrap_external>:1684: size=460 KiB, count=3871, average=122 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\pydantic\plugin\_schema_validator.py:51: size=450 KiB, count=5643, average=82 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\pydantic\fields.py:316: size=406 KiB, count=1576, average=264 B
+C:\Users\enjoy\AppData\Local\Programs\Python\Python311\Lib\enum.py:552: size=373 KiB, count=1258, average=303 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\asyncpg\exceptions\_base.py:51: size=370 KiB, count=1689, average=224 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\fastapi\routing.py:271: size=369 KiB, count=2955, average=128 B
+<frozen importlib._bootstrap_external>:147: size=350 KiB, count=2041, average=176 B
+C:\Users\enjoy\AppData\Local\Programs\Python\Python311\Lib\re\_compiler.py:759: size=345 KiB, count=819, average=432 B
+<string>:8: size=325 KiB, count=5845, average=57 B
+C:\Users\enjoy\Music\GTS Logistics origin\.venv\Lib\site-packages\fastapi\utils.py:93: size=323 KiB, count=4242, average=78 B

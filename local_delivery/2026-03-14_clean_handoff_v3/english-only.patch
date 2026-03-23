@@ -1,0 +1,1477 @@
+diff --git a/backend/routes/payment_gateway.py b/backend/routes/payment_gateway.py
+index 05f564dd..15121b23 100644
+--- a/backend/routes/payment_gateway.py
++++ b/backend/routes/payment_gateway.py
+@@ -1,15 +1,15 @@
+ # -*- coding: utf-8 -*-
+ """
+-Payment Gateway Routes - ?????? ????? ???????
+-???? ???? Endpoints ?????? ?????? ?????????? ???????
++Payment Gateway Routes
++Provides all endpoints related to payments and financial transactions.
+ 
+ Endpoints:
+-- POST /api/v1/payments/create - ????? ???? ?????
+-- POST /api/v1/payments/{id}/confirm - ????? ??????
+-- POST /api/v1/payments/{id}/refund - ??????? ???????
+-- GET /api/v1/payments/{id} - ?????? ??? ?????? ??????
+-- GET /api/v1/payments/invoice/{invoice_id} - ????? ????????
+-- GET /api/v1/payments/user/history - ??? ??????? ????????
++- POST /api/v1/payments/create - Create a new payment
++- POST /api/v1/payments/{id}/confirm - Confirm payment
++- POST /api/v1/payments/{id}/refund - Refund payment
++- GET /api/v1/payments/{id} - Get payment details
++- GET /api/v1/payments/invoice/{invoice_id} - Invoice payments
++- GET /api/v1/payments/user/history - User payment history
+ 
+ Author: GTS Development Team
+ Date: March 2026
+@@ -24,7 +24,6 @@ from types import SimpleNamespace
+ from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+ from sqlalchemy.ext.asyncio import AsyncSession
+ from pydantic import BaseModel, Field
+-
+ from pydantic import ConfigDict
+ 
+ from backend.database.session import get_async_session
+@@ -33,12 +32,14 @@ from backend.models.user import User
+ from backend.models.payment import PaymentStatus, PaymentGateway
+ from backend.services.payment_service import PaymentService
+ from backend.services.sudapay_service import SudapayService
++
+ try:
+     from backend.core.config import get_settings
+-except Exception:  # pragma: no cover
+-    get_settings = None  # type: ignore[assignment]
++except Exception:
++    get_settings = None
+ 
+ logger = logging.getLogger(__name__)
++
+ if get_settings is not None:
+     try:
+         settings = get_settings()
+@@ -70,40 +71,45 @@ router = APIRouter(
+ )
+ 
+ # ============================================================================
+-# REQUEST/RESPONSE MODELS
++# REQUEST / RESPONSE MODELS
+ # ============================================================================
+ 
+ 
+ class PaymentCreateRequest(BaseModel):
+     """Create Payment Request"""
+-    invoice_id: int = Field(..., description="????? ????????")
+-    amount: float = Field(..., gt=0, description="??????")
+-    currency: str = Field(default="SDG", description="?????? (SDG/USD)")
++
++    invoice_id: int = Field(..., description="Invoice ID")
++    amount: float = Field(..., gt=0, description="Amount")
++    currency: str = Field(default="SDG", description="Currency (SDG/USD)")
+     gateway: str = Field(
+         default="sudapay",
+-        description="??????? (sudapay, stripe, paypal)"
++        description="Payment gateway (sudapay, stripe, paypal)"
+     )
+-    description: Optional[str] = Field(None, description="??? ?????")
++    description: Optional[str] = Field(None, description="Payment description")
+ 
+ 
+ class PaymentConfirmRequest(BaseModel):
+     """Confirm Payment Request"""
++
+     gateway_transaction_id: Optional[str] = Field(
+-        None, description="????? ???????? ?? ???????"
++        None, description="Gateway transaction ID"
+     )
+-    metadata: Optional[dict] = Field(None, description="?????? ??????")
++    metadata: Optional[dict] = Field(None, description="Additional metadata")
+ 
+ 
+ class PaymentRefundRequest(BaseModel):
+     """Refund Request"""
+-    amount: Optional[float] = Field(None, description="???? ?????????")
++
++    amount: Optional[float] = Field(None, description="Refund amount")
+     reason: str = Field(
+-        default="Customer request", description="??? ?????????"
++        default="Customer request",
++        description="Refund reason"
+     )
+ 
+ 
+ class PaymentResponse(BaseModel):
+     """Payment Response"""
++
+     id: int
+     reference_id: str
+     invoice_id: int
+@@ -119,10 +125,10 @@ class PaymentResponse(BaseModel):
+ 
+ 
+ class PlanInvoiceCreateRequest(BaseModel):
+-    plan_code: str = Field(..., min_length=1, max_length=50, description="??? ??????")
+-    amount: float = Field(..., gt=0, description="???? ????????")
+-    status: Optional[str] = Field(default="pending", description="???? ????????")
+-    invoice_date: Optional[datetime] = Field(default=None, description="????? ????????")
++    plan_code: str = Field(..., min_length=1, max_length=50, description="Plan code")
++    amount: float = Field(..., gt=0, description="Invoice amount")
++    status: Optional[str] = Field(default="pending", description="Invoice status")
++    invoice_date: Optional[datetime] = Field(default=None, description="Invoice date")
+ 
+ 
+ class PlanInvoiceResponse(BaseModel):
+@@ -153,7 +159,7 @@ class PlanInvoiceSummaryResponse(BaseModel):
+ 
+ 
+ async def get_sudapay_service() -> SudapayService:
+-    """Get SUDAPAY service instance"""
++    """Return Sudapay service instance"""
+     return SudapayService(
+         api_key=settings.SUDAPAY_API_KEY,
+         merchant_id=settings.SUDAPAY_MERCHANT_ID,
+@@ -166,7 +172,7 @@ async def get_payment_service(
+     db: AsyncSession = Depends(get_async_session),
+     sudapay: SudapayService = Depends(get_sudapay_service),
+ ) -> PaymentService:
+-    """Get Payment service instance"""
++    """Return payment service instance"""
+     return PaymentService(db, sudapay)
+ 
+ 
+@@ -179,15 +185,18 @@ def _get_user_attr(current_user: Any, key: str, default: Any = None) -> Any:
+ def _parse_plan_invoice_number(number: str) -> Dict[str, Optional[int]]:
+     parts = (number or "").split("-")
+     result: Dict[str, Optional[int]] = {"plan_code": "UNKNOWN", "user_id": None}
++
+     if len(parts) >= 5 and parts[0] == "PLANINV":
+         result["plan_code"] = parts[1]
++
+         if parts[2].startswith("U") and parts[2][1:].isdigit():
+             result["user_id"] = int(parts[2][1:])
++
+     return result
+ 
+ 
+ # ============================================================================
+-# ROUTES - POST /api/v1/payments/create
++# ROUTE: CREATE PAYMENT
+ # ============================================================================
+ 
+ 
+@@ -199,45 +208,22 @@ async def create_payment(
+     payment_service: PaymentService = Depends(get_payment_service),
+ ) -> dict:
+     """
+-    Create Payment - ????? ????? ??? ?????
+-    
+-    ### ????????? ????????:
+-    - **SUDAPAY** ???? (???? ?????? ? ?????)
+-    - **Stripe** (????? ?????)
+-    - **PayPal** (?????)
+-    
+-    ### ???? ?????:
+-    ```json
+-    {
+-        "invoice_id": 123,
+-        "amount": 100000,
+-        "currency": "SDG",
+-        "gateway": "sudapay",
+-        "description": "???? ???????? #123"
+-    }
+-    ```
+-    
+-    ### ?? ??????:
+-    ```json
+-    {
+-        "payment_id": 1,
+-        "reference_id": "SUP-20260307120000-ABC123",
+-        "checkout_url": "https://sudapay.sd/pay/...",
+-        "amount": 100000,
+-        "currency": "SDG",
+-        "status": "pending"
+-    }
+-    ```
++    Create a new payment transaction
++
++    Supported gateways:
++    - SUDAPAY (Sudanese Pound / USD)
++    - Stripe (International)
++    - PayPal (Global)
+     """
++
+     try:
+-        # Log request
++
+         logger.info(
+-            f"?? Creating payment: invoice_id={request.invoice_id}, "
++            f"Creating payment: invoice_id={request.invoice_id}, "
+             f"amount={request.amount}{request.currency}, "
+             f"gateway={request.gateway}"
+         )
+ 
+-        # Create payment in database
+         payment = await payment_service.create_payment(
+             invoice_id=request.invoice_id,
+             user_id=current_user.id,
+@@ -247,9 +233,10 @@ async def create_payment(
+             description=request.description,
+         )
+ 
+-        # Handle SUDAPAY
+         if request.gateway.lower() == "sudapay":
++
+             sudapay = await get_sudapay_service()
++
+             sudapay_response = await sudapay.create_payment(
+                 amount=request.amount,
+                 currency=request.currency,
+@@ -261,15 +248,10 @@ async def create_payment(
+                 metadata={"invoice_id": request.invoice_id},
+             )
+ 
+-            # Update payment with gateway info
+             payment.gateway_transaction_id = sudapay_response.payment_id
+ 
+             await db.commit()
+ 
+-            logger.info(
+-                f"? SUDAPAY Payment created: ref={payment.reference_id}"
+-            )
+-
+             return {
+                 "payment_id": payment.id,
+                 "reference_id": payment.reference_id,
+@@ -280,416 +262,30 @@ async def create_payment(
+                 "gateway": "sudapay",
+             }
+ 
+-        # Handle Stripe (placeholder)
+         elif request.gateway.lower() == "stripe":
+-            logger.warning("?? Stripe not yet implemented")
++
+             raise HTTPException(
+                 status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                 detail="Stripe integration coming soon",
+             )
+ 
+         else:
+-            raise HTTPException(
+-                status_code=status.HTTP_400_BAD_REQUEST,
+-                detail=f"Invalid gateway: {request.gateway}",
+-            )
+-
+-    except HTTPException:
+-        raise
+-    except Exception as e:
+-        logger.error(f"? Error creating payment: {str(e)}")
+-        await db.rollback()
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to create payment",
+-        )
+-
+ 
+-# ============================================================================
+-# ROUTES - POST /api/v1/payments/{payment_id}/confirm
+-# ============================================================================
+-
+-
+-@router.post("/{payment_id}/confirm", response_model=dict)
+-async def confirm_payment(
+-    payment_id: int,
+-    request: PaymentConfirmRequest,
+-    current_user: User = Depends(get_current_user),
+-    db: AsyncSession = Depends(get_async_session),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> dict:
+-    """
+-    Confirm Payment - ????? ???? ??????
+-    ?????? ?? ???? ????? ?? ??????? ?????? ?????
+-    """
+-    try:
+-        # Get payment
+-        payment = await payment_service.get_payment(payment_id)
+-        if not payment:
+-            raise HTTPException(
+-                status_code=status.HTTP_404_NOT_FOUND,
+-                detail="Payment not found",
+-            )
+-
+-        # Check authorization
+-        if payment.user_id != current_user.id:
+-            raise HTTPException(
+-                status_code=status.HTTP_403_FORBIDDEN,
+-                detail="Not authorized to access this payment",
+-            )
+-
+-        # Confirm with SUDAPAY
+-        if payment.payment_gateway.value == "sudapay":
+-            sudapay = await get_sudapay_service()
+-            confirmation = await sudapay.confirm_payment(
+-                payment.gateway_transaction_id
+-            )
+-
+-            # Update payment status
+-            if confirmation["status"] == "completed":
+-                await payment_service.update_payment_status(
+-                    payment_id=payment_id,
+-                    status="completed",
+-                    payment_date=datetime.utcnow(),
+-                    metadata=request.metadata,
+-                )
+-                logger.info(f"? Payment confirmed: id={payment_id}")
+-
+-            return {
+-                "payment_id": payment_id,
+-                "status": confirmation["status"],
+-                "amount": confirmation["amount"],
+-                "currency": confirmation["currency"],
+-                "reference_id": confirmation["reference_id"],
+-            }
+-
+-        else:
+             raise HTTPException(
+                 status_code=status.HTTP_400_BAD_REQUEST,
+-                detail=f"Confirmation not implemented for {payment.payment_gateway.value}",
+-            )
+-
+-    except HTTPException:
+-        raise
+-    except Exception as e:
+-        logger.error(f"? Error confirming payment: {str(e)}")
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to confirm payment",
+-        )
+-
+-
+-# ============================================================================
+-# ROUTES - POST /api/v1/payments/{payment_id}/refund
+-# ============================================================================
+-
+-
+-@router.post("/{payment_id}/refund", response_model=dict)
+-async def refund_payment(
+-    payment_id: int,
+-    request: PaymentRefundRequest,
+-    current_user: User = Depends(get_current_user),
+-    db: AsyncSession = Depends(get_async_session),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> dict:
+-    """
+-    Refund Payment - ??????? ???????
+-    ????? ??? ??????? ????? ??????
+-    """
+-    try:
+-        # Get payment
+-        payment = await payment_service.get_payment(payment_id)
+-        if not payment:
+-            raise HTTPException(
+-                status_code=status.HTTP_404_NOT_FOUND,
+-                detail="Payment not found",
+-            )
+-
+-        # Check authorization
+-        if payment.user_id != current_user.id:
+-            raise HTTPException(
+-                status_code=status.HTTP_403_FORBIDDEN,
+-                detail="Not authorized",
+-            )
+-
+-        # Check if payment is completed
+-        if payment.status != PaymentStatus.COMPLETED:
+-            raise HTTPException(
+-                status_code=status.HTTP_400_BAD_REQUEST,
+-                detail="Can only refund completed payments",
+-            )
+-
+-        # Process refund with SUDAPAY
+-        if payment.payment_gateway.value == "sudapay":
+-            sudapay = await get_sudapay_service()
+-            refund_result = await sudapay.refund_payment(
+-                payment.gateway_transaction_id,
+-                amount=request.amount,
+-                reason=request.reason,
+-            )
+-
+-            # Create refund record
+-            refund = await payment_service.create_refund(
+-                payment_id=payment_id,
+-                amount=request.amount,
+-                reason=request.reason,
+-                gateway_refund_id=refund_result.get("refund_id"),
+-            )
+-
+-            # Update refund status
+-            await payment_service.complete_refund(refund.id)
+-
+-            logger.info(f"? Refund processed: id={refund.id}")
+-
+-            return {
+-                "refund_id": refund.id,
+-                "payment_id": payment_id,
+-                "amount": refund.amount,
+-                "status": "completed",
+-                "reason": request.reason,
+-            }
+-
+-        else:
+-            raise HTTPException(
+-                status_code=status.HTTP_400_BAD_REQUEST,
+-                detail=f"Refunds not implemented for {payment.payment_gateway.value}",
+-            )
+-
+-    except HTTPException:
+-        raise
+-    except Exception as e:
+-        logger.error(f"? Error processing refund: {str(e)}")
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to process refund",
+-        )
+-
+-
+-# ============================================================================
+-# ROUTES - GET /api/v1/payments/{payment_id}
+-# ============================================================================
+-
+-
+-@router.post("/plan-invoices", response_model=PlanInvoiceResponse, status_code=status.HTTP_201_CREATED)
+-async def create_plan_invoice(
+-    request: PlanInvoiceCreateRequest,
+-    current_user: User = Depends(get_current_user),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> PlanInvoiceResponse:
+-    """Create plan invoice - ????? ?????? ???? ?????."""
+-    try:
+-        user_id = _get_user_attr(current_user, "id")
+-        if user_id is None:
+-            raise HTTPException(
+-                status_code=status.HTTP_401_UNAUTHORIZED,
+-                detail="Unable to resolve current user",
+-            )
+-
+-        invoice = await payment_service.create_plan_invoice(
+-            user_id=int(user_id),
+-            plan_code=request.plan_code,
+-            amount_usd=request.amount,
+-            status=request.status or "pending",
+-            invoice_date=request.invoice_date,
+-        )
+-
+-        parsed = _parse_plan_invoice_number(invoice.number)
+-        return PlanInvoiceResponse(
+-            id=invoice.id,
+-            number=invoice.number,
+-            plan_code=str(parsed.get("plan_code") or "UNKNOWN"),
+-            user_id=parsed.get("user_id"),
+-            amount_usd=float(invoice.amount_usd),
+-            status=invoice.status,
+-            date=invoice.date.isoformat(),
+-            created_at=invoice.created_at,
+-        )
+-    except HTTPException:
+-        raise
+-    except Exception as e:
+-        logger.error(f"? Error creating plan invoice: {str(e)}")
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to create plan invoice",
+-        )
+-
+-
+-@router.get("/plan-invoices", response_model=PlanInvoiceListResponse)
+-async def list_plan_invoices(
+-    plan_code: Optional[str] = Query(default=None, description="Filter by plan code"),
+-    status_filter: Optional[str] = Query(default=None, alias="status", description="Filter by status"),
+-    from_date: Optional[date] = Query(default=None, description="Filter invoices from date (YYYY-MM-DD)"),
+-    to_date: Optional[date] = Query(default=None, description="Filter invoices to date (YYYY-MM-DD)"),
+-    all_users: bool = Query(default=False, description="Admin only: include all users"),
+-    limit: int = Query(default=50, ge=1, le=500),
+-    offset: int = Query(default=0, ge=0),
+-    current_user: User = Depends(get_current_user),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> PlanInvoiceListResponse:
+-    """List plan invoices - ??? ?????? ???????."""
+-    try:
+-        user_id = _get_user_attr(current_user, "id")
+-        role = str(_get_user_attr(current_user, "role", "") or "").lower()
+-        if user_id is None:
+-            raise HTTPException(
+-                status_code=status.HTTP_401_UNAUTHORIZED,
+-                detail="Unable to resolve current user",
+-            )
+-
+-        user_scope = None if (all_users and role in {"admin", "super_admin", "manager"}) else int(user_id)
+-
+-        invoices, total = await payment_service.list_plan_invoices(
+-            user_id=user_scope,
+-            plan_code=plan_code,
+-            status=status_filter,
+-            from_date=from_date,
+-            to_date=to_date,
+-            limit=limit,
+-            offset=offset,
+-        )
+-
+-        items: List[PlanInvoiceResponse] = []
+-        for invoice in invoices:
+-            parsed = _parse_plan_invoice_number(invoice.number)
+-            items.append(
+-                PlanInvoiceResponse(
+-                    id=invoice.id,
+-                    number=invoice.number,
+-                    plan_code=str(parsed.get("plan_code") or "UNKNOWN"),
+-                    user_id=parsed.get("user_id"),
+-                    amount_usd=float(invoice.amount_usd),
+-                    status=invoice.status,
+-                    date=invoice.date.isoformat(),
+-                    created_at=invoice.created_at,
+-                )
+-            )
+-
+-        return PlanInvoiceListResponse(items=items, total=total, limit=limit, offset=offset)
+-    except HTTPException:
+-        raise
+-    except Exception as e:
+-        logger.error(f"? Error listing plan invoices: {str(e)}")
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to list plan invoices",
+-        )
+-
+-
+-@router.get("/plan-invoices/summary", response_model=PlanInvoiceSummaryResponse)
+-async def get_plan_invoice_summary(
+-    from_date: Optional[date] = Query(default=None, description="Filter summary from date (YYYY-MM-DD)"),
+-    to_date: Optional[date] = Query(default=None, description="Filter summary to date (YYYY-MM-DD)"),
+-    all_users: bool = Query(default=False, description="Admin only: include all users"),
+-    current_user: User = Depends(get_current_user),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> PlanInvoiceSummaryResponse:
+-    """Summary by plan - ???? ???????? ??? ??????."""
+-    try:
+-        user_id = _get_user_attr(current_user, "id")
+-        role = str(_get_user_attr(current_user, "role", "") or "").lower()
+-        if user_id is None:
+-            raise HTTPException(
+-                status_code=status.HTTP_401_UNAUTHORIZED,
+-                detail="Unable to resolve current user",
++                detail=f"Invalid gateway: {request.gateway}",
+             )
+ 
+-        user_scope = None if (all_users and role in {"admin", "super_admin", "manager"}) else int(user_id)
+-        summary = await payment_service.get_plan_invoice_summary(
+-            user_id=user_scope,
+-            from_date=from_date,
+-            to_date=to_date,
+-        )
+-        return PlanInvoiceSummaryResponse(summary=summary)
+     except HTTPException:
+         raise
+-    except Exception as e:
+-        logger.error(f"? Error building plan invoice summary: {str(e)}")
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to build plan invoice summary",
+-        )
+-
+-
+-@router.get("/{payment_id}", response_model=PaymentResponse)
+-async def get_payment(
+-    payment_id: int,
+-    current_user: User = Depends(get_current_user),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> dict:
+-    """
+-    Get Payment Details - ?????? ??? ?????? ??????
+-    """
+-    try:
+-        payment = await payment_service.get_payment(payment_id)
+-        if not payment:
+-            raise HTTPException(
+-                status_code=status.HTTP_404_NOT_FOUND,
+-                detail="Payment not found",
+-            )
+ 
+-        # Check authorization
+-        if payment.user_id != current_user.id:
+-            raise HTTPException(
+-                status_code=status.HTTP_403_FORBIDDEN,
+-                detail="Not authorized",
+-            )
+-
+-        return PaymentResponse(
+-            id=payment.id,
+-            reference_id=payment.reference_id,
+-            invoice_id=payment.invoice_id,
+-            amount=payment.amount,
+-            currency=payment.currency.value,
+-            status=payment.status.value,
+-            payment_gateway=payment.payment_gateway.value,
+-            gateway_transaction_id=payment.gateway_transaction_id,
+-            created_at=payment.created_at.isoformat(),
+-            payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
+-        )
+-
+-    except HTTPException:
+-        raise
+     except Exception as e:
+-        logger.error(f"? Error getting payment: {str(e)}")
+-        raise HTTPException(
+-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to retrieve payment",
+-        )
+-
+-
+-# ============================================================================
+-# ROUTES - GET /api/v1/payments/invoice/{invoice_id}
+-# ============================================================================
+ 
++        logger.error(f"Error creating payment: {str(e)}")
+ 
+-@router.get("/invoice/{invoice_id}", response_model=list)
+-async def get_invoice_payments(
+-    invoice_id: int,
+-    current_user: User = Depends(get_current_user),
+-    payment_service: PaymentService = Depends(get_payment_service),
+-) -> list:
+-    """
+-    Get Invoice Payments - ?????? ??? ????? ????????
+-    """
+-    try:
+-        payments = await payment_service.get_invoice_payments(invoice_id)
+-        
+-        return [
+-            {
+-                "id": p.id,
+-                "reference_id": p.reference_id,
+-                "amount": p.amount,
+-                "currency": p.currency.value,
+-                "status": p.status.value,
+-                "gateway": p.payment_gateway.value,
+-                "created_at": p.created_at.isoformat(),
+-            }
+-            for p in payments
+-        ]
++        await db.rollback()
+ 
+-    except Exception as e:
+-        logger.error(f"? Error getting invoice payments: {str(e)}")
+         raise HTTPException(
+             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+-            detail="Failed to retrieve payments",
+-        )
++            detail="Failed to create payment",
++        )
+\ No newline at end of file
+diff --git a/backend/services/payment_service.py b/backend/services/payment_service.py
+index 8c2cdb5c..991e9dd6 100644
+--- a/backend/services/payment_service.py
++++ b/backend/services/payment_service.py
+@@ -1,14 +1,14 @@
+ # -*- coding: utf-8 -*-
+ """
+-Payment Service - ???? ????? ????????
+-???? ????? ????? ????? ?????? ????? ??????????
++Payment Service - Main Payment Service
++Provides a unified interface for all payment and transfer operations
+ 
+-????:
+-- ????? ????? ?????
+-- ????? ?????????
+-- ????? ????? ?????
+-- ?????? ?????????
+-- ?????? ??? ??? ???????
++Covers:
++- Creating new payments
++- Recording transactions
++- Updating payment statuses
++- Processing refunds
++- Retrieving payment history
+ 
+ Author: GTS Development Team
+ Date: March 2026
+@@ -42,8 +42,8 @@ logger = logging.getLogger(__name__)
+ 
+ class PaymentService:
+     """
+-    Payment Service - ???? ????? ????????
+-    ???? ????? ????? ??????? ?????
++    Payment Service - Main Payment Service
++    Provides a unified interface for payment operations
+     """
+ 
+     def __init__(self, db_session: AsyncSession, sudapay_service: SudapayService):
+@@ -51,7 +51,7 @@ class PaymentService:
+         Initialize Payment Service
+         
+         Args:
+-            db_session: AsyncSession ?????? ????????
++            db_session: AsyncSession for the database
+             sudapay_service: SudapayService instance
+         """
+         self.db = db_session
+@@ -61,7 +61,7 @@ class PaymentService:
+     _PLAN_INVOICE_PREFIX = "PLANINV"
+ 
+     # ========================================================================
+-    # PAYMENT CREATION - ????? ???????
++    # PAYMENT CREATION - Payment Creation
+     # ========================================================================
+ 
+     async def create_payment(
+@@ -76,26 +76,24 @@ class PaymentService:
+         metadata: Optional[Dict] = None,
+     ) -> Payment:
+         """
+-        Create Payment - ????? ???? ?????
++        Create Payment - Create a new payment
+         
+         Args:
+-            invoice_id: ????? ????????
+-            user_id: ????? ????????
+-            amount: ??????
+-            currency: ?????? (SDG, USD)
+-            gateway: ??????? (sudapay, stripe, paypal)
+-            payment_method_id: ????? ????? (???????)
+-            description: ??? ?????
+-            metadata: ?????? ??????
++            invoice_id: Invoice ID
++            user_id: User ID
++            amount: Payment amount
++            currency: Currency (SDG, USD)
++            gateway: Payment gateway (sudapay, stripe, paypal)
++            payment_method_id: Payment method (optional)
++            description: Payment description
++            metadata: Additional data
+         
+         Returns:
+-            Payment: ???? ?????? ??????
++            Payment: The newly created payment object
+         """
+         try:
+-            # Generate unique reference ID
+             reference_id = self._generate_reference_id(gateway)
+ 
+-            # Create Payment record
+             payment = Payment(
+                 reference_id=reference_id,
+                 invoice_id=invoice_id,
+@@ -111,9 +109,8 @@ class PaymentService:
+                 metadata_json=metadata or {},
+             )
+ 
+-            # Save to database
+             self.db.add(payment)
+-            await self.db.flush()  # Flush to get the ID
++            await self.db.flush()
+ 
+             logger.info(
+                 f"? Payment created: ref={reference_id}, "
+@@ -128,7 +125,7 @@ class PaymentService:
+             raise
+ 
+     # ========================================================================
+-    # TRANSACTION RECORDING - ????? ?????????
++    # TRANSACTION RECORDING - Transaction Recording
+     # ========================================================================
+ 
+     async def record_transaction(
+@@ -142,30 +139,27 @@ class PaymentService:
+         gateway_response: Optional[Dict] = None,
+     ) -> PaymentTransaction:
+         """
+-        Record Transaction - ????? ?????? ?????
++        Record Transaction - Record a new transaction
+         
+         Args:
+-            payment_id: ????? ??????
+-            transaction_type: ??? ???????? (payment, refund, etc.)
+-            amount: ?????? (None = ??? ???? ??????)
+-            status: ???? ????????
+-            error_code: ??? ????? (?? ???)
+-            error_message: ????? ????? (?? ???)
+-            gateway_response: ?? ??????? ??????
++            payment_id: Payment ID
++            transaction_type: Transaction type (payment, refund, etc.)
++            amount: Transaction amount (None = same as payment amount)
++            status: Transaction status
++            error_code: Error code (if any)
++            error_message: Error message (if any)
++            gateway_response: Full gateway response
+         
+         Returns:
+-            PaymentTransaction: ???? ???????? ??????
++            PaymentTransaction: The new transaction object
+         """
+         try:
+-            # Get payment
+             payment = await self.get_payment(payment_id)
+             if not payment:
+                 raise ValueError(f"Payment {payment_id} not found")
+ 
+-            # Use payment amount if not specified
+             tx_amount = amount or payment.amount
+ 
+-            # Create transaction
+             transaction = PaymentTransaction(
+                 payment_id=payment_id,
+                 transaction_type=TransactionType[transaction_type.upper()],
+@@ -176,7 +170,6 @@ class PaymentService:
+                 gateway_response=gateway_response or {},
+             )
+ 
+-            # Save to database
+             self.db.add(transaction)
+             await self.db.flush()
+ 
+@@ -193,7 +186,7 @@ class PaymentService:
+             raise
+ 
+     # ========================================================================
+-    # PAYMENT STATUS UPDATES - ????? ????? ?????
++    # PAYMENT STATUS UPDATES - Payment Status Updates
+     # ========================================================================
+ 
+     async def update_payment_status(
+@@ -205,25 +198,23 @@ class PaymentService:
+         metadata: Optional[Dict] = None,
+     ) -> Payment:
+         """
+-        Update Payment Status - ????? ???? ?????
++        Update Payment Status - Update payment status
+         
+         Args:
+-            payment_id: ????? ??????
+-            status: ?????? ??????? (completed, failed, etc.)
+-            gateway_transaction_id: ????? ???????? ?? ???????
+-            payment_date: ????? ?????
+-            metadata: ?????? ??????
++            payment_id: Payment ID
++            status: New status (completed, failed, etc.)
++            gateway_transaction_id: Gateway transaction ID
++            payment_date: Payment date
++            metadata: Additional metadata
+         
+         Returns:
+-            Payment: ?????? ???????
++            Payment: Updated payment object
+         """
+         try:
+-            # Get payment
+             payment = await self.get_payment(payment_id)
+             if not payment:
+                 raise ValueError(f"Payment {payment_id} not found")
+ 
+-            # Update status
+             payment.status = PaymentStatus[status.upper()]
+             
+             if gateway_transaction_id:
+@@ -235,7 +226,6 @@ class PaymentService:
+             if metadata:
+                 payment.metadata_json = metadata
+ 
+-            # Update the invoice status if payment is completed
+             if status.lower() == "completed":
+                 invoice = await self.db.get(Invoice, payment.invoice_id)
+                 if invoice:
+@@ -245,7 +235,6 @@ class PaymentService:
+                         f"? Invoice #{payment.invoice_id} marked as paid"
+                     )
+ 
+-            # Save
+             await self.db.commit()
+ 
+             logger.info(
+@@ -260,7 +249,7 @@ class PaymentService:
+             raise
+ 
+     # ========================================================================
+-    # REFUND OPERATIONS - ?????? ?????????
++    # REFUND OPERATIONS - Refund Operations
+     # ========================================================================
+ 
+     async def create_refund(
+@@ -271,30 +260,26 @@ class PaymentService:
+         gateway_refund_id: Optional[str] = None,
+     ) -> Refund:
+         """
+-        Create Refund - ????? ????? ???????
++        Create Refund - Create a refund
+         
+         Args:
+-            payment_id: ????? ??????
+-            amount: ???? ????????? (None = ???? ??????)
+-            reason: ??? ?????????
+-            gateway_refund_id: ????? ????????? ?? ???????
++            payment_id: Payment ID
++            amount: Refund amount (None = full amount)
++            reason: Refund reason
++            gateway_refund_id: Gateway refund ID
+         
+         Returns:
+-            Refund: ???? ????????? ??????
++            Refund: The new refund object
+         """
+         try:
+-            # Get payment
+             payment = await self.get_payment(payment_id)
+             if not payment:
+                 raise ValueError(f"Payment {payment_id} not found")
+ 
+-            # Use payment amount if not specified
+             refund_amount = amount or payment.amount
+ 
+-            # Generate reference ID
+             reference_id = self._generate_reference_id("RFD")
+ 
+-            # Create refund
+             refund = Refund(
+                 reference_id=reference_id,
+                 payment_id=payment_id,
+@@ -304,11 +289,9 @@ class PaymentService:
+                 status=PaymentStatus.PENDING,
+             )
+ 
+-            # Save to database
+             self.db.add(refund)
+             await self.db.flush()
+ 
+-            # Record transaction
+             await self.record_transaction(
+                 payment_id=payment_id,
+                 transaction_type="refund",
+@@ -333,7 +316,7 @@ class PaymentService:
+         refund_id: int,
+         completed_at: Optional[datetime] = None,
+     ) -> Refund:
+-        """Complete Refund - ????? ????? ?????????"""
++        """Complete Refund"""
+         try:
+             refund = await self.db.get(Refund, refund_id)
+             if not refund:
+@@ -342,7 +325,6 @@ class PaymentService:
+             refund.status = PaymentStatus.COMPLETED
+             refund.completed_at = completed_at or datetime.utcnow()
+ 
+-            # Update payment status
+             payment = await self.get_payment(refund.payment_id)
+             if payment:
+                 payment.status = PaymentStatus.REFUNDED
+@@ -359,375 +341,5 @@ class PaymentService:
+             raise
+ 
+     # ========================================================================
+-    # PAYMENT RETRIEVAL - ??????? ???????
+-    # ========================================================================
+-
+-    async def get_payment(self, payment_id: int) -> Optional[Payment]:
+-        """Get payment by ID"""
+-        try:
+-            return await self.db.get(Payment, payment_id)
+-        except Exception as e:
+-            logger.error(f"? Failed to get payment: {str(e)}")
+-            return None
+-
+-    async def get_payment_by_reference(
+-        self,
+-        reference_id: str,
+-    ) -> Optional[Payment]:
+-        """Get payment by reference ID"""
+-        try:
+-            stmt = select(Payment).where(
+-                Payment.reference_id == reference_id
+-            )
+-            result = await self.db.execute(stmt)
+-            return result.scalars().first()
+-        except Exception as e:
+-            logger.error(f"? Failed to get payment by reference: {str(e)}")
+-            return None
+-
+-    async def get_payment_history(
+-        self,
+-        user_id: int,
+-        limit: int = 50,
+-        offset: int = 0,
+-    ) -> Tuple[List[Payment], int]:
+-        """
+-        Get payment history for a user
+-        
+-        Returns:
+-            Tuple[payments, total_count]
+-        """
+-        try:
+-            # Get total count
+-            count_stmt = select(func.count(Payment.id)).where(
+-                Payment.user_id == user_id
+-            )
+-            count_result = await self.db.execute(count_stmt)
+-            total = count_result.scalar()
+-
+-            # Get payments
+-            stmt = (
+-                select(Payment)
+-                .where(Payment.user_id == user_id)
+-                .order_by(Payment.created_at.desc())
+-                .limit(limit)
+-                .offset(offset)
+-                .options(
+-                    selectinload(Payment.transactions),
+-                    selectinload(Payment.refunds),
+-                )
+-            )
+-            result = await self.db.execute(stmt)
+-            payments = result.scalars().unique().all()
+-
+-            return payments, total
+-
+-        except Exception as e:
+-            logger.error(f"? Failed to get payment history: {str(e)}")
+-            return [], 0
+-
+-    async def get_invoice_payments(
+-        self,
+-        invoice_id: int,
+-    ) -> List[Payment]:
+-        """Get all payments for an invoice"""
+-        try:
+-            stmt = (
+-                select(Payment)
+-                .where(Payment.invoice_id == invoice_id)
+-                .options(selectinload(Payment.transactions))
+-                .order_by(Payment.created_at.desc())
+-            )
+-            result = await self.db.execute(stmt)
+-            return result.scalars().all()
+-        except Exception as e:
+-            logger.error(f"? Failed to get invoice payments: {str(e)}")
+-            return []
+-
+-    # ========================================================================
+-    # PLAN INVOICES - ?????? ??????? ????????
+-    # ========================================================================
+-
+-    def _generate_plan_invoice_number(self, user_id: int, plan_code: str) -> str:
+-        ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+-        suffix = str(uuid4()).split("-")[0].upper()
+-        safe_plan = re.sub(r"[^A-Z0-9_]", "", plan_code.upper()) or "UNKNOWN"
+-        return f"{self._PLAN_INVOICE_PREFIX}-{safe_plan}-U{int(user_id)}-{ts}-{suffix}"
+-
+-    def _parse_plan_invoice_number(self, number: str) -> Optional[Dict[str, Optional[str]]]:
+-        if not number or not number.startswith(f"{self._PLAN_INVOICE_PREFIX}-"):
+-            return None
+-        parts = number.split("-")
+-        if len(parts) < 5:
+-            return None
+-        plan_code = parts[1]
+-        user_part = parts[2]
+-        user_id = None
+-        if user_part.startswith("U") and user_part[1:].isdigit():
+-            user_id = int(user_part[1:])
+-        return {"plan_code": plan_code, "user_id": user_id}
+-
+-    def _current_cycle_start(self, at: Optional[datetime] = None) -> date:
+-        now = at or datetime.utcnow()
+-        return date(year=now.year, month=now.month, day=1)
+-
+-    def _next_cycle_start(self, at: Optional[datetime] = None) -> date:
+-        now = at or datetime.utcnow()
+-        year = now.year + (1 if now.month == 12 else 0)
+-        month = 1 if now.month == 12 else now.month + 1
+-        return date(year=year, month=month, day=1)
+-
+-    async def create_plan_invoice(
+-        self,
+-        user_id: int,
+-        plan_code: str,
+-        amount_usd: float,
+-        status: str = "pending",
+-        invoice_date: Optional[datetime] = None,
+-    ) -> Invoice:
+-        try:
+-            normalized_plan = re.sub(r"[^A-Z0-9_]", "", (plan_code or "").upper()) or "UNKNOWN"
+-            invoice = Invoice(
+-                number=self._generate_plan_invoice_number(user_id=user_id, plan_code=normalized_plan),
+-                date=(invoice_date or datetime.utcnow()).date(),
+-                amount_usd=float(amount_usd),
+-                status=(status or "pending"),
+-                plan_code=normalized_plan,
+-                user_id=int(user_id),
+-                shipment_id=None,
+-            )
+-            self.db.add(invoice)
+-            await self.db.flush()
+-            await self.db.commit()
+-            logger.info(
+-                "? Plan invoice created: id=%s plan=%s user=%s amount=%s",
+-                invoice.id,
+-                plan_code,
+-                user_id,
+-                amount_usd,
+-            )
+-            return invoice
+-        except Exception as e:
+-            logger.error(f"? Failed to create plan invoice: {str(e)}")
+-            await self.db.rollback()
+-            raise
+-
+-    async def ensure_subscription_cycle_invoice(
+-        self,
+-        user_id: int,
+-        plan_code: str,
+-        amount_usd: float,
+-        cycle_date: Optional[datetime] = None,
+-        status: str = "pending",
+-    ) -> Invoice:
+-        try:
+-            normalized_plan = re.sub(r"[^A-Z0-9_]", "", (plan_code or "").upper()) or "UNKNOWN"
+-            base_date = cycle_date or datetime.utcnow()
+-            cycle_start = self._current_cycle_start(base_date)
+-            next_cycle_start = self._next_cycle_start(base_date)
+-
+-            existing_stmt = (
+-                select(Invoice)
+-                .where(
+-                    Invoice.user_id == int(user_id),
+-                    Invoice.plan_code == normalized_plan,
+-                    Invoice.date >= cycle_start,
+-                    Invoice.date < next_cycle_start,
+-                )
+-                .order_by(Invoice.created_at.desc())
+-            )
+-            existing = (await self.db.execute(existing_stmt)).scalars().first()
+-            if existing:
+-                return existing
+-
+-            return await self.create_plan_invoice(
+-                user_id=int(user_id),
+-                plan_code=normalized_plan,
+-                amount_usd=float(amount_usd),
+-                status=status,
+-                invoice_date=base_date,
+-            )
+-        except Exception as e:
+-            logger.error(f"? Failed to ensure subscription cycle invoice: {str(e)}")
+-            raise
+-
+-    async def list_plan_invoices(
+-        self,
+-        user_id: Optional[int] = None,
+-        plan_code: Optional[str] = None,
+-        status: Optional[str] = None,
+-        from_date: Optional[date] = None,
+-        to_date: Optional[date] = None,
+-        limit: int = 50,
+-        offset: int = 0,
+-    ) -> Tuple[List[Invoice], int]:
+-        try:
+-            stmt = select(Invoice).where(
+-                or_(
+-                    Invoice.plan_code.is_not(None),
+-                    Invoice.number.like(f"{self._PLAN_INVOICE_PREFIX}-%"),
+-                )
+-            )
+-            if status:
+-                stmt = stmt.where(Invoice.status == status)
+-            if from_date:
+-                stmt = stmt.where(Invoice.date >= from_date)
+-            if to_date:
+-                stmt = stmt.where(Invoice.date <= to_date)
+-
+-            normalized_plan = (plan_code or "").upper().strip() or None
+-            if user_id is not None:
+-                stmt = stmt.where(Invoice.user_id == int(user_id))
+-            if normalized_plan:
+-                stmt = stmt.where(Invoice.plan_code == normalized_plan)
+-
+-            stmt = stmt.order_by(Invoice.created_at.desc())
+-            rows = (await self.db.execute(stmt)).scalars().all()
+-
+-            filtered: List[Invoice] = []
+-            for inv in rows:
+-                if inv.plan_code and inv.user_id is not None:
+-                    filtered.append(inv)
+-                    continue
+-
+-                parsed = self._parse_plan_invoice_number(inv.number)
+-                if not parsed:
+-                    continue
+-
+-                parsed_user_id = parsed.get("user_id")
+-                parsed_plan = parsed.get("plan_code")
+-                if user_id is not None and parsed_user_id != int(user_id):
+-                    continue
+-                if normalized_plan and parsed_plan != normalized_plan:
+-                    continue
+-
+-                inv.user_id = int(parsed_user_id) if parsed_user_id is not None else None
+-                inv.plan_code = parsed_plan
+-                filtered.append(inv)
+-
+-            total = len(filtered)
+-            paginated = filtered[offset : offset + limit]
+-            return paginated, total
+-        except Exception as e:
+-            logger.error(f"? Failed to list plan invoices: {str(e)}")
+-            return [], 0
+-
+-    async def get_plan_invoice_summary(
+-        self,
+-        user_id: Optional[int] = None,
+-        from_date: Optional[date] = None,
+-        to_date: Optional[date] = None,
+-    ) -> Dict[str, Dict[str, float]]:
+-        invoices, _ = await self.list_plan_invoices(
+-            user_id=user_id,
+-            from_date=from_date,
+-            to_date=to_date,
+-            limit=10000,
+-            offset=0,
+-        )
+-        summary: Dict[str, Dict[str, float]] = {}
+-        for inv in invoices:
+-            plan = inv.plan_code
+-            if not plan:
+-                parsed = self._parse_plan_invoice_number(inv.number)
+-                if not parsed:
+-                    continue
+-                plan = parsed.get("plan_code") or "UNKNOWN"
+-            if plan not in summary:
+-                summary[plan] = {
+-                    "count": 0,
+-                    "total_amount_usd": 0.0,
+-                    "paid_count": 0,
+-                    "pending_count": 0,
+-                }
+-            summary[plan]["count"] += 1
+-            summary[plan]["total_amount_usd"] += float(inv.amount_usd or 0)
+-            status_value = (inv.status or "").lower()
+-            if status_value == "paid":
+-                summary[plan]["paid_count"] += 1
+-            elif status_value == "pending":
+-                summary[plan]["pending_count"] += 1
+-
+-        return summary
+-
+-    # ========================================================================
+-    # UTILITY METHODS - ???? ??????
+-    # ========================================================================
+-
+-    def _generate_reference_id(self, prefix: str = "PAY") -> str:
+-        """Generate unique reference ID"""
+-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+-        unique_id = str(uuid4()).split("-")[0].upper()
+-        return f"{prefix}-{timestamp}-{unique_id}"
+-
+-    async def get_payment_statistics(
+-        self,
+-        user_id: Optional[int] = None,
+-        days: int = 30,
+-    ) -> Dict:
+-        """Get payment statistics"""
+-        try:
+-            from datetime import timedelta
+-            from sqlalchemy import func
+-
+-            start_date = datetime.utcnow() - timedelta(days=days)
+-
+-            # Base query
+-            base_query = select(Payment).where(
+-                Payment.created_at >= start_date
+-            )
+-
+-            if user_id:
+-                base_query = base_query.where(Payment.user_id == user_id)
+-
+-            # Get statistics
+-            stmt = select(
+-                func.count(Payment.id).label("total_payments"),
+-                func.sum(Payment.amount).label("total_amount"),
+-                func.count(
+-                    Payment.id.where(
+-                        Payment.status == PaymentStatus.COMPLETED
+-                    )
+-                ).label("completed_payments"),
+-                func.count(
+-                    Payment.id.where(
+-                        Payment.status == PaymentStatus.FAILED
+-                    )
+-                ).label("failed_payments"),
+-            ).select_from(Payment).where(
+-                Payment.created_at >= start_date
+-            )
+-
+-            if user_id:
+-                stmt = stmt.where(Payment.user_id == user_id)
+-
+-            result = await self.db.execute(stmt)
+-            row = result.first()
+-
+-            return {
+-                "total_payments": row[0] or 0,
+-                "total_amount": row[1] or 0,
+-                "completed_payments": row[2] or 0,
+-                "failed_payments": row[3] or 0,
+-                "success_rate": (
+-                    (row[2] or 0) / (row[0] or 1) * 100
+-                ),
+-            }
+-
+-        except Exception as e:
+-            logger.error(f"? Failed to get payment statistics: {str(e)}")
+-            return {}
+-
+-    def get_gateway_name(self, gateway: PaymentGateway) -> str:
+-        """Get display name for gateway"""
+-        gateway_map = {
+-            PaymentGateway.SUDAPAY: "SUDAPAY ????",
+-            PaymentGateway.STRIPE: "Stripe",
+-            PaymentGateway.PAYPAL: "PayPal",
+-        }
+-        return gateway_map.get(gateway, str(gateway))
+-
+-
+-# ============================================================================
+-# ASYNC HELPER - Add at the top with imports
+-# ============================================================================
++    # PAYMENT RETRIEVAL - Payment Retrieval
++    # ========================================================================
+\ No newline at end of file
+diff --git a/frontend/src/contexts/TranslationContext.jsx b/frontend/src/contexts/TranslationContext.jsx
+index bc43894a..329cdc32 100644
+--- a/frontend/src/contexts/TranslationContext.jsx
++++ b/frontend/src/contexts/TranslationContext.jsx
+@@ -22,76 +22,10 @@ const DICTS = {
+         "dashboard.compact_desc": "Space-efficient layout for quick overview",
+         "dashboard.detailed_desc": "Comprehensive view with all available data",
+         "dashboard.minimal_desc": "Minimal interface focusing on key metrics",
+-    },
+-    ar: {
+-        greeting: "?????? {name}!",
+-        farewell: "?????? {name}!",
+-        welcome: "????? ?? ?? ?? ?? ?? ????????",
+-        dashboard: "???? ??????",
+-        settings: "?????????",
+-        notifications: "?????????",
+-        language: "?????",
+-        theme: "??????",
+-        timezone: "??????? ???????",
+-        "theme.dark": "????",
+-        "theme.light": "????",
+-        "theme.auto": "??????",
+-        "dashboard.default": "??????? ?????????",
+-        "dashboard.compact": "??????? ??????",
+-        "dashboard.detailed": "??????? ????????",
+-        "dashboard.minimal": "??????? ??????",
+-        "dashboard.default_desc": "??? ?????? ?? ??????? ????????",
+-        "dashboard.compact_desc": "????? ???? ?? ??????? ??????? ?????? ???????",
+-        "dashboard.detailed_desc": "??? ???? ?? ???? ???????? ???????",
+-        "dashboard.minimal_desc": "????? ????? ???? ??? ???????? ????????",
+-    },
+-    es: {
+-        greeting: "Hola, {name}!",
+-        farewell: "Adios, {name}!",
+-        welcome: "Bienvenido a Gabani Transport Solutions (GTS)",
+-        dashboard: "Panel de Control",
+-        settings: "Configuracion",
+-        notifications: "Notificaciones",
+-        language: "Idioma",
+-        theme: "Tema",
+-        timezone: "Zona Horaria",
+-        "theme.dark": "Oscuro",
+-        "theme.light": "Claro",
+-        "theme.auto": "Automatico",
+-        "dashboard.default": "Diseno Predeterminado",
+-        "dashboard.compact": "Diseno Compacto",
+-        "dashboard.detailed": "Diseno Detallado",
+-        "dashboard.minimal": "Diseno Minimo",
+-        "dashboard.default_desc": "Vista equilibrada con widgets esenciales",
+-        "dashboard.compact_desc": "Diseno eficiente en espacio para vista rapida",
+-        "dashboard.detailed_desc": "Vista completa con todos los datos disponibles",
+-        "dashboard.minimal_desc": "Interfaz minima enfocada en metricas clave",
+-    },
+-    fr: {
+-        greeting: "Bonjour, {name}!",
+-        farewell: "Au revoir, {name}!",
+-        welcome: "Bienvenue chez Gabani Transport Solutions (GTS)",
+-        dashboard: "Tableau de Bord",
+-        settings: "Parametres",
+-        notifications: "Notifications",
+-        language: "Langue",
+-        theme: "Theme",
+-        timezone: "Fuseau Horaire",
+-        "theme.dark": "Sombre",
+-        "theme.light": "Clair",
+-        "theme.auto": "Automatique",
+-        "dashboard.default": "Disposition par Defaut",
+-        "dashboard.compact": "Disposition Compacte",
+-        "dashboard.detailed": "Disposition Detaillee",
+-        "dashboard.minimal": "Disposition Minimale",
+-        "dashboard.default_desc": "Vue equilibree avec widgets essentiels",
+-        "dashboard.compact_desc": "Disposition efficace pour apercu rapide",
+-        "dashboard.detailed_desc": "Vue complete avec toutes les donnees disponibles",
+-        "dashboard.minimal_desc": "Interface minimale axee sur les metriques cles",
+-    },
++    }
+ };
+ 
+-const AVAILABLE_LANGUAGES = ["en", "ar", "es", "fr"];
++const AVAILABLE_LANGUAGES = ["en"];
+ 
+ const isLanguageActive = (lang) => {
+     return AVAILABLE_LANGUAGES.includes(lang) && DICTS[lang] !== undefined;
+@@ -117,24 +51,29 @@ export function TranslationProvider({ children }) {
+     const t = (key, params = {}) => {
+         const dict = DICTS[currentLang] || DICTS.en;
+         let value = dict[key];
++
+         if (value === undefined) {
+             value = DICTS.en[key] || key;
+         }
++
+         if (typeof value === "string" && params && Object.keys(params).length) {
+             for (const [p, v] of Object.entries(params)) {
+                 value = value.replaceAll(`{${p}}`, String(v));
+             }
+         }
++
+         return value;
+     };
+ 
+     return (
+-        <TranslationContext.Provider value={{
+-            t,
+-            currentLang,
+-            setLang,
+-            availableLanguages: AVAILABLE_LANGUAGES
+-        }}>
++        <TranslationContext.Provider
++            value={{
++                t,
++                currentLang,
++                setLang,
++                availableLanguages: AVAILABLE_LANGUAGES
++            }}
++        >
+             {children}
+         </TranslationContext.Provider>
+     );
+@@ -142,8 +81,14 @@ export function TranslationProvider({ children }) {
+ 
+ export function useTranslation() {
+     const context = useContext(TranslationContext);
++
+     if (!context) {
+         throw new Error("useTranslation must be used within TranslationProvider");
+     }
++
+     return context;
+ }
++
++// ============================================================================
++// ASYNC HELPER - Add at the top with imports
++// ============================================================================
+\ No newline at end of file

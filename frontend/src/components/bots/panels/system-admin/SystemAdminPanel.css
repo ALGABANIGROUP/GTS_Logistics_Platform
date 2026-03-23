@@ -1,0 +1,327 @@
+/* src/components/bots/panels/system-admin/SystemAdminPanel.css */
+
+.system-admin-panel {
+    padding: 2rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh;
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Header Styles */
+.admin-panel-header {
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(51, 65, 85, 0.8), rgba(71, 85, 105, 0.6));
+    border-radius: 20px;
+    border: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.header-title h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.active,
+.status-badge.operational,
+.status-badge.healthy {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.status-badge.warning {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: white;
+}
+
+.status-badge.error,
+.status-badge.critical {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.status-badge.unknown,
+.status-badge.loading {
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+}
+
+.header-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.system-admin-panel .stat-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 2px solid rgba(99, 102, 241, 0.2);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    /* Fallback for browsers without backdrop-filter support */
+    background: rgba(15, 23, 42, 0.8);
+    /* Vendor prefix for Safari */
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+.system-admin-panel .stat-card:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    transform: translateY(-2px);
+}
+
+.system-admin-panel .stat-icon {
+    font-size: 2rem;
+}
+
+.system-admin-panel .stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.system-admin-panel .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.system-admin-panel .stat-label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-refresh-dashboard {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-refresh-dashboard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* Tab Navigation */
+.admin-tab-navigation {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.admin-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 2px solid rgba(99, 102, 241, 0.2);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.admin-tab-btn:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(30, 41, 59, 0.8);
+}
+
+.admin-tab-btn.active {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(167, 139, 250, 0.1));
+    box-shadow: 0 5px 20px rgba(99, 102, 241, 0.3);
+}
+
+.tab-icon {
+    font-size: 2rem;
+}
+
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.tab-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.tab-description {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* Notifications */
+.admin-notifications {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 400px;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #1e293b, #334155);
+    border: 2px solid rgba(99, 102, 241, 0.5);
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notif-icon {
+    font-size: 1.5rem;
+}
+
+.notif-message {
+    flex: 1;
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
+.notif-time {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Tab Content */
+.admin-tab-content {
+    min-height: 500px;
+}
+
+/* Footer */
+.admin-panel-footer {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 15px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.footer-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.footer-info span {
+    padding: 0.5rem 1rem;
+}
+
+/* Loading Panel */
+.loading-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-size: 1.5rem;
+    color: #94a3b8;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .admin-tab-navigation {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .system-admin-panel {
+        padding: 1rem;
+    }
+
+    .admin-panel-header {
+        padding: 1.5rem;
+    }
+
+    .header-stats {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .system-admin-panel .stat-card {
+        width: 100%;
+    }
+
+    .admin-tab-navigation {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-notifications {
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
+    }
+
+    .footer-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}

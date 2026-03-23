@@ -1,0 +1,33 @@
+"""add invoices table
+
+Revision ID: 8a3aa957f944
+Revises:
+Create Date: 2025-07-25 13:16:25.878528
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+# revision identifiers, used by Alembic.
+revision = '8a3aa957f944'
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        'invoices',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('number', sa.String, nullable=False),
+        sa.Column('date', sa.Date, nullable=False),
+        sa.Column('amount_usd', sa.Float, nullable=False),
+        sa.Column('status', sa.String, nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), onupdate=sa.func.now())
+    )
+
+
+def downgrade() -> None:
+    op.drop_table('invoices')
+# No downgrade logic needed as this is a new table

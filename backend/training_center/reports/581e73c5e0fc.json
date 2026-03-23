@@ -1,0 +1,43 @@
+{
+  "session_id": "581e73c5e0fc",
+  "plan_id": "2a40e3373a6a",
+  "bot_key": "security_manager_bot",
+  "bot_name": "AI Security Manager",
+  "specialization": "security",
+  "trainer_name": "AI Trainer Bot",
+  "started_at": "2026-03-19T10:29:17.240814",
+  "completed_at": "2026-03-19T10:29:17.240814",
+  "final_score": 74.84,
+  "grade": "Good",
+  "recommendations": [
+    "Schedule an advanced follow-up path in the same specialization.",
+    "Run shadow simulations before wider rollout."
+  ],
+  "completed_courses": [
+    {
+      "course_id": "SEC-201",
+      "course_name": "Coordinated Threat Response",
+      "theory_score": 62.09,
+      "practical_score": 92.5,
+      "test_score": 71.88,
+      "final_score": 77.19,
+      "simulation_count": 2
+    }
+  ],
+  "improvements": {
+    "incident_detection": 8.01,
+    "threat_analysis": 7.15,
+    "containment": 20.13
+  },
+  "certificate": {
+    "certificate_id": "D5B0DD31F5FE",
+    "bot_key": "security_manager_bot",
+    "bot_name": "AI Security Manager",
+    "level_achieved": "intermediate",
+    "final_score": 74.84,
+    "issued_at": "2026-03-19T10:29:17.240814",
+    "courses_completed": [
+      "Coordinated Threat Response"
+    ]
+  }
+}

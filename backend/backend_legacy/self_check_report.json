@@ -1,0 +1,149 @@
+{
+  "ts": "2025-11-10T13:42:22",
+  "api_base": "http://127.0.0.1:8000",
+  "steps": [
+    {
+      "name": "env_keys",
+      "ok": false,
+      "details": {
+        "missing": [
+          "HOST",
+          "PORT",
+          "DATABASE_URL",
+          "ASYNC_DATABASE_URL"
+        ],
+        "optional_present": []
+      }
+    },
+    {
+      "name": "server_ping",
+      "ok": true,
+      "details": {
+        "response": {
+          "ok": true,
+          "pong": true
+        }
+      }
+    },
+    {
+      "name": "auth_token",
+      "ok": true,
+      "details": {
+        "token_type": "bearer",
+        "prefix": "eyJhbGciOiJI..."
+      }
+    },
+    {
+      "name": "routes_list",
+      "ok": true,
+      "details": {
+        "status_code": 200
+      }
+    },
+    {
+      "name": "documents_endpoints",
+      "ok": true,
+      "details": {
+        "/documents/_debug/db": {
+          "status_code": 403,
+          "ok": false
+        },
+        "/documents/": {
+          "status_code": 403,
+          "ok": false
+        },
+        "/documents/expiring-soon/": {
+          "status_code": 404,
+          "ok": false,
+          "skipped": true
+        },
+        "/documents/notify-expiring/": {
+          "status_code": 404,
+          "ok": false,
+          "skipped": true
+        }
+      }
+    },
+    {
+      "name": "finance_endpoints",
+      "ok": true,
+      "details": {
+        "/finance/health": {
+          "status_code": 403,
+          "ok": false
+        },
+        "/finance/expenses": {
+          "status_code": 403,
+          "ok": false
+        },
+        "/finance/summary": {
+          "status_code": 403,
+          "ok": false
+        },
+        "/finance/reports/summary": {
+          "status_code": 403,
+          "ok": false
+        },
+        "/ai/finance-analysis": {
+          "status_code": 403,
+          "ok": false
+        }
+      }
+    },
+    {
+      "name": "ai_bots",
+      "ok": true,
+      "details": {
+        "/ai/bots": {
+          "status_code": 200,
+          "ok": true,
+          "body": {
+            "bots": {
+              "general_manager": "GeneralManagerBot",
+              "freight_broker": "FreightBrokerBot",
+              "operations_manager": "OperationsManagerBot",
+              "finance_bot": "FinanceBot",
+              "documents_manager": "DocumentsManagerBot",
+              "maintenance_dev": "AIMaintenanceDevBot"
+            }
+          }
+        },
+        "/ai/general_manager/status": {
+          "status_code": 200,
+          "ok": true
+        },
+        "/ai/freight_broker/status": {
+          "status_code": 200,
+          "ok": true
+        },
+        "/ai/operations_manager/status": {
+          "status_code": 200,
+          "ok": true
+        },
+        "/ai/finance_bot/status": {
+          "status_code": 200,
+          "ok": true
+        },
+        "/ai/documents_manager/status": {
+          "status_code": 200,
+          "ok": true
+        },
+        "/ai/maintenance_dev/status": {
+          "status_code": 200,
+          "ok": true
+        },
+        "/ai/operations_manager/run": {
+          "status_code": 500,
+          "ok": false,
+          "allowed_500": true
+        },
+        "/ai/finance_bot/run": {
+          "status_code": 500,
+          "ok": false,
+          "allowed_500": true
+        }
+      }
+    }
+  ],
+  "overall_ok": false
+}

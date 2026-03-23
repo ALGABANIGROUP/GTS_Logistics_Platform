@@ -1,0 +1,37 @@
+List of all frontend TMS files moved for safe deletion:
+
+src/pages/tms/
+- admin/AdminDashboard.jsx
+- broker/BrokerDashboard.jsx
+- broker/Dashboard.jsx
+- broker/index.js
+- carrier/CarrierDashboard.jsx
+- carrier/Dashboard.jsx
+- carrier/index.js
+- shipper/Dashboard.jsx
+- shipper/index.js
+- shipper/ShipperDashboard.jsx
+- Dashboard.jsx
+- DriverManagement.jsx
+- LiveTracking.jsx
+- ShipmentManager.jsx
+- TenantSocialSettings.css
+- TenantSocialSettings.jsx
+- TMSDashboard.jsx
+
+src/components/tms/
+- AISuggestions.jsx
+- GTSLiveMap.jsx
+- LiveMap.jsx
+- PlanSelector.css
+- PlanSelector.jsx
+- ShipmentCard.jsx
+- StatsCard.jsx
+- Timeline.jsx
+
+src/styles/
+- tms.css
+- tms-map.css
+
+src/utils/tms/
+- api.js

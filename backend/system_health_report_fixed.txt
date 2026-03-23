@@ -1,0 +1,48 @@
+{
+  "database": {
+    "available_vars": [
+      "DATABASE_URL"
+    ],
+    "missing_vars": [
+      "ASYNC_DATABASE_URL",
+      "async_engine"
+    ]
+  },
+  "ai_bots": {
+    "error": "ai_core.py not found"
+  },
+  "api_routes": {
+    "error": "No module named 'backend.database'"
+  },
+  "config": {},
+  "module_imports": {
+    "successful": [
+      "database.config",
+      "database.session"
+    ],
+    "failed": [
+      "main: No module named 'backend.database'",
+      "core.config: No module named 'core.config'",
+      "core.ai_core: No module named 'core.ai_core'",
+      "routes.finance_routes: No module named 'backend.database'",
+      "routes.documents_routes: No module named 'backend.database'"
+    ]
+  },
+  "overall_status": "unhealthy",
+  "structure": {
+    "existing_dirs": [
+      "d:\\GTS Logistics\\backend\\database",
+      "d:\\GTS Logistics\\backend\\core",
+      "d:\\GTS Logistics\\backend\\routes",
+      "d:\\GTS Logistics\\backend\\tools"
+    ],
+    "missing_dirs": [],
+    "existing_files": [
+      "d:\\GTS Logistics\\backend\\database\\config.py",
+      "d:\\GTS Logistics\\backend\\database\\session.py",
+      "d:\\GTS Logistics\\backend\\database\\base.py",
+      "d:\\GTS Logistics\\backend\\main.py"
+    ],
+    "missing_files": []
+  }
+}

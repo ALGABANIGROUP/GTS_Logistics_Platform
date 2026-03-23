@@ -1,0 +1,41 @@
+// check_audio_assets.js
+
+import fs from "fs";
+import path from "path";
+
+const __dirname = path.resolve();
+const assetsDir = path.join(__dirname, "src", "assets");
+
+const requiredFiles = [
+  "alert_critical.mp3",
+  "notify_general.mp3",
+  "notify_message.mp3",
+  "error_alert.mp3",
+  "finance_alert.mp3",
+];
+
+console.log("🔎 Checking audio files in:", assetsDir);
+
+if (!fs.existsSync(assetsDir)) {
+  console.error("❌ 'src/assets' directory does not exist.");
+  throw new Error("'src/assets' directory does not exist.");
+}
+
+const existingFiles = fs.readdirSync(assetsDir);
+
+let allFound = true;
+
+for (const file of requiredFiles) {
+  if (!existingFiles.includes(file)) {
+    console.warn(`⚠️ Missing: ${file}`);
+    allFound = false;
+  } else {
+    console.log(`✅ Found: ${file}`);
+  }
+}
+
+if (allFound) {
+  console.log("\n🎉 All required audio files are present.");
+} else {
+  console.log("\n🚨 Some audio files are missing. Please check the list above.");
+}
