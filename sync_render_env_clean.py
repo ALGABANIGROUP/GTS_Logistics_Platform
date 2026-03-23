@@ -228,15 +228,15 @@ ENVIRONMENT_VARIABLES = {
     # OPTIONAL: AI & Integrations (set if needed)
     # ============================================================
     "OPENAI_API_KEY": {
-        "value": "sk-xxxxxx",
+        "value": os.getenv("OPENAI_API_KEY", ""),
         "description": "OpenAI API key for AI features (optional)"
     },
     "STRIPE_PUBLISHABLE_KEY": {
-        "value": "pk_test_51Sszi5ALfhgsDcRowOAXl3rOverlPK1QwgBP4hNE7oBaQcCqHLrSVs5Y3ADdurj61alqfyviK0EU9ONHmVqErOTc00JashOiLP",
+        "value": os.getenv("STRIPE_PUBLISHABLE_KEY", ""),
         "description": "Stripe publishable key (optional)"
     },
     "STRIPE_SECRET_KEY": {
-        "value": "sk_test_REMOVED",
+        "value": os.getenv("STRIPE_SECRET_KEY", ""),
         "description": "Stripe secret key (optional)"
     },
     "REDIS_URL": {
@@ -244,7 +244,7 @@ ENVIRONMENT_VARIABLES = {
         "description": "Redis connection URL (optional)"
     },
     "PIESOCKET_API_KEY": {
-        "value": "psk_xxxxxx",
+        "value": os.getenv("PIESOCKET_API_KEY", ""),
         "description": "PieSocket API key for real-time updates (optional)"
     },
     "PIESOCKET_CLUSTER_ID": {
