@@ -1,15 +1,15 @@
 /**
- * PaymentFailedPage Component - صفحة فشل الدفع
- * عرض رسالة الخطأ والخيارات المتاحة
+ * PaymentFailedPage Component - Payment failure page
+ * Displays error message and available options
  * 
- * المميزات:
- * - عرض سبب الفشل
- * - خيارات إعادة المحاولة
- * - معلومات الدعم الفني
- * - دعم اللغة العربية
+ * Features:
+ * - Display failure reason
+ * - Retry options
+ * - Technical support information
+ * - English language support
  * 
  * Routes:
- * - /payments/failed - صفحة الفشل
+ * - /payments/failed - Failure page
  * 
  * Author: GTS Development Team
  * Date: March 2026
@@ -20,7 +20,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 
 /**
  * PaymentFailedPage Component
- * صفحة عرض فشل العملية مع الخيارات
+ * Page to display payment failure with options
  */
 export function PaymentFailedPage() {
     const navigate = useNavigate();
@@ -28,7 +28,7 @@ export function PaymentFailedPage() {
 
     const paymentId = searchParams.get('payment_id');
     const invoiceId = searchParams.get('invoice_id');
-    const reason = searchParams.get('reason') || 'الدفع غير مكتمل';
+    const reason = searchParams.get('reason') || 'Payment incomplete';
 
     const [retrying, setRetrying] = useState(false);
 
@@ -52,47 +52,47 @@ export function PaymentFailedPage() {
     const getErrorDetails = () => {
         const errorMap = {
             'insufficient_funds': {
-                title: 'رصيد غير كافي',
-                description: 'يبدو أن رصيدك غير كافي لإتمام هذه العملية. يرجى التأكد من وجود رصيد كافي والمحاولة مرة أخرى.',
+                title: 'Insufficient Funds',
+                description: 'Your balance is insufficient to complete this transaction. Please ensure sufficient funds and try again.',
                 icon: '💰',
-                actions: ['محاولة طريقة دفع أخرى', 'إضافة رصيد', 'العودة'],
+                actions: ['Try another payment method', 'Add funds', 'Go back'],
             },
             'card_declined': {
-                title: 'تم رفض البطاقة',
-                description: 'تم رفض البطاقة من قبل البنك. قد يكون السبب أمان أو مشكلة أخرى. تواصل مع البنك لمزيد من التفاصيل.',
+                title: 'Card Declined',
+                description: 'Your card was declined by the bank. This may be due to security reasons or other issues. Contact your bank for details.',
                 icon: '🚫',
-                actions: ['محاولة بطاقة أخرى', 'التواصل مع البنك', 'العودة'],
+                actions: ['Try another card', 'Contact your bank', 'Go back'],
             },
             'expired_card': {
-                title: 'البطاقة منتهية الصلاحية',
-                description: 'بطاقتك منتهية الصلاحية. يرجى استخدام بطاقة صحيحة.',
+                title: 'Expired Card',
+                description: 'Your card has expired. Please use a valid card.',
                 icon: '📆',
-                actions: ['استخدام بطاقة أخرى', 'العودة'],
+                actions: ['Use another card', 'Go back'],
             },
             'network_error': {
-                title: 'خطأ في الاتصال',
-                description: 'حدث خطأ في الاتصال بخادم الدفع. يرجى المحاولة مرة أخرى.',
+                title: 'Network Error',
+                description: 'A connection error occurred with the payment server. Please try again.',
                 icon: '🌐',
-                actions: ['إعادة المحاولة', 'العودة'],
+                actions: ['Retry', 'Go back'],
             },
             'timeout': {
-                title: 'انتهت المهلة الزمنية',
-                description: 'استغرقت العملية وقتاً طويلاً جداً. يرجى المحاولة مرة أخرى.',
+                title: 'Timeout',
+                description: 'The transaction took too long to complete. Please try again.',
                 icon: '⏱️',
-                actions: ['إعادة المحاولة', 'العودة'],
+                actions: ['Retry', 'Go back'],
             },
             'cancelled': {
-                title: 'تم إلغاء الدفع',
-                description: 'تم إلغاء عملية الدفع. يمكنك إعادة المحاولة في أي وقت.',
+                title: 'Payment Cancelled',
+                description: 'Payment was cancelled. You can retry at any time.',
                 icon: '❌',
-                actions: ['إعادة المحاولة', 'العودة'],
+                actions: ['Retry', 'Go back'],
             },
         };
         return errorMap[reason] || {
-            title: 'فشل الدفع',
-            description: reason || 'حدث خطأ أثناء معالجة الدفع.',
+            title: 'Payment Failed',
+            description: reason || 'An error occurred while processing payment.',
             icon: '❌',
-            actions: ['إعادة المحاولة', 'العودة'],
+            actions: ['Retry', 'Go back'],
         };
     };
 
@@ -123,24 +123,24 @@ export function PaymentFailedPage() {
                     <div className="error-details">
                         {paymentId && (
                             <div className="detail">
-                                <span className="label">معرف الدفعة:</span>
+                                <span className="label">Payment ID:</span>
                                 <span className="value">{paymentId}</span>
                             </div>
                         )}
                         {invoiceId && (
                             <div className="detail">
-                                <span className="label">رقم الفاتورة:</span>
+                                <span className="label">Invoice Number:</span>
                                 <span className="value">#{invoiceId}</span>
                             </div>
                         )}
                         <div className="detail">
-                            <span className="label">السبب:</span>
+                            <span className="label">Reason:</span>
                             <span className="value">{reason}</span>
                         </div>
                         <div className="detail">
-                            <span className="label">التاريخ والوقت:</span>
+                            <span className="label">Date & Time:</span>
                             <span className="value">
-                                {new Date().toLocaleString('ar-SD')}
+                                {new Date().toLocaleString()}
                             </span>
                         </div>
                     </div>
@@ -152,27 +152,27 @@ export function PaymentFailedPage() {
                             onClick={handleRetry}
                             disabled={retrying}
                         >
-                            {retrying ? '⏳ جاري المحاولة...' : '🔄 إعادة المحاولة'}
+                            {retrying ? '⏳ Retrying...' : '🔄 Retry'}
                         </button>
                         <button
                             className="btn-alt1"
                             onClick={() => navigate(`/payments/${invoiceId}`)}
                         >
-                            💳 محاولة طريقة دفع أخرى
+                            💳 Try another payment method
                         </button>
                         <button
                             className="btn-alt2"
                             onClick={() => navigate('/invoices')}
                         >
-                            📋 العودة للفواتير
+                            📋 Back to Invoices
                         </button>
                     </div>
 
                     {/* Support Section */}
                     <div className="support-section">
-                        <h3>📞 هل تحتاج للمساعدة؟</h3>
+                        <h3>📞 Need Help?</h3>
                         <p>
-                            إذا استمرت المشكلة، يرجى التواصل مع فريق الدعم:
+                            If the problem persists, please contact our support team:
                         </p>
                         <div className="support-contacts">
                             <a href="mailto:support@gtslogistics.sd" className="support-link">
@@ -182,66 +182,66 @@ export function PaymentFailedPage() {
                                 📞 +249 123 456 789
                             </a>
                             <a href="https://wa.me/249123456789" className="support-link">
-                                💬 تواصل عبر WhatsApp
+                                💬 Contact via WhatsApp
                             </a>
                         </div>
                     </div>
 
                     {/* Tips */}
                     <div className="tips-section">
-                        <h4>💡 نصائح للمساعدة:</h4>
+                        <h4>💡 Helpful Tips:</h4>
                         <ul>
-                            <li>✓ تأكد من اتصالك بالإنترنت</li>
-                            <li>✓ تحقق من بيانات الدفعة (المبلغ، العملة)</li>
-                            <li>✓ تأكد من أن لديك رصيد كافي</li>
-                            <li>✓ حاول من متصفح آخر إذا استمرت المشكلة</li>
-                            <li>✓ امسح ذاكرة التخزين المؤقت للمتصفح</li>
+                            <li>✓ Check your internet connection</li>
+                            <li>✓ Verify payment details (amount, currency)</li>
+                            <li>✓ Ensure sufficient funds</li>
+                            <li>✓ Try a different browser if issue persists</li>
+                            <li>✓ Clear browser cache and cookies</li>
                         </ul>
                     </div>
                 </div>
 
                 {/* FAQ */}
                 <div className="faq-section">
-                    <h3>❓ أسئلة متكررة</h3>
+                    <h3>❓ Frequently Asked Questions</h3>
 
                     <div className="faq-items">
                         <div className="faq-item">
                             <button className="faq-toggle">
-                                لماذا تم رفض الدفع؟
+                                Why was my payment declined?
                             </button>
                             <div className="faq-content">
-                                قد يكون الرفض بسبب عدة أسباب منها: رصيد غير كافي،
-                                بيانات بطاقة غير صحيحة، أو إجراءات أمان من البنك.
+                                Payment may be declined due to several reasons: insufficient funds,
+                                incorrect card details, or bank security measures.
                             </div>
                         </div>
 
                         <div className="faq-item">
                             <button className="faq-toggle">
-                                هل سيتم خصم المبلغ من حسابي؟
+                                Will the amount be deducted from my account?
                             </button>
                             <div className="faq-content">
-                                لا، عند فشل الدفع لا يتم خصم أي مبلغ. جميع المحاولات الفاشلة
-                                لا تترك اثراً على حسابك.
+                                No, if payment fails, no amount is deducted. All failed attempts
+                                leave no impact on your account.
                             </div>
                         </div>
 
                         <div className="faq-item">
                             <button className="faq-toggle">
-                                كيف أعرف أن الدفع نجح؟
+                                How do I know if payment was successful?
                             </button>
                             <div className="faq-content">
-                                ستظهر صفحة تأكيد النجاح عند اكتمال الدفع. كما ستتلقى
-                                بريداً إلكترونياً بتأكيد العملية.
+                                A success confirmation page will appear upon completion. You will also
+                                receive an email confirmation.
                             </div>
                         </div>
 
                         <div className="faq-item">
                             <button className="faq-toggle">
-                                هل يمكن استخدام عملة أخرى للدفع؟
+                                Can I pay in another currency?
                             </button>
                             <div className="faq-content">
-                                نعم، نحن ندعم الدفع بعملات متعددة منها الجنيه السوداني (SDG)
-                                والدولار الأمريكي (USD).
+                                Yes, we support multiple currencies including Sudanese Pound (SDG)
+                                and US Dollar (USD).
                             </div>
                         </div>
                     </div>
@@ -258,8 +258,8 @@ export function PaymentFailedPage() {
           justify-content: center;
           padding: 20px;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          direction: rtl;
-          text-align: right;
+          direction: ltr;
+          text-align: left;
         }
 
         .failed-container {
@@ -307,7 +307,7 @@ export function PaymentFailedPage() {
           border-radius: 12px;
           padding: 20px;
           margin-bottom: 25px;
-          text-align: right;
+          text-align: left;
         }
 
         .detail {
@@ -428,7 +428,7 @@ export function PaymentFailedPage() {
           border-radius: 12px;
           padding: 20px;
           margin-bottom: 0;
-          text-align: right;
+          text-align: left;
         }
 
         .tips-section h4 {
@@ -480,7 +480,7 @@ export function PaymentFailedPage() {
           background: #f9f9f9;
           border: none;
           cursor: pointer;
-          text-align: right;
+          text-align: left;
           font-weight: 600;
           color: #333;
           transition: all 0.3s ease;
