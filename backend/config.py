@@ -200,14 +200,24 @@ class Settings:
     auto_posting_enabled: bool = os.getenv("AUTO_POSTING_ENABLED", "false").lower() in ("1", "true", "yes")
     auto_post_new_blogs: bool = os.getenv("AUTO_POST_NEW_BLOGS", "false").lower() in ("1", "true", "yes")
     auto_post_new_services: bool = os.getenv("AUTO_POST_NEW_SERVICES", "false").lower() in ("1", "true", "yes")
-    optimal_posting_enabled: bool = os.getenv("OPTIMAL_POSTING_ENABLED", "false").lower() in ("1", "true", "yes")
-    max_posts_per_day: int = int(os.getenv("MAX_POSTS_PER_DAY", "5"))
+    # Offline Mode Database Settings
+    OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "false").lower() in ("1", "true", "yes")
+    SQLITE_PATH: str = os.getenv("SQLITE_PATH", "./gts_offline.db")
+    USE_SQLITE_FALLBACK: bool = os.getenv("USE_SQLITE_FALLBACK", "true").lower() in ("1", "true", "yes")
+
+    def get_database_url(self) -> str:
+        """Get the appropriate database URL based on mode"""
+        if self.OFFLINE_MODE or self.USE_SQLITE_FALLBACK:
+            return f"sqlite+aiosqlite:///{self.SQLITE_PATH}"
+        return self.ASYNC_DATABASE_URL or self.DATABASE_URL
 
 
 settings = Settings()
 
 __all__ = ["Settings", "settings"]
-        async def init_db():
+
+
+async def init_db():
     """
     Initialize database connection and create tables if needed.
     This function is called during pre-deploy on Render.
@@ -215,32 +225,32 @@ __all__ = ["Settings", "settings"]
     import logging
     from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy import text
-    
+
     logger = logging.getLogger(__name__)
-    
+
     # Get database URL
     db_url = settings.ASYNC_DATABASE_URL or settings.DATABASE_URL
-    
+
     if not db_url:
         logger.warning("No database URL found, skipping database initialization")
         return
-    
+
     logger.info(f"Initializing database connection to: {db_url.split('@')[-1] if '@' in db_url else db_url}")
-    
+
     # Create engine
     engine = create_async_engine(db_url, echo=False)
-    
+
     try:
         # Test connection
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
             logger.info("✅ Database connection successful")
-        
+
         # Optionally create tables if using SQLAlchemy models
         # from backend.database.base import Base
         # async with engine.begin() as conn:
         #     await conn.run_sync(Base.metadata.create_all)
-        
+
     except Exception as e:
         logger.error(f"❌ Database initialization failed: {e}")
         raise
