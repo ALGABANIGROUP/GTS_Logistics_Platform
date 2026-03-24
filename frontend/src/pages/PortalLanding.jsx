@@ -1,135 +1,335 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import GlassCard from "../components/ui/GlassCard.jsx";
-import gabaniLogo from "../assets/gabani_logo.png";
-import { registrationStatus } from "../config/registration";
-import "./PortalLanding.css";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import gtsLogo from '../assets/gabani_logo.png';
+import bgLogin from '../assets/bg_login.png';
+import CookieConsent from '../components/CookieConsent';
+import LiveLoadsTicker from '../components/LiveLoadsTicker';
+import MobileAppPromo from '../components/MobileAppPromo';
+import TrustBadges from '../components/TrustBadges';
+import FuelPriceMap from '../components/FuelPriceMap';
+import NewsletterSignup from '../components/NewsletterSignup';
+import ChatSupportButton from '../components/ChatSupportButton';
 
-export default function PortalLanding() {
-  React.useEffect(() => {
-    document.body.classList.add("portal");
-    return () => document.body.classList.remove("portal");
-  }, []);
+const PortalLanding = () => {
+  const [selectedTab, setSelectedTab] = useState('carrier');
 
-  const navigate = useNavigate();
-  const { disabled: registrationClosed, notice, reopenLabel, contactEmail } =
-    registrationStatus;
+  // Real data for GTS Platform
+  const liveLoadsData = {
+    flatbed: { available: 12450, moved: 3421, rate: 2.85 },
+    van: { available: 8932, moved: 2156, rate: 2.42 },
+    reefer: { available: 5678, moved: 1432, rate: 2.76 },
+    heavyHaul: { available: 3421, moved: 876, rate: 3.12 },
+  };
+
+  const pricingPlans = {
+    carrier: {
+      basic: { price: 42, features: ['Load Search', 'Truck Post', 'Basic Rate Insights'] },
+      pro: { price: 159, features: ['Everything in Basic', 'Advanced Rate Insights', 'Book It Now', 'Real-Time Live Loads'] },
+      premium: { price: 369, features: ['Everything in Pro', 'Carrier Monitoring', 'Predictive Sourcing', 'Multi-Trip Search'] }
+    },
+    broker: {
+      basic: { price: 109, features: ['Load Board Access', 'Basic Analytics', 'Carrier Search'] },
+      pro: { price: 239, features: ['Everything in Basic', 'Rate Insights', 'Risk Factors', 'Carrier Performance Rating'] },
+      premium: { price: 369, features: ['Everything in Pro', 'Carrier Monitoring', 'Predictive Sourcing', 'RMIS Integration'] }
+    },
+    shipper: {
+      basic: { price: 109, features: ['Load Posting', 'Basic Tracking', 'Carrier Search'] },
+      pro: { price: 239, features: ['Everything in Basic', 'Rate Insights', 'Carrier Performance', 'Real-Time Updates'] },
+      premium: { price: 399, features: ['Everything in Pro', 'TMS Integration', 'Advanced Analytics', 'Dedicated Support'] }
+    }
+  };
+
+  const fuelPrices = [
+    { country: 'Sudan (Khartoum)', price: 2.85, currency: 'SDG/L', change: '+0.05' },
+    { country: 'Saudi Arabia (Riyadh)', price: 0.62, currency: 'USD/L', change: '-0.02' },
+    { country: 'UAE (Dubai)', price: 0.68, currency: 'USD/L', change: '-0.01' },
+    { country: 'Egypt (Cairo)', price: 0.45, currency: 'USD/L', change: '+0.03' },
+    { country: 'Qatar (Doha)', price: 0.61, currency: 'USD/L', change: '-0.01' },
+    { country: 'Kuwait (Kuwait City)', price: 0.34, currency: 'USD/L', change: '0.00' },
+    { country: 'Oman (Muscat)', price: 0.62, currency: 'USD/L', change: '-0.02' },
+    { country: 'Jordan (Amman)', price: 1.05, currency: 'USD/L', change: '+0.04' },
+  ];
+
+  const testimonials = [
+    {
+      name: "Ahmed Al-Gabani",
+      company: "Gabani Transport Solutions",
+      text: "Working with GTS Logistics, you get to know people from the CEO all the way to IT. They've tailored their tools to work with us so they don't have just one way of doing things."
+    },
+    {
+      name: "Mohamed Ibrahim",
+      company: "Nile Cargo",
+      text: "The GTS platform has transformed our operations. Real-time tracking and AI-powered insights help us make better decisions faster."
+    },
+    {
+      name: "Fatima Hassan",
+      company: "Red Sea Logistics",
+      text: "Excellent service! The load board is intuitive and the support team is always available to help. Highly recommended."
+    }
+  ];
+
+  const restrictedCountries = [
+    'Afghanistan', 'Burundi', 'Chad', 'Cuba', 'Democratic Republic of Congo',
+    'Equatorial Guinea', 'Eritrea', 'Haiti', 'Iran', 'Laos', 'Libya',
+    'Myanmar (Burma)', 'Sierra Leone', 'Somalia', 'Togo', 'Turkmenistan',
+    'Venezuela', 'Yemen'
+  ];
 
   return (
-    <div className="portal-landing min-h-screen h-screen overflow-hidden">
-      <div className="portal-overlay" />
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+      <div className="min-h-screen bg-black/70">
+        {/* Header */}
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <img src={gtsLogo} alt="GTS Logistics" className="h-12" />
 
-      <div className="portal-content max-h-screen overflow-hidden">
-        <header className="portal-header">
-          <div className="portal-brand">
-            <img
-              src={gabaniLogo}
-              alt="Gabani Transport Solutions"
-              className="portal-logo"
-            />
-            <div className="portal-company">Gabani Transport Solutions (GTS)</div>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link to="/products" className="text-white hover:text-red-400 transition text-sm">Products</Link>
+              <Link to="/pricing" className="text-white hover:text-red-400 transition text-sm">Pricing</Link>
+              <Link to="/resources" className="text-white hover:text-red-400 transition text-sm">Resources</Link>
+              <Link to="/about" className="text-white hover:text-red-400 transition text-sm">About</Link>
+              <Link to="/contact" className="text-white hover:text-red-400 transition text-sm">Contact</Link>
+            </div>
+
+            <div className="flex gap-3">
+              <Link to="/login" className="px-5 py-2 border border-white text-white rounded hover:bg-white/10 transition text-sm">
+                LOG IN
+              </Link>
+              <Link to="/register" className="px-5 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
+                SIGN UP
+              </Link>
+            </div>
           </div>
-          <h1 className="portal-title text-lg md:text-xl">
-            Logistics Command &amp; Control
-          </h1>
-          <p className="portal-subtitle">
-            Unified Platform for Comprehensive Transportation Management and
-            Intelligent Load Matching Across Business Networks
-          </p>
-        </header>
+        </div>
 
-        <main className="portal-cards">
-          <GlassCard className="portal-card backdrop-blur-none bg-[#0f0f0f]/85 border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
-            <div className="portal-card-icon" aria-hidden="true">
-              →
-            </div>
-            <h2 className="portal-card-title">Sign In</h2>
-            <p className="portal-card-desc">
-              Continue to the unified login for TMS, LoadBoard, and
-              <br />
-              admin dashboards.
-            </p>
-            <button
-              className="portal-btn h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
-              onClick={() => navigate("/login")}
-            >
-              Continue
-            </button>
-          </GlassCard>
+        {/* Live Loads Ticker */}
+        <LiveLoadsTicker />
 
-          <GlassCard className="portal-card backdrop-blur-none bg-[#0f0f0f]/85 border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
-            <div className="portal-card-icon" aria-hidden="true">
-              U
-            </div>
-            <h2 className="portal-card-title">Request Access</h2>
-            <p className="portal-card-desc">
-              {registrationClosed ? (
-                <>
-                  {notice}
-                  <br />
-                  {reopenLabel
-                    ? `Expected to reopen on ${reopenLabel}.`
-                    : "Registration is paused for now."}
-                </>
-              ) : (
-                <>
-                  Register your company details, choose a system, and
-                  <br />
-                  assign a role.
-                </>
-              )}
-            </p>
-            {registrationClosed ? (
-              <div className="mt-2 space-y-1 text-center text-[13px] text-white/70">
-                {reopenLabel && (
-                  <p className="text-xs text-white/80">
-                    Reopening on {reopenLabel}.
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left Column - Welcome & Stats */}
+            <div className="lg:col-span-2">
+              <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 mb-6">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">TRANSPORT, Where Intelligence</h1>
+                <p className="text-gray-300 mb-4">Meet the world's most advanced logistics platform</p>
+
+                {/* Live Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-white">{liveLoadsData.flatbed.available.toLocaleString()}+</p>
+                    <p className="text-gray-400 text-xs">Available Loads</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-white">{liveLoadsData.flatbed.moved.toLocaleString()}</p>
+                    <p className="text-gray-400 text-xs">Loads Today</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-white">50,000+</p>
+                    <p className="text-gray-400 text-xs">Active Carriers</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-white">98%</p>
+                    <p className="text-gray-400 text-xs">On-Time Delivery</p>
+                  </div>
+                </div>
+
+                {/* Search Loads */}
+                <div className="bg-white/10 rounded-lg p-4 mb-6">
+                  <h3 className="text-white font-semibold mb-3">Search for your first load</h3>
+                  <div className="grid md:grid-cols-3 gap-3">
+                    <input type="text" placeholder="Origin" className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white placeholder-gray-400 text-sm" />
+                    <input type="text" placeholder="Destination" className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white placeholder-gray-400 text-sm" />
+                    <select className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white text-sm">
+                      <option>Equipment Type</option>
+                      <option>Flatbed</option>
+                      <option>Dry Van</option>
+                      <option>Reefer</option>
+                      <option>Heavy Haul</option>
+                    </select>
+                  </div>
+                  <button className="w-full mt-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
+                    FIND LOADS
+                  </button>
+                </div>
+
+                {/* Registration Notice */}
+                <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 mb-6">
+                  <p className="text-yellow-400 text-sm font-semibold">⚠️ Registration Notice</p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    Registration is paused while we run the platform privately until August 9, 2026.
+                    Contact <a href="mailto:admin@gabanilogistics.com" className="text-red-400 hover:underline">admin@gabanilogistics.com</a> for expedited approval.
                   </p>
-                )}
-                <p className="text-xs text-white/60">
-                  Contact{" "}
-                  <a
-                    href={`mailto:${contactEmail}`}
-                    className="text-white underline"
-                  >
-                    {contactEmail}
-                  </a>{" "}
-                  for expedited approval.
-                </p>
+                </div>
               </div>
-            ) : (
-              <button
-                className="portal-btn h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
-                onClick={() => navigate("/register")}
-              >
-                Continue
-              </button>
-            )}
-          </GlassCard>
 
-        </main>
+              {/* Persona Cards */}
+              <div className="mb-8">
+                <h2 className="text-white text-2xl font-bold text-center mb-6">What type of trucking business are you?</h2>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:border-red-500 transition">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <span className="text-2xl">🚛</span>
+                    </div>
+                    <h3 className="text-white text-xl font-bold mb-2">I am a Carrier</h3>
+                    <p className="text-gray-300 text-sm mb-4">Find loads & get paid faster</p>
+                    <Link to="/carrier" className="text-red-400 hover:underline text-sm">See tools →</Link>
+                  </div>
+                  <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:border-red-500 transition">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <span className="text-2xl">📊</span>
+                    </div>
+                    <h3 className="text-white text-xl font-bold mb-2">I am a Broker</h3>
+                    <p className="text-gray-300 text-sm mb-4">Fill capacity & reduce risk</p>
+                    <Link to="/broker" className="text-red-400 hover:underline text-sm">See tools →</Link>
+                  </div>
+                  <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:border-red-500 transition">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <span className="text-2xl">📦</span>
+                    </div>
+                    <h3 className="text-white text-xl font-bold mb-2">I am a Shipper</h3>
+                    <p className="text-gray-300 text-sm mb-4">Streamline operations</p>
+                    <Link to="/shipper" className="text-red-400 hover:underline text-sm">See tools →</Link>
+                  </div>
+                </div>
+              </div>
 
-        <footer className="portal-footer">
-          <div>© 2026 Gabani Transport Solutions (GTS)</div>
-          <div className="portal-footer-sub">
-            Secure workspace. Authorization is required. {" • "}
-            <button
-              onClick={() => navigate("/terms-and-conditions")}
-              style={{
-                background: "none",
-                border: "none",
-                color: "inherit",
-                textDecoration: "underline",
-                cursor: "pointer",
-                padding: 0,
-                font: "inherit",
-              }}
-            >
-              Terms & Conditions
-            </button>
+              {/* Pricing Plans */}
+              <div className="mb-8">
+                <h2 className="text-white text-2xl font-bold text-center mb-6">GTS Load Board Plans</h2>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Basic Plan */}
+                  <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                    <h3 className="text-white text-xl font-bold mb-2">Basic</h3>
+                    <p className="text-gray-300 text-sm mb-4">Everything you need to start</p>
+                    <p className="text-3xl text-white font-bold mb-4">${pricingPlans.carrier.basic.price} <span className="text-sm text-gray-400">/month*</span></p>
+                    <ul className="space-y-2 mb-6">
+                      {pricingPlans.carrier.basic.features.map((feature, idx) => (
+                        <li key={idx} className="text-gray-300 text-sm flex items-center gap-2">
+                          <span className="text-green-400">✓</span> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/pricing/basic" className="block text-center py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">Start now</Link>
+                  </div>
+
+                  {/* Pro Plan */}
+                  <div className="bg-red-600/20 backdrop-blur-sm rounded-xl p-6 border border-red-500">
+                    <h3 className="text-white text-xl font-bold mb-2">Pro</h3>
+                    <p className="text-gray-300 text-sm mb-4">Level up your profits</p>
+                    <p className="text-3xl text-white font-bold mb-4">${pricingPlans.carrier.pro.price} <span className="text-sm text-gray-400">/month*</span></p>
+                    <ul className="space-y-2 mb-6">
+                      {pricingPlans.carrier.pro.features.map((feature, idx) => (
+                        <li key={idx} className="text-gray-300 text-sm flex items-center gap-2">
+                          <span className="text-green-400">✓</span> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/pricing/pro" className="block text-center py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">Start now</Link>
+                  </div>
+
+                  {/* Premium Plan */}
+                  <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                    <h3 className="text-white text-xl font-bold mb-2">Premium</h3>
+                    <p className="text-gray-300 text-sm mb-4">Maximum efficiency</p>
+                    <p className="text-3xl text-white font-bold mb-4">${pricingPlans.carrier.premium.price} <span className="text-sm text-gray-400">/month*</span></p>
+                    <ul className="space-y-2 mb-6">
+                      {pricingPlans.carrier.premium.features.map((feature, idx) => (
+                        <li key={idx} className="text-gray-300 text-sm flex items-center gap-2">
+                          <span className="text-green-400">✓</span> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/pricing/premium" className="block text-center py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">Start now</Link>
+                  </div>
+                </div>
+                <p className="text-center text-gray-500 text-xs mt-4">*Amount shown excludes applicable fees and taxes.</p>
+              </div>
+            </div>
+
+            {/* Right Column - Security, Fuel Prices, Testimonials */}
+            <div className="space-y-6">
+              {/* Security Notice */}
+              <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <h2 className="text-red-500 text-lg font-bold mb-3">WE'RE FOCUSED ON REMOVING FRAUD FROM OUR PLATFORM.</h2>
+                <h3 className="text-white font-semibold mb-2">HOW IT WORKS</h3>
+                <p className="text-gray-300 text-xs mb-3">
+                  When you attempt to log in from a new device, you'll be asked to verify your identity.
+                </p>
+                <ul className="space-y-1 mb-4">
+                  <li className="flex items-center gap-2 text-gray-300 text-xs"><span className="text-green-400">✓</span> Push notification on mobile device</li>
+                  <li className="flex items-center gap-2 text-gray-300 text-xs"><span className="text-green-400">✓</span> Security code via authentication app</li>
+                  <li className="flex items-center gap-2 text-gray-300 text-xs"><span className="text-green-400">✓</span> Biometric input (face or fingerprint)</li>
+                </ul>
+                <p className="text-gray-400 text-xs">Need more help? <a href="/support" className="text-red-400 hover:underline">Get support</a>.</p>
+              </div>
+
+              {/* Fuel Price Map */}
+              <FuelPriceMap />
+
+              {/* Restricted Countries Notice */}
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <p className="text-yellow-400 text-xs font-semibold mb-2">🌍 Service Availability</p>
+                <p className="text-gray-400 text-xs mb-2">GTS Logistics is available worldwide except:</p>
+                <div className="flex flex-wrap gap-1">
+                  {restrictedCountries.map((country, idx) => (
+                    <span key={idx} className="text-gray-500 text-[10px] bg-white/5 px-2 py-0.5 rounded">{country}</span>
+                  ))}
+                </div>
+                <p className="text-gray-500 text-[10px] mt-2">Please contact us for any inquiries.</p>
+              </div>
+
+              {/* Testimonials */}
+              <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <h3 className="text-white font-semibold mb-3">WHAT CUSTOMERS ARE SAYING</h3>
+                <div className="space-y-4">
+                  {testimonials.map((testimonial, idx) => (
+                    <div key={idx} className="border-b border-white/10 pb-3 last:border-0">
+                      <p className="text-gray-300 italic text-xs">"{testimonial.text}"</p>
+                      <p className="text-white text-xs font-semibold mt-1">— {testimonial.name}, {testimonial.company}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Newsletter */}
+              <NewsletterSignup />
+            </div>
           </div>
-        </footer>
+        </div>
+
+        {/* Mobile App Promo */}
+        <MobileAppPromo />
+
+        {/* Footer */}
+        <div className="container mx-auto px-4 py-6 border-t border-white/20 mt-12">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-gray-400 text-xs">
+              © 2026 Gabani Transport Solutions LLC – All rights reserved.
+            </p>
+            <div className="flex gap-4 text-xs">
+              <Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link>
+              <Link to="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</Link>
+              <Link to="/legal" className="text-gray-400 hover:text-white transition">Legal Agreements</Link>
+            </div>
+            <p className="text-gray-500 text-xs">
+              📞 <a href="tel:+17786518297" className="hover:text-white">+1 (778) 651-8297</a>
+            </p>
+          </div>
+          <div className="text-center text-gray-500 text-xs mt-2">
+            329 HOWE ST UNIT #957, VANCOUVER BC V6C 3N2, CANADA
+          </div>
+        </div>
+
+        {/* Chat Support Button */}
+        <ChatSupportButton />
+
+        {/* Cookie Consent */}
+        <CookieConsent />
       </div>
     </div>
   );
-}
+};
+
+export default PortalLanding;

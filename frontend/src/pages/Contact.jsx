@@ -300,23 +300,30 @@ const Contact = () => {
                             <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
                                 <h2 className="text-xl font-bold text-white mb-4">Contact Information</h2>
                                 <div className="space-y-3">
-                                    {config ? (
-                                        <>
-                                            <p className="text-gray-300"><span className="text-red-400">📧 Sales:</span> <a href={`mailto:${config.sales_email}`} className="hover:text-red-400">{config.sales_email}</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📧 Marketing:</span> <a href={`mailto:${config.marketing_email}`} className="hover:text-red-400">{config.marketing_email}</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📧 Support:</span> <a href={`mailto:${config.support_email}`} className="hover:text-red-400">{config.support_email}</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📞 Phone:</span> <a href={`tel:${config.phone}`} className="hover:text-red-400">{config.phone}</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📍 Address:</span> {config.address}</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p className="text-gray-300"><span className="text-red-400">📧 Sales:</span> <a href="mailto:sales@gtslogistics.com" className="hover:text-red-400">sales@gtslogistics.com</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📧 Marketing:</span> <a href="mailto:marketing@gtslogistics.com" className="hover:text-red-400">marketing@gtslogistics.com</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📧 Support:</span> <a href="mailto:support@gtslogistics.com" className="hover:text-red-400">support@gtslogistics.com</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📞 Phone:</span> <a href="tel:+18883641189" className="hover:text-red-400">+1 (888) 364-1189</a></p>
-                                            <p className="text-gray-300"><span className="text-red-400">📍 Address:</span> 2261 Market Street, San Francisco, CA 94114, USA</p>
-                                        </>
-                                    )}
+                                    <p className="text-gray-300">
+                                        <span className="text-red-400">📧 Sales:</span> 
+                                        <a href="mailto:sales@gtslogistics.com" className="hover:text-red-400 ml-2">sales@gtslogistics.com</a>
+                                    </p>
+                                    <p className="text-gray-300">
+                                        <span className="text-red-400">📧 Marketing:</span> 
+                                        <a href="mailto:marketing@gtslogistics.com" className="hover:text-red-400 ml-2">marketing@gtslogistics.com</a>
+                                    </p>
+                                    <p className="text-gray-300">
+                                        <span className="text-red-400">📧 Support:</span> 
+                                        <a href="mailto:support@gtslogistics.com" className="hover:text-red-400 ml-2">support@gtslogistics.com</a>
+                                    </p>
+                                    <p className="text-gray-300">
+                                        <span className="text-red-400">📞 Phone:</span> 
+                                        <a href="tel:+17786518297" className="hover:text-red-400 ml-2">+1 (778) 651-8297</a>
+                                    </p>
+                                    <p className="text-gray-300">
+                                        <span className="text-red-400">📍 Mailing Address:</span>
+                                        <span className="ml-2 block text-sm mt-1">329 HOWE ST UNIT #957, VANCOUVER BC V6C 3N2, CANADA</span>
+                                    </p>
+                                    <p className="text-gray-300">
+                                        <span className="text-red-400">🚚 Delivery Address:</span>
+                                        <span className="ml-2 block text-sm mt-1">329 HOWE ST UNIT #957, VANCOUVER BC V6C 3N2, CANADA</span>
+                                    </p>
                                 </div>
                             </div>
 
