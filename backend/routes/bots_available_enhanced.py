@@ -8,9 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List
 
-from backend.database.session import get_async_session
-from backend.security.auth import get_current_user
-from backend.config import settings
+from database.session import get_async_session
+from security.auth import get_current_user
+from config import settings
 
 router = APIRouter(prefix="/api/v1/ai/bots", tags=["AI Bots"])
 
