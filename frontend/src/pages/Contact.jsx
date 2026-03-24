@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
 
 const Contact = () => {
+  const location = useLocation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +22,7 @@ const Contact = () => {
   const [userInput, setUserInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [config, setConfig] = useState({});
+  const [registrationMessage, setRegistrationMessage] = useState(null);
 
   // Load contact config
   useEffect(() => {
@@ -30,6 +32,12 @@ const Contact = () => {
       .catch(err => console.error('Failed to load config:', err));
   }, []);
 
+  useEffect(() => {
+    if (location.state?.message) {
+      setRegistrationMessage(location.state);
+    }
+  }, [location]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -38,7 +46,7 @@ const Contact = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -47,9 +55,9 @@ const Contact = () => {
         },
         body: JSON.stringify(formData),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         setSubmitted(true);
         setFormData({ name: '', email: '', phone: '', company: '', message: '', inquiryType: 'general' });
@@ -70,14 +78,14 @@ const Contact = () => {
     if (!userInput.trim()) return;
 
     const userMessage = userInput.trim();
-    setChatMessages(prev => [...prev, { 
-      role: 'user', 
-      message: userMessage, 
-      timestamp: new Date() 
+    setChatMessages(prev => [...prev, {
+      role: 'user',
+      message: userMessage,
+      timestamp: new Date()
     }]);
     setChatLoading(true);
     setUserInput('');
-    
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -86,19 +94,19 @@ const Contact = () => {
         },
         body: JSON.stringify({ message: userMessage, context: 'sales_marketing' }),
       });
-      
+
       const data = await response.json();
       const botReply = data.reply || "Thanks for reaching out! Our team will get back to you shortly.";
-      
-      setChatMessages(prev => [...prev, { 
-        role: 'bot', 
-        message: botReply, 
-        timestamp: new Date() 
+
+      setChatMessages(prev => [...prev, {
+        role: 'bot',
+        message: botReply,
+        timestamp: new Date()
       }]);
     } catch (err) {
       console.error('Chat error:', err);
-      setChatMessages(prev => [...prev, { 
-        role: 'bot', 
+      setChatMessages(prev => [...prev, {
+        role: 'bot',
         message: 'Sorry, I am having trouble connecting. Please try again or email us directly at support@gtslogistics.com.',
         timestamp: new Date()
       }]);
@@ -141,6 +149,19 @@ const Contact = () => {
             Our Sales, Marketing, and Customer Service teams are ready to help. Chat with our AI bot or fill out the form.
           </p>
         </div>
+
+        {/* Registration Message */}
+        {registrationMessage && (
+          <div className="container mx-auto px-4 mb-6">
+            <div className="bg-yellow-500/20 border border-yellow-500 rounded-xl p-4">
+              <p className="text-yellow-400 text-sm">{registrationMessage.message}</p>
+              <p className="text-gray-300 text-xs mt-1">
+                Expected to reopen on {registrationMessage.reopenDate}.
+                Contact <a href="mailto:admin@gtslogistics.com" className="text-red-400 hover:underline">admin@gtslogistics.com</a> for expedited approval.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Chat Bot Section */}
         <div className="container mx-auto px-4 mb-8">
@@ -186,8 +207,8 @@ const Contact = () => {
                 className="flex-1 px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm"
                 disabled={chatLoading}
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm disabled:opacity-50"
                 disabled={chatLoading || !userInput.trim()}
               >
@@ -209,8 +230,8 @@ const Contact = () => {
                   <div className="text-green-400 text-4xl mb-3">✓</div>
                   <p className="text-white">Thank you for contacting us!</p>
                   <p className="text-gray-400 text-sm mt-2">Our team will respond within {config.response_time || '24 hours'}.</p>
-                  <button 
-                    onClick={() => setSubmitted(false)} 
+                  <button
+                    onClick={() => setSubmitted(false)}
                     className="mt-4 px-4 py-2 border border-white/30 text-white rounded-lg hover:bg-white/10 transition text-sm"
                   >
                     Send another message
@@ -253,8 +274,8 @@ const Contact = () => {
                     <label className="block text-gray-300 text-sm mb-1">Message *</label>
                     <textarea name="message" rows="4" value={formData.message} onChange={handleChange} required className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white"></textarea>
                   </div>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={loading}
                     className="w-full py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
                   >
@@ -270,19 +291,19 @@ const Contact = () => {
                 <h2 className="text-xl font-bold text-white mb-4">Contact Information</h2>
                 <div className="space-y-3">
                   <p className="text-gray-300">
-                    <span className="text-red-400">📧 Sales:</span> 
+                    <span className="text-red-400">📧 Sales:</span>
                     <a href="mailto:sales@gtslogistics.com" className="hover:text-red-400 ml-2">sales@gtslogistics.com</a>
                   </p>
                   <p className="text-gray-300">
-                    <span className="text-red-400">📧 Marketing:</span> 
+                    <span className="text-red-400">📧 Marketing:</span>
                     <a href="mailto:marketing@gtslogistics.com" className="hover:text-red-400 ml-2">marketing@gtslogistics.com</a>
                   </p>
                   <p className="text-gray-300">
-                    <span className="text-red-400">📧 Support:</span> 
+                    <span className="text-red-400">📧 Support:</span>
                     <a href="mailto:support@gtslogistics.com" className="hover:text-red-400 ml-2">support@gtslogistics.com</a>
                   </p>
                   <p className="text-gray-300">
-                    <span className="text-red-400">📞 Phone:</span> 
+                    <span className="text-red-400">📞 Phone:</span>
                     <a href="tel:+17786518297" className="hover:text-red-400 ml-2">+1 (778) 651-8297</a>
                   </p>
                   <div className="pt-2 border-t border-white/10 mt-2">

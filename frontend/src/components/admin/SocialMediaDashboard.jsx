@@ -1,321 +1,271 @@
 import React, { useState, useEffect } from 'react';
-import axiosClient from "../../api/axiosClient";
-import './SocialMediaDashboard.css';
 
 const SocialMediaDashboard = () => {
-    const [connectedAccounts, setConnectedAccounts] = useState([]);
-    const [scheduledPosts, setScheduledPosts] = useState([]);
-    const [analytics, setAnalytics] = useState({});
-    const [activeTab, setActiveTab] = useState('overview');
+    const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [autoPostingEnabled, setAutoPostingEnabled] = useState(false);
 
     useEffect(() => {
-        fetchDashboardData();
+        fetchSocialAccounts();
     }, []);
 
-    const fetchDashboardData = async () => {
+    const fetchSocialAccounts = async () => {
         try {
-            setLoading(true);
-            const [accountsRes, postsRes, analyticsRes] = await Promise.all([
-                axiosClient.get('/api/v1/admin/social-media/accounts'),
-                axiosClient.get('/api/v1/admin/social-media/posts?status=scheduled'),
-                axiosClient.get('/api/v1/admin/social-media/analytics/summary')
-            ]);
-
-            setConnectedAccounts(accountsRes.data.accounts || []);
-            setScheduledPosts(postsRes.data.posts || []);
-            setAnalytics(analyticsRes.data || {});
-            setLoading(false);
+            const response = await fetch('/api/v1/admin/social-media/accounts');
+            const data = await response.json();
+            setAccounts(data.accounts || []);
+            setAutoPostingEnabled(data.auto_posting_enabled || false);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-            setError('Failed to load dashboard data');
+            console.error('Failed to fetch social accounts:', error);
+        } finally {
             setLoading(false);
         }
     };
 
-    const connectPlatform = async (platform) => {
+    const toggleAutoPosting = async () => {
         try {
-            const response = await axiosClient.post(`/api/v1/admin/social-media/connect/${platform}`);
-            if (response.data.auth_url) {
-                window.open(response.data.auth_url, '_blank', 'width=600,height=600');
+            const response = await fetch('/api/v1/admin/social-media/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ auto_posting_enabled: !autoPostingEnabled })
+            });
+            if (response.ok) {
+                setAutoPostingEnabled(!autoPostingEnabled);
             }
         } catch (error) {
-            console.error('Error connecting platform:', error);
-            alert('Failed to connect platform');
+            console.error('Failed to toggle auto-posting:', error);
         }
     };
 
-    const disconnectPlatform = async (platform) => {
-        if (!confirm(`Are you sure you want to disconnect ${platform}?`)) return;
-
+    const connectAccount = async (platform) => {
         try {
-            await axiosClient.post(`/api/v1/admin/social-media/disconnect/${platform}`);
-            fetchDashboardData();
+            const response = await fetch(`/api/v1/admin/social-media/connect/${platform}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.auth_url) {
+                window.location.href = data.auth_url;
+            }
         } catch (error) {
-            console.error('Error disconnecting platform:', error);
-            alert('Failed to disconnect platform');
+            console.error(`Failed to connect ${platform}:`, error);
         }
     };
 
-    const syncPlatform = async (platform) => {
+    const disconnectAccount = async (platform) => {
         try {
-            await axiosClient.post(`/api/v1/admin/social-media/sync/${platform}`);
-            fetchDashboardData();
+            await fetch(`/api/v1/admin/social-media/disconnect/${platform}`, {
+                method: 'DELETE'
+            });
+            await fetchSocialAccounts();
         } catch (error) {
-            console.error('Error syncing platform:', error);
-            alert('Failed to sync platform');
+            console.error(`Failed to disconnect ${platform}:`, error);
         }
     };
-
-    const renderPlatformCard = (account) => {
-        const platformIcons = {
-            linkedin: '💼',
-            twitter: '🐦',
-            facebook: '📘',
-            instagram: '📸',
-            youtube: '🎬'
-        };
-
-        return (
-            <div key={account.id} className={`platform-card ${account.is_connected ? 'connected' : 'disconnected'}`}>
-                <div className="platform-header">
-                    <div className="platform-icon">
-                        {platformIcons[account.platform] || '📱'}
-                    </div>
-                    <div className="platform-info">
-                        <h4>{account.platform.charAt(0).toUpperCase() + account.platform.slice(1)}</h4>
-                        <span className={`status-badge ${account.is_connected ? 'connected' : 'disconnected'}`}>
-                            {account.is_connected ? '✅ Connected' : '❌ Not Connected'}
-                        </span>
-                    </div>
-                    <div className="platform-actions">
-                        {account.is_connected ? (
-                            <>
-                                <button
-                                    className="btn-sync"
-                                    onClick={() => syncPlatform(account.platform)}
-                                    title="Sync data"
-                                >
-                                    🔄 Sync
-                                </button>
-                                <button
-                                    className="btn-disconnect"
-                                    onClick={() => disconnectPlatform(account.platform)}
-                                >
-                                    Disconnect
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                className="btn-connect"
-                                onClick={() => connectPlatform(account.platform)}
-                            >
-                                Connect Account
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {account.is_connected && (
-                    <div className="platform-details">
-                        <div className="account-info">
-                            <p><strong>Account:</strong> {account.account_name || 'N/A'}</p>
-                            <p><strong>Last Activity:</strong> {account.last_sync ? new Date(account.last_sync).toLocaleDateString() : 'Never'}</p>
-                            <p><strong>Auto-posting:</strong> {account.auto_posting_enabled ? '✅ Enabled' : '❌ Disabled'}</p>
-                        </div>
-                        <div className="platform-stats">
-                            <div className="stat">
-                                <span className="stat-value">{account.followers_count?.toLocaleString() || 0}</span>
-                                <span className="stat-label">Followers</span>
-                            </div>
-                            <div className="stat">
-                                <span className="stat-value">{account.posts_count || 0}</span>
-                                <span className="stat-label">Total Posts</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    const OverviewTab = () => (
-        <div className="overview-tab">
-            <div className="stats-grid">
-                <div className="stat-card total">
-                    <h3>Total Followers</h3>
-                    <p className="stat-number">{analytics.totalFollowers?.toLocaleString() || 0}</p>
-                    <span className="stat-change positive">+{analytics.followerGrowth || 0} this month</span>
-                </div>
-                <div className="stat-card engagement">
-                    <h3>Engagement Rate</h3>
-                    <p className="stat-number">{analytics.engagementRate || 0}%</p>
-                    <span className="stat-change positive">+0.5% vs last month</span>
-                </div>
-                <div className="stat-card posts">
-                    <h3>Posts This Month</h3>
-                    <p className="stat-number">{analytics.monthlyPosts || 0}</p>
-                    <span className="stat-change neutral">Target: 150</span>
-                </div>
-                <div className="stat-card reach">
-                    <h3>Total Reach</h3>
-                    <p className="stat-number">{analytics.totalReach?.toLocaleString() || 0}</p>
-                    <span className="stat-change positive">+12% vs last month</span>
-                </div>
-            </div>
-
-            <div className="quick-actions">
-                <h3>Quick Actions</h3>
-                <div className="action-buttons">
-                    <button className="action-btn" onClick={() => setActiveTab('scheduler')}>
-                        📝 Create New Post
-                    </button>
-                    <button className="action-btn" onClick={() => setActiveTab('scheduler')}>
-                        🗓️ Schedule Post
-                    </button>
-                    <button className="action-btn" onClick={() => setActiveTab('analytics')}>
-                        📊 View Reports
-                    </button>
-                    <button className="action-btn" onClick={fetchDashboardData}>
-                        🔄 Sync All Accounts
-                    </button>
-                </div>
-            </div>
-
-            <div className="recent-activity">
-                <h3>Recent Activity</h3>
-                <div className="activity-list">
-                    {scheduledPosts.slice(0, 5).map(post => (
-                        <div key={post.id} className="activity-item">
-                            <span className="activity-icon">📝</span>
-                            <div className="activity-details">
-                                <p className="activity-title">{post.content?.substring(0, 60)}...</p>
-                                <p className="activity-meta">
-                                    Scheduled for {new Date(post.scheduled_time).toLocaleString()}
-                                    on {post.platforms?.join(', ')}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-
-    const AccountsTab = () => (
-        <div className="accounts-tab">
-            <div className="accounts-header">
-                <h3>Connected Accounts</h3>
-                <button className="btn-add-account" onClick={() => setActiveTab('settings')}>
-                    + Add New Platform
-                </button>
-            </div>
-
-            <div className="platforms-grid">
-                {connectedAccounts.map(account => renderPlatformCard(account))}
-            </div>
-
-            <div className="integration-guide">
-                <h4>How to Connect:</h4>
-                <ol>
-                    <li>Click "Connect Account" next to the desired platform</li>
-                    <li>A new window will open for authorization</li>
-                    <li>Log in and approve the permissions</li>
-                    <li>You'll be automatically redirected and the account will be linked</li>
-                </ol>
-            </div>
-        </div>
-    );
-
-    const SchedulerTab = () => (
-        <div className="scheduler-tab">
-            <PostScheduler onPostCreated={fetchDashboardData} />
-        </div>
-    );
-
-    const AnalyticsTab = () => (
-        <div className="analytics-tab">
-            <SocialAnalytics />
-        </div>
-    );
-
-    const SettingsTab = () => (
-        <div className="settings-tab">
-            <SocialMediaSettings onSettingsUpdated={fetchDashboardData} />
-        </div>
-    );
 
     if (loading) {
-        return (
-            <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Loading dashboard...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="error-container">
-                <p className="error-message">❌ {error}</p>
-                <button onClick={fetchDashboardData}>Retry</button>
-            </div>
-        );
+        return <div className="text-center py-8">Loading...</div>;
     }
 
     return (
-        <div className="social-media-dashboard">
-            {/* Header */}
-            <div className="dashboard-header">
-                <h1>Social Media Command Center</h1>
-                <p>Manage and track all social media accounts from one place</p>
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-white">Social Media Management</h2>
+                <div className="flex items-center gap-3">
+                    <span className="text-gray-300 text-sm">Auto-posting:</span>
+                    <button
+                        onClick={toggleAutoPosting}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${autoPostingEnabled
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-gray-600 text-gray-300 hover:bg-gray-700'
+                            }`}
+                    >
+                        {autoPostingEnabled ? '✅ Enabled' : '❌ Disabled'}
+                    </button>
+                </div>
             </div>
 
-            {/* Tabs Navigation */}
-            <div className="tabs-navigation">
-                <button
-                    className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('overview')}
-                >
-                    📊 Overview
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('accounts')}
-                >
-                    🔗 Connected Accounts
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'scheduler' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('scheduler')}
-                >
-                    🗓️ Post Scheduler
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('analytics')}
-                >
-                    📈 Analytics
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('settings')}
-                >
-                    ⚙️ Settings
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {['twitter', 'linkedin', 'facebook', 'instagram', 'tiktok'].map(platform => {
+                    const account = accounts.find(a => a.platform === platform);
+                    const isConnected = account?.is_connected || false;
+
+                    return (
+                        <div key={platform} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <div className="flex justify-between items-center mb-3">
+                                <span className="text-white font-semibold capitalize">{platform}</span>
+                                <span className={`text-xs px-2 py-1 rounded-full ${isConnected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                    {isConnected ? '✅ Connected' : '❌ Not Connected'}
+                                </span>
+                            </div>
+
+                            {isConnected ? (
+                                <div>
+                                    <p className="text-gray-400 text-xs mb-2">@{account?.username || 'username'}</p>
+                                    <button
+                                        onClick={() => disconnectAccount(platform)}
+                                        className="w-full py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition text-sm"
+                                    >
+                                        Disconnect
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => connectAccount(platform)}
+                                    className="w-full py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition text-sm"
+                                >
+                                    Connect Account
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Content based on active tab */}
-            <div className="tab-content">
-                {activeTab === 'overview' && <OverviewTab />}
-                {activeTab === 'accounts' && <AccountsTab />}
-                {activeTab === 'scheduler' && <SchedulerTab />}
-                {activeTab === 'analytics' && <AnalyticsTab />}
-                {activeTab === 'settings' && <SettingsTab />}
+            <div className="mt-6 pt-4 border-t border-white/10">
+                <h3 className="text-white font-semibold mb-2">Auto-posting Settings</h3>
+                <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center gap-2 text-gray-300 text-sm">
+                        <input type="checkbox" checked={true} disabled className="w-4 h-4" />
+                        New Blog Posts
+                    </label>
+                    <label className="flex items-center gap-2 text-gray-300 text-sm">
+                        <input type="checkbox" checked={true} disabled className="w-4 h-4" />
+                        New Services
+                    </label>
+                    <label className="flex items-center gap-2 text-gray-300 text-sm">
+                        <input type="checkbox" checked={false} disabled className="w-4 h-4" />
+                        Promotional Content
+                    </label>
+                    <label className="flex items-center gap-2 text-gray-300 text-sm">
+                        <input type="checkbox" checked={true} disabled className="w-4 h-4" />
+                        Company Updates
+                    </label>
+                </div>
             </div>
         </div>
     );
+};
+
+export default SocialMediaDashboard;
+                </div >
+            </div >
+        </div >
+    );
+
+const AccountsTab = () => (
+    <div className="accounts-tab">
+        <div className="accounts-header">
+            <h3>Connected Accounts</h3>
+            <button className="btn-add-account" onClick={() => setActiveTab('settings')}>
+                + Add New Platform
+            </button>
+        </div>
+
+        <div className="platforms-grid">
+            {connectedAccounts.map(account => renderPlatformCard(account))}
+        </div>
+
+        <div className="integration-guide">
+            <h4>How to Connect:</h4>
+            <ol>
+                <li>Click "Connect Account" next to the desired platform</li>
+                <li>A new window will open for authorization</li>
+                <li>Log in and approve the permissions</li>
+                <li>You'll be automatically redirected and the account will be linked</li>
+            </ol>
+        </div>
+    </div>
+);
+
+const SchedulerTab = () => (
+    <div className="scheduler-tab">
+        <PostScheduler onPostCreated={fetchDashboardData} />
+    </div>
+);
+
+const AnalyticsTab = () => (
+    <div className="analytics-tab">
+        <SocialAnalytics />
+    </div>
+);
+
+const SettingsTab = () => (
+    <div className="settings-tab">
+        <SocialMediaSettings onSettingsUpdated={fetchDashboardData} />
+    </div>
+);
+
+if (loading) {
+    return (
+        <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Loading dashboard...</p>
+        </div>
+    );
+}
+
+if (error) {
+    return (
+        <div className="error-container">
+            <p className="error-message">❌ {error}</p>
+            <button onClick={fetchDashboardData}>Retry</button>
+        </div>
+    );
+}
+
+return (
+    <div className="social-media-dashboard">
+        {/* Header */}
+        <div className="dashboard-header">
+            <h1>Social Media Command Center</h1>
+            <p>Manage and track all social media accounts from one place</p>
+        </div>
+
+        {/* Tabs Navigation */}
+        <div className="tabs-navigation">
+            <button
+                className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+            >
+                📊 Overview
+            </button>
+            <button
+                className={`tab-btn ${activeTab === 'accounts' ? 'active' : ''}`}
+                onClick={() => setActiveTab('accounts')}
+            >
+                🔗 Connected Accounts
+            </button>
+            <button
+                className={`tab-btn ${activeTab === 'scheduler' ? 'active' : ''}`}
+                onClick={() => setActiveTab('scheduler')}
+            >
+                🗓️ Post Scheduler
+            </button>
+            <button
+                className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => setActiveTab('analytics')}
+            >
+                📈 Analytics
+            </button>
+            <button
+                className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+                onClick={() => setActiveTab('settings')}
+            >
+                ⚙️ Settings
+            </button>
+        </div>
+
+        {/* Content based on active tab */}
+        <div className="tab-content">
+            {activeTab === 'overview' && <OverviewTab />}
+            {activeTab === 'accounts' && <AccountsTab />}
+            {activeTab === 'scheduler' && <SchedulerTab />}
+            {activeTab === 'analytics' && <AnalyticsTab />}
+            {activeTab === 'settings' && <SettingsTab />}
+        </div>
+    </div>
+);
 };
 
 // Post Scheduler Component
