@@ -27,14 +27,14 @@ tracemalloc.start()
 # Mount coordinator_analytics router for /coordinator endpoints (after app is defined)
 coordinator_analytics_router = None
 try:
-    from backend.routes.coordinator_analytics import router as coordinator_analytics_router
+    from routes.coordinator_analytics import router as coordinator_analytics_router
 except Exception as e:
     log.warning("[main] coordinator_analytics router import failed: %s", e)
 
 # Mount email_command_center router for /api/v1/email endpoints
 email_command_center_router = None
 try:
-    from backend.routes.email_command_center import router as email_command_center_router
+    from routes.email_command_center import router as email_command_center_router
 except Exception as e:
     log.warning("[main] email_command_center router import failed: %s", e)
 
@@ -91,7 +91,7 @@ except Exception as _e:
 
 # ========= Hotfix: optional finance env normalization =========
 try:
-    from backend.util.finance_env_fix import apply as _gts_fin_env_fix  # type: ignore
+    from util.finance_env_fix import apply as _gts_fin_env_fix  # type: ignore
     _gts_fin_env_fix()
 except Exception as _e:
     log.info("[finance_env_fix] skipped: %s", _e)
@@ -268,7 +268,7 @@ def _try_import_router(abs_mod: str, rel_mod: str):
 # Import marketing_router after helper is defined to avoid recursion
 marketing_router = None
 try:
-    from backend.routes.marketing import router as marketing_router
+    from routes.marketing import router as marketing_router
 except Exception as e:
     log.warning("[main] failed to import marketing_router: %s", e)
 
@@ -302,10 +302,37 @@ email_ai_stats_router = _try_import_router("routes.email_ai_stats", "routes.emai
 email_bot_router = _try_import_router("routes.email_bot_routes", "routes.email_bot_routes")
 admin_users_router  = _try_import_router("routes.admin_users", "routes.admin_users")
 admin_unified_router = _try_import_router("routes.admin_unified", "routes.admin_unified")
-policy_context_router = _try_import_router("routes.policy_context", "routes.policy_context")
-bots_available_router = _try_import_router("routes.bots_available", "routes.bots_available")
-bots_available_enhanced_router = _try_import_router("routes.bots_available_enhanced", "routes.bots_available_enhanced")
-customer_service_router = _try_import_router("routes.customer_service_api", "routes.customer_service_api")
+# Bots availability (v1) - Legacy
+try:
+    from routes.bots_available import router as bots_available_router
+    log.info("[main] bots_available imported successfully")
+except Exception as e:
+    log.warning(f"[main] bots_available import failed: {e}")
+    bots_available_router = None
+
+# Bots availability enhanced (v1) - Returns all available bots
+try:
+    from routes.bots_available_enhanced import router as bots_available_enhanced_router
+    log.info("[main] bots_available_enhanced imported successfully")
+except Exception as e:
+    log.warning(f"[main] bots_available_enhanced import failed: {e}")
+    bots_available_enhanced_router = None
+
+# Customer service API (v1)
+try:
+    from routes.customer_service_api import router as customer_service_router
+    log.info("[main] customer_service_router imported successfully")
+except Exception as e:
+    log.warning(f"[main] customer_service_router import failed: {e}")
+    customer_service_router = None
+
+# Policy Context router
+try:
+    from routes.policy_context import router as policy_context_router
+    log.info("[main] policy_context_router imported successfully")
+except Exception as e:
+    log.warning(f"[main] policy_context_router import failed: {e}")
+    policy_context_router = None
 dispatch_router = _try_import_router("routes.dispatch_routes", "routes.dispatch_routes")
 driver_router = _try_import_router("routes.driver_routes", "routes.driver_routes")
 drivers_management_router = _try_import_router("routes.drivers_management_routes", "routes.drivers_management_routes")
@@ -327,49 +354,49 @@ webhooks_router = _try_import_router("routes.webhooks", "routes.webhooks")
 quo_webhook_router = _try_import_router("routes.quo_webhooks", "routes.quo_webhooks")
 ai_calls_router = _try_import_router("routes.ai_calls_api", "routes.ai_calls_api")
 enhanced_call_router = _try_import_router("routes.call_webhooks", "routes.call_webhooks")
-payment_webhooks_router = _try_import_router("backend.webhooks.payment_webhooks", "webhooks.payment_webhooks")
-billing_router = _try_import_router("backend.billing.routes", "billing.routes")
-admin_billing_router = _try_import_attr("backend.billing.routes", "billing.routes", "admin_router")
-portal_requests_router = _try_import_router("backend.routes.portal_requests", "routes.portal_requests")
-admin_portal_requests_router = _try_import_router("backend.routes.admin_portal_requests", "routes.admin_portal_requests")
-tms_requests_admin_router = _try_import_router("backend.routes.tms_requests_admin", "routes.tms_requests_admin")
-payment_gateway_router = _try_import_router("backend.routes.payment_gateway", "routes.payment_gateway")
-channels_webhooks_router = _try_import_router("backend.routes.channels_webhooks", "routes.channels_webhooks")
-call_ai_router = _try_import_router("backend.routes.call_ai_routes", "routes.call_ai_routes")
-communications_router = _try_import_router("backend.routes.communications", "routes.communications")
-training_center_router = _try_import_router("backend.routes.training_center", "routes.training_center")
-bot_collaboration_router = _try_import_router("backend.routes.bot_collaboration", "routes.bot_collaboration")
-mapleload_canada_router = _try_import_router("backend.routes.mapleload_canada_routes", "routes.mapleload_canada_routes")
-freight_broker_canada_router = _try_import_router("backend.routes.freight_broker_canada", "routes.freight_broker_canada")
-freight_broker_learning_router = _try_import_router("backend.routes.freight_broker_learning", "routes.freight_broker_learning")
-finance_bot_learning_router = _try_import_router("backend.routes.finance_bot_learning", "routes.finance_bot_learning")
-operations_manager_learning_router = _try_import_router("backend.routes.operations_manager_learning", "routes.operations_manager_learning")
-documents_manager_learning_router = _try_import_router("backend.routes.documents_manager_learning", "routes.documents_manager_learning")
-safety_manager_learning_router = _try_import_router("backend.routes.safety_manager_learning", "routes.safety_manager_learning")
-general_manager_learning_router = _try_import_router("backend.routes.general_manager_learning", "routes.general_manager_learning")
-strategy_advisor_learning_router = _try_import_router("backend.routes.strategy_advisor_learning", "routes.strategy_advisor_learning")
-maintenance_dev_learning_router = _try_import_router("backend.routes.maintenance_dev_learning", "routes.maintenance_dev_learning")
-legal_consultant_learning_router = _try_import_router("backend.routes.legal_consultant_learning", "routes.legal_consultant_learning")
-information_coordinator_learning_router = _try_import_router("backend.routes.information_coordinator_learning", "routes.information_coordinator_learning")
-sales_team_learning_router = _try_import_router("backend.routes.sales_team_learning", "routes.sales_team_learning")
-system_admin_learning_router = _try_import_router("backend.routes.system_admin_learning", "routes.system_admin_learning")
-security_manager_learning_router = _try_import_router("backend.routes.security_manager_learning", "routes.security_manager_learning")
-mapleload_canada_learning_router = _try_import_router("backend.routes.mapleload_canada_learning", "routes.mapleload_canada_learning")
-partner_manager_learning_router = _try_import_router("backend.routes.partner_manager_learning", "routes.partner_manager_learning")
-maintenance_dev_enhanced_router = _try_import_router("backend.routes.maintenance_dev_enhanced", "routes.maintenance_dev_enhanced")
+payment_webhooks_router = _try_import_router("webhooks.payment_webhooks", "webhooks.payment_webhooks")
+billing_router = _try_import_router("billing.routes", "billing.routes")
+admin_billing_router = _try_import_attr("billing.routes", "billing.routes", "admin_router")
+portal_requests_router = _try_import_router("routes.portal_requests", "routes.portal_requests")
+admin_portal_requests_router = _try_import_router("routes.admin_portal_requests", "routes.admin_portal_requests")
+tms_requests_admin_router = _try_import_router("routes.tms_requests_admin", "routes.tms_requests_admin")
+payment_gateway_router = _try_import_router("routes.payment_gateway", "routes.payment_gateway")
+channels_webhooks_router = _try_import_router("routes.channels_webhooks", "routes.channels_webhooks")
+call_ai_router = _try_import_router("routes.call_ai_routes", "routes.call_ai_routes")
+communications_router = _try_import_router("routes.communications", "routes.communications")
+training_center_router = _try_import_router("routes.training_center", "routes.training_center")
+bot_collaboration_router = _try_import_router("routes.bot_collaboration", "routes.bot_collaboration")
+mapleload_canada_router = _try_import_router("routes.mapleload_canada_routes", "routes.mapleload_canada_routes")
+freight_broker_canada_router = _try_import_router("routes.freight_broker_canada", "routes.freight_broker_canada")
+freight_broker_learning_router = _try_import_router("routes.freight_broker_learning", "routes.freight_broker_learning")
+finance_bot_learning_router = _try_import_router("routes.finance_bot_learning", "routes.finance_bot_learning")
+operations_manager_learning_router = _try_import_router("routes.operations_manager_learning", "routes.operations_manager_learning")
+documents_manager_learning_router = _try_import_router("routes.documents_manager_learning", "routes.documents_manager_learning")
+safety_manager_learning_router = _try_import_router("routes.safety_manager_learning", "routes.safety_manager_learning")
+general_manager_learning_router = _try_import_router("routes.general_manager_learning", "routes.general_manager_learning")
+strategy_advisor_learning_router = _try_import_router("routes.strategy_advisor_learning", "routes.strategy_advisor_learning")
+maintenance_dev_learning_router = _try_import_router("routes.maintenance_dev_learning", "routes.maintenance_dev_learning")
+legal_consultant_learning_router = _try_import_router("routes.legal_consultant_learning", "routes.legal_consultant_learning")
+information_coordinator_learning_router = _try_import_router("routes.information_coordinator_learning", "routes.information_coordinator_learning")
+sales_team_learning_router = _try_import_router("routes.sales_team_learning", "routes.sales_team_learning")
+system_admin_learning_router = _try_import_router("routes.system_admin_learning", "routes.system_admin_learning")
+security_manager_learning_router = _try_import_router("routes.security_manager_learning", "routes.security_manager_learning")
+mapleload_canada_learning_router = _try_import_router("routes.mapleload_canada_learning", "routes.mapleload_canada_learning")
+partner_manager_learning_router = _try_import_router("routes.partner_manager_learning", "routes.partner_manager_learning")
+maintenance_dev_enhanced_router = _try_import_router("routes.maintenance_dev_enhanced", "routes.maintenance_dev_enhanced")
 executive_intelligence_router = _try_import_router(
-    "backend.routes.executive_intelligence_routes",
+    "routes.executive_intelligence_routes",
     "routes.executive_intelligence_routes",
 )
-partners_admin_router = _try_import_attr("backend.api.routes.v1.partners", "api.routes.v1.partners", "admin_router")
-partners_router = _try_import_attr("backend.api.routes.v1.partners", "api.routes.v1.partners", "partner_router")
+partners_admin_router = _try_import_attr("api.routes.v1.partners", "api.routes.v1.partners", "admin_router")
+partners_router = _try_import_attr("api.routes.v1.partners", "api.routes.v1.partners", "partner_router")
 
 # Live Support Routes
-live_support_router = _try_import_router("backend.api.routes.live_support", "api.routes.live_support")
+live_support_router = _try_import_router("api.routes.live_support", "api.routes.live_support")
 
 # Social Media Routes
 try:
-    from backend.routes.social_media_routes import router as social_media_router, public_router as social_media_public_router
+    from routes.social_media_routes import router as social_media_router, public_router as social_media_public_router
 except Exception as e:
     log.warning("[main] failed to import social media routers: %s", e)
     social_media_router = None
@@ -377,21 +404,21 @@ except Exception as e:
 
 # Incident Response Routes
 try:
-    from backend.api.routes.incident_routes import router as incident_routes_router
+    from api.routes.incident_routes import router as incident_routes_router
 except Exception as e:
     log.warning("[main] failed to import incident routes: %s", e)
     incident_routes_router = None
 
 # Chat Routes
 try:
-    from backend.api.routes.chat_routes import router as chat_routes_router
+    from api.routes.chat_routes import router as chat_routes_router
 except Exception as e:
     log.warning("[main] failed to import chat routes: %s", e)
     chat_routes_router = None
 
 # System readiness + /api/v1/auth/me (optional)
 try:
-    from backend.routes.system_readiness import router as system_readiness_router
+    from routes.system_readiness import router as system_readiness_router
 except Exception:
     system_readiness_router = APIRouter()
 
@@ -400,44 +427,44 @@ except Exception:
         return {"ok": True, "status": "ok"}
 
 try:
-    from backend.routes.auth_me import router as auth_me_router
+    from routes.auth_me import router as auth_me_router
 except Exception as e_auth_me:
     log.error("[main] auth_me_router import failed: %s", e_auth_me)
     auth_me_router = None
 
 try:
-    from backend.routes.auth_reset import router as auth_reset_router
+    from routes.auth_reset import router as auth_reset_router
 except Exception as e_auth_reset:
     log.warning("[main] auth_reset routes unavailable: %s", e_auth_reset)
     auth_reset_router = None  # type: ignore
 
 try:
-    from backend.routes.auth_routes import router as auth_users_router
+    from routes.auth_routes import router as auth_users_router
 except Exception as e_auth_users:
     log.warning("[main] auth_users routes unavailable: %s", e_auth_users)
     auth_users_router = None  # type: ignore
 
 try:
-    from backend.routes.auth_extended import router as auth_extended_router
+    from routes.auth_extended import router as auth_extended_router
 except Exception as e_auth_ext:
     log.warning("[main] auth_extended routes unavailable: %s", e_auth_ext)
     auth_extended_router = None  # type: ignore
 
 try:
-    from backend.routes.auth import router as auth_router  # type: ignore
+    from routes.auth import router as auth_router  # type: ignore
 except Exception as e_auth:
     log.warning("[main] auth routes unavailable: %s", e_auth)
     auth_router = None  # type: ignore
 
 # documents + auth with safe fallback
 try:
-    from backend.routes.documents_routes import (  # type: ignore
+    from routes.documents_routes import (  # type: ignore
         router as documents_router,
         ai_router as documents_ai_router,
     )
 except Exception as e_docs_abs:
     try:
-        from backend.routes.documents_routes import (  # type: ignore
+        from routes.documents_routes import (  # type: ignore
             router as documents_router,
             ai_router as documents_ai_router,
         )
@@ -447,37 +474,37 @@ except Exception as e_docs_abs:
         documents_ai_router = None  # type: ignore
 
 try:
-    from backend.api import api_router as public_api_router  # type: ignore
+    from api import api_router as public_api_router  # type: ignore
 except Exception as e_public_api:
     log.warning("[main] public api router unavailable: %s", e_public_api)
     public_api_router = None  # type: ignore
 
-ai_gateway_router = _try_import_router("backend.routes.ai_gateway", "routes.ai_gateway")
+ai_gateway_router = _try_import_router("routes.ai_gateway", "routes.ai_gateway")
 
 # Finance routers
-finance_router    = _try_import_router("backend.routes.finance_routes", "routes.finance_routes")
-finance_reports   = _try_import_router("backend.routes.finance_reports", "routes.finance_reports")
-finance_ai_router = _try_import_router("backend.routes.finance_ai_routes", "routes.finance_ai_routes")
-accounting_router = _try_import_router("backend.routes.accounting_routes", "routes.accounting_routes")
-unified_finance_router = _try_import_router("backend.routes.unified_finance_routes", "routes.unified_finance_routes")
+finance_router    = _try_import_router("routes.finance_routes", "routes.finance_routes")
+finance_reports   = _try_import_router("routes.finance_reports", "routes.finance_reports")
+finance_ai_router = _try_import_router("routes.finance_ai_routes", "routes.finance_ai_routes")
+accounting_router = _try_import_router("routes.accounting_routes", "routes.accounting_routes")
+unified_finance_router = _try_import_router("routes.unified_finance_routes", "routes.unified_finance_routes")
 
 # Maintenance & Development routes
-maintenance_ai_router = _try_import_router("backend.routes.maintenance_ai", "routes.maintenance_ai")
-maintenance_center_router = _try_import_router("backend.routes.maintenance_center", "routes.maintenance_center")
-dev_maintenance_router = _try_import_router("backend.routes.dev_maintenance", "routes.dev_maintenance")
-maintenance_router = _try_import_router("backend.maintenance.router", "maintenance.router")
+maintenance_ai_router = _try_import_router("routes.maintenance_ai", "routes.maintenance_ai")
+maintenance_center_router = _try_import_router("routes.maintenance_center", "routes.maintenance_center")
+dev_maintenance_router = _try_import_router("routes.dev_maintenance", "routes.dev_maintenance")
+maintenance_router = _try_import_router("maintenance.router", "maintenance.router")
 
 # System routes (health, metrics, status endpoints)
-system_routes_router = _try_import_router("backend.routes.system_routes", "routes.system_routes")
+system_routes_router = _try_import_router("routes.system_routes", "routes.system_routes")
 
 # Admin System routes
-admin_system_router = _try_import_router("backend.routes.admin_system", "routes.admin_system")
-admin_data_sources_router = _try_import_router("backend.routes.admin_data_sources", "routes.admin_data_sources")
-admin_platform_settings_router = _try_import_router("backend.routes.admin_platform_settings", "routes.admin_platform_settings")
+admin_system_router = _try_import_router("routes.admin_system", "routes.admin_system")
+admin_data_sources_router = _try_import_router("routes.admin_data_sources", "routes.admin_data_sources")
+admin_platform_settings_router = _try_import_router("routes.admin_platform_settings", "routes.admin_platform_settings")
 
 # Try to import public platform settings router
 try:
-    from backend.routes.admin_platform_settings import public_router as platform_public_router
+    from routes.admin_platform_settings import public_router as platform_public_router
 except Exception:
     try:
         from routes.admin_platform_settings import public_router as platform_public_router  # type: ignore
@@ -486,21 +513,21 @@ except Exception:
 
 # Import Maintenance Mode middleware
 try:
-    from backend.middleware.maintenance_mode import MaintenanceModeMiddleware
+    from middleware.maintenance_mode import MaintenanceModeMiddleware
 except Exception as e:
     log.warning("[main] MaintenanceModeMiddleware import failed: %s", e)
     MaintenanceModeMiddleware = None
 
 # Import Max Upload Size middleware
 try:
-    from backend.middleware.max_upload_size import MaxUploadSizeMiddleware
+    from middleware.max_upload_size import MaxUploadSizeMiddleware
 except Exception as e:
     log.warning("[main] MaxUploadSizeMiddleware import failed: %s", e)
     MaxUploadSizeMiddleware = None
 
 # -------- Priority 1: Security Headers Middleware --------
 try:
-    from backend.middleware.security_headers import (
+    from middleware.security_headers import (
         SecurityHeadersMiddleware,
         HTTPSRedirectMiddleware,
         RateLimitMiddleware as Priority1RateLimitMiddleware,
@@ -513,19 +540,19 @@ except Exception as e:
 
 # -------- Priority 1: Sentry Integration --------
 try:
-    from backend.monitoring.sentry_integration import init_sentry
+    from monitoring.sentry_integration import init_sentry
 except Exception as e:
     log.warning("[main] Sentry integration import failed: %s", e)
     init_sentry = None
 
-admin_tenants_router = _try_import_router("backend.routes.admin_tenants", "routes.admin_tenants")
-admin_audit_router = _try_import_router("backend.routes.admin_audit", "routes.admin_audit")
-admin_api_connections_router = _try_import_router("backend.routes.admin_api_connections", "routes.admin_api_connections")
-integrations_router = _try_import_router("backend.routes.integrations_api", "routes.integrations_api")
+admin_tenants_router = _try_import_router("routes.admin_tenants", "routes.admin_tenants")
+admin_audit_router = _try_import_router("routes.admin_audit", "routes.admin_audit")
+admin_api_connections_router = _try_import_router("routes.admin_api_connections", "routes.admin_api_connections")
+integrations_router = _try_import_router("routes.integrations_api", "routes.integrations_api")
 
 # Machine Learning & Advanced Analytics routes
-ml_router = _try_import_router("backend.routes.ml_routes", "routes.ml_routes")
-map_entities_router = _try_import_router("backend.routes.map_entities", "routes.map_entities")
+ml_router = _try_import_router("routes.ml_routes", "routes.ml_routes")
+map_entities_router = _try_import_router("routes.map_entities", "routes.map_entities")
 
 FINANCE_REPORTS_TOGGLE = os.getenv("ENABLE_FINANCE_REPORTS")
 if FINANCE_REPORTS_TOGGLE is not None:
@@ -533,7 +560,7 @@ if FINANCE_REPORTS_TOGGLE is not None:
 
 # Import security helpers (note: provide a shim to accept list OR varargs)
 try:
-    from backend.security.auth import (  # type: ignore
+    from security.auth import (  # type: ignore
         require_roles as _require_roles_native,
         create_access_token,
         get_current_user,
@@ -857,7 +884,7 @@ if MaxUploadSizeMiddleware is not None:
     log.info("[main] Max Upload Size Middleware activated")
 
 # ---------------- Sentry Context Middleware ----------------
-    # from backend.monitoring.sentry_context_middleware import SentryContextMiddleware
+    # from monitoring.sentry_context_middleware import SentryContextMiddleware
     # app.add_middleware(SentryContextMiddleware)
 
 # ---------------- Rate limit wiring ----------------
@@ -941,10 +968,10 @@ ai_registry = _AIRegistry()
 
 from sqlalchemy import select as _select, func as _func
 try:
-    from backend.database.session import get_async_session as _get_session  # type: ignore
+    from database.session import get_async_session as _get_session  # type: ignore
 except Exception:
     try:
-        from backend.database.session import get_async_session as _get_session  # type: ignore
+        from database.session import get_async_session as _get_session  # type: ignore
     except Exception:
         _get_session = None  # type: ignore
 
@@ -1146,7 +1173,7 @@ class FreightBrokerBot:
 DocsClient = None
 _parse_command = None
 try:
-    from backend.ai.roles.bot_documents import DocsClient as _DocsClient, _parse_command as _CMD  # type: ignore
+    from ai.roles.bot_documents import DocsClient as _DocsClient, _parse_command as _CMD  # type: ignore
     DocsClient = _DocsClient
     _parse_command = _CMD
 except Exception:
@@ -1205,7 +1232,7 @@ class DocumentsManagerBot:
 
 import inspect
 try:
-    from backend.services.report_service import compile_system_report  # type: ignore
+    from services.report_service import compile_system_report  # type: ignore
 except Exception:
     try:
         from services.report_service import compile_system_report  # type: ignore
@@ -1292,7 +1319,7 @@ class OperationsManagerBot:
 
 def register_core_bots() -> None:
     try:
-        from backend.bots.general_manager import GeneralManagerBot as RuntimeGeneralManagerBot
+        from bots.general_manager import GeneralManagerBot as RuntimeGeneralManagerBot
 
         gm_bot = RuntimeGeneralManagerBot()
         gm_bot.name = "general_manager"
@@ -1303,8 +1330,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated General Manager bot, using fallback: {e}")
         ai_registry.register(GeneralManagerBot())
     try:
-        from backend.bots.freight_broker import FreightBrokerBot as RuntimeFreightBrokerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.freight_broker import FreightBrokerBot as RuntimeFreightBrokerBot
+        from ai.registry_fill import AliasBot
 
         freight_bot = RuntimeFreightBrokerBot()
         freight_bot.name = "freight_broker"
@@ -1316,8 +1343,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Freight Broker bot, using fallback: {e}")
         ai_registry.register(FreightBrokerBot())
     try:
-        from backend.bots.operations_manager import OperationsManagerBot as RuntimeOperationsManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.operations_manager import OperationsManagerBot as RuntimeOperationsManagerBot
+        from ai.registry_fill import AliasBot
 
         ops_bot = RuntimeOperationsManagerBot()
         ops_bot.name = "operations_manager"
@@ -1330,7 +1357,7 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Operations Manager bot, using fallback: {e}")
         ai_registry.register(OperationsManagerBot())
     try:
-        from backend.bots.information_coordinator import InformationCoordinatorBot as RuntimeInformationCoordinatorBot
+        from bots.information_coordinator import InformationCoordinatorBot as RuntimeInformationCoordinatorBot
 
         info_bot = RuntimeInformationCoordinatorBot()
         info_bot.name = "information_coordinator"
@@ -1340,8 +1367,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Information Coordinator bot: {e}")
     try:
-        from backend.bots.legal_bot import LegalBot as RuntimeLegalBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.legal_bot import LegalBot as RuntimeLegalBot
+        from ai.registry_fill import AliasBot
 
         legal_bot = RuntimeLegalBot()
         legal_bot.name = "legal_bot"
@@ -1353,8 +1380,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Legal Consultant bot: {e}")
     try:
-        from backend.bots.security_manager import SecurityManagerBot as RuntimeSecurityManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.security_manager import SecurityManagerBot as RuntimeSecurityManagerBot
+        from ai.registry_fill import AliasBot
 
         security_bot = RuntimeSecurityManagerBot()
         security_bot.name = "security_bot"
@@ -1367,8 +1394,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Security Manager bot, using fallback: {e}")
         ai_registry.register(SecurityBot())
     try:
-        from backend.bots.system_manager import SystemManagerBot as RuntimeSystemManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.system_manager import SystemManagerBot as RuntimeSystemManagerBot
+        from ai.registry_fill import AliasBot
 
         system_bot = RuntimeSystemManagerBot()
         system_bot.name = "system_bot"
@@ -1382,8 +1409,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated System Manager bot, using fallback: {e}")
         ai_registry.register(SystemBot())
     try:
-        from backend.bots.maintenance_dev import MaintenanceDevBot as RuntimeMaintenanceDevBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.maintenance_dev import MaintenanceDevBot as RuntimeMaintenanceDevBot
+        from ai.registry_fill import AliasBot
 
         maintenance_bot = RuntimeMaintenanceDevBot()
         maintenance_bot.name = "maintenance_dev"
@@ -1397,8 +1424,8 @@ def register_core_bots() -> None:
     ai_registry.register(FinanceBot())
     ai_registry.register(DocumentsManagerBot())
     try:
-        from backend.bots.sales_intelligence import SalesIntelligenceBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.sales_intelligence import SalesIntelligenceBot
+        from ai.registry_fill import AliasBot
 
         sales_bot = SalesIntelligenceBot()
         sales_bot.name = "sales_bot"
@@ -1411,8 +1438,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Sales bot: {e}")
     try:
-        from backend.bots.marketing_manager import MarketingManagerBot as RuntimeMarketingManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.marketing_manager import MarketingManagerBot as RuntimeMarketingManagerBot
+        from ai.registry_fill import AliasBot
 
         marketing_bot = RuntimeMarketingManagerBot()
         marketing_bot.name = "marketing_manager"
@@ -1424,8 +1451,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Marketing Manager bot: {e}")
     try:
-        from backend.bots.intelligence_bot import IntelligenceBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.intelligence_bot import IntelligenceBot
+        from ai.registry_fill import AliasBot
 
         intelligence_bot = IntelligenceBot()
         intelligence_bot.name = "intelligence_bot"
@@ -1437,8 +1464,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Intelligence bot: {e}")
     try:
-        from backend.bots.trainer_bot import TrainerBotRuntime
-        from backend.ai.registry_fill import AliasBot
+        from bots.trainer_bot import TrainerBotRuntime
+        from ai.registry_fill import AliasBot
 
         trainer_bot = TrainerBotRuntime()
         trainer_bot.name = "trainer_bot"
@@ -1450,8 +1477,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Trainer bot: {e}")
     try:
-        from backend.safety.main import AISafetyManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from safety.main import AISafetyManagerBot
+        from ai.registry_fill import AliasBot
 
         safety_bot = AISafetyManagerBot()
         safety_bot.name = "safety_bot"
@@ -1463,7 +1490,7 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Safety bot: {e}")
     try:
-        from backend.bots.ai_dispatcher import AIDispatcherBot
+        from bots.ai_dispatcher import AIDispatcherBot
         ai_registry.register(AIDispatcherBot())
         log.info("[register] AI Dispatcher bot registered")
     except Exception as e:
@@ -1471,8 +1498,8 @@ def register_core_bots() -> None:
     
     # Register MapleLoad Canada bot
     try:
-        from backend.bots.mapleload_canada import MapleLoadCanadaBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.mapleload_canada import MapleLoadCanadaBot
+        from ai.registry_fill import AliasBot
 
         mapleload_bot = MapleLoadCanadaBot()
         mapleload_bot.name = "mapleload_bot"
@@ -1590,7 +1617,7 @@ async def on_startup():
     # -------- Priority 1: Initialize Sentry --------
     if init_sentry is not None:
         try:
-            from backend.config import Settings
+            from config import Settings
             settings = Settings()
             init_sentry(
                 dsn=getattr(settings, 'SENTRY_DSN', None),
@@ -1611,8 +1638,8 @@ async def on_startup():
 
     # Load technical settings into cache at startup
     try:
-        from backend.database.session import get_async_session
-        from backend.utils.technical_settings import get_technical_settings
+        from database.session import get_async_session
+        from utils.technical_settings import get_technical_settings
         
         async for db in get_async_session():
             settings = await get_technical_settings(db)
@@ -1625,7 +1652,7 @@ async def on_startup():
 
     async def _ensure_user_columns() -> None:
         try:
-            from backend.core.db_config import engine as core_engine
+            from core.db_config import engine as core_engine
 
             if core_engine is None:
                 log.warning("[startup] DB engine not configured; skipping column checks")
@@ -1718,7 +1745,7 @@ async def on_startup():
 
         # Also ensure columns for database.config engine (auth/session path)
         try:
-            from backend.database.config import get_sessionmaker, init_engines
+            from database.config import get_sessionmaker, init_engines
 
             init_engines()
             maker = get_sessionmaker()
@@ -1824,7 +1851,7 @@ async def on_startup():
     except Exception as e:
         log.warning("[startup] user column check failed: %s", e)
     try:
-        from backend.ai.registry_fill import ensure_all_bots_registered
+        from ai.registry_fill import ensure_all_bots_registered
 
         ensure_all_bots_registered(ai_registry)
     except Exception as e:
@@ -1832,7 +1859,7 @@ async def on_startup():
     log.info("[startup] AI core bots registered: %s", ai_registry.list())
 
     try:
-        from backend.services.learning_bootstrap import register_default_learning_bots, learning_scheduler_loop
+        from services.learning_bootstrap import register_default_learning_bots, learning_scheduler_loop
 
         learning_result = register_default_learning_bots()
         log.info(
@@ -1846,7 +1873,7 @@ async def on_startup():
         log.warning("[startup] learning bootstrap failed: %s", e)
 
     try:
-        from backend.services.db_maintenance import ensure_maintenance_indexes
+        from services.db_maintenance import ensure_maintenance_indexes
         maintenance_result = await ensure_maintenance_indexes()
         log.info(
             "[startup] maintenance indexes ensured: executed=%s skipped=%s",
@@ -1857,7 +1884,7 @@ async def on_startup():
         log.warning("[startup] maintenance index bootstrap failed: %s", e)
 
     try:
-        from backend.ai.maintenance_dev_enhanced import maintenance_auto_repair_loop
+        from ai.maintenance_dev_enhanced import maintenance_auto_repair_loop
         _maintenance_auto_repair_task = asyncio.create_task(maintenance_auto_repair_loop(interval_hours=6))
         log.info("[startup] maintenance auto-repair scheduler started (every 6 hours)")
     except Exception as e:
@@ -1866,7 +1893,7 @@ async def on_startup():
     try:
         email_polling_enabled = os.getenv("EMAIL_POLLING_ENABLED", "0").lower() in ("1", "true", "yes")
         if email_polling_enabled:
-            from backend.services.email_scheduler import start_email_polling_task
+            from services.email_scheduler import start_email_polling_task
 
             start_email_polling_task()
             log.info("[startup] email polling scheduler started")
@@ -1877,7 +1904,7 @@ async def on_startup():
     
     # Start backup scheduler
     try:
-        from backend.utils.backup_scheduler import start_backup_scheduler
+        from utils.backup_scheduler import start_backup_scheduler
         await start_backup_scheduler()
         log.info("[startup] Backup scheduler started")
     except Exception as e:
@@ -1897,7 +1924,7 @@ async def on_startup():
     try:
         legal_enabled = os.getenv("LEGAL_UPDATES_ENABLED", "1").lower() in ("1", "true", "yes")
         if legal_enabled:
-            from backend.services.legal_updates_monitor import legal_updates_scheduler_loop
+            from services.legal_updates_monitor import legal_updates_scheduler_loop
 
             _legal_updates_task = asyncio.create_task(legal_updates_scheduler_loop())
             log.info("[startup] legal updates scheduler started")
@@ -1906,8 +1933,8 @@ async def on_startup():
 
     # Initialize Market Data Service and MapleLoad Canada Bot
     try:
-        from backend.services.market_data_service import initialize_market_data_service
-        from backend.bots.mapleload_canada import initialize_mapleload_bot
+        from services.market_data_service import initialize_market_data_service
+        from bots.mapleload_canada import initialize_mapleload_bot
         
         await initialize_market_data_service()
         await initialize_mapleload_bot()
@@ -1954,7 +1981,7 @@ async def on_shutdown():
             except Exception:
                 pass
     try:
-        from backend.services.email_scheduler import stop_email_polling_task
+        from services.email_scheduler import stop_email_polling_task
 
         await stop_email_polling_task()
     except Exception:
@@ -1971,8 +1998,8 @@ async def app_lifespan(_app: FastAPI):
     
     # Shutdown Market Data Service and MapleLoad Canada Bot
     try:
-        from backend.services.market_data_service import shutdown_market_data_service
-        from backend.bots.mapleload_canada import shutdown_mapleload_bot
+        from services.market_data_service import shutdown_market_data_service
+        from bots.mapleload_canada import shutdown_mapleload_bot
         
         await shutdown_market_data_service()
         await shutdown_mapleload_bot()
@@ -1983,7 +2010,7 @@ async def app_lifespan(_app: FastAPI):
 
 # ---------------- Routers mounting ----------------
 try:
-    from backend.routes.ai_bots_backend import router as ai_bots_backend_router
+    from routes.ai_bots_backend import router as ai_bots_backend_router
     app.include_router(ai_bots_backend_router)
     log.info("[main] ai_bots_backend router mounted at /ai/*")
 except Exception as e:
@@ -2133,7 +2160,9 @@ if bots_available_router:
     log.info("[main] bots_available mounted at /api/v1/bots/*")
 
 # Bots availability enhanced (v1) - Returns all available bots
+log.info(f"[main] bots_available_enhanced_router is {bots_available_enhanced_router}")
 if bots_available_enhanced_router:
+    log.info("[main] mounting bots_available_enhanced_router...")
     app.include_router(bots_available_enhanced_router)
     log.info("[main] bots_available_enhanced mounted at /api/v1/ai/bots")
 
@@ -2196,7 +2225,7 @@ else:
 # Platform Infrastructure Expenses router (CRUD operations)
 platform_infrastructure_router = None
 try:
-    from backend.routes.platform_infrastructure_routes import router as platform_infrastructure_router
+    from routes.platform_infrastructure_routes import router as platform_infrastructure_router
     app.include_router(platform_infrastructure_router)
     log.info("[main] platform_infrastructure router mounted at /api/v1/platform/*")
 except Exception as e:
@@ -2204,7 +2233,7 @@ except Exception as e:
 
 # Invoice Extractor router (AI-powered invoice data extraction)
 try:
-    from backend.routes.invoice_extractor import router as invoice_extractor_router
+    from routes.invoice_extractor import router as invoice_extractor_router
     app.include_router(invoice_extractor_router, prefix="/api/v1/platform/expenses")
     log.info("[main] invoice_extractor router mounted at /api/v1/platform/expenses/extract-invoice")
 except Exception as e:
@@ -2212,7 +2241,7 @@ except Exception as e:
 
 # Invoices router (CRUD + webhook events)
 try:
-    from backend.routes.invoices import router as invoices_router
+    from routes.invoices import router as invoices_router
     app.include_router(invoices_router)
     log.info("[main] invoices router mounted at /api/v1/invoices")
 except Exception as e:
@@ -2220,7 +2249,7 @@ except Exception as e:
 
 # Freight Broker router (commission calculation, profit tracking, analytics)
 try:
-    from backend.routes.broker_invoices import router as broker_invoices_router
+    from routes.broker_invoices import router as broker_invoices_router
     app.include_router(broker_invoices_router)
     log.info("[main] broker_invoices router mounted at /api/v1/broker")
 except Exception as e:
@@ -2228,7 +2257,7 @@ except Exception as e:
 
 # Legacy Platform Expenses router (kept for backward compatibility)
 try:
-    from backend.routes.platform_expenses import router as platform_expenses_legacy_router
+    from routes.platform_expenses import router as platform_expenses_legacy_router
     app.include_router(platform_expenses_legacy_router)
     log.info("[main] platform_expenses_legacy router mounted at /finance/expenses")
 except Exception as e:
@@ -2236,7 +2265,7 @@ except Exception as e:
 
 # Bots subscription manager (v1)
 try:
-    from backend.routes.bots_subscription import router as bots_subscription_router
+    from routes.bots_subscription import router as bots_subscription_router
     app.include_router(bots_subscription_router)
     log.info("[main] bots_subscription mounted at /api/v1/ai/bots/*")
 except Exception as e:
@@ -2450,7 +2479,7 @@ if webhooks_router:
 
 # Carriers Management
 try:
-    from backend.routes.carriers import router as carriers_router
+    from routes.carriers import router as carriers_router
     app.include_router(carriers_router)
     log.info("[main] carriers routes mounted at /api/v1/carriers/*")
 except Exception as e:
@@ -2458,7 +2487,7 @@ except Exception as e:
 
 # Shippers Management
 try:
-    from backend.routes.shippers import router as shippers_router
+    from routes.shippers import router as shippers_router
     app.include_router(shippers_router)
     log.info("[main] shippers routes mounted at /api/v1/shippers/*")
 except Exception as e:
@@ -2528,7 +2557,7 @@ if channels_webhooks_router:
         log.warning("[main] channels webhooks router mount failed: %s", e)
 
 # Telegram Webhook Router - Force reload test
-telegram_webhook_router = _try_import_router("backend.routes.telegram_webhook", "routes.telegram_webhook")
+telegram_webhook_router = _try_import_router("routes.telegram_webhook", "routes.telegram_webhook")
 if telegram_webhook_router:
     try:
         app.include_router(telegram_webhook_router)
@@ -2751,7 +2780,7 @@ async def _shim_fin_ai_double(rest: str, request: Request):
 
 # Meta Data API router (trailer types, locations)
 try:
-    from backend.routes.meta_data_api import router as meta_data_api_router
+    from routes.meta_data_api import router as meta_data_api_router
     app.include_router(meta_data_api_router, prefix="/api/v1/meta", tags=["Meta Data"])
     log.info("[main] meta_data_api router mounted at /api/v1/meta/*")
 except Exception as e:
@@ -2764,7 +2793,7 @@ app.include_router(ai_router)
 async def test_roles_v2():
     """Test endpoint - absolutely no auth needed - v2"""
     try:
-        from backend.database.session import wrap_session_factory, async_session
+        from database.session import wrap_session_factory, async_session
         from sqlalchemy import text
         
         async with wrap_session_factory(async_session) as session:
@@ -2853,7 +2882,7 @@ async def _shim_admin_routes(rest: str, request: Request):
 
 
 # Billing router (/billing/*) placeholder
-# billing_router = _try_import_router("backend.routes.billing", "billing")
+# billing_router = _try_import_router("routes.billing", "billing")
 # if billing_router:
 #     app.include_router(billing_router, dependencies=[Depends(require_roles(["user", "manager", "admin"]))])
 #     log.info("[main] billing router mounted at /billing/*")
@@ -2869,7 +2898,7 @@ async def healthz_alias():
 async def test_roles():
     """Test endpoint - absolutely no auth needed"""
     try:
-        from backend.database.session import wrap_session_factory, async_session
+        from database.session import wrap_session_factory, async_session
         from sqlalchemy import text
         
         async with wrap_session_factory(async_session) as session:
@@ -2955,7 +2984,7 @@ async def _debug_memory_snapshot(
 @app.get("/_debug/admin-users")
 async def _debug_admin_users(_user: dict = Depends(require_roles(["super_admin"]))):
     try:
-        from backend.routes import admin_users as admin_users_mod
+        from routes import admin_users as admin_users_mod
         router = getattr(admin_users_mod, "router", None)
         return {
             "module_file": getattr(admin_users_mod, "__file__", None),
