@@ -207,4 +207,42 @@ class Settings:
 settings = Settings()
 
 __all__ = ["Settings", "settings"]
+        async def init_db():
+    """
+    Initialize database connection and create tables if needed.
+    This function is called during pre-deploy on Render.
+    """
+    import logging
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from sqlalchemy import text
+    
+    logger = logging.getLogger(__name__)
+    
+    # Get database URL
+    db_url = settings.ASYNC_DATABASE_URL or settings.DATABASE_URL
+    
+    if not db_url:
+        logger.warning("No database URL found, skipping database initialization")
+        return
+    
+    logger.info(f"Initializing database connection to: {db_url.split('@')[-1] if '@' in db_url else db_url}")
+    
+    # Create engine
+    engine = create_async_engine(db_url, echo=False)
+    
+    try:
+        # Test connection
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+            logger.info("✅ Database connection successful")
         
+        # Optionally create tables if using SQLAlchemy models
+        # from backend.database.base import Base
+        # async with engine.begin() as conn:
+        #     await conn.run_sync(Base.metadata.create_all)
+        
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}")
+        raise
+    finally:
+        await engine.dispose()
