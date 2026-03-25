@@ -1,15 +1,15 @@
 /**
- * PaymentPage Component - صفحة الدفع الرئيسية
- * توفير تجربة دفع كاملة مع SUDAPAY
+ * PaymentPage Component - Main Payment Page
+ * Provide complete payment experience with SUDAPAY
  * 
- * المميزات:
- * - عرض بيانات الفاتورة
- * - محرر نموذج الدفع
- * - معالجة الأخطاء
- * - دعم اللغة العربية
+ * Features:
+ * - Display invoice data
+ * - Payment form editor
+ * - Error handling
+ * - English language support
  * 
  * Routes:
- * - /payments/:invoiceId - الدفع للفاتورة
+ * - /payments/:invoiceId - Payment for invoice
  * 
  * Author: GTS Development Team
  * Date: March 2026
@@ -23,7 +23,7 @@ import { useCurrencyStore } from '../../stores/useCurrencyStore';
 
 /**
  * PaymentPage Component
- * صفحة الدفع الكاملة مع معلومات الفاتورة والنموذج
+ * Complete payment page with invoice information and form
  */
 export function PaymentPage() {
   const { invoiceId } = useParams();
@@ -38,7 +38,7 @@ export function PaymentPage() {
   const paymentId = searchParams.get('payment_id');
 
   /**
-   * Load Invoice Data - تحميل بيانات الفاتورة
+   * Load Invoice Data
    */
   useEffect(() => {
     const loadInvoice = async () => {
@@ -54,7 +54,7 @@ export function PaymentPage() {
         });
 
         if (!response.ok) {
-          throw new Error('فشل تحميل بيانات الفاتورة');
+          throw new Error('Failed to load invoice data');
         }
 
         const data = await response.json();
@@ -75,7 +75,7 @@ export function PaymentPage() {
   }, [invoiceId]);
 
   /**
-   * Handle Payment Success - معالج النجاح
+   * Handle Payment Success
    */
   const handlePaymentSuccess = () => {
     console.log('✅ Payment successful!');
@@ -83,7 +83,7 @@ export function PaymentPage() {
   };
 
   /**
-   * Handle Payment Error - معالج الخطأ
+   * Handle Payment Error
    */
   const handlePaymentError = (errorMsg) => {
     console.error('❌ Payment error:', errorMsg);
@@ -91,10 +91,39 @@ export function PaymentPage() {
   };
 
   /**
-   * Go Back - العودة للخلف
+   * Go Back
    */
   const goBack = () => {
     navigate('/invoices');
+  };
+
+  /**
+   * Copy Bank Details to Clipboard
+   */
+  const copyToClipboard = async () => {
+    const bankDetails = `
+Account Holder: Gabani Transport Solutions LLC
+Account Number: 200116499651
+Institution/Transit: 621 / 16001
+SWIFT/BIC: TRWICAW1XXX
+Bank: Wise Payments Canada Inc.
+Reference: Invoice #${invoiceId}
+    `.trim();
+
+    try {
+      await navigator.clipboard.writeText(bankDetails);
+      alert('Bank details copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = bankDetails;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Bank details copied to clipboard!');
+    }
   };
 
   /* Loading State */
@@ -103,7 +132,7 @@ export function PaymentPage() {
       <div className="payment-loading">
         <div className="loader">
           <span>📥</span>
-          <p>جاري تحميل بيانات الفاتورة...</p>
+          <p>Loading invoice data...</p>
         </div>
       </div>
     );
@@ -115,10 +144,10 @@ export function PaymentPage() {
       <div className="payment-error">
         <div className="error-card">
           <span className="icon">❌</span>
-          <h2>حدث خطأ</h2>
+          <h2>An error occurred</h2>
           <p>{error}</p>
           <button className="btn-back" onClick={goBack}>
-            العودة للفواتير
+            Back to invoices
           </button>
         </div>
       </div>
@@ -131,14 +160,14 @@ export function PaymentPage() {
       <div className="payment-success">
         <div className="success-card">
           <span className="icon">✅</span>
-          <h2>تم الدفع بنجاح!</h2>
-          <p>تم استقبال دفعتك وجاري معالجتها</p>
+          <h2>Payment successful!</h2>
+          <p>Your payment has been received and is being processed</p>
           <div className="details">
-            <p>معرف الدفعة: <strong>{paymentId}</strong></p>
-            <p>الفاتورة: <strong>#{invoiceId}</strong></p>
+            <p>Payment ID: <strong>{paymentId}</strong></p>
+            <p>Invoice: <strong>#{invoiceId}</strong></p>
           </div>
           <button className="btn-continue" onClick={() => navigate('/invoices')}>
-            العودة للفواتير
+            Back to invoices
           </button>
         </div>
       </div>
@@ -150,41 +179,41 @@ export function PaymentPage() {
       {/* Header */}
       <div className="page-header">
         <button className="btn-back" onClick={goBack}>
-          ← العودة
+          ← Back
         </button>
-        <h1>💳 الدفع</h1>
+        <h1>💳 Payment</h1>
       </div>
 
       {/* Invoice Summary */}
       {invoice && (
         <div className="invoice-summary">
           <div className="summary-card">
-            <h3>📋 ملخص الفاتورة</h3>
+            <h3>📋 Invoice summary</h3>
 
             <div className="summary-row">
-              <span className="label">رقم الفاتورة:</span>
+              <span className="label">Invoice number:</span>
               <span className="value">#{invoice.id}</span>
             </div>
 
             <div className="summary-row">
-              <span className="label">الشاحن:</span>
-              <span className="value">{invoice.shipper_name || 'غير معروف'}</span>
+              <span className="label">Shipper:</span>
+              <span className="value">{invoice.shipper_name || 'Unknown'}</span>
             </div>
 
             <div className="summary-row">
-              <span className="label">الحامل:</span>
-              <span className="value">{invoice.carrier_name || 'غير معروف'}</span>
+              <span className="label">Carrier:</span>
+              <span className="value">{invoice.carrier_name || 'Unknown'}</span>
             </div>
 
             <div className="summary-row">
-              <span className="label">الحالة:</span>
+              <span className="label">Status:</span>
               <span className={`status-badge ${invoice.status}`}>
                 {translateStatus(invoice.status)}
               </span>
             </div>
 
             <div className="summary-row total">
-              <span className="label">المبلغ المستحق:</span>
+              <span className="label">Amount due:</span>
               <span className="value">
                 {formatAmount(invoice.total_amount, invoice.currency)}
               </span>
@@ -192,7 +221,7 @@ export function PaymentPage() {
 
             {invoice.notes && (
               <div className="summary-row notes">
-                <span className="label">ملاحظات:</span>
+                <span className="label">Notes:</span>
                 <span className="value">{invoice.notes}</span>
               </div>
             )}
@@ -218,7 +247,7 @@ export function PaymentPage() {
         <div className="error-alert">
           <span className="icon">⚠️</span>
           <div className="content">
-            <h4>تنبيه</h4>
+            <h4>Warning</h4>
             <p>{error}</p>
           </div>
           <button
@@ -230,49 +259,90 @@ export function PaymentPage() {
         </div>
       )}
 
+      {/* Bank Transfer Section */}
+      <div className="bank-transfer-section">
+        <h3>🏦 Bank Transfer (Wire Transfer)</h3>
+        <p className="bank-transfer-description">
+          Make a direct bank transfer to our account. Your invoice will be marked as paid once we receive the funds.
+        </p>
+
+        <div className="bank-details-card">
+          <div className="bank-detail-row">
+            <span className="bank-label">Account Holder:</span>
+            <span className="bank-value">Gabani Transport Solutions LLC</span>
+          </div>
+          <div className="bank-detail-row">
+            <span className="bank-label">Account Number:</span>
+            <span className="bank-value">200116499651</span>
+          </div>
+          <div className="bank-detail-row">
+            <span className="bank-label">Institution/Transit:</span>
+            <span className="bank-value">621 / 16001</span>
+          </div>
+          <div className="bank-detail-row">
+            <span className="bank-label">SWIFT/BIC:</span>
+            <span className="bank-value">TRWICAW1XXX</span>
+          </div>
+          <div className="bank-detail-row">
+            <span className="bank-label">Bank:</span>
+            <span className="bank-value">Wise Payments Canada Inc.</span>
+          </div>
+          <div className="bank-warning">
+            <p className="warning-text">⚠️ Important: Please include your invoice number in the transfer reference.</p>
+          </div>
+        </div>
+
+        <button
+          onClick={copyToClipboard}
+          className="copy-bank-details-btn"
+        >
+          📋 Copy Bank Details
+        </button>
+      </div>
+
       {/* FAQ Section */}
       <div className="faq-section">
-        <h3>❓ الأسئلة الشائعة</h3>
+        <h3>❓ Frequently Asked Questions</h3>
 
         <div className="faq-item">
-          <h4>كيف يتم الدفع؟</h4>
+          <h4>How is payment made?</h4>
           <p>
-            انقر على زر "الدفع الآن" لتحويلك إلى منصة SUDAPAY الآمنة.
-            هناك ستتمكن من اختيار طريقة الدفع المفضلة لديك.
+            Click the "Pay Now" button to be redirected to the secure SUDAPAY platform.
+            There you can choose your preferred payment method.
           </p>
         </div>
 
         <div className="faq-item">
-          <h4>هل البيانات آمنة؟</h4>
+          <h4>Is the data secure?</h4>
           <p>
-            نعم، جميع المعاملات محمية بتشفير من الدرجة العسكرية (TLS 1.3)
-            وتتوافق مع معايير البنك المركزي السوداني.
+            Yes, all transactions are protected with military-grade encryption (TLS 1.3)
+            and comply with the standards of the Central Bank of Sudan.
           </p>
         </div>
 
         <div className="faq-item">
-          <h4>ماذا لو فشل الدفع؟</h4>
+          <h4>What if payment fails?</h4>
           <p>
-            يمكنك إعادة محاولة الدفع مرة أخرى. إذا استمرت المشكلة،
-            تواصل مع فريق الدعم لدينا.
+            You can retry the payment again. If the problem persists,
+            contact our support team.
           </p>
         </div>
 
         <div className="faq-item">
-          <h4>كم وقت تستغرق معالجة الدفع؟</h4>
+          <h4>How long does payment processing take?</h4>
           <p>
-            عادة ما يتم تأكيد الدفع فوراً. قد تستغرق بعض الطرق وقتاً أطول
-            قليلاً حسب الطريقة المختارة.
+            Usually, payment is confirmed immediately. Some methods may take a bit longer
+            depending on the selected method.
           </p>
         </div>
       </div>
 
       {/* Support Section */}
       <div className="support-section">
-        <h3>📞 هل تحتاج للمساعدة؟</h3>
+        <h3>📞 Need help?</h3>
         <p>
-          تواصل مع فريق الدعم على
-          <a href="tel:+249123456789"> +249 123 456 789</a> أو
+          Contact our support team at
+          <a href="tel:+249123456789"> +249 123 456 789</a> or
           <a href="mailto:support@gtslogistics.sd"> support@gtslogistics.sd</a>
         </p>
       </div>
@@ -438,6 +508,88 @@ export function PaymentPage() {
           flex-shrink: 0;
         }
 
+        .bank-transfer-section {
+          margin-bottom: 40px;
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 12px;
+          padding: 25px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .bank-transfer-section h3 {
+          margin: 0 0 15px 0;
+          font-size: 18px;
+          color: #333;
+        }
+
+        .bank-transfer-description {
+          color: #666;
+          margin-bottom: 20px;
+          line-height: 1.5;
+        }
+
+        .bank-details-card {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 20px;
+          margin-bottom: 20px;
+        }
+
+        .bank-detail-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .bank-detail-row:last-child {
+          border-bottom: none;
+        }
+
+        .bank-label {
+          font-weight: 600;
+          color: #495057;
+        }
+
+        .bank-value {
+          color: #212529;
+          font-family: monospace;
+          font-weight: 500;
+        }
+
+        .bank-warning {
+          margin-top: 15px;
+          padding-top: 15px;
+          border-top: 1px solid #dee2e6;
+        }
+
+        .warning-text {
+          color: #856404;
+          background: #fff3cd;
+          padding: 10px;
+          border-radius: 4px;
+          border: 1px solid #ffeaa7;
+          margin: 0;
+          font-size: 14px;
+        }
+
+        .copy-bank-details-btn {
+          width: 100%;
+          padding: 12px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 16px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+
+        .copy-bank-details-btn:hover {
+          background: #0056b3;
+        }
+
         .faq-section {
           background: #f5f5f5;
           padding: 30px;
@@ -596,26 +748,26 @@ export function PaymentPage() {
  */
 
 /**
- * Translate Status - ترجمة حالة الفاتورة
+ * Translate Status - Translate invoice status
  */
 function translateStatus(status) {
   const statusMap = {
-    'draft': '♠️ مسودة',
-    'sent': '📤 مرسلة',
-    'pending': '⏳ معلقة',
-    'paid': '✅ مدفوعة',
-    'overdue': '⚠️ متأخرة',
-    'cancelled': '❌ ملغاة',
-    'refunded': '🔄 مسترجعة',
+    'draft': '♠️ Draft',
+    'sent': '📤 Sent',
+    'pending': '⏳ Pending',
+    'paid': '✅ Paid',
+    'overdue': '⚠️ Overdue',
+    'cancelled': '❌ Cancelled',
+    'refunded': '🔄 Refunded',
   };
   return statusMap[status] || status;
 }
 
 /**
- * Format Amount - تنسيق المبلغ
+ * Format Amount - Format amount
  */
 function formatAmount(amount, currency = 'SDG') {
-  // استخدام العملة الحالية من المتجر إذا لم يتم تحديد عملة
+  // Use current currency from store if no currency specified
   const currentCurrency = currency || useCurrencyStore.getState().currency;
   const locale = useCurrencyStore.getState().currencyLocale;
 

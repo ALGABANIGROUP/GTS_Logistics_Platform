@@ -42,6 +42,31 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
+# WISE BANK ACCOUNT DETAILS
+# ============================================================================
+
+WISE_CAD_ACCOUNT = {
+    "account_holder": "Gabani Transport Solutions LLC",
+    "account_number": "200116499651",
+    "institution_number": "621",
+    "transit_number": "16001",
+    "swift_bic": "TRWICAW1XXX",
+    "bank_name": "Wise Payments Canada Inc.",
+    "bank_address": "99 Bank Street, Suite 1420, Ottawa, ON, K1P 1H4, Canada",
+    "currency": "CAD"
+}
+
+WISE_USD_ACCOUNT = {
+    "account_holder": "Gabani Transport Solutions LLC",
+    "routing_number": "084009519",
+    "account_number": "960001287651",
+    "swift_bic": "TRWICAW1XXX",
+    "bank_name": "Wise Payments Canada Inc.",
+    "currency": "USD"
+}
+
+
+# ============================================================================
 # PAYMENT SERVICE
 # ============================================================================
 
