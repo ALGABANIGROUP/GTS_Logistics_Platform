@@ -23,19 +23,19 @@ const PortalLanding = () => {
 
   const pricingPlans = {
     carrier: {
-      basic: { price: 42, features: ['Load Search', 'Truck Post', 'Basic Rate Insights'] },
-      pro: { price: 159, features: ['Everything in Basic', 'Advanced Rate Insights', 'Book It Now', 'Real-Time Live Loads'] },
-      premium: { price: 369, features: ['Everything in Pro', 'Carrier Monitoring', 'Predictive Sourcing', 'Multi-Trip Search'] }
+      basic: { monthly: 19, yearly: 199, features: ['Load Search (unlimited)', 'Truck Post (unlimited)', 'Basic Rate Insights'] },
+      pro: { monthly: 49, yearly: 499, features: ['Everything in Basic', 'Advanced Rate Insights', 'Book It Now', 'Real-Time Live Loads'] },
+      premium: { monthly: 99, yearly: 999, features: ['Everything in Pro', 'Carrier Monitoring', 'Predictive Sourcing', 'Multi-Trip Search'] }
     },
     broker: {
-      basic: { price: 109, features: ['Load Board Access', 'Basic Analytics', 'Carrier Search'] },
-      pro: { price: 239, features: ['Everything in Basic', 'Rate Insights', 'Risk Factors', 'Carrier Performance Rating'] },
-      premium: { price: 369, features: ['Everything in Pro', 'Carrier Monitoring', 'Predictive Sourcing', 'RMIS Integration'] }
+      basic: { monthly: 29, yearly: 299, features: ['Load Board Access', 'Basic Analytics', 'Carrier Search'] },
+      pro: { monthly: 79, yearly: 799, features: ['Everything in Basic', 'Rate Insights', 'Risk Factors', 'Carrier Performance Rating'] },
+      premium: { monthly: 149, yearly: 1499, features: ['Everything in Pro', 'Carrier Monitoring', 'Predictive Sourcing', 'RMIS Integration'] }
     },
     shipper: {
-      basic: { price: 109, features: ['Load Posting', 'Basic Tracking', 'Carrier Search'] },
-      pro: { price: 239, features: ['Everything in Basic', 'Rate Insights', 'Carrier Performance', 'Real-Time Updates'] },
-      premium: { price: 399, features: ['Everything in Pro', 'TMS Integration', 'Advanced Analytics', 'Dedicated Support'] }
+      basic: { monthly: 29, yearly: 299, features: ['Load Posting', 'Basic Tracking', 'Carrier Search'] },
+      pro: { monthly: 79, yearly: 799, features: ['Everything in Basic', 'Rate Insights', 'Carrier Performance', 'Real-Time Updates'] },
+      premium: { monthly: 149, yearly: 1499, features: ['Everything in Pro', 'TMS Integration', 'Advanced Analytics', 'Dedicated Support'] }
     }
   };
 
@@ -168,29 +168,43 @@ const PortalLanding = () => {
               <div className="mb-8">
                 <h2 className="text-white text-2xl font-bold text-center mb-6">What type of trucking business are you?</h2>
                 <div className="grid md:grid-cols-3 gap-6">
+                  {/* Carrier Card */}
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:border-red-500 transition">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                       <span className="text-2xl">🚛</span>
                     </div>
                     <h3 className="text-white text-xl font-bold mb-2">I am a Carrier</h3>
                     <p className="text-gray-300 text-sm mb-4">Find loads & get paid faster</p>
-                    <Link to="/carrier" className="text-red-400 hover:underline text-sm">See tools →</Link>
+                    <p className="text-red-400 text-sm font-semibold mb-3">Starting at ${pricingPlans.carrier.basic.monthly}/month</p>
+                    <Link to="/register?type=carrier" className="inline-block px-4 py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">
+                      See tools →
+                    </Link>
                   </div>
+
+                  {/* Broker Card */}
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:border-red-500 transition">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                       <span className="text-2xl">📊</span>
                     </div>
                     <h3 className="text-white text-xl font-bold mb-2">I am a Broker</h3>
                     <p className="text-gray-300 text-sm mb-4">Fill capacity & reduce risk</p>
-                    <Link to="/broker" className="text-red-400 hover:underline text-sm">See tools →</Link>
+                    <p className="text-red-400 text-sm font-semibold mb-3">Starting at ${pricingPlans.broker.basic.monthly}/month</p>
+                    <Link to="/register?type=broker" className="inline-block px-4 py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">
+                      See tools →
+                    </Link>
                   </div>
+
+                  {/* Shipper Card */}
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20 hover:border-red-500 transition">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                       <span className="text-2xl">📦</span>
                     </div>
                     <h3 className="text-white text-xl font-bold mb-2">I am a Shipper</h3>
                     <p className="text-gray-300 text-sm mb-4">Streamline operations</p>
-                    <Link to="/shipper" className="text-red-400 hover:underline text-sm">See tools →</Link>
+                    <p className="text-red-400 text-sm font-semibold mb-3">Starting at ${pricingPlans.shipper.basic.monthly}/month</p>
+                    <Link to="/register?type=shipper" className="inline-block px-4 py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">
+                      See tools →
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -203,7 +217,10 @@ const PortalLanding = () => {
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
                     <h3 className="text-white text-xl font-bold mb-2">Basic</h3>
                     <p className="text-gray-300 text-sm mb-4">Everything you need to start</p>
-                    <p className="text-3xl text-white font-bold mb-4">${pricingPlans.carrier.basic.price} <span className="text-sm text-gray-400">/month*</span></p>
+                    <p className="text-3xl text-white font-bold mb-4">
+                      ${pricingPlans.carrier.basic.monthly} <span className="text-sm text-gray-400">/month</span>
+                      <span className="block text-sm text-gray-500 mt-1">or ${pricingPlans.carrier.basic.yearly}/year (save 15%)</span>
+                    </p>
                     <ul className="space-y-2 mb-6">
                       {pricingPlans.carrier.basic.features.map((feature, idx) => (
                         <li key={idx} className="text-gray-300 text-sm flex items-center gap-2">
@@ -211,14 +228,20 @@ const PortalLanding = () => {
                         </li>
                       ))}
                     </ul>
-                    <Link to="/pricing/basic" className="block text-center py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">Start now</Link>
+                    <Link to="/register?plan=basic" className="block text-center py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">Start now</Link>
                   </div>
 
-                  {/* Pro Plan */}
-                  <div className="bg-red-600/20 backdrop-blur-sm rounded-xl p-6 border border-red-500">
+                  {/* Pro Plan - Popular */}
+                  <div className="bg-gradient-to-b from-red-600/20 to-black/60 backdrop-blur-sm rounded-xl p-6 border-2 border-red-500 relative">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-3 py-1 rounded-full">
+                      Most Popular
+                    </div>
                     <h3 className="text-white text-xl font-bold mb-2">Pro</h3>
                     <p className="text-gray-300 text-sm mb-4">Level up your profits</p>
-                    <p className="text-3xl text-white font-bold mb-4">${pricingPlans.carrier.pro.price} <span className="text-sm text-gray-400">/month*</span></p>
+                    <p className="text-3xl text-white font-bold mb-4">
+                      ${pricingPlans.carrier.pro.monthly} <span className="text-sm text-gray-400">/month</span>
+                      <span className="block text-sm text-gray-500 mt-1">or ${pricingPlans.carrier.pro.yearly}/year (save 15%)</span>
+                    </p>
                     <ul className="space-y-2 mb-6">
                       {pricingPlans.carrier.pro.features.map((feature, idx) => (
                         <li key={idx} className="text-gray-300 text-sm flex items-center gap-2">
@@ -226,14 +249,17 @@ const PortalLanding = () => {
                         </li>
                       ))}
                     </ul>
-                    <Link to="/pricing/pro" className="block text-center py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">Start now</Link>
+                    <Link to="/register?plan=pro" className="block text-center py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">Start now</Link>
                   </div>
 
                   {/* Premium Plan */}
                   <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
                     <h3 className="text-white text-xl font-bold mb-2">Premium</h3>
                     <p className="text-gray-300 text-sm mb-4">Maximum efficiency</p>
-                    <p className="text-3xl text-white font-bold mb-4">${pricingPlans.carrier.premium.price} <span className="text-sm text-gray-400">/month*</span></p>
+                    <p className="text-3xl text-white font-bold mb-4">
+                      ${pricingPlans.carrier.premium.monthly} <span className="text-sm text-gray-400">/month</span>
+                      <span className="block text-sm text-gray-500 mt-1">or ${pricingPlans.carrier.premium.yearly}/year (save 15%)</span>
+                    </p>
                     <ul className="space-y-2 mb-6">
                       {pricingPlans.carrier.premium.features.map((feature, idx) => (
                         <li key={idx} className="text-gray-300 text-sm flex items-center gap-2">
@@ -241,10 +267,10 @@ const PortalLanding = () => {
                         </li>
                       ))}
                     </ul>
-                    <Link to="/pricing/premium" className="block text-center py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">Start now</Link>
+                    <Link to="/register?plan=premium" className="block text-center py-2 border border-white/30 text-white rounded hover:bg-white/10 transition text-sm">Start now</Link>
                   </div>
                 </div>
-                <p className="text-center text-gray-500 text-xs mt-4">*Amount shown excludes applicable fees and taxes.</p>
+                <p className="text-center text-gray-500 text-xs mt-4">*Amount shown excludes applicable fees and taxes. Annual plans save 15%.</p>
               </div>
             </div>
 
@@ -303,22 +329,17 @@ const PortalLanding = () => {
         <MobileAppPromo />
 
         {/* Footer */}
-        <div className="container mx-auto px-4 py-6 border-t border-white/20 mt-12">
+        <div className="container mx-auto px-4 py-6 border-t border-white/20 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-xs">
               © 2026 Gabani Transport Solutions LLC – All rights reserved.
             </p>
+            <TrustBadges />
             <div className="flex gap-4 text-xs">
-              <Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link>
-              <Link to="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</Link>
-              <Link to="/legal" className="text-gray-400 hover:text-white transition">Legal Agreements</Link>
+              <a href="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</a>
+              <a href="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</a>
+              <a href="/legal" className="text-gray-400 hover:text-white transition">Legal Agreements</a>
             </div>
-            <p className="text-gray-500 text-xs">
-              📞 <a href="tel:+17786518297" className="hover:text-white">+1 (778) 651-8297</a>
-            </p>
-          </div>
-          <div className="text-center text-gray-500 text-xs mt-2">
-            329 HOWE ST UNIT #957, VANCOUVER BC V6C 3N2, CANADA
           </div>
         </div>
 
