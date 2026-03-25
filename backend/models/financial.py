@@ -12,7 +12,11 @@ from sqlalchemy import (
     DateTime,
     Index,
     UniqueConstraint,
+    ForeignKey,
+    Text,
+    JSON,
 )
+from sqlalchemy.sql import func
 from backend.database.base import Base
 
 
@@ -61,7 +65,7 @@ class Expense(Base):
         ),
         Index("ix_expenses_status", "status"),
         Index("ix_expenses_vendor", "vendor"),
-        {"extend_existing": True},
+        {"extend_existing": True},  # Fix table conflict
     )
 
     @staticmethod
@@ -88,4 +92,42 @@ class Expense(Base):
 
     def __repr__(self) -> str:
         return f"<Expense id={self.id} category={self.category} amount={self.amount}>"
+
+
+class Invoice(Base):
+    """Invoice model for billing"""
+    __tablename__ = "invoices"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    invoice_number = Column(String(50), unique=True, nullable=False)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(3), default="USD")
+    status = Column(String(20), default="pending")  # pending, paid, overdue, cancelled
+    due_date = Column(DateTime(timezone=True))
+    paid_date = Column(DateTime(timezone=True))
+    items = Column(JSON, default=[])  # List of invoice items
+    invoice_metadata = Column(JSON, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class Payment(Base):
+    """Payment model for transactions"""
+    __tablename__ = "payments"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    invoice_id = Column(Integer, ForeignKey("invoices.id"))
+    amount = Column(Float, nullable=False)
+    currency = Column(String(3), default="USD")
+    gateway = Column(String(50))  # stripe, wise, sudapay, bank
+    gateway_transaction_id = Column(String(200))
+    status = Column(String(20), default="pending")  # pending, completed, failed, refunded
+    payment_method = Column(String(50))
+    payment_metadata = Column(JSON, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True))
 

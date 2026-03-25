@@ -1,24 +1,106 @@
 """
-System Admin Bot - Data Source Routing
-Routes data from different sources:
-- Health Monitoring → maintenance_dev bot
-- User Management → Database
-- Security & Audit → security bot
+Admin Data Sources Routes
+Endpoints for managing data sources and integrations
 """
 
-from fastapi import APIRouter, Depends, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
-from backend.security.auth import get_current_user, require_roles
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.database.session import wrap_session_factory
-from backend.database.config import get_db_async
-from sqlalchemy import select, func
-from backend.models.user import User
-import logging
+from typing import Dict, Any, List, Optional
 
-logger = logging.getLogger(__name__)
+from backend.database.session import get_async_session
+from backend.security.auth import require_roles, get_current_user
+from backend.services.data_source_service import get_data_source_service
+
 router = APIRouter(prefix="/api/v1/admin/data-sources", tags=["Admin Data Sources"])
+
+
+@router.get("/")
+async def list_data_sources(
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """List all configured data sources"""
+    service = get_data_source_service(session)
+    sources = await service.list_sources()
+    return {"success": True, "sources": sources, "count": len(sources)}
+
+
+@router.get("/{source_id}")
+async def get_data_source(
+    source_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """Get data source details"""
+    service = get_data_source_service(session)
+    source = await service.get_source(source_id)
+    if not source:
+        raise HTTPException(status_code=404, detail="Data source not found")
+    return {"success": True, "source": source}
+
+
+@router.post("/")
+async def create_data_source(
+    data: Dict[str, Any],
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """Create a new data source"""
+    service = get_data_source_service(session)
+    source = await service.create_source(data)
+    return {"success": True, "source": source}
+
+
+@router.put("/{source_id}")
+async def update_data_source(
+    source_id: str,
+    data: Dict[str, Any],
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """Update data source"""
+    service = get_data_source_service(session)
+    source = await service.update_source(source_id, data)
+    if not source:
+        raise HTTPException(status_code=404, detail="Data source not found")
+    return {"success": True, "source": source}
+
+
+@router.delete("/{source_id}")
+async def delete_data_source(
+    source_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """Delete data source"""
+    service = get_data_source_service(session)
+    result = await service.delete_source(source_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Data source not found")
+    return {"success": True, "message": "Data source deleted"}
+
+
+@router.post("/{source_id}/test")
+async def test_data_source(
+    source_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """Test data source connection"""
+    service = get_data_source_service(session)
+    result = await service.test_connection(source_id)
+    return {"success": result["success"], "message": result.get("message", "")}
+
+
+@router.get("/health/check")
+async def data_sources_health(
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(require_roles(["admin", "super_admin"]))
+):
+    """Check health of all data sources"""
+    service = get_data_source_service(session)
+    health = await service.check_health()
+    return {"success": True, "health": health}
 
 
 # ============================================================================
