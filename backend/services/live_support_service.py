@@ -59,15 +59,15 @@ class LiveSupportService:
 
         # Keyword patterns
         intents = {
-            "system_health": ["health", "status", "system", "performance", "cpu", "memory", "disk", "صحة", "حالة", "أداء"],
-            "errors": ["error", "bug", "issue", "problem", "خطأ", "مشكلة", "عطل"],
-            "incidents": ["incident", "accident", "حادث", "حادثة"],
-            "security": ["security", "hack", "breach", "أمن", "اختراق", "تهديد"],
-            "maintenance": ["maintenance", "update", "upgrade", "صيانة", "تحديث"],
-            "weather": ["weather", "rain", "storm", "طقس", "مطر", "عاصفة"],
-            "finance": ["invoice", "payment", "revenue", "فاتورة", "دفع", "إيراد"],
-            "fleet": ["driver", "vehicle", "truck", "سائق", "مركبة", "شاحنة"],
-            "help": ["help", "how", "what", "مساعدة", "كيف", "ماذا"]
+            "system_health": ["health", "status", "system", "performance", "cpu", "memory", "disk"],
+            "errors": ["error", "bug", "issue", "problem"],
+            "incidents": ["incident", "accident"],
+            "security": ["security", "hack", "breach"],
+            "maintenance": ["maintenance", "update", "upgrade"],
+            "weather": ["weather", "rain", "storm"],
+            "finance": ["invoice", "payment", "revenue"],
+            "fleet": ["driver", "vehicle", "truck"],
+            "help": ["help", "how", "what"]
         }
 
         for intent, keywords in intents.items():

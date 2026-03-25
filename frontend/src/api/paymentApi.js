@@ -195,14 +195,14 @@ const paymentApi = {
 
     getPaymentStatus(status) {
         const statuses = {
-            pending: { label: 'قيد الانتظار', icon: '⏳', color: 'warning' },
-            processing: { label: 'قيد المعالجة', icon: '🔄', color: 'info' },
-            completed: { label: 'مكتمل', icon: '✅', color: 'success' },
-            failed: { label: 'فاشل', icon: '❌', color: 'danger' },
-            cancelled: { label: 'ملغى', icon: '⏹️', color: 'secondary' },
-            refunded: { label: 'مسترجع', icon: '↩️', color: 'info' },
+            pending: { label: 'Pending', icon: '⏳', color: 'warning' },
+            processing: { label: 'Processing', icon: '🔄', color: 'info' },
+            completed: { label: 'Completed', icon: '✅', color: 'success' },
+            failed: { label: 'Failed', icon: '❌', color: 'danger' },
+            cancelled: { label: 'Cancelled', icon: '⏹️', color: 'secondary' },
+            refunded: { label: 'Refunded', icon: '↩️', color: 'info' },
         };
-        return statuses[status] || { label: 'غير معروف', icon: '❓', color: 'dark' };
+        return statuses[status] || { label: 'Unknown', icon: '❓', color: 'dark' };
     },
 };
 

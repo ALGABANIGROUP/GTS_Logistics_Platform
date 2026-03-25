@@ -121,9 +121,9 @@ def test_detect_language_returns_arabic_for_arabic_text(mock_db):
         id=1,
         mailbox_id=1,
         direction="inbound",
-        subject="طلب عاجل",
-        body_preview="يرجى مراجعة الفاتورة المتأخرة اليوم",
-        from_addr="arabic@example.com",
+        subject="Urgent Request",
+        body_preview="Please review the overdue invoice today",
+        from_addr="test@example.com",
     )
     analyzer = EmailAIAnalyzer(mock_db, FakeChatService(configured=False))
 

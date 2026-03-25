@@ -18,14 +18,14 @@ export function PaymentSuccessPage() {
         const loadPayment = async () => {
             try {
                 if (!paymentId) {
-                    throw new Error('معرف الدفعة غير موجود');
+                    throw new Error('Payment ID not found');
                 }
 
                 setLoading(true);
                 const paymentData = await paymentApi.get(paymentId);
                 setPayment(paymentData);
             } catch (err) {
-                setError(err?.response?.data?.detail || err.message || 'فشل تحميل بيانات الدفعة');
+                setError(err?.response?.data?.detail || err.message || 'Failed to load payment data');
             } finally {
                 setLoading(false);
             }
@@ -57,15 +57,15 @@ export function PaymentSuccessPage() {
         }
 
         const receipt = [
-            'إيصال الدفع',
+            'Payment Receipt',
             '------------------------------',
-            `معرف الدفعة: ${payment.reference_id}`,
-            `معرف العملية: ${payment.gateway_transaction_id || 'غير متوفر'}`,
-            `المبلغ: ${formatAmount(payment.amount, payment.currency)}`,
-            `البوابة: ${paymentApi.getGatewayName(payment.payment_gateway)}`,
-            `الحالة: ${getStatusText(payment.status)}`,
-            `التاريخ: ${new Date(payment.created_at).toLocaleString('ar-SD')}`,
-            `رقم الفاتورة: #${payment.invoice_id}`,
+            `Payment ID: ${payment.reference_id}`,
+            `Transaction ID: ${payment.gateway_transaction_id || 'Not Available'}`,
+            `Amount: ${formatAmount(payment.amount, payment.currency)}`,
+            `Gateway: ${paymentApi.getGatewayName(payment.payment_gateway)}`,
+            `Status: ${getStatusText(payment.status)}`,
+            `Date: ${new Date(payment.created_at).toLocaleString()}`,
+            `Invoice Number: #${payment.invoice_id}`,
         ].join('\n');
 
         const element = document.createElement('a');
@@ -82,8 +82,8 @@ export function PaymentSuccessPage() {
             <div className="payment-status-page">
                 <div className="status-card">
                     <div className="status-icon">⏳</div>
-                    <h1>جاري تحميل بيانات الدفع</h1>
-                    <p>نسترجع آخر حالة متاحة من النظام.</p>
+                    <h1>Loading payment data</h1>
+                    <p>Retrieving the latest available status from the system.</p>
                 </div>
             </div>
         );
@@ -94,11 +94,11 @@ export function PaymentSuccessPage() {
             <div className="payment-status-page">
                 <div className="status-card">
                     <div className="status-icon">⚠️</div>
-                    <h1>تعذر تحميل بيانات الدفع</h1>
-                    <p>{error || 'حدث خطأ غير متوقع'}</p>
+                    <h1>Failed to load payment data</h1>
+                    <p>{error || 'An unexpected error occurred'}</p>
                     <div className="actions">
-                        <button className="btn-primary" onClick={goToInvoice}>عرض الفاتورة</button>
-                        <button className="btn-secondary" onClick={() => navigate('/')}>العودة للرئيسية</button>
+                        <button className="btn-primary" onClick={goToInvoice}>View invoice</button>
+                        <button className="btn-secondary" onClick={() => navigate('/')}>Back to home</button>
                     </div>
                 </div>
             </div>
@@ -118,20 +118,20 @@ export function PaymentSuccessPage() {
 
                 <div className="payment-details">
                     <DetailRow
-                        label="معرف الدفعة"
+                        label="Payment ID"
                         value={payment.reference_id}
                         action={(
                             <button className="copy-btn" onClick={() => copyToClipboard(payment.reference_id)}>
-                                {copied ? 'تم النسخ' : 'نسخ'}
+                                {copied ? 'Copied' : 'Copy'}
                             </button>
                         )}
                     />
-                    <DetailRow label="المبلغ" value={formatAmount(payment.amount, payment.currency)} />
-                    <DetailRow label="البوابة" value={paymentApi.getGatewayName(payment.payment_gateway)} />
-                    <DetailRow label="رقم الفاتورة" value={`#${payment.invoice_id}`} />
-                    <DetailRow label="الحالة" value={getStatusText(payment.status)} />
-                    <DetailRow label="معرف العملية" value={payment.gateway_transaction_id || 'غير متوفر'} />
-                    <DetailRow label="التاريخ" value={new Date(payment.created_at).toLocaleString('ar-SD')} />
+                    <DetailRow label="Amount" value={formatAmount(payment.amount, payment.currency)} />
+                    <DetailRow label="Gateway" value={paymentApi.getGatewayName(payment.payment_gateway)} />
+                    <DetailRow label="Invoice Number" value={`#${payment.invoice_id}`} />
+                    <DetailRow label="Status" value={getStatusText(payment.status)} />
+                    <DetailRow label="Transaction ID" value={payment.gateway_transaction_id || 'Not available'} />
+                    <DetailRow label="Date" value={new Date(payment.created_at).toLocaleString()} />
                 </div>
 
                 <div
@@ -148,7 +148,7 @@ export function PaymentSuccessPage() {
                 </div>
 
                 <div className="next-steps">
-                    <h2>الخطوات التالية</h2>
+                    <h2>Next steps</h2>
                     {statusMeta.steps.map((step, index) => (
                         <div key={step.title} className="step-row">
                             <span className="step-number">{index + 1}</span>
@@ -161,9 +161,9 @@ export function PaymentSuccessPage() {
                 </div>
 
                 <div className="actions">
-                    <button className="btn-primary" onClick={goToInvoice}>عرض الفاتورة</button>
-                    <button className="btn-secondary" onClick={downloadReceipt}>تحميل الإيصال</button>
-                    <button className="btn-secondary" onClick={() => navigate('/invoices')}>كل الفواتير</button>
+                    <button className="btn-primary" onClick={goToInvoice}>View Invoice</button>
+                    <button className="btn-secondary" onClick={downloadReceipt}>Download Receipt</button>
+                    <button className="btn-secondary" onClick={() => navigate('/invoices')}>All Invoices</button>
                 </div>
             </div>
 
@@ -376,13 +376,13 @@ function DetailRow({ label, value, action = null }) {
 
 function getStatusText(status) {
     const statusMap = {
-        pending: 'قيد الانتظار',
-        processing: 'جاري المعالجة',
-        completed: 'مكتمل',
-        paid: 'مدفوع',
-        failed: 'فشل',
-        cancelled: 'ملغى',
-        refunded: 'مسترجع',
+        pending: 'Pending',
+        processing: 'Processing',
+        completed: 'Completed',
+        paid: 'Paid',
+        failed: 'Failed',
+        cancelled: 'Cancelled',
+        refunded: 'Refunded',
     };
     return statusMap[status] || status;
 }
@@ -396,15 +396,15 @@ function getStatusMeta(status) {
             accentColor: '#15803d',
             infoBackground: '#ecfdf5',
             infoColor: '#166534',
-            title: 'تم الدفع بنجاح',
-            subtitle: 'تم تأكيد الدفع وتحديث حالته في النظام.',
-            infoLine1: 'تم تأكيد الدفع من المنصة.',
-            infoLine2: 'جميع المعاملات محمية ومثبتة في السجل المالي.',
-            infoLine3: 'يمكنك الآن متابعة الفاتورة أو تنزيل الإيصال.',
+            title: 'Payment Successful',
+            subtitle: 'Payment has been confirmed and its status updated in the system.',
+            infoLine1: 'Payment confirmed from the platform.',
+            infoLine2: 'All transactions are protected and recorded in the financial log.',
+            infoLine3: 'You can now track the invoice or download the receipt.',
             steps: [
-                { title: 'تأكيد الدفع', description: 'تم تسجيل الدفعة كعملية مكتملة.' },
-                { title: 'تحديث الفاتورة', description: 'يتم اعتبار الفاتورة مدفوعة في النظام.' },
-                { title: 'الاحتفاظ بالمرجع', description: 'احتفظ بمعرف الدفعة ومعرف العملية عند الحاجة.' },
+                { title: 'Payment Confirmation', description: 'The payment has been recorded as a completed transaction.' },
+                { title: 'Invoice Update', description: 'The invoice is now considered paid in the system.' },
+                { title: 'Keep Reference', description: 'Keep the payment ID and transaction ID for future reference.' },
             ],
         };
     }
@@ -415,15 +415,15 @@ function getStatusMeta(status) {
             accentColor: '#b45309',
             infoBackground: '#fffbeb',
             infoColor: '#92400e',
-            title: 'الدفع قيد التأكيد',
-            subtitle: 'تم استلام الطلب لكن الحالة النهائية لم تُحسم بعد.',
-            infoLine1: 'قد يكون الدفع بانتظار تأكيد البوابة أو وصول webhook.',
-            infoLine2: 'ارجع لهذه الصفحة لاحقًا أو راجع الفاتورة.',
-            infoLine3: 'لا تعتمد هذه الصفحة كإثبات نهائي حتى تصبح الحالة مكتملة.',
+            title: 'Payment Pending Confirmation',
+            subtitle: 'Request received but final status not yet determined.',
+            infoLine1: 'Payment may be waiting for gateway confirmation or webhook arrival.',
+            infoLine2: 'Return to this page later or check the invoice.',
+            infoLine3: 'Do not rely on this page as final proof until status is completed.',
             steps: [
-                { title: 'تسجيل الطلب', description: 'تم إنشاء سجل الدفع محليًا.' },
-                { title: 'انتظار التحديث', description: 'ننتظر رد البوابة أو إشعار الويبهوك.' },
-                { title: 'المتابعة', description: 'راجع الفاتورة لاحقًا للتأكد من اكتمال العملية.' },
+                { title: 'Request Registration', description: 'Payment record created locally.' },
+                { title: 'Waiting for Update', description: 'Waiting for gateway response or webhook notification.' },
+                { title: 'Follow-up', description: 'Check the invoice later to confirm completion.' },
             ],
         };
     }
@@ -433,15 +433,15 @@ function getStatusMeta(status) {
         accentColor: '#b91c1c',
         infoBackground: '#fef2f2',
         infoColor: '#991b1b',
-        title: 'الدفع غير مكتمل',
-        subtitle: 'الحالة الحالية لا تشير إلى عملية دفع ناجحة.',
-        infoLine1: 'قد تكون العملية فشلت أو ألغيت أو تم استرجاعها.',
-        infoLine2: 'راجع الفاتورة أو سجل المدفوعات لمعرفة السبب.',
-        infoLine3: 'إذا تم الخصم فعليًا فتواصل مع الدعم لإجراء المطابقة.',
+        title: 'Payment Incomplete',
+        subtitle: 'Current status does not indicate a successful payment.',
+        infoLine1: 'The transaction may have failed, been cancelled, or refunded.',
+        infoLine2: 'Check the invoice or payment history for the reason.',
+        infoLine3: 'If the amount was actually deducted, contact support for reconciliation.',
         steps: [
-            { title: 'مراجعة الحالة', description: 'تحقق من الحالة الحالية ومراجع العملية.' },
-            { title: 'التحقق من الفاتورة', description: 'تأكد أن الفاتورة لم تعد بانتظار السداد.' },
-            { title: 'التواصل مع الدعم', description: 'استخدم معرف الدفعة إذا احتجت للمساعدة.' },
+            { title: 'Review Status', description: 'Check current status and transaction references.' },
+            { title: 'Verify Invoice', description: 'Ensure the invoice is no longer pending payment.' },
+            { title: 'Contact Support', description: 'Use the payment ID if you need assistance.' },
         ],
     };
 }

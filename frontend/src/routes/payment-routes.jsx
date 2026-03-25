@@ -1,16 +1,16 @@
 /**
  * Payment Routes Configuration
- * تحديد جميع مسارات الدفع والتوجيه للمكونات المناسبة
+ * Define all payment routes and routing to appropriate components
  * 
- * المسارات:
- * - /payments/:invoiceId             - صفحة الدفع
- * - /payments/success                - صفحة النجاح
- * - /payments/failed                 - صفحة الفشل
+ * Routes:
+ * - /payments/:invoiceId             - Payment page
+ * - /payments/success                - Success page
+ * - /payments/failed                 - Failure page
  * 
- * المميزات:
- * - حماية المسارات بمعلومات المستخدم
- * - معالجة الأخطاء الشاملة
- * - دعم اللغة العربية
+ * Features:
+ * - Route protection with user information
+ * - Comprehensive error handling
+ * - English language support
  * 
  * Author: GTS Development Team
  * Date: March 2026
@@ -27,7 +27,7 @@ import { readAuthToken } from '../utils/authStorage';
 
 /**
  * Payment Routes Configuration Array
- * استخدم هذا في تطبيقك الرئيسي (App.jsx أو Router.jsx)
+ * Use this in your main application (App.jsx or Router.jsx)
  */
 export const paymentRoutes = [
     {
@@ -38,8 +38,8 @@ export const paymentRoutes = [
                 path: ':invoiceId',
                 element: <PaymentPage />,
                 meta: {
-                    title: 'الدفع',
-                    description: 'صفحة الدفع الآمنة',
+                    title: 'Payment',
+                    description: 'Secure payment page',
                     requiresAuth: true,
                 },
             },
@@ -56,8 +56,8 @@ export const paymentRoutes = [
                 path: 'success',
                 element: <PaymentSuccessPage />,
                 meta: {
-                    title: 'تم الدفع بنجاح',
-                    description: 'تأكيد الدفع',
+                    title: 'Payment Successful',
+                    description: 'Payment Confirmation',
                     requiresAuth: false,
                 },
             },
@@ -65,8 +65,8 @@ export const paymentRoutes = [
                 path: 'failed',
                 element: <PaymentFailedPage />,
                 meta: {
-                    title: 'فشل الدفع',
-                    description: 'معالجة فشل العملية',
+                    title: 'Payment Failed',
+                    description: 'Payment Processing Failed',
                     requiresAuth: false,
                 },
             },
@@ -77,7 +77,7 @@ export const paymentRoutes = [
 /**
  * Integration Example for Router
  * 
- * في ملف App.jsx أو Router.tsx الخاص بك:
+ * In your App.jsx or Router.tsx file:
  * 
  * import { createBrowserRouter } from 'react-router-dom';
  * import { paymentRoutes } from './routes/payment-routes';
@@ -99,12 +99,12 @@ export const paymentRoutes = [
 
 /**
  * Navigation Helper Functions
- * دوال مساعدة للتنقل بين صفحات الدفع
+ * Helper functions for navigation between payment pages
  */
 export const PaymentNavigation = {
     /**
      * Navigate to Payment Page
-     * التنقل إلى صفحة الدفع
+     * Navigate to payment page
      */
     goToPayment: (navigate, invoiceId) => {
         navigate(`/payments/${invoiceId}`);
@@ -112,7 +112,7 @@ export const PaymentNavigation = {
 
     /**
      * Navigate to Success Page
-     * التنقل إلى صفحة النجاح
+     * Navigate to success page
      */
     goToSuccess: (navigate, paymentId, invoiceId) => {
         navigate(
@@ -122,7 +122,7 @@ export const PaymentNavigation = {
 
     /**
      * Navigate to Failed Page
-     * التنقل إلى صفحة الفشل
+     * Navigate to failed page
      */
     goToFailed: (navigate, paymentId, invoiceId, reason = 'unknown') => {
         navigate(
@@ -133,7 +133,7 @@ export const PaymentNavigation = {
 
 /**
  * Protected Route Component
- * مكون لحماية المسارات بمعلومات المستخدم
+ * Component to protect routes with user information
  */
 export function ProtectedPaymentRoute({ element, requiresAuth = true }) {
     const [isAuthenticated, setIsAuthenticated] = React.useState(null);
@@ -146,7 +146,7 @@ export function ProtectedPaymentRoute({ element, requiresAuth = true }) {
 
     if (isAuthenticated === null) {
         // Loading
-        return <div className="loading">جاري التحميل...</div>;
+        return <div className="loading">Loading...</div>;
     }
 
     if (requiresAuth && !isAuthenticated) {
@@ -159,7 +159,7 @@ export function ProtectedPaymentRoute({ element, requiresAuth = true }) {
 
 /**
  * Payment Context
- * توفير سياق للتطبيق بمعلومات الدفع
+ * Provide context for the application with payment information
  */
 export const PaymentContext = React.createContext({
     currentPayment: null,
@@ -170,7 +170,7 @@ export const PaymentContext = React.createContext({
 
 /**
  * Payment Provider Component
- * مزود السياق لتطبيق الدفع
+ * Context provider for payment application
  */
 export function PaymentProvider({ children }) {
     const [currentPayment, setCurrentPayment] = React.useState(null);
@@ -192,7 +192,7 @@ export function PaymentProvider({ children }) {
 
 /**
  * usePaymentContext Custom Hook
- * هوك مخصص للوصول إلى سياق الدفع
+ * Custom hook to access payment context
  */
 export function usePaymentContext() {
     const context = React.useContext(PaymentContext);
@@ -204,7 +204,7 @@ export function usePaymentContext() {
 
 /**
  * Export All Components
- * تصدير جميع المكونات للاستخدام
+ * Export all components for use
  */
 export {
     PaymentPage,
@@ -273,7 +273,7 @@ export {
  *        ↓
  *   SudaPaymentForm rendered
  *        ↓
- *   User clicks "الدفع الآن"
+ *   User clicks "Pay Now"
  *        ↓
  *   API call to create payment
  *        ↓

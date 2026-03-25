@@ -31,7 +31,7 @@ describe('paymentApi helpers', () => {
     it('returns known payment status metadata', () => {
         const status = paymentApi.getPaymentStatus('completed');
 
-        expect(status.label).toContain('مكتمل');
+        expect(status.label).toContain('Completed');
         expect(status.color).toBe('success');
     });
 

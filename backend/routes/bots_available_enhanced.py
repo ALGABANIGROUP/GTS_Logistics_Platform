@@ -263,18 +263,26 @@ async def get_all_bots(
     session: AsyncSession = Depends(get_async_session),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
-    """Get all available active bots"""
+    """Get all available bots with real activation status"""
     active_bot_ids = get_active_bots()
     
-    # Filter only active bots
-    bots = [b for b in ALL_BOTS if b["id"] in active_bot_ids and b["enabled"]]
+    bots = []
+    for bot in ALL_BOTS:
+        bot_info = bot.copy()
+        # Override status with real activation
+        is_activated = bot["id"] in active_bot_ids and bot["enabled"]
+        bot_info["is_activated"] = is_activated
+        bot_info["status"] = "active" if is_activated else "inactive"
+        bots.append(bot_info)
+    
+    active_count = len([b for b in bots if b["is_activated"]])
     
     return {
         "ok": True,
         "bots": bots,
-        "active_count": len(bots),
+        "active_count": active_count,
         "total_count": len(ALL_BOTS),
-        "inactive_count": len(ALL_BOTS) - len(bots)
+        "inactive_count": len(bots) - active_count
     }
 
 

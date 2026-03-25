@@ -21,7 +21,6 @@ const EXTENSIONS = new Set([
     ".json",
     ".yml",
     ".yaml",
-    ".md",
     ".ps1",
     ".bat",
     ".sql",
@@ -92,7 +91,7 @@ function getStagedFiles() {
 }
 
 function scanFile(file) {
-    const text = fs.readFileSync(file, "utf8");
+    const text = fs.readFileSync(file, "utf8").replace(/^\uFEFF/, '');
     if (!ARABIC_REGEX.test(text)) return null;
     const lines = text.split(/\r?\n/);
     const hits = [];

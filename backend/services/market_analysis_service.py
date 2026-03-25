@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class MarketAnalysisService:
     """
-    خدمة تحليل السوق - متصلة بـ APIs خارجية
+    Market Analysis Service - Connected to external APIs
     """
 
     def __init__(self):

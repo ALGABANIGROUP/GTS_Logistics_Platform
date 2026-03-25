@@ -122,9 +122,15 @@ const SocialMediaFooter = () => {
         >
             <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
-                    <p style={{ margin: "0", fontSize: "0.875rem" }}>
-                        Copyright 2026 Gabani Transport Solutions - Secure logistics command center
-                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <p style={{ margin: "0", fontSize: "0.875rem" }}>
+                            Copyright 2026 Gabani Transport Solutions - Secure logistics command center
+                        </p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "#64748b" }}>
+                            <span>🌍</span>
+                            <span>We contribute 1% to carbon removal via Stripe Climate</span>
+                        </div>
+                    </div>
                     <Link
                         to="/terms-and-conditions"
                         style={{

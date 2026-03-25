@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class LegalUpdatesService:
     """
-    خدمة تحديث القوانين - متصلة بـ APIs خارجية
+    Legal Updates Service - Connected to external APIs
     """
 
     def __init__(self):
@@ -25,16 +25,16 @@ class LegalUpdatesService:
             updates = {
                 "SA": [
                     {
-                        "title": "تحديث نظام النقل البري",
+                        "title": "Update to Road Transport System",
                         "date": "2026-03-15",
-                        "summary": "تعديلات على رسوم النقل البري",
+                        "summary": "Modifications to road transport fees",
                         "impact": "medium",
                         "effective_date": "2026-04-01"
                     },
                     {
-                        "title": "لائحة جديدة للشحن الدولي",
+                        "title": "New regulation for international shipping",
                         "date": "2026-03-10",
-                        "summary": "متطلبات جديدة للشحن عبر الحدود",
+                        "summary": "New requirements for cross-border shipping",
                         "impact": "high",
                         "effective_date": "2026-05-01"
                     }

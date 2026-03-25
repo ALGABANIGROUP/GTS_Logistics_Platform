@@ -19,7 +19,7 @@ class LegalCounselBot:
         self.description = "Reviews legal documents and ensures compliance"
         self.version = "1.0.0"
         self.mode = "intelligence"
-        self.is_active = False
+        self.is_active = True
         
         # Legal data structures
         self.contracts_db: List[Dict] = []

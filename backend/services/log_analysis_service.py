@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 class LogAnalysisService:
     """
-    خدمة تحليل السجلات الأمنية - تبحث عن أنشطة مشبوهة في logs حقيقية
+    Security Log Analysis Service - Searches for suspicious activities in real logs
     """
 
     def __init__(self, log_path: str = "logs/app.log"):
         self.log_path = Path(log_path)
 
-        # أنماط الأنشطة المشبوهة
+        # Patterns of suspicious activities
         self.suspicious_patterns = [
             (r'(?i)login.*failed', "Failed login attempt"),
             (r'(?i)unauthorized', "Unauthorized access attempt"),
@@ -33,7 +33,7 @@ class LogAnalysisService:
 
     def analyze_logs(self, hours: int = 24) -> Dict:
         """
-        تحليل السجلات للبحث عن أنشطة مشبوهة
+        Analyze logs to search for suspicious activities
         """
         if not self.log_path.exists():
             return {
@@ -51,12 +51,12 @@ class LogAnalysisService:
 
         with open(self.log_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
-                # استخراج الوقت (محاكاة بسيطة)
-                # في الواقع، نستخدم regex لاستخراج الوقت الحقيقي
+                # Extract time (simple simulation)
+                # In reality, we use regex to extract real time
 
                 for pattern, description in self.suspicious_patterns:
                     if re.search(pattern, line, re.IGNORECASE):
-                        # استخراج IP (محاكاة)
+                        # Extract IP (simulation)
                         ip_match = re.search(r'\d+\.\d+\.\d+\.\d+', line)
                         ip = ip_match.group() if ip_match else "unknown"
                         unique_ips.add(ip)
@@ -78,13 +78,13 @@ class LogAnalysisService:
             "total_suspicious": len(suspicious_events),
             "unique_ips": list(unique_ips),
             "events_by_type": events_by_type,
-            "suspicious_events": suspicious_events[-50:],  # آخر 50 حدث
+            "suspicious_events": suspicious_events[-50:],  # Last 50 events
             "recommendation": self._get_recommendation(events_by_type),
             "timestamp": datetime.now().isoformat()
         }
 
     def _get_recommendation(self, events_by_type: Dict) -> str:
-        """توليد توصية بناءً على التحليل"""
+        """Generate recommendation based on analysis"""
         if not events_by_type:
             return "No suspicious activity detected"
 

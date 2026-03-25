@@ -1,7 +1,7 @@
 # backend/ai/openai_safe_client.py
 import os
 
-OPENAI_ENABLED = os.getenv("OPENAI_ENABLED", "0").lower() in ("1", "true", "yes", "on")
+OPENAI_ENABLED = os.getenv("OPENAI_ENABLED", "true").lower() in ("1", "true", "yes", "on")
 
 try:
     from openai import AsyncOpenAI  # type: ignore

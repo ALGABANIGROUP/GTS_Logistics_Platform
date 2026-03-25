@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-SUDAPAY Service - خدمة SUDAPAY لمنصة GTS
-يوفر جميع العمليات الأساسية للتعامل مع SUDAPAY
+SUDAPAY Service - SUDAPAY Service for GTS Platform
+Provides all basic operations for dealing with SUDAPAY
 
-SUDAPAY: منصة الدفع الموحدة الحكومية السودانية
-- البنك المركزي السوداني
-- دعم جنيه سوداني (SDG) ودولار أمريكي (USD)
-- معايير أمان عالية (PCI DSS متوافق)
-- رسوم منخفضة: 1.5-2% (أقل من Stripe و PayPal)
+SUDAPAY: Unified Government Payment Platform of Sudan
+- Central Bank of Sudan
+- Support for Sudanese Pound (SDG) and US Dollar (USD)
+- High security standards (PCI DSS compliant)
+- Low fees: 1.5-2% (lower than Stripe and PayPal)
 
 Author: GTS Development Team
 Date: March 2026
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# ENUMS & MODELS - أنماط البيانات
+# ENUMS & MODELS - Data Models
 # ============================================================================
 
 class SudapayPaymentStatus(str, Enum):
@@ -39,19 +39,19 @@ class SudapayPaymentStatus(str, Enum):
 
 
 class SudapayPaymentRequest(BaseModel):
-    """SUDAPAY Payment Request - طلب دفع"""
-    amount: float = Field(..., gt=0, description="المبلغ")
-    currency: str = Field(default="SDG", description="العملة (SDG/USD)")
-    reference_id: str = Field(..., description="رقم مرجعي فريد")
-    description: Optional[str] = Field(None, description="وصف الدفع")
-    customer_email: Optional[str] = Field(None, description="بريد المستخدم")
-    return_url: Optional[str] = Field(None, description="رابط العودة بعد الدفع")
-    cancel_url: Optional[str] = Field(None, description="رابط الإلغاء")
-    metadata: Optional[Dict] = Field(None, description="بيانات إضافية")
+    """SUDAPAY Payment Request"""
+    amount: float = Field(..., gt=0, description="Amount")
+    currency: str = Field(default="SDG", description="Currency (SDG/USD)")
+    reference_id: str = Field(..., description="Unique reference number")
+    description: Optional[str] = Field(None, description="Payment description")
+    customer_email: Optional[str] = Field(None, description="Customer email")
+    return_url: Optional[str] = Field(None, description="Return URL after payment")
+    cancel_url: Optional[str] = Field(None, description="Cancel URL")
+    metadata: Optional[Dict] = Field(None, description="Additional data")
 
 
 class SudapayPaymentResponse(BaseModel):
-    """SUDAPAY Payment Response - رد الدفع"""
+    """SUDAPAY Payment Response"""
     payment_id: str
     status: str
     checkout_url: Optional[str] = None
@@ -72,17 +72,17 @@ class SudapayWebhookPayload(BaseModel):
 
 class SudapayService:
     """
-    SUDAPAY Service - خدمة SUDAPAY
-    توفر واجهة موحدة للتعامل مع SUDAPAY
+    SUDAPAY Service - SUDAPAY Service
+    Provides a unified interface for dealing with SUDAPAY
     
     Usage:
         sudapay = SudapayService(
             api_key="your_api_key",
             merchant_id="your_merchant_id",
-            sandbox=True  # وضع الاختبار
+            sandbox=True  # test mode
         )
         
-        # إنشاء دفعة
+        # Create payment
         payment = await sudapay.create_payment(
             amount=100000,
             currency="SDG",
@@ -103,12 +103,12 @@ class SudapayService:
         Initialize SUDAPAY Service
         
         Args:
-            api_key: مفتاح API من SUDAPAY
-            merchant_id: معرّف التاجر
-            webhook_secret: سر التحقق من Webhooks
-            sandbox: وضع الاختبار (True) أم الإنتاج (False)
-            api_version: إصدار API
-            timeout: timeout للطلبات بالثواني
+            api_key: API key from SUDAPAY
+            merchant_id: Merchant identifier
+            webhook_secret: Webhook verification secret
+            sandbox: Test mode (True) or production (False)
+            api_version: API version
+            timeout: Request timeout in seconds
         """
         self.api_key = api_key
         self.merchant_id = merchant_id
@@ -139,7 +139,7 @@ class SudapayService:
         )
 
     # ========================================================================
-    # PAYMENT OPERATIONS - عمليات الدفع
+    # PAYMENT OPERATIONS
     # ========================================================================
 
     async def create_payment(
@@ -154,23 +154,23 @@ class SudapayService:
         metadata: Optional[Dict] = None,
     ) -> SudapayPaymentResponse:
         """
-        Create Payment - إنشاء عملية دفع جديدة
+        Create Payment - Create a new payment transaction
         
         Args:
-            amount: المبلغ (SDG أو USD)
-            currency: العملة (SDG/USD)
-            reference_id: رقم مرجعي فريد (اختياري - يتم الإنشاء تلقائياً)
-            description: وصف الدفعة
-            customer_email: بريد العميل
-            return_url: رابط العودة الناجح
-            cancel_url: رابط الإلغاء
-            metadata: بيانات إضافية (JSON)
+            amount: Amount (SDG or USD)
+            currency: Currency (SDG/USD)
+            reference_id: Unique reference number (optional - auto-generated)
+            description: Payment description
+            customer_email: Customer email
+            return_url: Success return URL
+            cancel_url: Cancel URL
+            metadata: Additional data (JSON)
         
         Returns:
-            SudapayPaymentResponse: معلومات الدفعة الجديدة
+            SudapayPaymentResponse: Information about the new payment
         
         Raises:
-            SudapayAPIError: إذا فشل الطلب
+            SudapayAPIError: If the request fails
         """
         try:
             # Generate reference_id if not provided
@@ -235,13 +235,13 @@ class SudapayService:
         payment_id: str,
     ) -> Dict:
         """
-        Confirm Payment - تأكيد حالة الدفعة
+        Confirm Payment - Confirm payment status
         
         Args:
-            payment_id: معرّف الدفعة من SUDAPAY
+            payment_id: Payment ID from SUDAPAY
         
         Returns:
-            Dict: معلومات الدفعة الحالية
+            Dict: Current payment information
         """
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -283,15 +283,15 @@ class SudapayService:
         reason: str = "Customer request",
     ) -> Dict:
         """
-        Refund Payment - استرجاع الأموال
+        Refund Payment - Refund payment
         
         Args:
-            payment_id: معرّف الدفعة
-            amount: مبلغ الاسترجاع (None = كامل المبلغ)
-            reason: سبب الاسترجاع
+            payment_id: Payment ID
+            amount: Refund amount (None = full amount)
+            reason: Refund reason
         
         Returns:
-            Dict: معلومات الاسترجاع
+            Dict: Refund information
         """
         try:
             payload = {
@@ -332,7 +332,7 @@ class SudapayService:
             raise SudapayAPIError(error_msg) from e
 
     # ========================================================================
-    # VALIDATION & SECURITY - التحقق والأمان
+    # VALIDATION & SECURITY
     # ========================================================================
 
     def verify_webhook_signature(
@@ -341,14 +341,14 @@ class SudapayService:
         signature: str,
     ) -> bool:
         """
-        Verify Webhook Signature - التحقق من توقيع Webhook
+        Verify Webhook Signature - Verify webhook signature
         
         Args:
-            payload: نص payload من SUDAPAY
-            signature: التوقيع من headers
+            payload: Payload text from SUDAPAY
+            signature: Signature from headers
         
         Returns:
-            bool: هل التوقيع صحيح
+            bool: Whether the signature is valid
         """
         import hmac
         import hashlib
@@ -374,7 +374,7 @@ class SudapayService:
             return False
 
     # ========================================================================
-    # UTILITY METHODS - دوال مساعدة
+    # UTILITY METHODS - Utility Functions
     # ========================================================================
 
     def format_amount(self, amount: float) -> int:
