@@ -33,6 +33,7 @@ export function PaymentPage() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState('stripe');
 
   const paymentStatus = searchParams.get('status');
   const paymentId = searchParams.get('payment_id');
@@ -241,6 +242,50 @@ Reference: Invoice #${invoiceId}
           />
         )}
       </div>
+
+      {/* Stripe Climate Section */}
+      {selectedMethod === 'stripe' && invoice && (
+        <div className="stripe-climate-section">
+          <div className="climate-card">
+            <div className="climate-header">
+              <div className="climate-icon">
+                <span>🌍</span>
+              </div>
+              <div className="climate-info">
+                <h3>Stripe Climate</h3>
+                <p>You're helping fund next-generation carbon removal technology.</p>
+              </div>
+            </div>
+            <div className="climate-progress">
+              <div className="progress-bar">
+                <div className="progress-fill"></div>
+              </div>
+              <span className="progress-text">1% contribution</span>
+            </div>
+            <div className="climate-features">
+              <span className="feature">✓ Permanent carbon removal</span>
+              <span className="separator">•</span>
+              <span className="feature">✓ Verified projects</span>
+              <span className="separator">•</span>
+              <span className="feature">✓ Transparent reporting</span>
+            </div>
+            <div className="climate-breakdown">
+              <div className="breakdown-row">
+                <span className="breakdown-label">Your payment:</span>
+                <span className="breakdown-value">{formatAmount(invoice.total_amount, invoice.currency)}</span>
+              </div>
+              <div className="breakdown-row">
+                <span className="breakdown-label">Climate contribution (1%):</span>
+                <span className="breakdown-value climate-amount">{formatAmount(invoice.total_amount * 0.01, invoice.currency)}</span>
+              </div>
+              <div className="breakdown-row total">
+                <span className="breakdown-label">Total:</span>
+                <span className="breakdown-value">{formatAmount(invoice.total_amount, invoice.currency)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Previous Error */}
       {error && (
@@ -588,6 +633,135 @@ Reference: Invoice #${invoiceId}
 
         .copy-bank-details-btn:hover {
           background: #0056b3;
+        }
+
+        .stripe-climate-section {
+          margin-bottom: 40px;
+        }
+
+        .climate-card {
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+        }
+
+        .climate-header {
+          display: flex;
+          align-items: flex-start;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .climate-icon {
+          width: 40px;
+          height: 40px;
+          background: rgba(34, 197, 94, 0.2);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .climate-icon span {
+          font-size: 20px;
+        }
+
+        .climate-info h3 {
+          margin: 0 0 5px 0;
+          font-size: 18px;
+          color: white;
+          font-weight: 600;
+        }
+
+        .climate-info p {
+          margin: 0;
+          color: #10b981;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+
+        .climate-progress {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 15px;
+        }
+
+        .progress-bar {
+          flex: 1;
+          height: 8px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          width: 100%;
+          height: 100%;
+          background: #22c55e;
+          border-radius: 4px;
+        }
+
+        .progress-text {
+          color: #10b981;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
+        .climate-features {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 15px;
+          font-size: 12px;
+          color: #6b7280;
+        }
+
+        .feature {
+          color: #10b981;
+          font-weight: 500;
+        }
+
+        .separator {
+          color: #9ca3af;
+        }
+
+        .climate-breakdown {
+          border-top: 1px solid rgba(34, 197, 94, 0.2);
+          padding-top: 15px;
+        }
+
+        .breakdown-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 4px 0;
+          font-size: 12px;
+        }
+
+        .breakdown-row.total {
+          border-top: 1px solid rgba(34, 197, 94, 0.3);
+          padding-top: 8px;
+          margin-top: 8px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .breakdown-label {
+          color: #9ca3af;
+        }
+
+        .breakdown-value {
+          color: white;
+          font-weight: 500;
+        }
+
+        .climate-amount {
+          color: #10b981 !important;
         }
 
         .faq-section {
