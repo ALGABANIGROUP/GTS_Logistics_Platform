@@ -352,6 +352,7 @@ notifications_router = _try_import_router("routes.notifications_api", "routes.no
 freight_market_rates_router = _try_import_router("routes.freight_market_rates", "routes.freight_market_rates")
 webhooks_router = _try_import_router("routes.webhooks", "routes.webhooks")
 quo_webhook_router = _try_import_router("routes.quo_webhooks", "routes.quo_webhooks")
+wise_webhooks_router = _try_import_router("routes.wise_webhooks", "routes.wise_webhooks")
 ai_calls_router = _try_import_router("routes.ai_calls_api", "routes.ai_calls_api")
 enhanced_call_router = _try_import_router("routes.call_webhooks", "routes.call_webhooks")
 payment_webhooks_router = _try_import_router("webhooks.payment_webhooks", "webhooks.payment_webhooks")
@@ -2515,6 +2516,10 @@ if enhanced_call_router:
 if payment_webhooks_router:
     app.include_router(payment_webhooks_router)
     log.info("[main] payment webhooks routes mounted at /api/v1/webhooks/sudapay/*")
+
+if wise_webhooks_router:
+    app.include_router(wise_webhooks_router)
+    log.info("[main] wise webhooks routes mounted at /api/webhooks/wise/*")
 
 if portal_requests_router:
     app.include_router(portal_requests_router)
