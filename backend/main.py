@@ -298,7 +298,6 @@ truckerpath_router = _try_import_router("routes.truckerpath_routes", "routes.tru
 tp_webhook_router  = _try_import_router("routes.truckerpath_webhook", "routes.truckerpath_webhook")
 users_router       = _try_import_router("routes.users_routes", "routes.users_routes")
 email_center_router = _try_import_router("routes.email_center", "routes.email_center")
-contact_router      = _try_import_router("routes.contact_routes", "routes.contact_routes")
 email_ai_stats_router = _try_import_router("routes.email_ai_stats", "routes.email_ai_stats")
 email_bot_router = _try_import_router("routes.email_bot_routes", "routes.email_bot_routes")
 admin_users_router  = _try_import_router("routes.admin_users", "routes.admin_users")
@@ -618,12 +617,7 @@ def generate_unique_id(route: APIRoute) -> str:
     return f"{tag}:{route.name}:{methods}:{route.path}".replace("/", "_").replace("{", "").replace("}", "")
 
 
-# Add this near the top, after imports
-from backend.config import settings
-
-# Configure FastAPI with proper docs settings
 ENABLE_OPENAPI = os.getenv("ENABLE_OPENAPI", "false").lower() in ("1", "true", "yes")
-ENABLE_DOCS = os.getenv("ENABLE_DOCS", "true" if os.getenv("ENVIRONMENT") == "development" else "false").lower() in ("1", "true", "yes")
 
 
 @asynccontextmanager
@@ -694,8 +688,8 @@ app = FastAPI(
     * **Website**: https://www.gabanilogistics.com
     """,
     generate_unique_id_function=generate_unique_id,
-    docs_url="/docs" if ENABLE_DOCS else None,
-    redoc_url="/redoc" if ENABLE_DOCS else None,
+    docs_url="/docs" if ENABLE_OPENAPI else None,
+    redoc_url="/redoc" if ENABLE_OPENAPI else None,
     openapi_url="/openapi.json" if ENABLE_OPENAPI else None,
     contact={
         "name": "GTS Support Team",
@@ -718,32 +712,6 @@ app = FastAPI(
 UPLOADS_DIR = Path("uploads")
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
-
-# ---------------- Vizion Eye Integration ----------------
-from backend.monitoring.vizion_integration import get_vizion
-
-# Initialize Vizion Eye
-vizion = get_vizion()
-
-# Add middleware for request tracking
-@app.middleware("http")
-async def vizion_middleware(request: Request, call_next):
-    """Track all requests with Vizion Eye"""
-    start_time = datetime.now()
-    
-    response = await call_next(request)
-    
-    duration_ms = (datetime.now() - start_time).total_seconds() * 1000
-    
-    if vizion._initialized:
-        vizion.record_request(
-            endpoint=request.url.path,
-            method=request.method,
-            status_code=response.status_code,
-            duration_ms=int(duration_ms)
-        )
-    
-    return response
 
 # ---------------- Sentry Integration ----------------
 def _init_sentry():
@@ -2819,11 +2787,6 @@ except Exception as e:
     log.warning("[main] meta_data_api router import failed: %s", e)
 
 app.include_router(ai_router)
-
-# Contact routes (contact form and chat)
-if contact_router:
-    app.include_router(contact_router)
-    log.info("[main] contact routes mounted at /api/*")
 
 # ---- Compat shims for frontend roles endpoints ----
 @app.get("/test/roles2", include_in_schema=False)

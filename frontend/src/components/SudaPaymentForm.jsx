@@ -1,12 +1,12 @@
 /**
- * SudaPaymentForm Component - مكون نموذج الدفع الخاص بـ SUDAPAY
- * يوفر واجهة محاسنة للدفع مع SUDAPAY
+ * SudaPaymentForm Component - SUDAPAY payment form component
+ * Provides an optimized payment interface for SUDAPAY
  * 
- * المميزات:
- * - دعم جنيه سوداني (SDG) ودولار أمريكي (USD)
- * - تصميم جوال محسّن
- * - معالجة أخطاء شاملة
- * - دعم اللغة العربية الكامل
+ * Features:
+ * - Support for Sudanese Pound (SDG) and US Dollar (USD)
+ * - Mobile-optimized design
+ * - Comprehensive error handling
+ * - Full English language support
  * 
  * Author: GTS Development Team
  * Date: March 2026
@@ -20,11 +20,11 @@ import paymentApi from '../api/paymentApi';
  * SudaPaymentForm Component
  * 
  * Props:
- * - invoiceId (number): معرّف الفاتورة
- * - amount (number): المبلغ
- * - currency (string): العملة (SDG, USD)
- * - onSuccess (function): دالة عند النجاح
- * - onError (function): دالة عند الخطأ
+ * - invoiceId (number): Invoice ID
+ * - amount (number): Payment amount
+ * - currency (string): Currency (SDG, USD)
+ * - onSuccess (function): Success callback
+ * - onError (function): Error callback
  */
 export function SudaPaymentForm({
   invoiceId,
@@ -40,15 +40,14 @@ export function SudaPaymentForm({
   const [paymentId, setPaymentId] = useState(null);
 
   /**
-   * Handle Payment - معالج الدفع
-   * ينشئ طلب دفع جديد مع SUDAPAY ويعيد توجيه للدفع
+   * Handle Payment - Creates new payment with SUDAPAY and redirects
    */
   const handlePayment = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('📝 Creating SUDAPAY payment');
+      console.log('Creating SUDAPAY payment');
 
       // Create payment on backend
       const payment = await paymentApi.create({
@@ -56,11 +55,11 @@ export function SudaPaymentForm({
         amount: amount,
         currency: selectedCurrency,
         gateway: 'sudapay',
-        description: `دفعة الفاتورة #${invoiceId}`,
+        description: `Invoice #${invoiceId} payment`,
       });
 
       setPaymentId(payment.payment_id);
-      console.log('✅ Payment created:', payment);
+      console.log('Payment created:', payment);
 
       // Check if SUDAPAY is in sandbox or production
       if (!payment.checkout_url) {
@@ -68,12 +67,12 @@ export function SudaPaymentForm({
       }
 
       // Redirect to SUDAPAY checkout
-      console.log('🔀 Redirecting to SUDAPAY checkout...');
+      console.log('Redirecting to SUDAPAY checkout...');
       window.location.href = payment.checkout_url;
 
     } catch (err) {
       const errorMsg = err.response?.data?.detail || err.message || 'Payment creation failed';
-      console.error('❌ Payment creation failed:', errorMsg);
+      console.error('Payment creation failed:', errorMsg);
       setError(errorMsg);
 
       if (onError) {
@@ -85,46 +84,46 @@ export function SudaPaymentForm({
   };
 
   /**
-   * Format Amount - تنسيق المبلغ للعرض
+   * Format Amount - Formats amount for display
    */
   const formattedAmount = paymentApi.formatAmount(amount, selectedCurrency);
 
   /**
-   * Currency Symbol - الرموز المالية
+   * Currency Symbol - Currency symbols
    */
   const getCurrencySymbol = (curr) => {
-    return curr === 'SDG' ? 'ع.س' : '$';
+    return curr === 'SDG' ? 'SDG' : '$';
   };
 
   return (
     <div className="suda-payment-form">
       {/* Header */}
       <div className="payment-header">
-        <h2>💳 دفع آمن عبر SUDAPAY</h2>
-        <p className="subtitle">منصة الدفع الحكومية الموحدة السودانية</p>
+        <h2>💳 Secure Payment via SUDAPAY</h2>
+        <p className="subtitle">Sudanese Unified Government Payment Platform</p>
       </div>
 
       {/* Payment Info */}
       <div className="payment-info-card">
         <div className="info-row">
-          <span className="label">رقم الفاتورة:</span>
+          <span className="label">Invoice Number:</span>
           <span className="value">#{invoiceId}</span>
         </div>
 
         <div className="info-row">
-          <span className="label">المبلغ المستحق:</span>
+          <span className="label">Amount Due:</span>
           <span className="value amount">{formattedAmount}</span>
         </div>
 
         <div className="info-row">
-          <span className="label">طريقة الدفع:</span>
+          <span className="label">Payment Method:</span>
           <span className="value gateway">🇸🇩 SUDAPAY</span>
         </div>
       </div>
 
       {/* Currency Selection */}
       <div className="currency-selector">
-        <label className="label">اختر العملة:</label>
+        <label className="label">Select Currency:</label>
         <div className="currency-options">
           {['SDG', 'USD'].map((curr) => (
             <button
@@ -135,7 +134,7 @@ export function SudaPaymentForm({
             >
               <span className="symbol">{getCurrencySymbol(curr)}</span>
               <span className="name">{curr}</span>
-              {curr === 'SDG' && <span className="badge">🇸🇩 محلي</span>}
+              {curr === 'SDG' && <span className="badge">🇸🇩 Local</span>}
             </button>
           ))}
         </div>
@@ -153,19 +152,19 @@ export function SudaPaymentForm({
       <div className="features">
         <div className="feature">
           <span className="icon">🔐</span>
-          <span className="text">دفع آمن تماماً</span>
+          <span className="text">Fully Secure Payment</span>
         </div>
         <div className="feature">
           <span className="icon">⚡</span>
-          <span className="text">معالجة فريعة</span>
+          <span className="text">Fast Processing</span>
         </div>
         <div className="feature">
           <span className="icon">✅</span>
-          <span className="text">معايير حكومية</span>
+          <span className="text">Government Standards</span>
         </div>
         <div className="feature">
           <span className="icon">💬</span>
-          <span className="text">دعم محلي 24/7</span>
+          <span className="text">Local Support 24/7</span>
         </div>
       </div>
 
@@ -178,12 +177,12 @@ export function SudaPaymentForm({
         {loading ? (
           <>
             <span className="spinner">🔄</span>
-            <span>جاري المعالجة...</span>
+            <span>Processing...</span>
           </>
         ) : (
           <>
             <span className="icon">💳</span>
-            <span>الدفع الآن {formattedAmount}</span>
+            <span>Pay Now {formattedAmount}</span>
           </>
         )}
       </button>
@@ -191,9 +190,9 @@ export function SudaPaymentForm({
       {/* Security Info */}
       <div className="security-info">
         <p>
-          ✅ تم فحص نظام الدفع بواسطة معايير البنك المركزي السوداني<br />
-          🔒 كل المعلومات محمية بتشفير من الدرجة الأولى<br />
-          📞 في حالة المساعدة: support@sudapay.sd
+          ✅ Payment system certified by Central Bank of Sudan standards<br />
+          🔒 All information is protected with top-tier encryption<br />
+          📞 For assistance: support@sudapay.sd
         </p>
       </div>
 
@@ -204,8 +203,8 @@ export function SudaPaymentForm({
           margin: 0 auto;
           padding: 20px;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          direction: rtl;
-          text-align: right;
+          direction: ltr;
+          text-align: left;
         }
 
         .payment-header {

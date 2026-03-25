@@ -10,6 +10,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
+# Ensure report_service is available
+import importlib.util
+import sys
+
+# Try to import report_service
+try:
+    from backend.services.report_service import compile_system_report
+    REPORT_SERVICE_AVAILABLE = True
+except ImportError:
+    # Try alternative path
+    try:
+        from services.report_service import compile_system_report
+        REPORT_SERVICE_AVAILABLE = True
+    except ImportError:
+        # Create fallback report service
+        REPORT_SERVICE_AVAILABLE = False
+        
+        # Create a fallback report function
+        async def compile_system_report(**kwargs):
+            return {
+                "success": True,
+                "report": {
+                    "summary": "System report service not available. Using fallback data.",
+                    "generated_at": datetime.now().isoformat(),
+                    "fallback": True
+                }
+            }
+
 
 class GeneralManagerBot:
     """AI General Manager for strategic oversight and reporting"""
@@ -27,7 +55,7 @@ class GeneralManagerBot:
 
         if action == "strategic_report":
             period = payload.get("period", "monthly")
-            return await self._generate_strategic_report(period)
+            return await self.generate_strategic_report(period)
         elif action == "performance_analysis":
             return await self._analyze_performance()
         elif action == "market_insights":
@@ -38,6 +66,89 @@ class GeneralManagerBot:
             return await self._get_recommendations()
         else:
             return self._get_dashboard()
+
+    async def generate_strategic_report(self, period: str = "monthly") -> Dict[str, Any]:
+        """Generate strategic report with real data or fallback"""
+        try:
+            if REPORT_SERVICE_AVAILABLE:
+                # Use real report service
+                result = await compile_system_report(period=period)
+                return {
+                    "success": True,
+                    "report": result,
+                    "period": period,
+                    "generated_at": datetime.now().isoformat()
+                }
+            else:
+                # Use fallback with database data
+                return await self._generate_fallback_report(period)
+                
+        except Exception as e:
+            logger.error(f"Failed to generate strategic report: {e}")
+            return await self._generate_fallback_report(period)
+
+    async def _generate_fallback_report(self, period: str) -> Dict[str, Any]:
+        """Generate fallback report from database"""
+        try:
+            from backend.database.session import get_async_session
+            from backend.models.shipment import Shipment
+            from backend.models.financial import Expense
+            
+            end_date = datetime.now()
+            if period == "weekly":
+                start_date = end_date - timedelta(days=7)
+            elif period == "monthly":
+                start_date = end_date - timedelta(days=30)
+            else:
+                start_date = end_date - timedelta(days=30)
+            
+            async for session in get_async_session():
+                # Get shipments count
+                shipments_result = await session.execute(
+                    select(func.count(Shipment.id)).where(
+                        Shipment.created_at >= start_date
+                    )
+                )
+                total_shipments = shipments_result.scalar() or 0
+                
+                # Get expenses
+                expenses_result = await session.execute(
+                    select(func.sum(Expense.amount)).where(
+                        Expense.created_at >= start_date
+                    )
+                )
+                total_expenses = expenses_result.scalar() or 0
+                
+                break
+            
+            return {
+                "success": True,
+                "report": {
+                    "summary": {
+                        "total_shipments": total_shipments,
+                        "total_expenses": float(total_expenses),
+                        "period": period,
+                        "date_range": {
+                            "start": start_date.isoformat(),
+                            "end": end_date.isoformat()
+                        }
+                    },
+                    "recommendations": self._generate_recommendations(
+                        total_shipments, 0, 0, 0
+                    ),
+                    "fallback": False
+                },
+                "period": period,
+                "generated_at": end_date.isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Fallback report failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Strategic report generation failed. Please try again later.",
+                "fallback": True
+            }
 
     async def _generate_strategic_report(self, period: str = "monthly") -> Dict[str, Any]:
         """Generate comprehensive strategic report with real data"""

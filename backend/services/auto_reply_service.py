@@ -1,12 +1,6 @@
-"""
-Auto Reply Service - Automated email responses
-"""
-
+# Auto Reply Service for GTS Logistics
 import os
 import logging
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -14,146 +8,127 @@ logger = logging.getLogger(__name__)
 
 
 class AutoReplyService:
-    """
-    Automated email reply service for customer inquiries
-    """
+    """Service for handling automatic email replies"""
 
     def __init__(self):
-        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_user = os.getenv("SMTP_USER", "")
-        self.smtp_password = os.getenv("SMTP_PASSWORD", "")
-        self.from_email = os.getenv("SMTP_FROM", "no-reply@gabanilogistics.com")
-        self.enabled = bool(self.smtp_user and self.smtp_password)
+        self.enabled = self._is_enabled()
 
-        # Reply templates
-        self.templates = {
-            "general": {
-                "subject": "Thank you for contacting GTS Logistics",
-                "body": """
-                Hello {name},
-                
-                Thank you for reaching out to GTS Logistics. We have received your message and will respond within 24 hours.
-                
-                Your reference: {reference}
-                
-                In the meantime, you can:
-                - Visit our Pricing page: https://gtslogistics.com/pricing
-                - Check our Resources: https://gtslogistics.com/resources
-                - Chat with our AI assistant on our website
-                
-                Best regards,
-                GTS Logistics Support Team
-                """
-            },
-            "sales": {
-                "subject": "GTS Logistics - Sales Inquiry",
-                "body": """
-                Hello {name},
-                
-                Thank you for your interest in GTS Logistics! Our sales team has received your inquiry and will contact you shortly.
-                
-                Your reference: {reference}
-                
-                While you wait, here are some resources:
-                - View our pricing plans: https://gtslogistics.com/pricing
-                - Request a demo: https://gtslogistics.com/demo
-                - Learn about our AI bots: https://gtslogistics.com/ai-bots
-                
-                We look forward to helping you grow your business!
-                
-                Best regards,
-                GTS Logistics Sales Team
-                """
-            },
-            "support": {
-                "subject": "GTS Logistics - Support Ticket Created",
-                "body": """
-                Hello {name},
-                
-                Your support request has been received and a ticket has been created.
-                
-                Reference: {reference}
-                Type: {inquiry_type}
-                
-                Our support team will review your request and respond as soon as possible. For urgent matters, please call +1 (888) 364-1189.
-                
-                You can also check our FAQ: https://gtslogistics.com/faq
-                
-                Best regards,
-                GTS Logistics Support Team
-                """
-            }
-        }
+    def _is_enabled(self) -> bool:
+        """Check if auto-reply is enabled"""
+        return os.getenv("AUTO_REPLY_ENABLED", "true").lower() in ("1", "true", "yes")
 
-    def send_auto_reply(
-        self, 
-        to_email: str, 
-        name: str, 
-        inquiry_type: str = "general",
-        reference: Optional[str] = None
-    ) -> bool:
-        """Send auto-reply email"""
+    def send_auto_reply(self, to_email: str, name: str, inquiry_type: str, reference: Optional[str] = None) -> bool:
+        """Send an automatic reply to customer inquiry"""
         if not self.enabled:
-            logger.warning("Auto-reply disabled - SMTP not configured")
+            logger.info("Auto-reply is disabled, skipping")
             return False
 
         try:
-            template = self.templates.get(inquiry_type, self.templates["general"])
-            ref = reference or f"{datetime.now().strftime('%Y%m%d')}-{name[:3].upper()}"
-            
-            body = template["body"].format(
-                name=name,
-                reference=ref,
-                inquiry_type=inquiry_type
+            # Import email service
+            from backend.services.email_service import send_email
+
+            subject = self._get_subject(inquiry_type)
+            body = self._get_body(name, inquiry_type, reference)
+
+            # Send the email
+            success = send_email(
+                to_email=to_email,
+                subject=subject,
+                body=body,
+                is_html=True
             )
 
-            msg = MIMEMultipart("alternative")
-            msg['From'] = self.from_email
-            msg['To'] = to_email
-            msg['Subject'] = template["subject"]
+            if success:
+                logger.info(f"Auto-reply sent to {to_email} for {inquiry_type}")
+            else:
+                logger.error(f"Failed to send auto-reply to {to_email}")
 
-            # Plain text
-            msg.attach(MIMEText(body, 'plain'))
-
-            # HTML version
-            html_body = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #d32f2f;">GTS Logistics</h2>
-                <p>Hello <strong>{name}</strong>,</p>
-                <p>{body.split('Best regards')[0]}</p>
-                <hr style="border: none; border-top: 1px solid #ddd;">
-                <p style="color: #666; font-size: 12px;">
-                    GTS Logistics - Gabani Transport Solutions<br>
-                    <a href="https://gtslogistics.com">gtslogistics.com</a> | support@gtslogistics.com | +1 (888) 364-1189
-                </p>
-            </body>
-            </html>
-            """
-            msg.attach(MIMEText(html_body, 'html'))
-
-            # Send
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(msg)
-
-            logger.info(f"Auto-reply sent to {to_email}")
-            return True
+            return success
 
         except Exception as e:
-            logger.error(f"Failed to send auto-reply: {e}")
+            logger.error(f"Error sending auto-reply: {e}")
             return False
 
+    def _get_subject(self, inquiry_type: str) -> str:
+        """Get email subject based on inquiry type"""
+        subjects = {
+            "billing": "Thank you for your billing inquiry - GTS Logistics",
+            "shipping": "Thank you for your shipping inquiry - GTS Logistics",
+            "support": "Thank you for contacting GTS Logistics Support",
+            "general": "Thank you for your inquiry - GTS Logistics"
+        }
+        return subjects.get(inquiry_type, subjects["general"])
 
-# Singleton instance
-_auto_reply = None
+    def _get_body(self, name: str, inquiry_type: str, reference: Optional[str] = None) -> str:
+        """Get email body based on inquiry type"""
+        greeting = f"Dear {name}," if name else "Dear Customer,"
+
+        reference_text = f"\n\nReference: {reference}" if reference else ""
+
+        bodies = {
+            "billing": f"""
+{greeting}
+
+Thank you for your billing inquiry. We have received your message and our finance team will review it shortly.
+
+Our typical response time is 24-48 hours during business days. For urgent billing matters, please call us at +1 (778) 651-8297.{reference_text}
+
+Best regards,
+GTS Logistics Finance Team
+support@gtslogistics.com
++1 (778) 651-8297
+""",
+            "shipping": f"""
+{greeting}
+
+Thank you for your shipping inquiry. We have received your message and our operations team will assist you shortly.
+
+Our typical response time is 12-24 hours during business days. For time-sensitive shipping matters, please call us at +1 (778) 651-8297.{reference_text}
+
+Best regards,
+GTS Logistics Operations Team
+operations@gtslogistics.com
++1 (778) 651-8297
+""",
+            "support": f"""
+{greeting}
+
+Thank you for contacting GTS Logistics support. We have received your message and our support team will assist you shortly.
+
+Our typical response time is 12-24 hours during business days. For urgent technical issues, please call us at +1 (778) 651-8297.{reference_text}
+
+Best regards,
+GTS Logistics Support Team
+support@gtslogistics.com
++1 (778) 651-8297
+""",
+            "general": f"""
+{greeting}
+
+Thank you for your inquiry. We have received your message and our team will respond shortly.
+
+Our typical response time is 24-48 hours during business days. For urgent matters, please call us at +1 (778) 651-8297.{reference_text}
+
+Best regards,
+GTS Logistics Team
+info@gtslogistics.com
++1 (778) 651-8297
+"""
+        }
+
+        body = bodies.get(inquiry_type, bodies["general"])
+        return body.strip()
+
+
+# Global instance
+auto_reply_service = AutoReplyService()
 
 
 def get_auto_reply() -> AutoReplyService:
-    """Get auto-reply service instance"""
-    global _auto_reply
-    if _auto_reply is None:
-        _auto_reply = AutoReplyService()
-    return _auto_reply
+    """Get the global auto-reply service instance"""
+    return auto_reply_service
+
+
+def is_auto_reply_enabled() -> bool:
+    """Check if auto-reply is enabled"""
+    return auto_reply_service.enabled

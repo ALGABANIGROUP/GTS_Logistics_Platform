@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class WeatherService:
     """
-    خدمة الطقس الحقيقية - متصلة بـ OpenWeatherMap API
+    Real-time weather service - connected to OpenWeatherMap API
     """
 
     def __init__(self):
@@ -17,11 +17,11 @@ class WeatherService:
         self.base_url = "https://api.openweathermap.org/data/2.5"
         self.forecast_url = "https://api.openweathermap.org/data/2.5/forecast"
 
-        # ذاكرة تخزين مؤقت لتقليل الاستدعاءات
+        # Cache to reduce API calls
         self.cache = {}
-        self.cache_ttl = 300  # 5 دقائق
+        self.cache_ttl = 300  # 5 minutes
 
-        logger.info("✅ Weather Service initialized")
+        logger.info("Weather Service initialized")
 
     async def get_current_weather(self, city: str = None, lat: float = None, lon: float = None) -> Dict:
         """
@@ -64,7 +64,7 @@ class WeatherService:
                             "timestamp": datetime.now().isoformat()
                         }
 
-                        # تخزين في الكاش
+                        # Store in cache
                         self.cache[cache_key] = (result, datetime.now())
 
                         return result
@@ -109,7 +109,7 @@ class WeatherService:
                                 "snow": item.get("snow", {}).get("3h", 0)
                             })
 
-                        # تحليل المخاطر الجوية
+                        # Analyze weather risks
                         risks = self._analyze_weather_risks(forecasts)
 
                         return {
@@ -129,7 +129,7 @@ class WeatherService:
 
     def _analyze_weather_risks(self, forecasts: List[Dict]) -> List[Dict]:
         """
-        تحليل المخاطر الجوية
+        Analyze weather risks
         """
         risks = []
 
@@ -141,50 +141,50 @@ class WeatherService:
                 "recommendations": []
             }
 
-            # تحليل الأمطار
+            # Analyze rain
             rain = forecast.get("rain", 0)
             if rain > 20:
                 risk["risk_level"] = "high"
                 risk["risks"].append("heavy_rain")
-                risk["recommendations"].append("تأخير الشحنات غير العاجلة")
+                risk["recommendations"].append("Delay non-urgent shipments")
             elif rain > 10:
                 risk["risk_level"] = "medium"
                 risk["risks"].append("moderate_rain")
-                risk["recommendations"].append("تخفيض السرعة على الطرق السريعة")
+                risk["recommendations"].append("Reduce speed on highways")
 
-            # تحليل الرياح
+            # Analyze wind
             wind = forecast.get("wind_speed", 0)
             if wind > 60:
                 risk["risk_level"] = "severe"
                 risk["risks"].append("strong_winds")
-                risk["recommendations"].append("إيقاف الشاحنات المرتفعة")
+                risk["recommendations"].append("Stop high-profile trucks")
             elif wind > 40:
                 if risk["risk_level"] == "low":
                     risk["risk_level"] = "medium"
                 risk["risks"].append("moderate_winds")
-                risk["recommendations"].append("الحذر عند قيادة الشاحنات المرتفعة")
+                risk["recommendations"].append("Caution when driving high-profile trucks")
 
-            # تحليل درجات الحرارة
+            # Analyze temperature
             temp = forecast.get("temperature", 0)
             if temp > 45:
                 risk["risk_level"] = "severe"
                 risk["risks"].append("extreme_heat")
-                risk["recommendations"].append("تجنب القيادة في منتصف النهار، شرب الماء بكثرة")
+                risk["recommendations"].append("Avoid driving at midday, drink plenty of water")
             elif temp > 38:
                 if risk["risk_level"] == "low":
                     risk["risk_level"] = "medium"
                 risk["risks"].append("high_temperature")
-                risk["recommendations"].append("تأكد من تبريد المحرك، خذ استراحات متكررة")
+                risk["recommendations"].append("Ensure engine cooling, take frequent breaks")
             elif temp < -5:
                 risk["risk_level"] = "high"
                 risk["risks"].append("freezing")
-                risk["recommendations"].append("استخدام سلاسل الإطارات، الحذر من الجليد")
+                risk["recommendations"].append("Use tire chains, watch for ice")
 
-            # تحليل الضباب
+            # Analyze fog
             if forecast.get("description", "").lower().find("fog") >= 0:
                 risk["risk_level"] = "high"
                 risk["risks"].append("fog")
-                risk["recommendations"].append("استخدام أنوار الضباب، زيادة مسافة الأمان")
+                risk["recommendations"].append("Use fog lights, increase following distance")
 
             risks.append(risk)
 

@@ -28,13 +28,37 @@ export function canShow(item, ent) {
 }
 
 export const RegistrationGate = ({ children }) => {
-    if (REGISTRATION_DISABLED) {
+    // Check if registration is enabled from backend as well
+    const [backendEnabled, setBackendEnabled] = React.useState(true);
+    const [checking, setChecking] = React.useState(true);
+
+    React.useEffect(() => {
+        fetch('/api/auth/registration-status')
+            .then(res => res.json())
+            .then(data => {
+                setBackendEnabled(data.enabled);
+                setChecking(false);
+            })
+            .catch(() => {
+                setBackendEnabled(!REGISTRATION_DISABLED);
+                setChecking(false);
+            });
+    }, []);
+
+    if (checking) {
+        return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    }
+
+    const isDisabled = REGISTRATION_DISABLED || !backendEnabled;
+
+    if (isDisabled) {
         return (
             <Navigate
                 to="/contact"
                 state={{
-                    message: 'Registration is temporarily paused. Please contact us for access.',
-                    reopenDate: REGISTRATION_REOPEN_DATE
+                    message: 'Registration is temporarily paused while we run the platform privately.',
+                    reopenDate: REGISTRATION_REOPEN_DATE,
+                    contactEmail: 'admin@gtslogistics.com'
                 }}
                 replace
             />
@@ -59,3 +83,14 @@ export const RequireActiveAccount = ({ children }) => {
     }
     return children;
 };
+
+// Default export for backward compatibility
+const AccessComponents = {
+    RegistrationGate,
+    LoginGate,
+    RequireActiveAccount,
+    sidebarItems,
+    canShow
+};
+
+export default AccessComponents;

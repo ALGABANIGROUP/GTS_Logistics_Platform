@@ -58,6 +58,8 @@ const AIDataCoordinatorControlPage = React.lazy(() => import("./pages/ai-bots/wr
 const AIFinanceControlPage = React.lazy(() => import("./pages/ai-bots/wrappers/AIFinanceControlPage"));
 const AISecurityControlPage = React.lazy(() => import("./pages/ai-bots/wrappers/AISecurityControlPage"));
 const AISalesControlPage = React.lazy(() => import("./pages/ai-bots/wrappers/AISalesControlPage"));
+const About = React.lazy(() => import("./pages/About"));
+const Resources = React.lazy(() => import("./pages/Resources"));
 const AILegalControlPage = React.lazy(() => import("./pages/ai-bots/wrappers/AILegalControlPage"));
 const AIPartnerManagementControlPage = React.lazy(() => import("./pages/ai-bots/wrappers/AIPartnerManagementControlPage"));
 const AiBotsLayout = React.lazy(() => import("./pages/ai-bots/AiBotsLayout"));
@@ -185,6 +187,11 @@ const BotFeatures = React.lazy(() => import("./pages/BotFeatures"));
 const UserSettings = React.lazy(() => import("./pages/UserSettings"));
 const NotificationsPage = React.lazy(() => import("./pages/notifications/Notifications.jsx"));
 const Pricing = React.lazy(() => import("./pages/Pricing"));
+const Products = React.lazy(() => import("./pages/Products"));
+const Privacy = React.lazy(() => import("./pages/Privacy"));
+const Terms = React.lazy(() => import("./pages/Terms"));
+const Legal = React.lazy(() => import("./pages/Legal"));
+const Contact = React.lazy(() => import("./pages/Contact"));
 
 /** Simple error boundary so the app doesn't go blank-white on runtime errors */
 class ErrorBoundary extends React.Component {
@@ -335,6 +342,14 @@ const App = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<PortalLanding />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/legal" element={<Legal />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
               <Route path="/logout" element={<LogoutPage />} />
               <Route path="/account-inactive" element={<AccountInactive />} />

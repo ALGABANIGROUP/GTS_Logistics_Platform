@@ -162,25 +162,6 @@ const About = () => {
                         </div>
                     </div>
 
-                    {/* Contact Information */}
-                    <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                        <h2 className="text-xl font-bold text-white mb-4">Contact Information</h2>
-                        <div className="space-y-3">
-                            <p className="text-gray-300">
-                                <span className="text-red-400">📞 Phone:</span> 
-                                <a href="tel:+17786518297" className="hover:text-red-400 ml-2">+1 (778) 651-8297</a>
-                            </p>
-                            <p className="text-gray-300">
-                                <span className="text-red-400">📧 Email:</span> 
-                                <a href="mailto:info@gtslogistics.com" className="hover:text-red-400 ml-2">info@gtslogistics.com</a>
-                            </p>
-                            <p className="text-gray-300">
-                                <span className="text-red-400">📍 Address:</span>
-                                <span className="ml-2 block text-sm mt-1">329 HOWE ST UNIT #957, VANCOUVER BC V6C 3N2, CANADA</span>
-                            </p>
-                        </div>
-                    </div>
-
                     {/* Mission Statement */}
                     <div className="mt-12 bg-gradient-to-r from-red-600/20 to-transparent rounded-xl p-8 border border-red-500/30">
                         <h2 className="text-2xl font-bold text-white text-center mb-4">Our Mission</h2>

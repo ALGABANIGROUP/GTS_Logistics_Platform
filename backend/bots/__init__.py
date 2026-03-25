@@ -1,9 +1,9 @@
 """
-GTS Logistics AI Bots Package - Complete Registration
+GTS Logistics AI Bots Package
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,7 @@ from .information_coordinator import InformationCoordinatorBot
 from .legal_bot import LegalBot
 from .security_bot import SecurityBot
 from .system_manager import SystemManagerBot
+from .system_admin import SystemAdminBot
 from .maintenance_dev import MaintenanceDevBot
 from .sales_intelligence import SalesIntelligenceBot
 from .marketing_manager import MarketingManagerBot
@@ -30,31 +31,26 @@ try:
     from .documents_manager import DocumentsManagerBot
 except ImportError:
     DocumentsManagerBot = None
-    logger.debug("DocumentsManagerBot not available")
 
 try:
     from .executive_intelligence import ExecutiveIntelligenceBot
 except ImportError:
     ExecutiveIntelligenceBot = None
-    logger.debug("ExecutiveIntelligenceBot not available")
 
 try:
     from .finance_intelligence import FinanceIntelligenceBot
 except ImportError:
     FinanceIntelligenceBot = None
-    logger.debug("FinanceIntelligenceBot not available")
 
 try:
     from .partner_management import PartnerManagementBot
 except ImportError:
     PartnerManagementBot = None
-    logger.debug("PartnerManagementBot not available")
 
 try:
     from .system_intelligence import SystemIntelligenceBot
 except ImportError:
     SystemIntelligenceBot = None
-    logger.debug("SystemIntelligenceBot not available")
 
 # List of all available bots
 __all__ = [
@@ -65,6 +61,7 @@ __all__ = [
     "LegalBot",
     "SecurityBot",
     "SystemManagerBot",
+    "SystemAdminBot",
     "MaintenanceDevBot",
     "SalesIntelligenceBot",
     "MarketingManagerBot",
@@ -97,6 +94,7 @@ BOTS_REGISTRY = {
     "legal_consultant": LegalBot,
     "security_manager": SecurityBot,
     "system_manager": SystemManagerBot,
+    "system_admin": SystemAdminBot,
     "maintenance_dev": MaintenanceDevBot,
     "sales_intelligence": SalesIntelligenceBot,
     "marketing_manager": MarketingManagerBot,
@@ -120,51 +118,41 @@ if PartnerManagementBot:
 if SystemIntelligenceBot:
     BOTS_REGISTRY["system_intelligence"] = SystemIntelligenceBot
 
+# Add active bot tracking
+ACTIVE_BOTS = []
+INACTIVE_BOTS = []
 
-def register_all_bots(ai_registry):
-    """Register all available bots to the AI registry"""
-    registered_count = 0
-    failed_count = 0
-    
-    for bot_name, bot_class in BOTS_REGISTRY.items():
-        try:
-            if bot_class is not None:
-                bot_instance = bot_class()
-                # Set bot name if not already set
-                if not hasattr(bot_instance, 'name'):
-                    bot_instance.name = bot_name
-                if not hasattr(bot_instance, 'display_name'):
-                    bot_instance.display_name = bot_name.replace('_', ' ').title()
-                
-                ai_registry.register(bot_instance)
-                registered_count += 1
-                logger.info(f"Bot registered: {bot_name}")
-            else:
-                logger.warning(f"Bot {bot_name} is None, skipping")
-                failed_count += 1
-        except Exception as e:
-            logger.error(f"Failed to register bot {bot_name}: {e}")
-            failed_count += 1
-    
-    logger.info(f"Bot registration complete: {registered_count} registered, {failed_count} failed")
-    return {"registered": registered_count, "failed": failed_count}
+def set_bot_status(bot_name: str, is_active: bool):
+    """Set bot active/inactive status"""
+    if is_active:
+        if bot_name in INACTIVE_BOTS:
+            INACTIVE_BOTS.remove(bot_name)
+        if bot_name not in ACTIVE_BOTS:
+            ACTIVE_BOTS.append(bot_name)
+    else:
+        if bot_name in ACTIVE_BOTS:
+            ACTIVE_BOTS.remove(bot_name)
+        if bot_name not in INACTIVE_BOTS:
+            INACTIVE_BOTS.append(bot_name)
 
+def is_bot_active(bot_name: str) -> bool:
+    """Check if bot is active"""
+    return bot_name in ACTIVE_BOTS
 
-def get_bot_instance(bot_name: str) -> Optional[Any]:
-    """Get a bot instance by name"""
-    bot_class = BOTS_REGISTRY.get(bot_name)
-    if bot_class:
-        try:
-            return bot_class()
-        except Exception as e:
-            logger.error(f"Failed to create bot instance {bot_name}: {e}")
-    return None
+def get_active_bots() -> List[str]:
+    """Get list of active bot names"""
+    return ACTIVE_BOTS.copy()
 
+def get_inactive_bots() -> List[str]:
+    """Get list of inactive bot names"""
+    return INACTIVE_BOTS.copy()
 
-def get_all_bots() -> Dict[str, str]:
-    """Get all available bot names and display names"""
-    return {
-        name: getattr(bot_class, 'display_name', name.replace('_', ' ').title())
-        for name, bot_class in BOTS_REGISTRY.items()
-        if bot_class is not None
-    }
+def activate_all_bots():
+    """Activate all registered bots"""
+    global ACTIVE_BOTS, INACTIVE_BOTS
+    ACTIVE_BOTS = list(BOTS_REGISTRY.keys())
+    INACTIVE_BOTS = []
+    logger.info(f"Activated {len(ACTIVE_BOTS)} bots")
+
+# Call this on startup
+activate_all_bots()

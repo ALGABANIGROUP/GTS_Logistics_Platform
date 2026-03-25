@@ -370,16 +370,10 @@ const Resources = () => {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <p className="text-gray-400 text-xs">© 2026 Gabani Transport Solutions LLC – All rights reserved.</p>
                         <div className="flex gap-4 text-xs">
-                            <Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link>
-                            <Link to="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</Link>
-                            <Link to="/legal" className="text-gray-400 hover:text-white transition">Legal Agreements</Link>
+                            <a href="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</a>
+                            <a href="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</a>
+                            <a href="/legal" className="text-gray-400 hover:text-white transition">Legal Agreements</a>
                         </div>
-                        <p className="text-gray-500 text-xs">
-                            📞 <a href="tel:+17786518297" className="hover:text-white">+1 (778) 651-8297</a>
-                        </p>
-                    </div>
-                    <div className="text-center text-gray-500 text-xs mt-2">
-                        329 HOWE ST UNIT #957, VANCOUVER BC V6C 3N2, CANADA
                     </div>
                 </div>
             </div>

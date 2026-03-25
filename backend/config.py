@@ -200,16 +200,8 @@ class Settings:
     auto_posting_enabled: bool = os.getenv("AUTO_POSTING_ENABLED", "false").lower() in ("1", "true", "yes")
     auto_post_new_blogs: bool = os.getenv("AUTO_POST_NEW_BLOGS", "false").lower() in ("1", "true", "yes")
     auto_post_new_services: bool = os.getenv("AUTO_POST_NEW_SERVICES", "false").lower() in ("1", "true", "yes")
-    # Offline Mode Database Settings
-    OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "false").lower() in ("1", "true", "yes")
-    SQLITE_PATH: str = os.getenv("SQLITE_PATH", "./gts_offline.db")
-    USE_SQLITE_FALLBACK: bool = os.getenv("USE_SQLITE_FALLBACK", "true").lower() in ("1", "true", "yes")
-
-    def get_database_url(self) -> str:
-        """Get the appropriate database URL based on mode"""
-        if self.OFFLINE_MODE or self.USE_SQLITE_FALLBACK:
-            return f"sqlite+aiosqlite:///{self.SQLITE_PATH}"
-        return self.ASYNC_DATABASE_URL or self.DATABASE_URL
+    optimal_posting_enabled: bool = os.getenv("OPTIMAL_POSTING_ENABLED", "false").lower() in ("1", "true", "yes")
+    max_posts_per_day: int = int(os.getenv("MAX_POSTS_PER_DAY", "5"))
 
 
 settings = Settings()

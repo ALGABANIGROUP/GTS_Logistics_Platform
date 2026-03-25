@@ -47,7 +47,7 @@ class AICustomerService:
             return CustomerIntent(label="negotiation", confidence=0.82)
         if any(k in text for k in ["complaint", "angry", "unacceptable", "complain", "bad service"]):
             return CustomerIntent(label="complaint", confidence=0.84)
-        if any(k in text for k in ["hello", "hi", "good morning", "good evening", "مرحبا", "السلام", "bonjour", "salut"]):
+        if any(k in text for k in ["hello", "hi", "good morning", "good evening", "bonjour", "salut"]):
             return CustomerIntent(label="greeting", confidence=0.8)
         if any(k in text for k in ["question", "support", "help", "assist", "inquiry"]):
             return CustomerIntent(label="general", confidence=0.7)
@@ -207,7 +207,7 @@ class AICustomerService:
         localized = replies.get(language, replies["en"]).get(reply_key, replies["en"]["general"])
         if reply_key == "negotiation" and negotiation_offer:
             if language == "fr":
-                return f"{localized} Offre actuelle: {negotiation_offer['discount_percent']}% valable pendant {negotiation_offer['expires_in_hours']} heures."
+                return f"{localized} Current offer: {negotiation_offer['discount_percent']}% valid for {negotiation_offer['expires_in_hours']} hours."
             if language == "ar":
                 return f"{localized} Current offer: {negotiation_offer['discount_percent']}% valid for {negotiation_offer['expires_in_hours']} hours."
             return f"{localized} Current offer: {negotiation_offer['discount_percent']}% valid for {negotiation_offer['expires_in_hours']} hours."

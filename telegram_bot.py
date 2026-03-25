@@ -125,7 +125,7 @@ class GTSBot:
             application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._message_handler))
 
             # Start polling
-            logger.info("🤖 Starting Telegram bot in polling mode...")
+            logger.info("Starting Telegram bot in polling mode...")
             application.run_polling()
 
         except Exception as e:
@@ -204,7 +204,7 @@ class GTSBot:
                 update.message.reply_text(response)
         except Exception as e:
             logger.error(f"Error handling command {command}: {e}")
-            update.message.reply_text("❌ حدث خطأ في معالجة الأمر")
+            update.message.reply_text("Error processing command")
 
     async def _handle_sync_message(self, update):
         """Handle message synchronously for telegram.ext"""
@@ -216,7 +216,7 @@ class GTSBot:
                 update.message.reply_text(response)
         except Exception as e:
             logger.error(f"Error handling message: {e}")
-            update.message.reply_text("❌ حدث خطأ في معالجة الرسالة")
+            update.message.reply_text("Error processing message")
 
     async def handle_command(self, command: str, args: list = None, chat_id: str = None) -> str:
         """Handle bot commands and return response"""
@@ -315,7 +315,7 @@ Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
         except Exception as e:
             logger.error(f"Error getting system status: {e}")
-            return "❌ Unable to retrieve system status"
+            return "Unable to retrieve system status"
 
     async def _incident_command(self) -> str:
         """Handle /incident command"""
@@ -337,7 +337,7 @@ Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
         except Exception as e:
             logger.error(f"Error getting incidents: {e}")
-            return "❌ Unable to retrieve incidents"
+            return "Unable to retrieve incidents"
 
     def _track_command(self, args: list) -> str:
         """Handle /track command"""
@@ -417,7 +417,7 @@ Last updated: {datetime.now().strftime('%H:%M:%S')}
 
         except Exception as e:
             logger.error(f"Error getting weather: {e}")
-            return "❌ Unable to retrieve weather information"
+            return "Unable to retrieve weather information"
 
     def _alert_command(self) -> str:
         """Handle /alert command"""
@@ -459,7 +459,7 @@ Use /alert to subscribe/unsubscribe from alerts.
         # Store feedback (implement actual storage)
         logger.info(f"Feedback received: {feedback}")
 
-        return "✅ Thank you for your feedback! We'll review it shortly."
+        return "Thank you for your feedback! We'll review it shortly."
 
     def _about_command(self) -> str:
         """Handle /about command"""

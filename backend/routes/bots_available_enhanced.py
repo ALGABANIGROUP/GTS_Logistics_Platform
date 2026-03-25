@@ -11,6 +11,7 @@ from typing import Dict, Any, List
 from database.session import get_async_session
 from security.auth import get_current_user
 from config import settings
+from backend.bots import get_active_bots, is_bot_active
 
 router = APIRouter(prefix="/api/v1/ai/bots", tags=["AI Bots"])
 
@@ -262,11 +263,18 @@ async def get_all_bots(
     session: AsyncSession = Depends(get_async_session),
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
-    """Get all available bots"""
+    """Get all available active bots"""
+    active_bot_ids = get_active_bots()
+    
+    # Filter only active bots
+    bots = [b for b in ALL_BOTS if b["id"] in active_bot_ids and b["enabled"]]
+    
     return {
         "ok": True,
-        "bots": [b for b in ALL_BOTS if b["enabled"]],
-        "total": len([b for b in ALL_BOTS if b["enabled"]]),
+        "bots": bots,
+        "active_count": len(bots),
+        "total_count": len(ALL_BOTS),
+        "inactive_count": len(ALL_BOTS) - len(bots)
     }
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import imaplib
+import logging
 import pathlib
 import re
 from datetime import datetime, timezone
@@ -9,6 +10,8 @@ from email.header import decode_header
 from email.utils import getaddresses, parsedate_to_datetime
 from html import unescape
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -589,7 +592,6 @@ class EmailCenterService:
         payload: Dict[str, Any],
         severity: str = "info",
     ) -> None:
-        self.db.add(
             EmailAuditLog(
                 action=action,
                 mailbox_id=mailbox_id,
@@ -600,6 +602,39 @@ class EmailCenterService:
             )
         )
         await self.db.flush()
+
+    # Email Rules Management Methods
+    async def get_active_rules(self) -> List[BotMailboxRule]:
+        """Get active email routing rules"""
+        try:
+            from backend.models.email_center import BotMailboxRule
+            result = await self.db.execute(
+                select(BotMailboxRule).where(
+                    BotMailboxRule.is_active == True,
+                    BotMailboxRule.deleted_at.is_(None)
+                )
+            )
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Failed to get active rules: {e}")
+            return []
+
+    async def activate_all_rules(self):
+        """Activate all email routing rules"""
+        try:
+            from backend.models.email_center import BotMailboxRule
+            result = await self.db.execute(
+                update(BotMailboxRule).values(
+                    is_active=True,
+                    updated_at=datetime.now(timezone.utc)
+                ).where(BotMailboxRule.deleted_at.is_(None))
+            )
+            await self.db.commit()
+            logger.info(f"Activated {result.rowcount} email rules")
+            return result.rowcount
+        except Exception as e:
+            logger.error(f"Failed to activate rules: {e}")
+            return 0
 
 
 def _decode_header_value(value: Optional[str]) -> str:
