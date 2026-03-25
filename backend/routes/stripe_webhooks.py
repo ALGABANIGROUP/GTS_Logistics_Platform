@@ -14,11 +14,15 @@ from sqlalchemy import update
 from backend.database.session import get_async_session
 from backend.models.invoices import Invoice
 from backend.models.payment import Payment, PaymentStatus
+from backend.config import Settings
+from backend.services.stripe_service import get_stripe_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webhooks/stripe", tags=["Stripe Webhooks"])
 
-webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+settings = Settings()
+stripe_service = get_stripe_service()
+webhook_secret = settings.STRIPE_WEBHOOK_SECRET
 
 
 def verify_signature(payload: bytes, signature: str) -> bool:

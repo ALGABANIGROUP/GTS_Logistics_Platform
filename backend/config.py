@@ -104,6 +104,12 @@ class Settings:
     MARKETAUX_KEY: str = os.getenv("MARKETAUX_KEY", "")
     GOV_API_KEY: str = os.getenv("GOV_API_KEY", "")
 
+    # Stripe Configuration
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
+    STRIPE_PUBLISHABLE_KEY: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+    STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+    STRIPE_ENABLED: bool = bool(STRIPE_SECRET_KEY)
+
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     ADMIN_URL: str = os.getenv("ADMIN_URL", "http://localhost:5173")
 
