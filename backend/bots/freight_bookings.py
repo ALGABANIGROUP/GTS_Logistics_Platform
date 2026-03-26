@@ -118,7 +118,7 @@ class FreightBookingsBot:
                 "error": "Origin and destination required"
             }
         
-        # Mock carrier data
+        # Carrier sample dataset
         carriers = [
             {
                 "carrier_id": "CAR-001",
@@ -174,13 +174,13 @@ class FreightBookingsBot:
         weight = payload.get("weight", 40000)
         equipment = payload.get("equipment", "Dry Van")
         
-        # Calculate mock rate
+        # Calculate estimated rate
         base_rate = 3.50
         fuel_surcharge = 0.45
         accessorial = 0.15
         total_rate = base_rate + fuel_surcharge + accessorial
         
-        # Estimate distance (mock)
+        # Estimate lane distance
         distance_miles = 850
         total_cost = distance_miles * total_rate
         

@@ -137,6 +137,14 @@ class AICustomerService:
             "negotiation_offer": negotiation_offer,
         }
 
+    def generate_response(
+        self,
+        message: str,
+        customer_context: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Backward-compatible string response used by the Telegram bot."""
+        return self.generate_reply(message, customer_context=customer_context)["reply"]
+
     def detect_language(self, message: str) -> str:
         text = (message or "").strip()
         if not text:
@@ -215,7 +223,11 @@ class AICustomerService:
 
 
 _customer_service = AICustomerService()
+ai_customer_service = _customer_service
 
 
 def get_ai_customer_service() -> AICustomerService:
     return _customer_service
+
+
+__all__ = ["AICustomerService", "CustomerIntent", "ai_customer_service", "get_ai_customer_service"]

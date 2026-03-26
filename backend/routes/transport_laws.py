@@ -5,9 +5,9 @@ from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
-from ..models.transport_laws import LawUpdateRequest, TransportLaw, TransportType
-from ..services.law_manager import TransportLawManager
-from ..services.update_scheduler import LawUpdateScheduler
+from backend.models.transport_laws import LawUpdateRequest, TransportLaw, TransportType
+from backend.services.law_manager import TransportLawManager
+from backend.services.update_scheduler import LawUpdateScheduler
 
 router = APIRouter(prefix="/api/transport-laws", tags=["Transport Laws"])
 

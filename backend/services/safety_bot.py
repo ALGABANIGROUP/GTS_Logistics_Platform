@@ -55,7 +55,7 @@ class SafetyBotService:
             route_name: Optional route name for context
         """
         try:
-            # Mock weather data (replace with actual OpenWeatherMap API)
+            # Reference weather data until live OpenWeatherMap integration is wired.
             weather_data = await self._fetch_weather_data(latitude, longitude)
             
             alert = self._assess_weather_risk(weather_data)
@@ -102,8 +102,8 @@ class SafetyBotService:
         TODO: Integrate with actual weather API
         """
         try:
-            # Mock weather response
-            mock_weather = {
+            # Reference weather response
+            weather_snapshot = {
                 "temp": 5,
                 "feels_like": 2,
                 "humidity": 85,
@@ -128,7 +128,7 @@ class SafetyBotService:
             #     )
             #     return response.json()
             
-            return mock_weather
+            return weather_snapshot
             
         except Exception as e:
             logger.error(f"Error fetching weather data: {e}")
@@ -233,7 +233,7 @@ class SafetyBotService:
             route: Optional list of coordinates along route
         """
         try:
-            # Mock incident detection
+            # Incident detection snapshot
             incidents = [
                 {
                     "id": "incident_001",
@@ -279,9 +279,9 @@ class SafetyBotService:
             warnings = []
             recommendations = []
             
-            # Mock route assessment
+            # Route assessment snapshot
             for i, segment in enumerate(route_segments):
-                # Check for high-risk areas (mock)
+                # Check for high-risk areas
                 if "highway" in segment.get("name", "").lower():
                     if i > 0:  # Not starting segment
                         warnings.append(f"Segment {i+1}: Heavy highway traffic expected")

@@ -152,5 +152,4 @@ async def handle_charge_refunded(charge: Dict[str, Any], session):
     logger.info(f"Charge refunded: {charge_id}, amount: {refund_amount}, payment_intent: {payment_intent_id}")
 
     # Update payment status for refunds
-    # This would require tracking refunds in the database</content>
-<parameter name="filePath">c:\Users\enjoy\dev\GTS\backend\routes\stripe_webhooks.py
+    # This would require tracking refunds in the database.

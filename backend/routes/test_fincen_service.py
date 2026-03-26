@@ -1,118 +1,141 @@
 # backend/tests/test_fincen_service.py
+from __future__ import annotations
+
 import pytest
-import os
-from httpx import Response
 
-from backend.services.fincen_api import FincenService, get_fincen_service
+from backend.services.fincen_api import FincenService
 
-# Sample transaction data
 SAMPLE_TRANSACTION = {
     "amount": 12000.00,
     "currency": "USD",
     "customer_id": "CUST-123",
-    "transaction_type": "wire_transfer"
+    "transaction_type": "wire_transfer",
 }
 
-@pytest.mark.asyncio
-async def test_fincen_service_disabled_mode(monkeypatch):
-    """Test that the service runs in mock mode when no API key is set."""
-    monkeypatch.delenv("FINCEN_API_KEY", raising=False)
-    
-    # Use the factory to get a fresh instance
-    service = FincenService()
-    
-    assert not service.enabled
-    
-    # Test submit report
-    response = await service.submit_transaction_report(SAMPLE_TRANSACTION)
-    assert response["status"] == "mock"
-    assert "MOCK-" in response["report_id"]
-    assert "mock mode" in response["detail"]
-    
-    # Test get status
-    status_response = await service.get_report_status("MOCK-123")
-    assert status_response["status"] == "mock"
-    assert status_response["processing_status"] == "completed"
+
+class _FakeResponse:
+    def __init__(self, status_code, json_data=None, text=""):
+        self.status_code = status_code
+        self._json_data = json_data or {}
+        self.text = text
+
+    def json(self):
+        return self._json_data
+
+
+class _FakeAsyncClient:
+    def __init__(self, post_response=None, get_response=None):
+        self._post_response = post_response
+        self._get_response = get_response
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+    async def post(self, *args, **kwargs):
+        return self._post_response
+
+    async def get(self, *args, **kwargs):
+        return self._get_response
+
 
 @pytest.mark.asyncio
-async def test_fincen_service_enabled_mode_submit_success(monkeypatch, httpx_mock):
-    """Test successful report submission in enabled mode."""
-    monkeypatch.setenv("FINCEN_API_KEY", "test-api-key")
-    
-    # Mock the API endpoint
-    httpx_mock.add_response(
-        method="POST",
-        url="https://api.fincen.gov/v1/reports/ctr",
-        json={"report_id": "FINCEN-REPORT-XYZ", "status": "accepted"},
-        status_code=200
-    )
-    
+async def test_fincen_service_returns_503_when_credentials_missing(monkeypatch):
+    monkeypatch.delenv("FINCEN_API_KEY", raising=False)
+    monkeypatch.delenv("FINCEN_API_SECRET", raising=False)
+
     service = FincenService()
-    assert service.enabled
-    
+
+    assert not service.enabled
+
+    response = await service.submit_transaction_report(SAMPLE_TRANSACTION)
+    assert response["status"] == "error"
+    assert response["error_code"] == 503
+    assert "missing FinCEN API credentials" in response["detail"]
+
+    status_response = await service.get_report_status("FIN-123")
+    assert status_response["status"] == "error"
+    assert status_response["error_code"] == 503
+    assert status_response["report_id"] == "FIN-123"
+
+
+@pytest.mark.asyncio
+async def test_fincen_service_enabled_mode_submit_success(monkeypatch):
+    monkeypatch.setenv("FINCEN_API_KEY", "test-api-key")
+    monkeypatch.setenv("FINCEN_API_SECRET", "test-api-secret")
+
+    fake_response = _FakeResponse(
+        200,
+        json_data={"report_id": "FINCEN-REPORT-XYZ", "status": "accepted"},
+    )
+    monkeypatch.setattr(
+        "backend.services.fincen_api.httpx.AsyncClient",
+        lambda *args, **kwargs: _FakeAsyncClient(post_response=fake_response),
+    )
+
+    service = FincenService()
     response = await service.submit_transaction_report(SAMPLE_TRANSACTION, report_type="ctr")
-    
+
     assert response["status"] == "success"
     assert response["report_id"] == "FINCEN-REPORT-XYZ"
     assert "acknowledgment" in response
 
+
 @pytest.mark.asyncio
-async def test_fincen_service_enabled_mode_submit_api_error(monkeypatch, httpx_mock):
-    """Test API error during report submission."""
+async def test_fincen_service_enabled_mode_submit_api_error(monkeypatch):
     monkeypatch.setenv("FINCEN_API_KEY", "test-api-key")
-    
-    # Mock the API endpoint to return an error
-    httpx_mock.add_response(
-        method="POST",
-        url="https://api.fincen.gov/v1/reports/sar",
-        text="Internal Server Error",
-        status_code=500
+    monkeypatch.setenv("FINCEN_API_SECRET", "test-api-secret")
+
+    fake_response = _FakeResponse(500, text="Internal Server Error")
+    monkeypatch.setattr(
+        "backend.services.fincen_api.httpx.AsyncClient",
+        lambda *args, **kwargs: _FakeAsyncClient(post_response=fake_response),
     )
-    
+
     service = FincenService()
-    assert service.enabled
-    
     response = await service.submit_transaction_report(SAMPLE_TRANSACTION, report_type="sar")
-    
+
     assert response["status"] == "error"
     assert response["error_code"] == 500
     assert "Internal Server Error" in response["detail"]
 
+
 @pytest.mark.asyncio
-async def test_fincen_get_report_status_success(monkeypatch, httpx_mock):
-    """Test successfully getting a report status."""
+async def test_fincen_get_report_status_success(monkeypatch):
     monkeypatch.setenv("FINCEN_API_KEY", "test-api-key")
-    
+    monkeypatch.setenv("FINCEN_API_SECRET", "test-api-secret")
+
     report_id = "FINCEN-REPORT-XYZ"
-    
-    httpx_mock.add_response(
-        method="GET",
-        url=f"https://api.fincen.gov/v1/reports/{report_id}",
-        json={"id": report_id, "status": "processed", "details": "Report processed successfully."},
-        status_code=200
+    fake_response = _FakeResponse(
+        200,
+        json_data={"id": report_id, "status": "processed", "details": "Report processed successfully."},
     )
-    
+    monkeypatch.setattr(
+        "backend.services.fincen_api.httpx.AsyncClient",
+        lambda *args, **kwargs: _FakeAsyncClient(get_response=fake_response),
+    )
+
     service = FincenService()
     response = await service.get_report_status(report_id)
-    
+
     assert response["status"] == "success"
     assert response["report_id"] == report_id
     assert response["report_data"]["status"] == "processed"
 
+
 @pytest.mark.asyncio
 async def test_validate_transaction():
-    """Test the local transaction validation logic."""
-    service = FincenService() # API key not needed for validation
-    
-    # Test case 1: Valid transaction under threshold
+    service = FincenService()
+
     valid_under_10k = {"amount": 5000, "currency": "USD"}
     result1 = await service.validate_transaction(valid_under_10k)
     assert result1["valid"]
     assert not result1["errors"]
     assert not result1["warnings"]
     assert not result1["requires_reporting"]
-    
-    # Test case 2: Transaction over threshold
+
     valid_over_10k = {"amount": 15000, "currency": "USD"}
     result2 = await service.validate_transaction(valid_over_10k)
     assert result2["valid"]
@@ -120,8 +143,7 @@ async def test_validate_transaction():
     assert len(result2["warnings"]) == 1
     assert "exceeds $10,000" in result2["warnings"][0]
     assert result2["requires_reporting"]
-    
-    # Test case 3: Invalid transaction (missing amount)
+
     invalid_data = {"currency": "USD"}
     result3 = await service.validate_transaction(invalid_data)
     assert not result3["valid"]

@@ -345,3 +345,15 @@ class IncidentTracker:
 
         total_seconds = sum((i.resolved_at - i.detected_at).total_seconds() for i in resolved)
         return (total_seconds / len(resolved)) / 60  # in minutes
+
+
+incident_tracker = IncidentTracker()
+
+
+__all__ = [
+    "Incident",
+    "IncidentSeverity",
+    "IncidentStatus",
+    "IncidentTracker",
+    "incident_tracker",
+]

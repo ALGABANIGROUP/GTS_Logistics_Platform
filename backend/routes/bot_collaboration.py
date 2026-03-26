@@ -7,78 +7,11 @@ from pydantic import BaseModel, Field
 
 from backend.core.alerts.smart_alert_engine import AlertSeverity, SmartAlertEngine
 from backend.core.reporting.smart_report_engine import ReportType, SmartReportEngine
+from backend.services.real_bot_connector import RealBotConnector
 from backend.services.executive_dashboard import ExecutiveDashboard
 
 
 router = APIRouter(prefix="/api/v1/bot-collaboration", tags=["Bot Collaboration"])
-
-
-class MockBotConnector:
-    def __init__(self, bot_name: str) -> None:
-        self.bot_name = bot_name
-        self.received_composites: list[dict[str, Any]] = []
-
-    async def get_status(self) -> dict[str, Any]:
-        return {
-            "total_shipments": 1247,
-            "on_time_delivery": 94,
-            "delayed_shipments": 8,
-            "active_drivers": 42,
-            "average_delivery_time": 3.5,
-            "target_delivery_time": 4.0,
-        }
-
-    async def get_metrics(self) -> dict[str, Any]:
-        if self.bot_name == "dispatcher":
-            return {
-                "total_shipments": 1247,
-                "on_time_delivery": 91,
-                "delayed_shipments": 12,
-                "active_drivers": 37,
-                "average_delivery_time": 4.1,
-                "target_delivery_time": 4.0,
-            }
-        return {
-            "revenue": 2400000,
-            "profit_margin": 18,
-            "revenue_growth": 12,
-            "pending_payments": 450000,
-        }
-
-    async def get_incidents(self) -> dict[str, Any]:
-        return {"incidents": 3, "accidents": 0, "safety_score": 92}
-
-    async def get_satisfaction_metrics(self) -> dict[str, Any]:
-        return {
-            "satisfaction_score": 87,
-            "open_tickets": 23,
-            "resolved_tickets": 156,
-            "average_response_time": 2.5,
-            "target_response_time": 3.0,
-        }
-
-    async def get_health_status(self) -> dict[str, Any]:
-        return {
-            "uptime": 99.9,
-            "response_time": 0.25,
-            "threshold": 0.5,
-            "error_rate": 0.01,
-            "cpu_usage": 45,
-            "memory_usage": 62,
-        }
-
-    async def get_performance_metrics(self) -> dict[str, Any]:
-        return {
-            "revenue": 2100000,
-            "profit_margin": 21,
-            "revenue_growth": 15,
-            "pending_payments": 320000,
-            "total_deals": 89,
-            "conversion_rate": 23,
-        }
-
-    async def receive_composite_alert(self, alert_data: dict[str, Any]) -> None:
-        self.received_composites.append(alert_data)
 
 
 class AlertIngestRequest(BaseModel):
@@ -108,13 +41,13 @@ async def _ensure_default_connectors() -> None:
     if _connectors_initialized:
         return
     connectors = {
-        "freight_broker": MockBotConnector("freight_broker"),
-        "dispatcher": MockBotConnector("dispatcher"),
-        "safety_manager": MockBotConnector("safety_manager"),
-        "finance_bot": MockBotConnector("finance_bot"),
-        "customer_service": MockBotConnector("customer_service"),
-        "system_manager": MockBotConnector("system_manager"),
-        "sales_bot": MockBotConnector("sales_bot"),
+        "freight_broker": RealBotConnector("freight_broker"),
+        "dispatcher": RealBotConnector("dispatcher"),
+        "safety_manager": RealBotConnector("safety_manager"),
+        "finance_bot": RealBotConnector("finance_bot"),
+        "customer_service": RealBotConnector("customer_service"),
+        "system_manager": RealBotConnector("system_manager"),
+        "sales_bot": RealBotConnector("sales_bot"),
     }
     await _report_engine.register_bot_connectors(connectors)
     await _alert_engine.register_bot_connectors(connectors)
@@ -128,6 +61,32 @@ async def list_connectors():
         "success": True,
         "report_connectors": sorted(_report_engine.bot_connectors.keys()),
         "alert_connectors": sorted(_alert_engine.bot_connectors.keys()),
+    }
+
+
+@router.get("/bots/status")
+async def get_bots_status():
+    await _ensure_default_connectors()
+    statuses = {}
+    for bot_name, connector in _report_engine.bot_connectors.items():
+        if hasattr(connector, "health_check"):
+            statuses[bot_name] = await connector.health_check()
+        else:
+            statuses[bot_name] = {"status": "unknown"}
+
+    available = [name for name, status in statuses.items() if status.get("status") != "unavailable"]
+    if not available:
+        return {
+            "success": False,
+            "status": 503,
+            "error": "No bots available for collaboration",
+            "data": {"available_bots": [], "bot_statuses": statuses},
+        }
+
+    return {
+        "success": True,
+        "available_bots": available,
+        "bot_statuses": statuses,
     }
 
 

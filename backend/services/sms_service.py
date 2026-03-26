@@ -30,7 +30,7 @@ class SMSService:
         if self.enabled:
             logger.info("SMS service initialized")
         else:
-            logger.warning("SMS service disabled: missing SDK or credentials")
+            logger.info("SMS service disabled: missing SDK or credentials")
 
     async def send_sms(
         self,

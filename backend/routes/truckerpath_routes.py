@@ -68,7 +68,11 @@ async def status():
     try:
         health = await _maybe_await(getattr(provider, "health")()) if hasattr(provider, "health") else {"ok": True}
         ok = bool(health.get("ok", True)) if isinstance(health, dict) else True
+        if isinstance(health, dict) and not ok and health.get("error") == "truckerpath_not_configured":
+            raise HTTPException(status_code=503, detail=health.get("message") or "TruckerPath API credentials not configured")
         return {"ok": ok, "provider": "truckerpath", "health": health}
+    except HTTPException:
+        raise
     except Exception as e:
         return {"ok": False, "provider": "truckerpath", "error": str(e)}
 
@@ -83,6 +87,10 @@ async def list_loads(
     filters = {"origin": origin, "destination": destination, "equipment": equipment}
     try:
         res = await _maybe_await(provider.list_loads(limit=limit, **{k: v for k, v in filters.items() if v}))
+        if isinstance(res, dict) and not res.get("ok", True):
+            status_code = 503 if res.get("error") == "truckerpath_not_configured" else int(res.get("status") or 502)
+            detail = res.get("message") or res.get("error") or "Failed to fetch loads"
+            raise HTTPException(status_code=status_code, detail=detail)
         # Expected provider response: {"ok": True, "loads": [...]} OR a plain list
         if isinstance(res, dict) and "loads" in res:
             loads = list(res.get("loads") or [])
@@ -91,6 +99,8 @@ async def list_loads(
         else:
             loads = []
         return {"ok": True, "count": len(loads), "loads": loads, "filters": {k: v for k, v in filters.items() if v}}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch loads: {e}")
 
@@ -99,6 +109,10 @@ async def post_load(payload: PostLoadRequest = Body(...)):
     provider = _get_provider_or_503()
     try:
         result = await _maybe_await(provider.post_load(payload.dict()))
+        if isinstance(result, dict) and not result.get("ok", True):
+            status_code = 503 if result.get("error") == "truckerpath_not_configured" else int(result.get("status") or 502)
+            detail = result.get("message") or result.get("error") or "TruckerPath post failed"
+            raise HTTPException(status_code=status_code, detail=detail)
         ok = bool(result.get("ok", False)) if isinstance(result, dict) else False
         if ok:
             try:
@@ -111,4 +125,3 @@ async def post_load(payload: PostLoadRequest = Body(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to post load: {e}")
-

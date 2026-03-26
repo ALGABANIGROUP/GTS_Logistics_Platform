@@ -25,6 +25,7 @@ from .safety_bot import SafetyBot
 from .ai_dispatcher import AIDispatcherBot
 from .mapleload_canada import MapleLoadCanadaBot
 from .customer_service import CustomerServiceBot
+from .os import get_bot_os, init_bot_os
 
 # Advanced bots
 try:
@@ -71,6 +72,8 @@ __all__ = [
     "AIDispatcherBot",
     "MapleLoadCanadaBot",
     "CustomerServiceBot",
+    "get_bot_os",
+    "init_bot_os",
 ]
 
 # Add advanced bots if available

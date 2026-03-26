@@ -169,23 +169,6 @@ async def create_payment(
     return result
 
 
-@router.post("/bootstrap-demo", status_code=status.HTTP_201_CREATED)
-async def bootstrap_demo_data(
-    current_user: Any = Depends(get_current_user),
-    service: UnifiedFinanceService = Depends(get_unified_finance_service),
-) -> Dict[str, Any]:
-    user_id = current_user.get("id") if isinstance(current_user, dict) else getattr(current_user, "id", None)
-    if user_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing current user id")
-    result = await service.bootstrap_demo_data(
-        user_id=int(user_id),
-        posted_by=_user_email(current_user),
-    )
-    if not result.get("success"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.get("error", "Failed to bootstrap demo data"))
-    return result
-
-
 @router.get("/reports/summary")
 async def get_summary_report(
     service: UnifiedFinanceService = Depends(get_unified_finance_service),

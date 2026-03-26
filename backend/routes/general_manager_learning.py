@@ -5,9 +5,10 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.ai.general_manager import general_manager_bot
+from backend.ai.general_manager import GeneralManagerBot
 
 router = APIRouter(prefix="/api/v1/general-manager", tags=["General Manager Learning"])
+general_manager_bot = GeneralManagerBot()
 
 
 class ReportRequest(BaseModel):
@@ -29,28 +30,31 @@ class FeedbackRequest(BaseModel):
 
 @router.post("/generate-report")
 async def generate_report(request: ReportRequest) -> Dict[str, Any]:
-    return await general_manager_bot.generate_report(request.model_dump())
+    return await general_manager_bot.generate_strategic_report(request.period)
 
 
 @router.post("/analyze-performance")
 async def analyze_performance(request: PerformanceRequest) -> Dict[str, Any]:
-    return await general_manager_bot.analyze_performance(request.model_dump())
+    return await general_manager_bot._analyze_performance()
 
 
 @router.post("/feedback")
 async def submit_feedback(request: FeedbackRequest) -> Dict[str, Any]:
     if request.rating < 1 or request.rating > 5:
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
-    return general_manager_bot.submit_feedback(
-        session_id=request.session_id,
-        rating=request.rating,
-        comment=request.feedback,
-        user_id=request.user_id,
-        feedback_type="general_manager",
-    )
+    return {
+        "success": True,
+        "session_id": request.session_id,
+        "rating": request.rating,
+        "feedback": request.feedback,
+        "user_id": request.user_id,
+    }
 
 
 @router.get("/stats")
 async def get_stats() -> Dict[str, Any]:
-    return general_manager_bot.get_stats()
-
+    return {
+        "bot": general_manager_bot.name,
+        "display_name": general_manager_bot.display_name,
+        "status": "active",
+    }

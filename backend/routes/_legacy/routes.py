@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from backend.models.document import Document
 from backend.database.config import get_db
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 import os
 import aiofiles
 router = APIRouter()
@@ -17,8 +17,7 @@ class DocumentOut(BaseModel):
     category: str
     url: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.post('/documents/upload', response_model=DocumentOut)
 async def upload_document(file: UploadFile=File(...), db: AsyncSession=Depends(get_db)):

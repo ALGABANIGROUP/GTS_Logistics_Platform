@@ -3,14 +3,14 @@ Transport Management API Routes
 Handles shipments, trucks, tracking, and WebSocket real-time updates
 """
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import json
 import asyncio
-from ..database import get_db
+from backend.database.config import get_db
 from ..models.shipment import Shipment
 from ..models.truck_location import TruckLocation
 
@@ -147,33 +147,72 @@ async def track_shipment(shipment_id: int, db: Session = Depends(get_db)):
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
     
     if not shipment:
-        return {"error": "Shipment not found"}, 404
-    
-    # Calculate distance remaining (mock)
-    total_distance = 2000  # Mock total distance in km
-    estimated_progress = 65
-    distance_remaining = int(total_distance * (100 - estimated_progress) / 100)
+        raise HTTPException(status_code=404, detail="Shipment not found")
+
+    truck_location = None
+    truck_id = getattr(shipment, 'truck_id', None)
+    if truck_id is not None:
+        truck_location = db.query(TruckLocation).filter(TruckLocation.id == truck_id).first()
+
+    current_lat = getattr(shipment, 'current_latitude', None)
+    current_lng = getattr(shipment, 'current_longitude', None)
+
+    if current_lat is None and truck_location is not None:
+        current_lat = getattr(truck_location, 'latitude', None)
+    if current_lng is None and truck_location is not None:
+        current_lng = getattr(truck_location, 'longitude', None)
+
+    if current_lat is None or current_lng is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Real-time tracking unavailable for this shipment because GPS telemetry is missing",
+        )
+
+    total_distance = getattr(shipment, 'distance_total_km', None)
+    distance_traveled = getattr(shipment, 'distance_traveled_km', None)
+    distance_remaining = getattr(shipment, 'distance_remaining_km', None)
+    progress = getattr(shipment, 'progress_percentage', None)
+
+    if distance_remaining is None and total_distance is not None and distance_traveled is not None:
+        distance_remaining = max(total_distance - distance_traveled, 0)
+
+    if progress is None and total_distance:
+        if distance_traveled is not None:
+            progress = round((distance_traveled / total_distance) * 100, 2)
+        elif distance_remaining is not None:
+            progress = round(((total_distance - distance_remaining) / total_distance) * 100, 2)
+
+    if total_distance is None and distance_traveled is not None and distance_remaining is not None:
+        total_distance = distance_traveled + distance_remaining
+
+    if progress is None and total_distance is None and distance_remaining is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Tracking metrics unavailable for this shipment because route telemetry is incomplete",
+        )
     
     return {
         "shipment_id": shipment_id,
         "status": getattr(shipment, 'status', 'in_transit'),
         "current_location": {
-            "lat": getattr(shipment, 'current_lat', 35.5),
-            "lng": getattr(shipment, 'current_lng', -97.5)
+            "lat": current_lat,
+            "lng": current_lng
         },
         "origin": {
-            "lat": getattr(shipment, 'origin_lat', 40.7),
-            "lng": getattr(shipment, 'origin_lng', -74.0)
+            "lat": getattr(shipment, 'origin_latitude', None),
+            "lng": getattr(shipment, 'origin_longitude', None)
         },
         "destination": {
-            "lat": getattr(shipment, 'dest_lat', 34.0),
-            "lng": getattr(shipment, 'dest_lng', -118.2)
+            "lat": getattr(shipment, 'destination_latitude', None),
+            "lng": getattr(shipment, 'destination_longitude', None)
         },
-        "progress": estimated_progress,
+        "progress": progress,
         "distance_remaining": distance_remaining,
-        "estimated_arrival": getattr(shipment, 'estimated_delivery', None),
-        "driver": getattr(shipment, 'driver_name', 'Unknown'),
-        "vehicle_license": getattr(shipment, 'vehicle_license', 'N/A')
+        "distance_total": total_distance,
+        "distance_traveled": distance_traveled,
+        "estimated_arrival": getattr(shipment, 'delivery_deadline', None),
+        "driver": getattr(shipment, 'driver_name', None),
+        "vehicle_license": getattr(truck_location, 'license_plate', None) if truck_location else None
     }
 
 
@@ -318,25 +357,12 @@ async def optimize_route(
 ):
     """
     Optimize route between origin and destination
-    This is a mock implementation - integrate with real routing service
     """
-    
-    # Mock implementation - would integrate with Google Maps or OSRM
-    optimized_route = {
-        "origin": origin,
-        "destination": destination,
-        "total_distance": "450 km",
-        "estimated_time": "5 hours 30 minutes",
-        "fuel_estimate": "85 liters",
-        "stops": stops or [],
-        "waypoints": [
-            [39.8283, -98.5795],
-            [35.5353, -97.4867],
-            [34.0522, -118.2437]
-        ]
-    }
-    
-    return optimized_route
+    del origin, destination, stops
+    raise HTTPException(
+        status_code=503,
+        detail="Route optimization requires a configured routing provider and is not available in this environment",
+    )
 
 
 # ==================== WebSocket Endpoints ====================
@@ -444,8 +470,8 @@ async def get_transport_statistics(db: Session = Depends(get_db)):
         "delayed": len([s for s in shipments if getattr(s, 'status', '') == 'delayed']),
         "active_trucks": len([t for t in trucks if getattr(t, 'status', '') == 'moving']),
         "avg_speed": sum([getattr(t, 'speed', 0) for t in trucks]) / len(trucks) if trucks else 0,
-        "total_distance_traveled": 45000,  # Mock data
-        "fuel_consumed": 3400  # Mock data
+        "total_distance_traveled": sum([getattr(t, 'odometer_km', 0) or 0 for t in trucks]),
+        "fuel_consumed": None
     }
     
     return stats
@@ -456,15 +482,8 @@ async def get_performance_metrics(db: Session = Depends(get_db)):
     """
     Get performance metrics and KPIs
     """
-    metrics = {
-        "on_time_delivery": 94.5,
-        "average_delivery_time": 5.2,  # hours
-        "fuel_efficiency": 7.2,  # km/liter
-        "driver_safety_score": 95,
-        "vehicle_utilization": 87,  # percent
-        "total_revenue": 125000,  # dollars
-        "cost_per_mile": 2.15,
-        "customer_satisfaction": 4.7  # out of 5
-    }
-    
-    return metrics
+    del db
+    raise HTTPException(
+        status_code=503,
+        detail="Transport performance metrics require a configured telemetry analytics backend",
+    )

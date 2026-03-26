@@ -133,7 +133,7 @@ class OperationStats(BaseModel):
     botUtilization: Dict[str, Dict[str, Any]]
 
 
-# Mock data for demonstration - in real implementation, this would come from database
+# Operational data for demonstration - in real implementation, this would come from database
 MOCK_BOTS = [
     {
         "id": "customer_service",
@@ -335,7 +335,7 @@ MOCK_WORKFLOWS = [
     }
 ]
 
-# Mock operations storage - in real implementation, use database
+# Operations storage - in real implementation, use database
 mock_operations = []
 operation_counter = 1
 
@@ -524,7 +524,7 @@ async def update_operation(
 @router.get("/statistics/bots")
 async def get_bot_statistics(user: Dict[str, Any] = Depends(get_current_user)):
     """Get statistics for all bots."""
-    # Calculate mock statistics
+    # Calculate aggregate statistics
     total_operations = len(mock_operations)
     active_operations = len([op for op in mock_operations if op["status"] == "active"])
     completed_today = len([

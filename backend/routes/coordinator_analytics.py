@@ -1,203 +1,301 @@
-# ==================== Imports and Router Definition ====================
-from fastapi import APIRouter, Query
-from typing import Optional
-from datetime import date
+from __future__ import annotations
+
+import re
+from datetime import date, datetime, timezone
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.database import get_async_session
 
 router = APIRouter(prefix="/coordinator")
+_TABLE_NAME_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
-# ==================== Additional Dashboard APIs ====================
+
+async def _table_exists(db: AsyncSession, table_name: str) -> bool:
+    if not _TABLE_NAME_RE.match(table_name):
+        return False
+    result = await db.execute(
+        text(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = :table_name
+            )
+            """
+        ),
+        {"table_name": table_name},
+    )
+    return bool(result.scalar())
+
+
+async def _column_exists(db: AsyncSession, table_name: str, column_name: str) -> bool:
+    if not _TABLE_NAME_RE.match(table_name):
+        return False
+    result = await db.execute(
+        text(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                  AND column_name = :column_name
+            )
+            """
+        ),
+        {"table_name": table_name, "column_name": column_name},
+    )
+    return bool(result.scalar())
+
+
+async def _count_rows(db: AsyncSession, table_name: str, where_sql: str = "", params: Optional[dict[str, Any]] = None) -> int:
+    if not await _table_exists(db, table_name):
+        return 0
+    query = f"SELECT COUNT(*) FROM {table_name}"
+    if where_sql:
+        query += f" WHERE {where_sql}"
+    result = await db.execute(text(query), params or {})
+    return int(result.scalar() or 0)
+
+
 @router.get("/dashboard/metrics")
-def get_dashboard_metrics():
+async def get_dashboard_metrics(db: AsyncSession = Depends(get_async_session)):
+    today = date.today()
+    shipments_total = await _count_rows(db, "shipments")
+
+    completed_today = 0
+    if await _column_exists(db, "shipments", "completed_at"):
+        completed_today = await _count_rows(
+            db,
+            "shipments",
+            "DATE(completed_at) = :today",
+            {"today": today},
+        )
+
+    monthly_revenue = 0.0
+    daily_revenue = 0.0
+    if await _table_exists(db, "payments") and await _column_exists(db, "payments", "amount"):
+        if await _column_exists(db, "payments", "created_at"):
+            month_start = today.replace(day=1)
+            daily_revenue_result = await db.execute(
+                text("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE DATE(created_at) = :today"),
+                {"today": today},
+            )
+            monthly_revenue_result = await db.execute(
+                text("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE DATE(created_at) >= :month_start"),
+                {"month_start": month_start},
+            )
+            daily_revenue = float(daily_revenue_result.scalar() or 0)
+            monthly_revenue = float(monthly_revenue_result.scalar() or 0)
+
     return {
         "metrics": {
-            "shipments": {"completed_today": 12, "delayed_shipments": 2, "total_active": 5},
-            "financial": {"daily_revenue": 15000, "monthly_revenue": 320000, "overdue_amount": 12000},
-            "inventory": {"total_items": 1200, "low_stock_count": 8, "total_inventory_value": 50000},
-            "customers": {"total_customers": 200, "active_customers": 180, "new_customers_month": 7}
+            "shipments": {
+                "completed_today": completed_today,
+                "delayed_shipments": 0,
+                "total_active": shipments_total,
+            },
+            "financial": {
+                "daily_revenue": daily_revenue,
+                "monthly_revenue": monthly_revenue,
+                "overdue_amount": 0,
+            },
+            "inventory": {
+                "total_items": await _count_rows(db, "inventory_items"),
+                "low_stock_count": 0,
+                "total_inventory_value": 0,
+            },
+            "customers": {
+                "total_customers": await _count_rows(db, "users"),
+                "active_customers": await _count_rows(db, "users"),
+                "new_customers_month": 0,
+            },
         },
-        "timestamp": str(date.today())
+        "timestamp": today.isoformat(),
     }
 
-# ==================== Additional Analytics APIs ====================
+
 @router.get("/analytics/trends")
-def get_analytics_trends():
+async def get_analytics_trends(db: AsyncSession = Depends(get_async_session)):
+    current_shipments = await _count_rows(db, "shipments")
+    current_customers = await _count_rows(db, "users")
+    revenue = 0.0
+    if await _table_exists(db, "payments") and await _column_exists(db, "payments", "amount"):
+        result = await db.execute(text("SELECT COALESCE(SUM(amount), 0) FROM payments"))
+        revenue = float(result.scalar() or 0)
+
     return {
         "trends": [
-            {"metric": "shipments", "trend": "up", "change": "+5%"},
-            {"metric": "revenue", "trend": "up", "change": "+10%"},
-            {"metric": "inventory", "trend": "down", "change": "-2%"}
+            {"metric": "shipments", "trend": "stable", "value": current_shipments},
+            {"metric": "revenue", "trend": "stable", "value": revenue},
+            {"metric": "customers", "trend": "stable", "value": current_customers},
         ],
-        "timestamp": str(date.today())
+        "timestamp": date.today().isoformat(),
     }
 
-# ==================== Sync Status API ====================
+
 @router.get("/sync/status")
-def get_sync_status():
+async def get_sync_status(db: AsyncSession = Depends(get_async_session)):
+    await db.execute(text("SELECT 1"))
     return {
         "status": "ok",
-        "last_sync": str(date.today()),
-        "message": "All systems synchronized."
+        "last_sync": datetime.now(timezone.utc).isoformat(),
+        "message": "Database connectivity check passed.",
     }
 
-# ==================== Integrations Status API ====================
+
 @router.get("/integrations/status")
-def get_integrations_status():
+async def get_integrations_status(db: AsyncSession = Depends(get_async_session)):
+    await db.execute(text("SELECT 1"))
     return {
         "status": "ok",
-        "integrations": [
-            {"name": "ERP", "status": "connected"},
-            {"name": "CRM", "status": "connected"},
-            {"name": "WMS", "status": "pending"}
-        ],
-        "timestamp": str(date.today())
-    }
-# ==================== Status API ====================
-@router.get("/status")
-def get_coordinator_status():
-    return {
-        "status": "ok",
-        "uptime": "72:15:32",
-        "last_restart": str(date.today()),
-        "message": "Coordinator service is running."
+        "integrations": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
-# ==================== Dashboard APIs ====================
-@router.get("/dashboard/operational")
-def get_operational_dashboard():
+
+@router.get("/status")
+async def get_coordinator_status(db: AsyncSession = Depends(get_async_session)):
+    await db.execute(text("SELECT 1"))
     return {
         "status": "ok",
-        "timestamp": str(date.today()),
-        "metrics": {
-            "shipments": {"completed_today": 12, "delayed_shipments": 2, "total_active": 5},
-            "financial": {"daily_revenue": 15000, "monthly_revenue": 320000, "overdue_amount": 12000},
-            "inventory": {"total_items": 1200, "low_stock_count": 8, "total_inventory_value": 50000},
-            "customers": {"total_customers": 200, "active_customers": 180, "new_customers_month": 7}
-        },
-        "insights": ["Revenue up 10% this month", "Low stock on 8 items"],
-        "alerts": []
+        "last_restart": None,
+        "message": "Coordinator service is running.",
     }
+
+
+@router.get("/dashboard/operational")
+async def get_operational_dashboard(db: AsyncSession = Depends(get_async_session)):
+    metrics = await get_dashboard_metrics(db)
+    return {
+        "status": "ok",
+        "timestamp": date.today().isoformat(),
+        "metrics": metrics["metrics"],
+        "insights": [],
+        "alerts": [],
+    }
+
 
 @router.get("/dashboard/alerts")
-def get_system_alerts(limit: int = 20):
+async def get_system_alerts(limit: int = 20, db: AsyncSession = Depends(get_async_session)):
+    _ = limit
+    total_alerts = await _count_rows(db, "alerts")
+    unresolved = 0
+    if await _table_exists(db, "alerts") and await _column_exists(db, "alerts", "resolved"):
+        unresolved = await _count_rows(db, "alerts", "resolved = false")
     return {
-        "total_alerts": 2,
-        "unresolved": 1,
-        "alerts": [
-            {"id": 1, "severity": "warning", "title": "Low Stock", "message": "8 items low on stock", "timestamp": str(date.today()), "action_required": False},
-            {"id": 2, "severity": "critical", "title": "Overdue Invoice", "message": "Invoice #1234 overdue", "timestamp": str(date.today()), "action_required": True}
-        ]
+        "total_alerts": total_alerts,
+        "unresolved": unresolved,
+        "alerts": [],
     }
+
 
 @router.get("/dashboard/kpis")
-def get_kpis():
+async def get_kpis(db: AsyncSession = Depends(get_async_session)):
+    shipments_total = await _count_rows(db, "shipments")
+    customers_total = await _count_rows(db, "users")
     return {
-        "timestamp": str(date.today()),
+        "timestamp": date.today().isoformat(),
         "kpis": {
-            "operational": {"on_time_shipments": {"value": 98, "target": 100, "unit": "%", "trend": "up"}},
-            "financial": {"profit_margin": {"value": 32, "target": 30, "unit": "%", "trend": "up"}},
-            "customer": {"satisfaction": {"value": 4.7, "target": 5, "unit": "stars", "trend": "stable"}}
-        }
+            "operational": {"shipments": {"value": shipments_total, "unit": "count", "trend": "stable"}},
+            "customer": {"customers": {"value": customers_total, "unit": "count", "trend": "stable"}},
+        },
     }
 
-# ==================== Analytics APIs ====================
+
 @router.get("/analytics/shipments")
-def get_shipments_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_shipments_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None, db: AsyncSession = Depends(get_async_session)):
     return {
-        "total_shipments": 120,
-        "delayed": 5,
-        "on_time": 115,
+        "total_shipments": await _count_rows(db, "shipments"),
+        "delayed": 0,
+        "on_time": 0,
         "status": "ok",
-        "details": [
-            {"date": start_date or str(date.today()), "completed": 12, "delayed": 1},
-            {"date": end_date or str(date.today()), "completed": 10, "delayed": 0}
-        ]
+        "details": [{"start_date": start_date, "end_date": end_date}],
     }
+
 
 @router.get("/analytics/financial")
-def get_financial_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_financial_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None, db: AsyncSession = Depends(get_async_session)):
+    _ = (start_date, end_date)
+    total_revenue = 0.0
+    if await _table_exists(db, "payments") and await _column_exists(db, "payments", "amount"):
+        result = await db.execute(text("SELECT COALESCE(SUM(amount), 0) FROM payments"))
+        total_revenue = float(result.scalar() or 0)
     return {
-        "total_revenue": 320000,
-        "total_expenses": 210000,
-        "net_profit": 110000,
+        "total_revenue": total_revenue,
+        "total_expenses": 0,
+        "net_profit": total_revenue,
         "status": "ok",
-        "details": [
-            {"date": start_date or str(date.today()), "revenue": 15000, "expenses": 9000},
-            {"date": end_date or str(date.today()), "revenue": 12000, "expenses": 8000}
-        ]
+        "details": [],
     }
+
 
 @router.get("/analytics/inventory")
-def get_inventory_analytics():
+async def get_inventory_analytics(db: AsyncSession = Depends(get_async_session)):
     return {
-        "total_items": 1200,
-        "low_stock": 8,
+        "total_items": await _count_rows(db, "inventory_items"),
+        "low_stock": 0,
         "status": "ok",
-        "details": [
-            {"item": "Widget A", "stock": 2},
-            {"item": "Widget B", "stock": 6}
-        ]
+        "details": [],
     }
+
 
 @router.get("/analytics/customers")
-def get_customer_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_customer_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None, db: AsyncSession = Depends(get_async_session)):
+    _ = (start_date, end_date)
     return {
-        "total_customers": 200,
-        "new_customers": 7,
-        "churned": 1,
+        "total_customers": await _count_rows(db, "users"),
+        "new_customers": 0,
+        "churned": 0,
         "status": "ok",
-        "details": [
-            {"date": start_date or str(date.today()), "new": 2, "churned": 0},
-            {"date": end_date or str(date.today()), "new": 1, "churned": 1}
-        ]
+        "details": [],
     }
 
-# ==================== Predictions APIs ====================
-@router.post("/analytics/predict")
-def predict(type: str, period: Optional[str] = None):
-    if type == "demand":
-        return {
-            "confidence": "Medium",
-            "predictions": {
-                "next_7_days_revenue": [12000, 13000, 12500, 14000, 13500, 15000, 15500],
-                "avg_daily_revenue": 13600,
-                "avg_daily_shipments": 11
-            },
-            "assumptions": ["Based on last 30 days data", "No major disruptions expected"]
-        }
-    elif type == "revenue":
-        return {
-            "confidence": "High",
-            "predictions": {
-                "next_30_days_revenue": [420000],
-                "avg_daily_revenue": 14000
-            },
-            "assumptions": ["Stable market conditions"]
-        }
-    elif type == "inventory":
-        return {
-            "confidence": "Low",
-            "predictions": {
-                "needed_items": ["Widget A", "Widget B"],
-                "restock_amounts": [100, 200]
-            },
-            "assumptions": ["Based on current sales trends"]
-        }
-    return {"status": "error", "message": "Unknown prediction type"}
 
-# ==================== Reports APIs ====================
+@router.post("/analytics/predict")
+async def predict(type: str, period: Optional[str] = None):
+    return {
+        "status": "not_implemented",
+        "message": "Predictive analytics requires a configured ML pipeline.",
+        "type": type,
+        "period": period,
+    }
+
+
 @router.post("/reports/generate")
-def generate_custom_report(type: str, start_date: str, end_date: str, filters: dict = {}, format: str = 'json'):
-    return {"status": "success", "report_id": 1, "message": "Report generated"}
+async def generate_custom_report(type: str, start_date: str, end_date: str, filters: dict | None = None, format: str = "json"):
+    return {
+        "status": "accepted",
+        "message": "Report generation request received.",
+        "requested": {
+            "type": type,
+            "start_date": start_date,
+            "end_date": end_date,
+            "filters": filters or {},
+            "format": format,
+        },
+    }
+
 
 @router.get("/reports/list")
-def list_reports(limit: int = 50):
-    return {"reports": [{"id": 1, "name": "Monthly Shipments", "type": "shipments", "created_at": str(date.today()), "format": "pdf"}], "total": 1}
+async def list_reports(limit: int = 50):
+    return {"reports": [], "total": 0, "limit": limit}
+
 
 @router.get("/reports/{report_id}")
-def get_report_details(report_id: int):
-    return {"id": report_id, "name": "Monthly Shipments", "type": "shipments", "created_at": str(date.today()), "format": "pdf", "status": "ready"}
+async def get_report_details(report_id: int):
+    return {"id": report_id, "status": "not_found"}
+
 
 @router.get("/reports/{report_id}/download")
-def download_report(report_id: int, format: str = 'pdf'):
-    # This is a placeholder. In production, return a real file response.
-    return {"status": "success", "message": f"Report {report_id} downloaded as {format}"}
+async def download_report(report_id: int, format: str = "pdf"):
+    return {
+        "status": "not_available",
+        "message": "Report download is not available for this report.",
+        "report_id": report_id,
+        "format": format,
+    }

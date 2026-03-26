@@ -2,136 +2,132 @@
 FinCEN API Service - Financial Crimes Enforcement Network reporting
 """
 
-import os
+from __future__ import annotations
+
 import logging
-from typing import Dict, Any, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict
+
 import httpx
 
 logger = logging.getLogger(__name__)
 
 
 class FincenService:
-    """Financial Crimes Enforcement Network reporting service"""
+    """Financial Crimes Enforcement Network reporting service."""
 
     def __init__(self) -> None:
-        # Enable service by default, check API key
         self.api_key = os.getenv("FINCEN_API_KEY", "")
+        self.api_secret = os.getenv("FINCEN_API_SECRET", "")
         self.base_url = os.getenv("FINCEN_API_URL", "https://api.fincen.gov/v1")
-        self.enabled = bool(self.api_key)  # ✅ Enable if API key exists
+        self.enabled = bool(self.api_key and self.api_secret)
         self.sandbox_mode = os.getenv("FINCEN_SANDBOX_MODE", "true").lower() in ("1", "true", "yes")
 
-        if not self.api_key:
-            logger.warning("FinCEN API key not configured. Service will run in mock mode.")
-            self.enabled = False
+        if not self.enabled:
+            logger.warning("FinCEN API credentials not configured. Service disabled.")
+
+    def _missing_credentials_response(self) -> Dict[str, Any]:
+        return {
+            "status": "error",
+            "error_code": 503,
+            "detail": "Service unavailable - missing FinCEN API credentials",
+            "submitted_at": datetime.now().isoformat(),
+        }
 
     async def submit_transaction_report(
         self,
         transaction_data: Dict[str, Any],
-        report_type: str = "ctr"
+        report_type: str = "ctr",
     ) -> Dict[str, Any]:
-        """Submit a transaction report to FinCEN"""
-        
+        """Submit a transaction report to FinCEN."""
         if not self.enabled:
-            # Return mock response for development
-            return {
-                "status": "mock",
-                "detail": "FinCEN API is running in mock mode. Set FINCEN_API_KEY to enable real reporting.",
-                "report_id": f"MOCK-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                "submitted_at": datetime.now().isoformat(),
-                "report_type": report_type
-            }
+            return self._missing_credentials_response()
 
         try:
             async with httpx.AsyncClient() as client:
-                headers = {
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
-                }
-                
-                url = f"{self.base_url}/reports/{report_type}"
-                
                 response = await client.post(
-                    url,
+                    f"{self.base_url}/reports/{report_type}",
                     json=transaction_data,
-                    headers=headers,
-                    timeout=30.0
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "X-API-Secret": self.api_secret,
+                        "Content-Type": "application/json",
+                    },
+                    timeout=30.0,
                 )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    logger.info(f"FinCEN report submitted: {data.get('report_id')}")
-                    return {
-                        "status": "success",
-                        "report_id": data.get("report_id"),
-                        "submitted_at": datetime.now().isoformat(),
-                        "acknowledgment": data
-                    }
-                else:
-                    logger.error(f"FinCEN API error: {response.status_code} - {response.text}")
-                    return {
-                        "status": "error",
-                        "error_code": response.status_code,
-                        "detail": response.text,
-                        "submitted_at": datetime.now().isoformat()
-                    }
-                    
-        except Exception as e:
-            logger.error(f"FinCEN submission failed: {e}")
+
+            if response.status_code == 200:
+                data = response.json()
+                logger.info("FinCEN report submitted: %s", data.get("report_id"))
+                return {
+                    "status": "success",
+                    "report_id": data.get("report_id"),
+                    "submitted_at": datetime.now().isoformat(),
+                    "acknowledgment": data,
+                }
+
+            logger.error("FinCEN API error: %s - %s", response.status_code, response.text)
             return {
                 "status": "error",
-                "detail": str(e),
-                "submitted_at": datetime.now().isoformat()
+                "error_code": response.status_code,
+                "detail": response.text,
+                "submitted_at": datetime.now().isoformat(),
+            }
+        except Exception as exc:
+            logger.error("FinCEN submission failed: %s", exc)
+            return {
+                "status": "error",
+                "error_code": 500,
+                "detail": str(exc),
+                "submitted_at": datetime.now().isoformat(),
             }
 
     async def get_report_status(self, report_id: str) -> Dict[str, Any]:
-        """Get status of a submitted report"""
-        
+        """Get status of a submitted report."""
         if not self.enabled:
-            return {
-                "status": "mock",
-                "report_id": report_id,
-                "processing_status": "completed",
-                "detail": "Mock response - API not enabled"
-            }
+            response = self._missing_credentials_response()
+            response["report_id"] = report_id
+            return response
 
         try:
             async with httpx.AsyncClient() as client:
-                headers = {
-                    "Authorization": f"Bearer {self.api_key}"
+                response = await client.get(
+                    f"{self.base_url}/reports/{report_id}",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "X-API-Secret": self.api_secret,
+                    },
+                    timeout=30.0,
+                )
+
+            if response.status_code == 200:
+                return {
+                    "status": "success",
+                    "report_id": report_id,
+                    "report_data": response.json(),
                 }
-                
-                url = f"{self.base_url}/reports/{report_id}"
-                response = await client.get(url, headers=headers, timeout=30.0)
-                
-                if response.status_code == 200:
-                    return {
-                        "status": "success",
-                        "report_id": report_id,
-                        "report_data": response.json()
-                    }
-                else:
-                    return {
-                        "status": "error",
-                        "report_id": report_id,
-                        "error_code": response.status_code,
-                        "detail": response.text
-                    }
-                    
-        except Exception as e:
-            logger.error(f"Failed to get report status: {e}")
+
             return {
                 "status": "error",
                 "report_id": report_id,
-                "detail": str(e)
+                "error_code": response.status_code,
+                "detail": response.text,
+            }
+        except Exception as exc:
+            logger.error("Failed to get report status: %s", exc)
+            return {
+                "status": "error",
+                "report_id": report_id,
+                "error_code": 500,
+                "detail": str(exc),
             }
 
     async def validate_transaction(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate transaction data before submission"""
+        """Validate transaction data before submission."""
         errors = []
         warnings = []
 
-        # Basic validation
         if not transaction_data.get("amount"):
             errors.append("Transaction amount is required")
 
@@ -146,20 +142,19 @@ class FincenService:
             "valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings,
-            "requires_reporting": amount > 10000 or transaction_data.get("suspicious", False)
+            "requires_reporting": amount > 10000 or transaction_data.get("suspicious", False),
         }
 
     def _has_currency_threshold_checks(self, transaction_data: Dict[str, Any]) -> bool:
-        """Check if transaction has required threshold reporting"""
+        """Check if transaction has required threshold reporting."""
         return bool(transaction_data.get("ctr_filed") or transaction_data.get("exemption_applies"))
 
 
-# Singleton instance
 _fincen_service = None
 
 
 def get_fincen_service() -> FincenService:
-    """Get or create FinCEN service instance"""
+    """Get or create FinCEN service instance."""
     global _fincen_service
     if _fincen_service is None:
         _fincen_service = FincenService()

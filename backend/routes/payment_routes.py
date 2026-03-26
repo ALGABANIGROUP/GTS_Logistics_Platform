@@ -4,7 +4,7 @@ Payment Routes - Payment related endpoints
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any
-from backend.auth.dependencies import get_current_user
+from backend.security.auth import get_current_user
 from backend.services.payment_service import WISE_CAD_ACCOUNT, WISE_USD_ACCOUNT
 from backend.services.stripe_service import get_stripe_service
 

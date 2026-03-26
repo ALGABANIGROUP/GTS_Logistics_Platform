@@ -1,110 +1,268 @@
-# backend/routes/ai_operations_api.py
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
-import os
-import httpx
 
-# ✅ provide the legacy name `get_session` from the async dependency
-from backend.database.session import get_async_session as get_session
-from backend.integrations.loadboards.mock_truckerpath import get_mock_loads
-from backend.schemas.shipment_schema import ShipmentCreate
-from backend.services.shipment_service import create_shipment
+from backend.database.session import get_async_session
+from backend.models.bot_os import BotRegistry, BotRun
+from backend.models.shipment import Shipment
+from backend.security.auth import get_current_user
 
-# Load .env if available (safe no-op if missing)
-try:
-    from dotenv import load_dotenv  # type: ignore
-    load_dotenv()
-except Exception:
-    pass
-
-GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY") or ""
-GOOGLE_MAPS_ENABLED = os.getenv("GOOGLE_MAPS_ENABLED", "0").lower() in ("1", "true", "yes", "on")
-EXTERNAL_APIS_ENABLED = os.getenv("EXTERNAL_APIS_ENABLED", "0").lower() in ("1", "true", "yes", "on")
-
-router = APIRouter()
+router = APIRouter(tags=["AI Operations"])
 
 
-async def get_coordinates(address: str):
-    """
-    Resolve an address to (lat, lng).
-    Returns (None, None) immediately if Google Maps is disabled or key missing.
-    """
-    if not address or not GOOGLE_MAPS_ENABLED or not EXTERNAL_APIS_ENABLED or not GOOGLE_MAPS_API_KEY:
-        return None, None
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _is_admin(user: Dict[str, Any] | None) -> bool:
+    if not isinstance(user, dict):
+        return False
+    role = str(
+        user.get("effective_role")
+        or user.get("role")
+        or user.get("db_role")
+        or user.get("token_role")
+        or ""
+    ).strip().lower()
+    return role in {"admin", "super_admin", "owner", "system_admin"}
+
+
+def _to_iso(value: Any) -> str | None:
+    if isinstance(value, datetime):
+        return value.astimezone(timezone.utc).isoformat()
+    return None
+
+
+async def _build_status(session: AsyncSession) -> Dict[str, Any]:
+    now = _utcnow()
+    day_start = now - timedelta(hours=24)
 
     try:
-        url = "https://maps.googleapis.com/maps/api/geocode/json"
-        params = {"address": address, "key": GOOGLE_MAPS_API_KEY}
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(url, params=params, timeout=20)
-            resp.raise_for_status()
-            data = resp.json()
-            if data.get("status") == "OK" and data.get("results"):
-                loc = data["results"][0]["geometry"]["location"]
-                return loc.get("lat"), loc.get("lng")
-    except Exception as e:
-        print(f"[geocoding] Error for '{address}': {e}")
-    return None, None
+        registry_rows = (
+            await session.execute(select(BotRegistry).order_by(BotRegistry.bot_name.asc()))
+        ).scalars().all()
+    except Exception:
+        registry_rows = []
+    try:
+        recent_runs = (
+            await session.execute(
+                select(BotRun)
+                .where(BotRun.started_at >= day_start)
+                .order_by(desc(BotRun.started_at))
+            )
+        ).scalars().all()
+    except Exception:
+        recent_runs = []
+
+    latest_by_bot: Dict[str, BotRun] = {}
+    by_status: Dict[str, int] = {}
+    for run in recent_runs:
+        by_status[run.status] = by_status.get(run.status, 0) + 1
+        if run.bot_name not in latest_by_bot:
+            latest_by_bot[run.bot_name] = run
+
+    try:
+        active_shipments = (
+            await session.execute(
+                select(func.count(Shipment.id)).where(
+                    func.lower(func.coalesce(Shipment.status, "")).in_(
+                        ["pending", "assigned", "in_transit", "delayed"]
+                    )
+                )
+            )
+        ).scalar()
+    except Exception:
+        active_shipments = 0
+
+    bots = []
+    for entry in registry_rows:
+        last_run = latest_by_bot.get(entry.bot_name)
+        derived_status = "inactive"
+        if entry.enabled:
+            derived_status = "idle"
+            if last_run is not None:
+                if str(last_run.status).lower() in {"failed", "error", "cancelled"}:
+                    derived_status = "error"
+                elif str(last_run.status).lower() == "running":
+                    derived_status = "running"
+
+        bots.append(
+            {
+                "bot_name": entry.bot_name,
+                "enabled": bool(entry.enabled),
+                "automation_level": entry.automation_level,
+                "schedule_cron": entry.schedule_cron,
+                "status": derived_status,
+                "last_run": {
+                    "id": last_run.id,
+                    "status": last_run.status,
+                    "started_at": _to_iso(last_run.started_at),
+                    "finished_at": _to_iso(last_run.finished_at),
+                    "error": last_run.error,
+                }
+                if last_run is not None
+                else None,
+            }
+        )
+
+    return {
+        "timestamp": now.isoformat(),
+        "registry": {
+            "total_bots": len(registry_rows),
+            "enabled_bots": sum(1 for entry in registry_rows if entry.enabled),
+            "paused_bots": sum(
+                1 for entry in registry_rows if str(entry.automation_level or "").lower() == "paused"
+            ),
+        },
+        "runs": {
+            "last_24h": len(recent_runs),
+            "by_status": by_status,
+        },
+        "shipments": {
+            "active": int(active_shipments or 0),
+        },
+        "bots": bots,
+    }
 
 
-class AIOperationsManager:
-    def __init__(self) -> None:
-        self.last_checked: datetime | None = None
+@router.get("/api/v1/ai/operations/status")
+async def get_ai_operations_status(
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    return {"success": True, "status": await _build_status(session)}
 
-    async def monitor_mock_truckerpath(self, db: AsyncSession):
-        """
-        Pull mock loads, optionally geocode origins, and create shipments.
-        """
-        loads = get_mock_loads()
-        created = []
 
-        for load in loads:
-            origin = str(load.get("origin", "") or "")
-            destination = str(load.get("destination", "") or "")
-            equipment = str(load.get("equipment_type", "") or "")
-            notes = str(load.get("notes", "") or "")
-            weight = str(load.get("weight", "0") or "0")
-            length = str(load.get("length", "0") or "0")
-            price = float(load.get("price", 0) or 0)
+@router.get("/api/v1/ai/operations/metrics")
+async def get_ai_operations_metrics(
+    period: str = "24h",
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    if not _is_admin(current_user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
-            lat, lng = await get_coordinates(origin)
+    period_map = {
+        "24h": timedelta(hours=24),
+        "7d": timedelta(days=7),
+        "30d": timedelta(days=30),
+    }
+    window = period_map.get(period, timedelta(hours=24))
+    started_after = _utcnow() - window
 
-            shipment_data = ShipmentCreate(
-                user_id=1,
-                pickup_location=origin,
-                dropoff_location=destination,
-                trailer_type=equipment,
-                rate=price,
-                recurring_type=None,
-                days=None,
-                weight=weight,
-                length=length,
-                load_size=str(load.get("load_size", "") or ""),
-                description=notes,
-                status="Imported",
-                latitude=lat,
-                longitude=lng,
+    try:
+        total_runs = (
+            await session.execute(
+                select(func.count(BotRun.id)).where(BotRun.started_at >= started_after)
+            )
+        ).scalar()
+        successful_runs = (
+            await session.execute(
+                select(func.count(BotRun.id)).where(
+                    BotRun.started_at >= started_after,
+                    func.lower(func.coalesce(BotRun.status, "")) == "completed",
+                )
+            )
+        ).scalar()
+        failed_runs = (
+            await session.execute(
+                select(func.count(BotRun.id)).where(
+                    BotRun.started_at >= started_after,
+                    func.lower(func.coalesce(BotRun.status, "")).in_(["failed", "error", "cancelled"]),
+                )
+            )
+        ).scalar()
+
+        by_bot_rows = (
+            await session.execute(
+                select(BotRun.bot_name, func.count(BotRun.id))
+                .where(BotRun.started_at >= started_after)
+                .group_by(BotRun.bot_name)
+                .order_by(desc(func.count(BotRun.id)))
+            )
+        ).all()
+    except Exception:
+        total_runs = 0
+        successful_runs = 0
+        failed_runs = 0
+        by_bot_rows = []
+
+    return {
+        "success": True,
+        "metrics": {
+            "period": period,
+            "window_start": started_after.isoformat(),
+            "total_runs": int(total_runs or 0),
+            "successful_runs": int(successful_runs or 0),
+            "failed_runs": int(failed_runs or 0),
+            "success_rate": round((int(successful_runs or 0) / int(total_runs or 1)) * 100.0, 1)
+            if int(total_runs or 0) > 0
+            else 0.0,
+            "by_bot": [
+                {"bot_name": bot_name, "runs": int(count or 0)}
+                for bot_name, count in by_bot_rows
+            ],
+        },
+    }
+
+
+@router.post("/api/v1/ai/operations/optimize")
+async def trigger_ai_optimization(
+    payload: Dict[str, Any] | None = None,
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    if not _is_admin(current_user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
+    status_snapshot = await _build_status(session)
+    suggested_actions = []
+    for bot in status_snapshot["bots"]:
+        if bot["enabled"] and bot["status"] == "error":
+            suggested_actions.append(
+                {
+                    "bot_name": bot["bot_name"],
+                    "action": "investigate_last_failure",
+                    "reason": "Bot has a failed or error status in the most recent run.",
+                }
+            )
+        if bot["enabled"] and not bot["schedule_cron"]:
+            suggested_actions.append(
+                {
+                    "bot_name": bot["bot_name"],
+                    "action": "review_schedule",
+                    "reason": "Enabled bot has no schedule configured.",
+                }
             )
 
-            await create_shipment(db=db, shipment_data=shipment_data)
-            created.append(shipment_data)
-
-        self.last_checked = datetime.utcnow()
-        return {
-            "new_shipments": len(created),
-            "timestamp": self.last_checked,
-        }
+    return {
+        "success": True,
+        "result": {
+            "triggered_at": _utcnow().isoformat(),
+            "requested_by": current_user.get("email") or current_user.get("id"),
+            "mode": (payload or {}).get("mode", "analysis"),
+            "actions_recommended": suggested_actions,
+            "status_snapshot": status_snapshot,
+        },
+    }
 
 
 @router.post("/ai/ops/load-import/trigger")
-async def trigger_load_import(session: AsyncSession = Depends(get_session)):
-    """
-    Triggers a mock import from TruckerPath into the shipments table.
-    """
-    manager = AIOperationsManager()
-    result = await manager.monitor_mock_truckerpath(db=session)
-    return {"status": "ok", **result}
+async def trigger_load_import(
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    if not _is_admin(current_user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
+    status_snapshot = await _build_status(session)
+    return {
+        "status": "disabled",
+        "message": "Legacy mock load import has been removed. Use the live AI operations endpoints instead.",
+        "status_snapshot": status_snapshot,
+    }

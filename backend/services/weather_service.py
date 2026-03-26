@@ -189,3 +189,9 @@ class WeatherService:
             risks.append(risk)
 
         return risks
+
+
+weather_service = WeatherService()
+
+
+__all__ = ["WeatherService", "weather_service"]

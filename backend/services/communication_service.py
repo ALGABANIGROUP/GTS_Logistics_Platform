@@ -9,6 +9,7 @@ from datetime import datetime
 import asyncio
 from enum import Enum
 from backend.utils.email_utils import send_bot_email
+from backend.services.sms_service import sms_service
 
 logger = logging.getLogger(__name__)
 
@@ -237,12 +238,13 @@ class CommunicationAutomationService:
             return False
     
     async def _send_sms(self, to: str, message: str) -> bool:
-        """Send SMS (placeholder - integrate with SMS service)"""
+        """Send SMS using the configured SMS channel service."""
         try:
-            # TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
-            logger.info(f"SMS sent to {to}: {message}")
-            await asyncio.sleep(0.1)  # Simulate sending
-            return True
+            result = await sms_service.send_sms(to, message, bot_name="customer_service")
+            ok = bool(result.get("success"))
+            if not ok:
+                logger.warning("SMS send failed for %s: %s", to, result.get("error"))
+            return ok
         except Exception as e:
             logger.error(f"Error sending SMS: {e}")
             return False

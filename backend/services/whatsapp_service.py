@@ -34,7 +34,7 @@ class WhatsAppService:
         if self.enabled:
             logger.info("WhatsApp service initialized")
         else:
-            logger.warning("WhatsApp service disabled: missing SDK or credentials")
+            logger.info("WhatsApp service disabled: missing SDK or credentials")
 
     async def send_message(
         self,

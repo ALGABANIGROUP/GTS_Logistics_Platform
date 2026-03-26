@@ -6,7 +6,8 @@ Handles document OCR, classification, and management.
 
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
-import asyncio
+
+from backend.services.documents_manager import DocumentsManagerService, OCRServiceUnavailable
 
 
 class DocumentsManagerBot:
@@ -24,6 +25,7 @@ class DocumentsManagerBot:
         self.documents: List[Dict] = []
         self.ocr_results: Dict[str, Dict] = {}
         self.classification_rules: Dict[str, str] = {}
+        self.service = DocumentsManagerService()
 
     async def run(self, payload: dict) -> dict:
         """Main execution method"""
@@ -57,7 +59,6 @@ class DocumentsManagerBot:
 
     async def process_document(self, document_path: str) -> dict:
         """Process a document with OCR"""
-        # Simulate OCR processing
         document_id = f"DOC-{len(self.documents) + 1}"
         document = {
             "id": document_id,
@@ -67,16 +68,28 @@ class DocumentsManagerBot:
             "processed_at": None
         }
         self.documents.append(document)
+        try:
+            ocr_result = self.service.process_document(document_path)
+        except OCRServiceUnavailable as exc:
+            document["status"] = "failed"
+            document["processed_at"] = datetime.now(timezone.utc).isoformat()
+            return {
+                "success": False,
+                "status_code": 503,
+                "error": str(exc),
+                "document": document,
+            }
 
-        # Simulate OCR processing delay
-        await asyncio.sleep(1)
+        if not ocr_result.get("success"):
+            document["status"] = "failed"
+            document["processed_at"] = datetime.now(timezone.utc).isoformat()
+            return {
+                "success": False,
+                "status_code": ocr_result.get("status_code", 500),
+                "error": ocr_result.get("error", "Document processing failed"),
+                "document": document,
+            }
 
-        # Mock OCR result
-        ocr_result = {
-            "text": "Sample extracted text from document",
-            "confidence": 0.95,
-            "language": "en"
-        }
         self.ocr_results[document_id] = ocr_result
 
         document["status"] = "completed"
@@ -86,16 +99,7 @@ class DocumentsManagerBot:
 
     async def classify_document(self, content: str) -> dict:
         """Classify document type based on content"""
-        # Simple rule-based classification
-        doc_type = "general"
-        if "invoice" in content.lower():
-            doc_type = "invoice"
-        elif "contract" in content.lower():
-            doc_type = "contract"
-        elif "report" in content.lower():
-            doc_type = "report"
-
-        return {"document_type": doc_type, "confidence": 0.8}
+        return self.service.classify_document(content)
 
     async def get_documents(self) -> dict:
         """Get all documents"""
@@ -119,11 +123,6 @@ class DocumentsManagerBot:
 
         text = self.ocr_results[document_id].get("text", "")
 
-        # Mock data extraction
-        extracted_data = {
-            "entities": [],
-            "key_values": {},
-            "summary": f"Document contains {len(text)} characters"
-        }
+        extracted_data = self.service.extract_data(text)
 
         return {"document_id": document_id, "extracted_data": extracted_data}

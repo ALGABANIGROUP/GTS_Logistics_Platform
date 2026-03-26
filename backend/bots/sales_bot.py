@@ -95,7 +95,7 @@ class Deal:
 class SalesActivity:
     """Sales activity log"""
     id: int
-    activity_type: str  # call, email, meeting, demo, proposal
+    activity_type: str  # call, email, meeting, walkthrough, proposal
     lead_id: Optional[int] = None
     deal_id: Optional[int] = None
     description: str = ""
@@ -150,7 +150,7 @@ class SalesBot:
     async def run(self) -> Dict[str, Any]:
         """Start the Sales Bot"""
         self.is_running = True
-        await self._initialize_demo_data()
+        await self._initialize_seed_data()
         
         return {
             "status": "success",
@@ -184,10 +184,10 @@ class SalesBot:
         """Get bot configuration"""
         return self.config.copy()
     
-    async def _initialize_demo_data(self):
-        """Initialize with demo leads and deals"""
-        # Demo leads
-        demo_leads = [
+    async def _initialize_seed_data(self):
+        """Initialize with starter leads and deals"""
+        # Starter leads
+        seed_leads = [
             {
                 "customer_name": "ABC Logistics",
                 "email": "contact@abclogistics.com",
@@ -220,7 +220,7 @@ class SalesBot:
             }
         ]
         
-        for lead_data in demo_leads:
+        for lead_data in seed_leads:
             await self.capture_lead(lead_data)
     
     async def capture_lead(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:

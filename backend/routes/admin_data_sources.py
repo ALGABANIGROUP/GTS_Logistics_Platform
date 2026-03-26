@@ -3,15 +3,22 @@ Admin Data Sources Routes
 Endpoints for managing data sources and integrations
 """
 
+import logging
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import Query
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List, Optional
 
-from backend.database.session import get_async_session
+from backend.core.db_config import get_async_db
+from backend.database.session import get_async_session, wrap_session_factory
+from backend.models.user import User
 from backend.security.auth import require_roles, get_current_user
 from backend.services.data_source_service import get_data_source_service
 
 router = APIRouter(prefix="/api/v1/admin/data-sources", tags=["Admin Data Sources"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/")
@@ -209,7 +216,7 @@ async def get_users_from_database(
     Used for: User Management panel
     """
     try:
-        async with wrap_session_factory(get_db_async) as session:
+        async with wrap_session_factory(get_async_db) as session:
             # Build query
             query = select(User)
             
@@ -272,7 +279,7 @@ async def get_user_statistics_from_database(
     Get user statistics directly from database
     """
     try:
-        async with wrap_session_factory(get_db_async) as session:
+        async with wrap_session_factory(get_async_db) as session:
             # Total users
             total_users = await session.scalar(select(func.count()).select_from(User))
             

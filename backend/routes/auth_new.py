@@ -5,7 +5,6 @@ Authentication Routes - Login, Register, Token
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
 from datetime import datetime, timedelta
 from typing import Optional
 import importlib
@@ -25,12 +24,15 @@ def _import_attr(module_names: tuple[str, ...], attr_name: str):
 
 if __name__.startswith("routes."):
     _db_modules = ("database.session", "backend.database.session")
+    _user_modules = ("models.user", "backend.models.user")
     _config_modules = ("config", "backend.config")
 else:
     _db_modules = ("backend.database.session", "database.session")
+    _user_modules = ("backend.models.user", "models.user")
     _config_modules = ("backend.config", "config")
 
 get_async_session = _import_attr(_db_modules, "get_async_session")
+User = _import_attr(_user_modules, "User")
 Settings = _import_attr(_config_modules, "Settings")
 
 settings = Settings()
@@ -50,56 +52,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-async def _fetch_user_by_login(session: AsyncSession, login: str) -> Optional[dict]:
-    result = await session.execute(
-        text(
-            """
-            SELECT
-                id,
-                email,
-                username,
-                role,
-                is_active,
-                created_at,
-                hashed_password,
-                token_version
-            FROM users
-            WHERE lower(email) = :login OR lower(username) = :login
-            LIMIT 1
-            """
-        ),
-        {"login": login.strip().lower()},
-    )
-    row = result.mappings().first()
-    return dict(row) if row else None
-
-
-async def _fetch_user_by_id(session: AsyncSession, user_id: int) -> Optional[dict]:
-    result = await session.execute(
-        text(
-            """
-            SELECT
-                id,
-                email,
-                username,
-                role,
-                is_active,
-                created_at,
-                hashed_password,
-                token_version
-            FROM users
-            WHERE id = :user_id
-            LIMIT 1
-            """
-        ),
-        {"user_id": user_id},
-    )
-    row = result.mappings().first()
-    return dict(row) if row else None
-
-
 async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_async_session)):
-    if get_async_session is None:
+    if get_async_session is None or User is None:
         raise HTTPException(status_code=500, detail="Database not available")
 
     credentials_exception = HTTPException(
@@ -115,7 +69,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSe
     except jwt.PyJWTError:
         raise credentials_exception
 
-    user = await _fetch_user_by_id(session, int(user_id))
+    from sqlalchemy import select
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
     return user
@@ -127,9 +83,18 @@ async def login(
     session: AsyncSession = Depends(get_async_session)
 ):
     """Login endpoint - returns access token"""
-    if get_async_session is None:
+    if get_async_session is None or User is None:
         raise HTTPException(status_code=500, detail="Database not available")
-    user = await _fetch_user_by_login(session, form_data.username)
+
+    from sqlalchemy import select
+
+    # Find user by email or username
+    result = await session.execute(
+        select(User).where(
+            (User.email == form_data.username) | (User.username == form_data.username)
+        )
+    )
+    user = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(
@@ -139,8 +104,7 @@ async def login(
         )
 
     # Verify password
-    hashed_password = str(user.get("hashed_password") or "")
-    if not hashed_password or not bcrypt.checkpw(form_data.password.encode('utf-8'), hashed_password.encode('utf-8')):
+    if not bcrypt.checkpw(form_data.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -149,12 +113,12 @@ async def login(
 
     # Create access token
     access_token = create_access_token(
-        data={"sub": str(user["id"]), "email": user["email"], "role": user.get("role") or "user"}
+        data={"sub": str(user.id), "email": user.email, "role": user.role}
     )
 
     # Create refresh token
     refresh_token = create_access_token(
-        data={"sub": str(user["id"]), "type": "refresh"},
+        data={"sub": str(user.id), "type": "refresh"},
         expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
@@ -167,15 +131,15 @@ async def login(
 
 
 @router.get("/me")
-async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user info"""
     return {
-        "id": current_user.get("id"),
-        "email": current_user.get("email"),
-        "username": current_user.get("username"),
-        "role": current_user.get("role"),
-        "is_active": current_user.get("is_active"),
-        "created_at": current_user["created_at"].isoformat() if current_user.get("created_at") else None
+        "id": current_user.id,
+        "email": current_user.email,
+        "username": current_user.username,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None
     }
 
 
@@ -188,12 +152,14 @@ async def refresh_token(refresh_token: str, session: AsyncSession = Depends(get_
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        user = await _fetch_user_by_id(session, int(user_id))
+        from sqlalchemy import select
+        result = await session.execute(select(User).where(User.id == int(user_id)))
+        user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
         new_access_token = create_access_token(
-            data={"sub": str(user["id"]), "email": user["email"], "role": user.get("role") or "user"}
+            data={"sub": str(user.id), "email": user.email, "role": user.role}
         )
 
         return {

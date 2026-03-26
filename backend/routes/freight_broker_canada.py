@@ -43,7 +43,7 @@ TRAILER_TYPES = {
 class LoadSearchParams(BaseModel):
     origin_province: Optional[str] = None
     destination_province: Optional[str] = None
-    destination_country: Optional[str] = Field(None, regex="^(CA|US)$")
+    destination_country: Optional[str] = Field(None, pattern="^(CA|US)$")
     trailer_type: Optional[List[str]] = None
     min_weight: Optional[int] = 0
     max_weight: Optional[int] = 100000

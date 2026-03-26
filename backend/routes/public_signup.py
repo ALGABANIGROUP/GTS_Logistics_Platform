@@ -16,21 +16,12 @@ from backend.database.session import wrap_session_factory, get_async_session
 from backend.models.tenant import Tenant, TenantPlan, TenantStatus, BillingStatus
 from backend.models.user import User
 from backend.security.auth import get_password_hash
+from backend.services.email_service import send_email_verification
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/signup", tags=["public-signup"])
 SIGNUP_DISABLED = True
 SIGNUP_DISABLED_DETAIL = "Public signup is temporarily closed. Please contact the administrator."
-
-# Email service stub (TODO: implement real email service)
-async def send_email_verification(email: str, verification_token: str, subdomain: str) -> bool:
-    """Stub for email verification - logs instead of sending."""
-    logger.warning(
-        f"[signup] STUB: Would send verification email to {email}\n"
-        f"  Subdomain: {subdomain}, Token: {verification_token}\n"
-        f"  URL: https://{subdomain}.gts-logistics.com/verify-email?token={verification_token}"
-    )
-    return True
 
 # In-memory IP rate limiter (replace with Redis in production)
 IP_SIGNUP_ATTEMPTS = {}
@@ -118,7 +109,7 @@ async def register(
     if SIGNUP_DISABLED:
         raise HTTPException(status_code=403, detail=SIGNUP_DISABLED_DETAIL)
     
-    async with wrap_session_factory(get_db_async) as session:
+    async with wrap_session_factory(get_async_session) as session:
         # Get client IP (handle proxies)
         client_ip = (
             request.headers.get("x-forwarded-for", "").split(",")[0].strip()
@@ -236,7 +227,7 @@ async def verify_email(
     Verify email and activate tenant
     """
     
-    async with wrap_session_factory(get_db_async) as session:
+    async with wrap_session_factory(get_async_session) as session:
         try:
             # Find tenant by verification token
             stmt = select(Tenant).where(
@@ -297,7 +288,7 @@ async def check_subdomain_availability(
     if not validate_subdomain(subdomain):
         return {"available": False, "message": "Invalid subdomain format"}
     
-    async with wrap_session_factory(get_db_async) as session:
+    async with wrap_session_factory(get_async_session) as session:
         existing = await session.execute(
             select(Tenant).where(Tenant.subdomain == subdomain.lower())
         )

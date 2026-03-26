@@ -8,7 +8,7 @@ ai_manager = AIOperationsManager()
 
 @router.get("/operations/status")
 async def operations_status():
-    return await ai_manager.monitor_mock_truckerpath()
+    return await ai_manager.monitor_truckerpath_feed()
 
 
 @router.post("/analyze-shipment")

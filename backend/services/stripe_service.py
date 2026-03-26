@@ -3,11 +3,15 @@ Stripe Payment Service - Real payment processing
 """
 
 import logging
-import stripe
 from typing import Dict, Any, Optional
 from datetime import datetime
 
 from backend.config import Settings
+
+try:
+    import stripe  # type: ignore
+except Exception:  # pragma: no cover
+    stripe = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 settings = Settings()
@@ -20,13 +24,13 @@ class StripeService:
         self.api_key = settings.STRIPE_SECRET_KEY
         self.publishable_key = settings.STRIPE_PUBLISHABLE_KEY
         self.webhook_secret = settings.STRIPE_WEBHOOK_SECRET
-        self.enabled = settings.STRIPE_ENABLED
+        self.enabled = bool(settings.STRIPE_ENABLED and stripe is not None)
 
         if self.enabled:
             stripe.api_key = self.api_key
             logger.info("Stripe service initialized")
         else:
-            logger.warning("Stripe service disabled - no API key")
+            logger.info("Stripe service disabled - SDK missing or API key not configured")
 
     async def create_payment_intent(
         self,

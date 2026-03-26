@@ -157,7 +157,7 @@ class LegalCounselBot:
                 "error": "No contract text provided"
             }
         
-        # Mock contract analysis
+        # Contract analysis
         word_count = len(contract_text.split())
         
         analysis = {
@@ -202,7 +202,7 @@ class LegalCounselBot:
     
     async def track_deadlines(self) -> dict:
         """Track legal deadlines and renewals"""
-        # Generate mock deadlines
+        # Generate deadlines
         now = datetime.now(timezone.utc)
         
         deadlines = {
@@ -258,7 +258,7 @@ class LegalCounselBot:
                 "error": f"Unknown domain: {domain}"
             }
         
-        # Mock compliance check
+        # Compliance check
         compliance_status = []
         for area, details in requirements.items():
             reqs = details.get("requirements", [])

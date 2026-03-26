@@ -13,7 +13,7 @@ from backend.integrations.loadboards.truckerpath import TruckerPathProvider
 
 logger = logging.getLogger("truckerpath.service")
 
-# Initialize once; reads env via provider (mock enabled by default if token missing)
+# Initialize once; provider reads integration env.
 _provider = TruckerPathProvider()
 
 # Try to import your Shipment model from common locations
@@ -33,8 +33,7 @@ for _path in (
 class TruckerPathService:
     """
     Unified service for TruckerPath:
-    - Outbound: delegates to TruckerPathProvider when available (HTTP & env-aware).
-                Falls back to safe stubs in offline/mock mode.
+    - Outbound: delegates to TruckerPathProvider when available.
     - Inbound: maps webhook events to DB updates on your Shipment model.
     """
 
@@ -42,38 +41,33 @@ class TruckerPathService:
 
     @staticmethod
     async def _call_provider(method_name: str, *args: Any, **kwargs: Any) -> Any:
-        """
-        Call a provider method if it exists; otherwise return a safe stub.
-        This keeps the app running even when external APIs are disabled.
-        """
+        """Call a provider method if it exists; otherwise return a disabled result."""
+        if not getattr(_provider, "auth", ""):
+            return {
+                "ok": False,
+                "error": "truckerpath_not_configured",
+                "message": "Set TRUCKERPATH_API_TOKEN to enable TruckerPath integration.",
+            }
         fn = getattr(_provider, method_name, None)
         if callable(fn):
             res = fn(*args, **kwargs)
             if inspect.isawaitable(res):
                 return await res
             return res
-
-        # Fallbacks / stubs
-        if method_name == "list_loads":
-            # Use pull_loads() if available
-            pulls = getattr(_provider, "pull_loads", None)
-            if callable(pulls):
-                data = pulls()
-                if inspect.isawaitable(data):
-                    data = await data
-                # normalize shape
-                return {"loads": data, "source": "mock" if getattr(_provider, "mock_enabled", False) else "live"}
-            return {"loads": [], "source": "unknown"}
-
-        # Generic stub response
-        return {"ok": True, "stub": True, "method": method_name, "message": "Not implemented in provider (offline stub)"}
+        return {
+            "ok": False,
+            "error": "provider_method_unavailable",
+            "method": method_name,
+            "message": f"TruckerPath provider does not implement '{method_name}'.",
+        }
 
     # ---------------------- Outbound (public API) ----------------------
 
     @staticmethod
     async def ping() -> Dict[str, Any]:
-        # Some providers don't implement ping; provide a consistent response
-        return {"ok": True, "provider": getattr(_provider, "name", "truckerpath"), "mock": getattr(_provider, "mock_enabled", False)}
+        if not getattr(_provider, "auth", ""):
+            return {"ok": False, "provider": getattr(_provider, "name", "truckerpath"), "configured": False}
+        return {"ok": True, "provider": getattr(_provider, "name", "truckerpath")}
 
     @staticmethod
     async def create_company(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -107,6 +101,14 @@ class TruckerPathService:
         { "loads": [...], "total": int, "source": "mock"|"live"|... }
         """
         res = await TruckerPathService._call_provider("list_loads", limit=limit, **filters)
+        if isinstance(res, dict) and not res.get("ok", True) and "loads" not in res:
+            return {
+                "loads": [],
+                "total": 0,
+                "source": "disabled",
+                "error": res.get("error"),
+                "message": res.get("message"),
+            }
         if isinstance(res, dict) and "loads" in res:
             loads = res["loads"] or []
             if limit:
@@ -118,19 +120,7 @@ class TruckerPathService:
         if isinstance(res, list):
             return {"loads": res[:limit], "total": min(len(res), limit)}
 
-        # Last-resort: try pull_loads directly
-        pulls = getattr(_provider, "pull_loads", None)
-        if callable(pulls):
-            data = pulls()
-            if inspect.isawaitable(data):
-                data = await data
-            # Ensure data is a list
-            if not isinstance(data, list):
-                data = []
-            data = data[:limit] if limit else data
-            return {"loads": data, "total": len(data), "source": "mock" if getattr(_provider, "mock_enabled", False) else "live"}
-
-        return {"loads": [], "total": 0}
+        return {"loads": [], "total": 0, "source": "disabled"}
 
     # ---------------------- Inbound (webhook -> DB) ----------------------
 

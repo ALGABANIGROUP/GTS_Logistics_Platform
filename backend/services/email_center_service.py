@@ -592,6 +592,7 @@ class EmailCenterService:
         payload: Dict[str, Any],
         severity: str = "info",
     ) -> None:
+        self.db.add(
             EmailAuditLog(
                 action=action,
                 mailbox_id=mailbox_id,
