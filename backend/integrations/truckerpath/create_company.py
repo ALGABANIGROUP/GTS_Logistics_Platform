@@ -11,7 +11,7 @@ except Exception:
 router = APIRouter(prefix='/integrations/truckerpath', tags=['TruckerPath'])
 TRUCKERPATH_BASE_URL = os.getenv('TRUCKERPATH_BASE_URL', 'https://test-api.truckerpath.com/truckload/api').rstrip('/')
 TRUCKERPATH_API_TOKEN = os.getenv('TRUCKERPATH_API_TOKEN', '')
-TRUCKERPATH_ENABLE_MOCK = os.getenv('TRUCKERPATH_ENABLE_MOCK', 'true').lower() in {'1', 'true', 'yes'}
+TRUCKERPATH_ENABLE_MOCK = os.getenv('TRUCKERPATH_ENABLE_MOCK', 'false').lower() in {'1', 'true', 'yes'}
 
 class CreateCompanyRequest(BaseModel):
     company_name: str = 'Gabani Transport Solutions LLC'
@@ -37,8 +37,10 @@ async def create_company(body: CreateCompanyRequest) -> CreateCompanyResponse:
     Create a company in TruckerPath via API.
     Uses TEST endpoint by default: https://test-api.truckerpath.com/truckload/api/company/create
     """
-    if TRUCKERPATH_ENABLE_MOCK or not TRUCKERPATH_API_TOKEN:
-        return CreateCompanyResponse(ok=True, status=200, data={'mock': True, 'echo': body.dict()}, message='Mock mode enabled or missing API token.')
+    if TRUCKERPATH_ENABLE_MOCK:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail='TruckerPath mock mode is disabled.')
+    if not TRUCKERPATH_API_TOKEN:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail='TruckerPath API credentials not configured.')
     url = f'{TRUCKERPATH_BASE_URL}/company/create'
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(url, headers=_headers(), json=body.dict())

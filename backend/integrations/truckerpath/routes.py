@@ -15,7 +15,7 @@ except Exception:
 router = APIRouter(prefix='/integrations/truckerpath', tags=['TruckerPath'])
 TP_BASE_URL = os.getenv('TRUCKERPATH_BASE_URL', 'https://test-api.truckerpath.com/truckload/api').rstrip('/')
 TP_TOKEN = os.getenv('TRUCKERPATH_API_TOKEN', '').strip()
-TP_ENABLE_MOCK = os.getenv('TRUCKERPATH_ENABLE_MOCK', 'true').lower() in {'1', 'true', 'yes'}
+TP_ENABLE_MOCK = os.getenv('TRUCKERPATH_ENABLE_MOCK', 'false').lower() in {'1', 'true', 'yes'}
 TP_WEBHOOK_SECRET = os.getenv('TRUCKERPATH_WEBHOOK_SECRET', '').strip()
 TP_POST_LOAD_URL = os.getenv('TRUCKERPATH_POST_LOAD_URL', f'{TP_BASE_URL}/shipments/v2')
 TP_CREATE_COMPANY_URL = os.getenv('TRUCKERPATH_CREATE_COMPANY_URL', f'{TP_BASE_URL}/company/create')
@@ -26,6 +26,19 @@ TP_TRACKING_POINTS_URL = os.getenv('TRUCKERPATH_TRACKING_URL', f'{TP_BASE_URL}/t
 
 def _headers() -> Dict[str, str]:
     return {'Authorization': TP_TOKEN if TP_TOKEN else '', 'Content-Type': 'application/json', 'Accept': 'application/json'}
+
+
+def _require_credentials() -> None:
+    if TP_ENABLE_MOCK:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='TruckerPath mock mode is disabled for production routes.',
+        )
+    if not TP_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='TruckerPath API credentials not configured.',
+        )
 
 class CreateCompanyRequest(BaseModel):
     company_name: str = 'Gabani Transport Solutions LLC'
@@ -158,14 +171,12 @@ def _verify_signature(raw_body: bytes, provided_signature: Optional[str]) -> boo
 
 @router.get('/ping', response_model=GenericProviderResponse)
 async def tp_ping() -> GenericProviderResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return GenericProviderResponse(ok=True, status=200, data={'mock': True, 'message': 'Ping OK (mock)'})
+    _require_credentials()
     return GenericProviderResponse(ok=True, status=200, data={'message': 'Ping OK (no provider ping)'})
 
 @router.post('/company/create', response_model=CreateCompanyResponse, dependencies=[Depends(admin_required)] if admin_required else None)
 async def create_company(body: CreateCompanyRequest) -> CreateCompanyResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return CreateCompanyResponse(ok=True, status=200, data={'mock': True, 'echo': body.dict()}, message='Mock mode or missing token')
+    _require_credentials()
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(TP_CREATE_COMPANY_URL, headers=_headers(), json=body.dict())
         if resp.status_code in (200, 201):
@@ -174,8 +185,7 @@ async def create_company(body: CreateCompanyRequest) -> CreateCompanyResponse:
 
 @router.post('/post-load', response_model=PostLoadResponse, dependencies=[Depends(admin_required)] if admin_required else None)
 async def post_load(body: PostLoadRequest) -> PostLoadResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return PostLoadResponse(ok=True, status=200, data={'mock': True, 'echo': body.dict()}, message='Mock mode or missing token')
+    _require_credentials()
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(TP_POST_LOAD_URL, headers=_headers(), json=body.dict())
         if resp.status_code in (200, 201):
@@ -184,8 +194,7 @@ async def post_load(body: PostLoadRequest) -> PostLoadResponse:
 
 @router.post('/register-webhook', response_model=RegisterWebhookResponse, dependencies=[Depends(admin_required)] if admin_required else None)
 async def register_webhook(body: RegisterWebhookRequest) -> RegisterWebhookResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return RegisterWebhookResponse(ok=True, status=200, webhook_id='mock-webhook-id', data={'mock': True, 'echo': body.dict()}, message='Mock mode or missing token')
+    _require_credentials()
     payload = {'url': str(body.url), 'events': body.events}
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(TP_REGISTER_WEBHOOK_URL, headers=_headers(), json=payload)
@@ -197,8 +206,7 @@ async def register_webhook(body: RegisterWebhookRequest) -> RegisterWebhookRespo
 
 @router.post('/register-webhook/add', response_model=RegisterWebhookAddResponse, dependencies=[Depends(admin_required)] if admin_required else None)
 async def register_webhook_add(body: RegisterWebhookAddRequest) -> RegisterWebhookAddResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return RegisterWebhookAddResponse(ok=True, status=200, data={'mock': True, 'echo': body.dict()}, message='Mock mode or missing token')
+    _require_credentials()
     payload = {'url': str(body.url), 'type': body.type}
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(TP_REGISTER_WEBHOOK_ADD_URL, headers=_headers(), json=payload)
@@ -208,8 +216,7 @@ async def register_webhook_add(body: RegisterWebhookAddRequest) -> RegisterWebho
 
 @router.post('/tracking/create', response_model=GenericProviderResponse)
 async def tracking_create(body: TrackingCreateRequest) -> GenericProviderResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return GenericProviderResponse(ok=True, status=200, data={'mock': True, 'echo': body.dict()}, message='Mock mode or missing token')
+    _require_credentials()
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(TP_TRACKING_CREATE_URL, headers=_headers(), json=body.dict())
         if resp.status_code in (200, 201):
@@ -218,8 +225,7 @@ async def tracking_create(body: TrackingCreateRequest) -> GenericProviderRespons
 
 @router.post('/tracking', response_model=GenericProviderResponse)
 async def push_tracking(body: TrackingPointsRequest) -> GenericProviderResponse:
-    if TP_ENABLE_MOCK or not TP_TOKEN:
-        return GenericProviderResponse(ok=True, status=200, data={'mock': True, 'echo': body.dict()}, message='Mock mode or missing token')
+    _require_credentials()
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(TP_TRACKING_POINTS_URL, headers=_headers(), json=body.dict())
         if resp.status_code in (200, 201, 202):

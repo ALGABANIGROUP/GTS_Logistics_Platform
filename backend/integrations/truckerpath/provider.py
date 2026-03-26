@@ -12,11 +12,6 @@ except Exception:  # pragma: no cover
 DEFAULT_BASE_URL = "https://test-api.truckerpath.com/truckload/api"
 
 
-def _bool_env(name: str, default: bool = False) -> bool:
-    val = os.getenv(name, str(default)).lower()
-    return val in {"1", "true", "yes", "on"}
-
-
 def _bearer(token: str) -> str:
     if not token:
         return ""
@@ -25,7 +20,7 @@ def _bearer(token: str) -> str:
 
 class TruckerPathProvider:
     """
-    Unified TruckerPath provider (mock-friendly).
+    Unified TruckerPath provider.
     Implements the interface expected by:
       - backend/routes/loadboards_routes.py (generic)
       - backend/services/truckerpath_service.py (service facade)
@@ -33,7 +28,6 @@ class TruckerPathProvider:
     Reads env:
       TRUCKERPATH_BASE_URL
       TRUCKERPATH_API_TOKEN
-      TRUCKERPATH_ENABLE_MOCK
       TRUCKERPATH_POST_LOAD_URL
       TRUCKERPATH_CREATE_COMPANY_URL
       TRUCKERPATH_REGISTER_WEBHOOK_URL
@@ -49,7 +43,6 @@ class TruckerPathProvider:
         self.base_url = os.getenv("TRUCKERPATH_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
         token = os.getenv("TRUCKERPATH_API_TOKEN", "").strip()
         self.auth = _bearer(token)
-        self.mock_enabled = _bool_env("TRUCKERPATH_ENABLE_MOCK", True)
 
         # Endpoints
         self.url_post_load = os.getenv("TRUCKERPATH_POST_LOAD_URL", f"{self.base_url}/shipments/v2")
@@ -66,10 +59,18 @@ class TruckerPathProvider:
             "Accept": "application/json",
         }
 
+    def _missing_credentials_response(self) -> Dict[str, Any]:
+        return {
+            "ok": False,
+            "status": 503,
+            "error": "truckerpath_not_configured",
+            "message": "Service unavailable - missing API credentials. Please configure TRUCKERPATH_API_TOKEN.",
+        }
+
     # ---------------- HTTP helpers ----------------
     async def _post(self, url: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        if self.mock_enabled or not self.auth or not httpx:
-            return {"ok": True, "mock": True, "url": url, "payload": payload}
+        if not self.auth or not httpx:
+            return self._missing_credentials_response()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(url, headers=self.headers, json=payload)
             try:
@@ -81,8 +82,8 @@ class TruckerPathProvider:
             return {"ok": False, "status": resp.status_code, "error": data}
 
     async def _get(self, url: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        if self.mock_enabled or not self.auth or not httpx:
-            return {"ok": True, "mock": True, "url": url, "params": params or {}}
+        if not self.auth or not httpx:
+            return self._missing_credentials_response()
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.get(url, headers=self.headers, params=params or {})
             try:
@@ -95,8 +96,9 @@ class TruckerPathProvider:
 
     # ---------------- Public API ----------------
     async def ping(self) -> Dict[str, Any]:
-        # No official ping endpoint; return consistent stub/mock
-        return {"ok": True, "provider": self.name, "mock": self.mock_enabled}
+        if not self.auth:
+            return self._missing_credentials_response()
+        return {"ok": True, "provider": self.name}
 
     async def create_company(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         return await self._post(self.url_create_company, payload)
@@ -119,15 +121,17 @@ class TruckerPathProvider:
     async def list_loads(self, *, limit: int = 10, **params: Any) -> Dict[str, Any]:
         """
         Return normalized loads shape:
-          { "ok": True, "loads": [...], "source": "mock"|"live" }
+          { "ok": True, "loads": [...], "source": "live" }
         """
-        if self.mock_enabled or not self.auth or not httpx:
-            try:
-                from backend.integrations.loadboards.mock_truckerpath import get_mock_loads
-                loads = get_mock_loads()
-            except Exception:
-                loads = []
-            return {"ok": True, "loads": loads[:limit], "source": "mock"}
+        if not self.auth or not httpx:
+            return {
+                "ok": False,
+                "loads": [],
+                "source": "disabled",
+                "status": 503,
+                "error": "truckerpath_not_configured",
+                "message": "Service unavailable - missing API credentials. Please configure TRUCKERPATH_API_TOKEN.",
+            }
 
         q = {"limit": limit, **params}
         res = await self._get(self.url_list_loads, params=q)
@@ -140,10 +144,7 @@ class TruckerPathProvider:
             loads = list(data.get("loads") or [])
         elif isinstance(data, list):
             loads = data
-        elif isinstance(res, dict) and "mock" in res:
-            # When provider returned a mock GET response; just surface params
-            loads = []
-        return {"ok": True, "loads": loads[:limit], "source": "live" if self.auth else "mock"}
+        return {"ok": True, "loads": loads[:limit], "source": "live"}
 
     # Backward-compat (service may call pull_loads)
     async def pull_loads(self) -> List[Dict[str, Any]]:

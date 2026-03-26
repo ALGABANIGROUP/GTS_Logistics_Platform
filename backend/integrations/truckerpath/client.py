@@ -11,17 +11,17 @@ TRUCKERPATH_BASE_URL = os.getenv("TRUCKERPATH_BASE_URL", "https://api.truckerpat
 TRUCKERPATH_API_KEY = os.getenv("TRUCKERPATH_API_KEY", "")
 TRUCKERPATH_COMPANY_ID = os.getenv("TRUCKERPATH_COMPANY_ID", "")
 TRUCKERPATH_WEBHOOK_SECRET = os.getenv("TRUCKERPATH_WEBHOOK_SECRET", "")
-TRUCKERPATH_ENABLE_MOCK = os.getenv("TRUCKERPATH_ENABLE_MOCK", "true").lower() in {"1", "true", "yes"}
+TRUCKERPATH_SANDBOX_MODE = os.getenv("TRUCKERPATH_SANDBOX_MODE", "false").lower() in {"1", "true", "yes"}
 
 class TruckerPathClient:
     def __init__(self) -> None:
         self.base_url = TRUCKERPATH_BASE_URL.rstrip("/")
         self.api_key = TRUCKERPATH_API_KEY
         self.company_id = TRUCKERPATH_COMPANY_ID
-        self.enable_mock = TRUCKERPATH_ENABLE_MOCK
+        self.use_sandbox = TRUCKERPATH_SANDBOX_MODE
 
-        if not self.api_key and not self.enable_mock:
-            raise RuntimeError("TRUCKERPATH_API_KEY is required when mock is disabled.")
+        if not self.api_key and not self.use_sandbox:
+            raise RuntimeError("TRUCKERPATH_API_KEY is required when sandbox mode is disabled.")
 
         self._headers = {
             "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
@@ -30,8 +30,8 @@ class TruckerPathClient:
         }
 
     async def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        if self.enable_mock:
-            return {"ok": True, "mock": True, "path": path, "payload": payload}
+        if self.use_sandbox:
+            return {"ok": False, "status": 503, "error": "truckerpath_sandbox_disabled", "message": "Sandbox mode is disabled."}
 
         url = f"{self.base_url}{path}"
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -40,8 +40,8 @@ class TruckerPathClient:
             return resp.json()
 
     async def _get(self, path: str) -> Dict[str, Any]:
-        if self.enable_mock:
-            return {"ok": True, "mock": True, "path": path}
+        if self.use_sandbox:
+            return {"ok": False, "status": 503, "error": "truckerpath_sandbox_disabled", "message": "Sandbox mode is disabled."}
 
         url = f"{self.base_url}{path}"
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -50,8 +50,8 @@ class TruckerPathClient:
             return resp.json()
 
     async def ping(self) -> Dict[str, Any]:
-        if self.enable_mock:
-            return {"ok": True, "mock": True, "message": "Ping OK (mock)"}
+        if self.use_sandbox:
+            return {"ok": False, "status": 503, "error": "truckerpath_sandbox_disabled", "message": "Sandbox mode is disabled."}
         # Adjust path per TruckerPath docs if different
         return await self._get("/v1/ping")
 
