@@ -15,7 +15,6 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import axiosClient from "../api/axiosClient";
-import { getAllMapData } from "../api/mockDataApi";
 import { getShipmentLiveData } from "../api/shipmentMapApi";
 import { WS_BASE_URL } from "../config/env";
 import { appendTokenToWsUrl, isSocketUnauthorized, notifySocketUnauthorized } from "../utils/wsHelpers";
@@ -23,7 +22,6 @@ import { appendTokenToWsUrl, isSocketUnauthorized, notifySocketUnauthorized } fr
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
-const LIST_URL = "/api/v1/shipments/?limit=100";
 const ITEM_URL = (id) => `/api/v1/shipments/${id}`;
 const CITY_COORDINATES = {
   dubai: [25.2048, 55.2708], abu_dhabi: [24.4539, 54.3773], riyadh: [24.7136, 46.6753],
@@ -168,6 +166,26 @@ function buildFallbackLiveData(shipment, drivers = [], companies = [], vehicles 
     },
     driver: driver ? { id: driver.id, name: driver.name || driver.full_name || driver.email, phone: driver.phone || driver.phone_number || "N/A", rating: driver.rating ?? null, status: driver.status, experience: driver.experience, completed_trips: driver.completed_trips } : { id: shipment.driver_id, name: shipment.driver_name || shipment.driver || "Unassigned", phone: shipment.driver_phone || shipment.phone || "N/A", rating: null },
     vehicle: vehicle ? { id: vehicle.id, plate: vehicle.plate, type: vehicle.type, speed: shipment.current_location?.speed || shipment.speed || null, truck_number: vehicle.model || vehicle.plate, status: vehicle.status } : { id: shipment.vehicle_id || shipment.truck_id, plate: shipment.license_plate || null, type: shipment.trailer_type || shipment.shipment_type, speed: shipment.current_location?.speed || shipment.speed || null, truck_number: shipment.truck_number || shipment.truck || shipment.truck_id || "N/A", status: shipment.vehicle_status || null },
+  };
+}
+
+function normalizeDriverEntity(driver) {
+  if (!driver) return driver;
+  return {
+    ...driver,
+    current_location: driver.current_location || driver.location || null,
+    status: driver.status || driver.driver_status || "unknown",
+    completed_trips: driver.completed_trips ?? driver.stats?.completed_trips ?? null,
+  };
+}
+
+function normalizeCompanyEntity(company) {
+  if (!company) return company;
+  return {
+    ...company,
+    headquarters: company.headquarters || company.location || null,
+    fleet_size: company.fleet_size ?? company.stats?.vehicles ?? company.stats?.fleet_size ?? null,
+    phone: company.phone || company.contact?.phone || null,
   };
 }
 
@@ -352,6 +370,7 @@ const UnifiedShipmentMap = ({ filterShipmentId, onTotalChange, setSummary, marke
   const [selectedShipmentLive, setSelectedShipmentLive] = useState(null);
   const [loadingLive, setLoadingLive] = useState(false);
   const [liveError, setLiveError] = useState("");
+  const [mapError, setMapError] = useState("");
   const [nowTs, setNowTs] = useState(() => Date.now());
   const wsRef = useRef(null);
   const hbRef = useRef(null);
@@ -364,46 +383,52 @@ const UnifiedShipmentMap = ({ filterShipmentId, onTotalChange, setSummary, marke
   const selectedCarrier = useMemo(() => carriers.find((item) => String(item.id) === String(selectedCarrierId)) || null, [carriers, selectedCarrierId]);
 
   const fetchMapData = async () => {
+    setMapError("");
     try {
-      const res = await axiosClient.get(LIST_URL);
-      let realShipments = normalizeList(res?.data || {});
+      const res = await axiosClient.get("/api/v1/unified/shipments", {
+        params: { limit: filterShipmentId ? 500 : 100 },
+      });
+      const mapData = res?.data?.data || {};
+      let realShipments = normalizeList(mapData.shipments || []);
       if (filterShipmentId) {
         const one = realShipments.find((x) => Number(x.id) === Number(filterShipmentId));
         if (!one) {
           const itemRes = await axiosClient.get(ITEM_URL(filterShipmentId)).catch(() => null);
           const single = itemRes?.data?.data || itemRes?.data || null;
           realShipments = single?.id ? [single] : [];
-        } else realShipments = [one];
+        } else {
+          realShipments = [one];
+        }
       }
-      const mapData = await getAllMapData({ shipments: realShipments });
-      setShipments(mapData.shipments);
-      setDrivers(mapData.drivers);
-      setCompanies(mapData.companies);
+      setShipments(realShipments);
+      setDrivers((mapData.drivers || []).map(normalizeDriverEntity));
+      setCompanies((mapData.companies || mapData.tenants || []).map(normalizeCompanyEntity));
       setTenants(mapData.tenants || []);
       setBrokers(mapData.brokers || []);
       setCarriers(mapData.carriers || []);
       setVehicles(mapData.vehicles || []);
       setSelectedShipmentId((current) => {
         if (filterShipmentId) return filterShipmentId;
-        if (current && mapData.shipments.some((item) => String(item.id) === String(current))) return current;
-        return mapData.shipments[0]?.id ?? null;
+        if (current && realShipments.some((item) => String(item.id) === String(current))) return current;
+        return realShipments[0]?.id ?? null;
       });
-      onTotalChange?.(mapData.shipments.length);
+      onTotalChange?.(realShipments.length);
       setSummary?.({
-        on_the_way: mapData.shipments.filter((item) => ["on_the_way", "in_transit"].includes(normalizeStatus(item.status))).length,
-        delayed: mapData.shipments.filter((item) => normalizeStatus(item.status).includes("delay")).length,
-        delivered: mapData.shipments.filter((item) => normalizeStatus(item.status).startsWith("deliver")).length,
+        on_the_way: realShipments.filter((item) => ["on_the_way", "in_transit"].includes(normalizeStatus(item.status))).length,
+        delayed: realShipments.filter((item) => normalizeStatus(item.status).includes("delay")).length,
+        delivered: realShipments.filter((item) => normalizeStatus(item.status).startsWith("deliver")).length,
       });
     } catch (err) {
       console.error("Failed to fetch map data:", err);
-      const mapData = await getAllMapData({ shipments: [] });
-      setShipments(mapData.shipments);
-      setDrivers(mapData.drivers);
-      setCompanies(mapData.companies);
-      setTenants(mapData.tenants || []);
-      setBrokers(mapData.brokers || []);
-      setCarriers(mapData.carriers || []);
-      setVehicles(mapData.vehicles || []);
+      const detail = err?.response?.data?.detail;
+      setMapError(typeof detail === "string" ? detail : err?.message || "Unable to load shipment data.");
+      setShipments([]);
+      setDrivers([]);
+      setCompanies([]);
+      setTenants([]);
+      setBrokers([]);
+      setCarriers([]);
+      setVehicles([]);
     }
   };
 
@@ -533,6 +558,21 @@ const UnifiedShipmentMap = ({ filterShipmentId, onTotalChange, setSummary, marke
     setSelectedBrokerId(null);
   };
 
+  if (mapError) {
+    return (
+      <div style={{ width: "100%", minHeight: 420, display: "grid", placeItems: "center", borderRadius: 18, border: "1px solid rgba(248,113,113,0.25)", background: "rgba(15,23,42,0.92)", color: "#e2e8f0", padding: 24, textAlign: "center" }}>
+        <div style={{ maxWidth: 420 }}>
+          <div style={{ fontSize: 28, marginBottom: 10 }}>⚠️</div>
+          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Unable to Load Shipment Data</div>
+          <div style={{ fontSize: 14, color: "#cbd5e1", marginBottom: 16 }}>{mapError}</div>
+          <button type="button" onClick={fetchMapData} style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 10, padding: "10px 16px", fontWeight: 700, cursor: "pointer" }}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", gap: 16, width: "100%", height: "600px", flexWrap: "wrap" }}>
       <div style={{ position: "relative", flex: "1 1 680px", minWidth: 0, height: "100%", borderRadius: 18, overflow: "hidden", border: "1px solid rgba(148,163,184,0.18)" }}>
@@ -583,7 +623,7 @@ const UnifiedShipmentMap = ({ filterShipmentId, onTotalChange, setSummary, marke
             </LayersControl.Overlay>
             <LayersControl.Overlay checked name="Companies">
               <>
-                {companies.map((company) => company?.headquarters?.lat && company?.headquarters?.lng ? <Marker key={`company-${company.id}`} position={[company.headquarters.lat, company.headquarters.lng]} icon={companyIcon} eventHandlers={{ click: () => handleSelectCompany(company.id) }}><Popup><strong>{company.name}</strong><div>{company.headquarters.city}, {company.headquarters.state}</div><div>Fleet: {company.fleet_size ?? "N/A"}</div><div>Phone: {company.phone || "N/A"}</div></Popup></Marker> : null)}
+                {companies.map((company) => company?.headquarters?.lat && company?.headquarters?.lng ? <Marker key={`company-${company.id}`} position={[company.headquarters.lat, company.headquarters.lng]} icon={companyIcon} eventHandlers={{ click: () => handleSelectCompany(company.id) }}><Popup><strong>{company.name}</strong><div>{company.headquarters.city || "Unknown"}{company.headquarters.state ? `, ${company.headquarters.state}` : ""}</div><div>Fleet: {company.fleet_size ?? "N/A"}</div><div>Phone: {company.phone || "N/A"}</div></Popup></Marker> : null)}
               </>
             </LayersControl.Overlay>
             {marketRoutes.length > 0 ? <LayersControl.Overlay checked name="Market Routes"><>{marketRoutes.map((route, index) => route?.originCoords && route?.destinationCoords ? <React.Fragment key={`market-route-${route.id || index}`}><Polyline positions={[route.originCoords, route.destinationCoords]} color="#8B5CF6" weight={4} opacity={0.85} /><Circle center={route.originCoords} radius={12000} pathOptions={{ color: "#8B5CF6", fillColor: "#8B5CF6", fillOpacity: 0.15 }} /></React.Fragment> : null)}</></LayersControl.Overlay> : null}

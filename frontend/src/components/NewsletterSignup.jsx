@@ -120,7 +120,7 @@ const NewsletterSignup = () => {
                 </div>
             )}
 
-            <style jsx>{`
+            <style>{`
         @keyframes slide-up {
           from {
             opacity: 0;

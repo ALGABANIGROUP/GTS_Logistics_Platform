@@ -73,26 +73,6 @@ export default function AIBotPage({
   const botLabel = title || botKey;
   const isPreview = preview || mode === "preview";
 
-  // Mock data for demo when backend is unavailable
-  const mockBotConfig = {
-    freight_broker: {
-      capabilities: [
-        "Carrier Matching & Selection",
-        "Rate Quote Aggregation",
-        "Load Booking Automation",
-        "Route Optimization",
-        "Real-Time Tracking"
-      ],
-      endpoints: [
-        "/api/v1/bots/freight_broker/run",
-        "/api/v1/bots/freight_broker/status",
-        "/api/v1/bots/freight_broker/config"
-      ],
-      version: "2.0.1",
-      lastUpdate: "2026-02-05T10:30:00Z"
-    }
-  };
-
   const loadStatus = useCallback(async () => {
     if (isPreview) return;
     if (!botKey) return;
@@ -268,24 +248,7 @@ export default function AIBotPage({
                 <div className="mt-3 text-xs text-slate-400">Loading status...</div>
               ) : statusError ? (
                 <div className="mt-3 text-xs text-slate-300">
-                  <p className="text-rose-300 mb-2">{statusError}</p>
-                  <div className="text-slate-400 text-xs mt-3 p-3 border border-slate-600 rounded bg-slate-950/50">
-                    <p className="font-semibold mb-2 text-slate-300">📊 Demo Configuration:</p>
-                    {botKey === 'freight_broker' && mockBotConfig.freight_broker && (
-                      <div className="space-y-2">
-                        <div><span className="text-slate-400">Version:</span> <span className="text-white">{mockBotConfig.freight_broker.version}</span></div>
-                        <div><span className="text-slate-400">Last Update:</span> <span className="text-white">{formatTime(mockBotConfig.freight_broker.lastUpdate)}</span></div>
-                        <div className="mt-2">
-                          <span className="text-slate-400 block mb-1">Capabilities:</span>
-                          <ul className="text-slate-300 text-xs space-y-1 ml-2">
-                            {mockBotConfig.freight_broker.capabilities.map((cap, i) => (
-                              <li key={i}>✓ {cap}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-rose-300">{statusError}</p>
                 </div>
               ) : (
                 <div className="mt-3 space-y-2 text-xs text-slate-200">
@@ -316,17 +279,7 @@ export default function AIBotPage({
               {loadingConfig ? (
                 <div className="mt-3 text-xs text-slate-400">Loading config...</div>
               ) : configError ? (
-                <div className="mt-3">
-                  <p className="text-xs text-slate-300 mb-2">{configError}</p>
-                  {botKey === 'freight_broker' && mockBotConfig.freight_broker && (
-                    <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-white/10 bg-slate-950/40 p-3 text-[11px] text-slate-300">
-                      {JSON.stringify({
-                        ...mockBotConfig.freight_broker,
-                        note: "Mock configuration - Backend not available"
-                      }, null, 2)}
-                    </pre>
-                  )}
-                </div>
+                <p className="mt-3 text-xs text-slate-300">{configError}</p>
               ) : configData?.config ? (
                 <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-white/10 bg-slate-950/40 p-3 text-[11px] text-slate-300">
                   {JSON.stringify(configData.config, null, 2)}

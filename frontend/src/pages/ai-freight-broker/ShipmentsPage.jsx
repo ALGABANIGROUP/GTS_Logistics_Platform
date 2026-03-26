@@ -179,7 +179,7 @@ const ShipmentsPage = ({ mode }) => {
                                 <input
                                     type="text"
                                     placeholder="City, State"
-                                    className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                                    className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -187,7 +187,7 @@ const ShipmentsPage = ({ mode }) => {
                                 <input
                                     type="text"
                                     placeholder="City, State"
-                                    className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                                    className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -195,7 +195,7 @@ const ShipmentsPage = ({ mode }) => {
                                 <input
                                     type="text"
                                     placeholder="$0.00"
-                                    className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                                    className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -212,7 +212,7 @@ const ShipmentsPage = ({ mode }) => {
                             <textarea
                                 placeholder="Additional shipment notes..."
                                 rows={4}
-                                className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100 placeholder-slate-500"
+                                className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm text-slate-100"
                             ></textarea>
                         </div>
                     </form>
@@ -258,7 +258,7 @@ const ShipmentsPage = ({ mode }) => {
                             placeholder="Search shipments..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 bg-transparent border-none text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+                            className="flex-1 bg-transparent border-none text-sm text-slate-100 focus:outline-none"
                         />
                     </div>
                     <select

@@ -1,13 +1,5 @@
-import React from 'react';
+import AIFreightBrokerPage from "../../pages/ai-bots/AIFreightBroker.jsx";
 
-const AIFreightBroker = () => {
-    return (
-        <div className="bot-page">
-            <h1>AI Freight Broker</h1>
-            <p>Manages shipments, carrier negotiations, and load optimization.</p>
-            <div className="placeholder">Control panel coming soon...</div>
-        </div>
-    );
-};
-
-export default AIFreightBroker;
+export default function AIFreightBroker(props) {
+  return <AIFreightBrokerPage {...props} />;
+}

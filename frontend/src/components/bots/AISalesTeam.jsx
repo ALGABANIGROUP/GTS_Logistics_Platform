@@ -1,13 +1,5 @@
-import React from 'react';
+import AISalesTeamPage from "../../pages/ai-bots/AISalesTeam.jsx";
 
-const AISalesTeam = () => {
-    return (
-        <div className="bot-page">
-            <h1>AI Sales Team</h1>
-            <p>CRM integration, lead management, and customer analysis.</p>
-            <div className="placeholder">Control panel coming soon...</div>
-        </div>
-    );
-};
-
-export default AISalesTeam;
+export default function AISalesTeam(props) {
+  return <AISalesTeamPage {...props} />;
+}

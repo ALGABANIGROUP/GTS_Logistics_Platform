@@ -36,34 +36,7 @@ class SalesService {
             return await this.runAction('dashboard');
         } catch (error) {
             console.error('Failed to get sales dashboard:', error);
-            return {
-                leads: [
-                    { id: 1, name: 'Acme Corp', contact: 'John Smith', email: 'john@acme.com', status: 'QUALIFIED', value: 250000, source: 'linkedin' },
-                    { id: 2, name: 'TechStart Inc', contact: 'Sarah Johnson', email: 'sarah@techstart.com', status: 'PROPOSAL', value: 180000, source: 'referral' },
-                    { id: 3, name: 'Global Industries', contact: 'Mike Davis', email: 'mike@global.com', status: 'NEW', value: 150000, source: 'website' }
-                ],
-                deals: [
-                    { id: 1, customer: 'Acme Corp', value: 500000, stage: 'NEGOTIATION', probability: 75, expected_close: '2026-03-15' },
-                    { id: 2, customer: 'TechStart Inc', value: 350000, stage: 'PROPOSAL', probability: 60, expected_close: '2026-02-28' },
-                    { id: 3, customer: 'Global Industries', value: 800000, stage: 'DISCOVERY', probability: 40, expected_close: '2026-04-30' }
-                ],
-                customers: [
-                    { id: 1, name: 'Acme Corp', segment: 'VIP', lifetime_value: 2500000, health: 95 },
-                    { id: 2, name: 'TechStart Inc', segment: 'REGULAR', lifetime_value: 850000, health: 80 },
-                    { id: 3, name: 'Global Industries', segment: 'POTENTIAL', lifetime_value: 1200000, health: 70 }
-                ],
-                forecast: [
-                    { month: '2026-04', projected: 1200000, actual: 980000 },
-                    { month: '2026-05', projected: 1500000, actual: null },
-                    { month: '2026-06', projected: 1800000, actual: null }
-                ],
-                stats: {
-                    totalLeads: 15,
-                    totalDeals: 8,
-                    totalRevenue: 1650000,
-                    conversionRate: 45
-                }
-            };
+            throw error;
         }
     }
 

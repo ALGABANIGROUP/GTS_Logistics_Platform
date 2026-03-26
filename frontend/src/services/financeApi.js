@@ -64,11 +64,6 @@ export const createPayment = async (payload) => {
     return response?.data;
 };
 
-export const bootstrapDemoData = async () => {
-    const response = await axiosClient.post(`${UNIFIED_FINANCE_API}/bootstrap-demo`);
-    return response?.data;
-};
-
 export const payInvoice = async (invoiceId, amount, gateway = "sudapay", extra = {}) => {
     return createPayment({
         payment_type: "invoice",
@@ -193,7 +188,6 @@ const financeApi = {
     createInvoice,
     createExpense,
     createPayment,
-    bootstrapDemoData,
     payInvoice,
     payExpense,
     getPendingInvoices,

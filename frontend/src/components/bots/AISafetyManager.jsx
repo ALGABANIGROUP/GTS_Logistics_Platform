@@ -1,13 +1,5 @@
-import React from 'react';
+import AISafetyManagerPage from "../../pages/ai-bots/AISafetyManager.jsx";
 
-const AISafetyManager = () => {
-    return (
-        <div className="bot-page">
-            <h1>AI Safety Manager</h1>
-            <p>Monitors safety data, incident reporting, and weather alerts.</p>
-            <div className="placeholder">Control panel coming soon...</div>
-        </div>
-    );
-};
-
-export default AISafetyManager;
+export default function AISafetyManager(props) {
+  return <AISafetyManagerPage {...props} />;
+}

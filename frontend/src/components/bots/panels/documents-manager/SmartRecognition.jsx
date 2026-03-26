@@ -2,6 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import './SmartRecognition.css';
 
+const DETERMINISTIC_ACCURACY = [95.6, 96.2, 97.1, 95.9];
+const DETERMINISTIC_TYPE_INDEX = [0, 1, 2, 1, 0, 2];
+const DETERMINISTIC_CONFIDENCE_BUMP = [4, 6, 8, 5, 7, 9];
+const DETERMINISTIC_FIELDS = [7, 9, 11, 8, 10, 12];
+
 const SmartRecognition = () => {
     const [recognitionMode, setRecognitionMode] = useState('auto');
     const [confidence, setConfidence] = useState(85);
@@ -42,10 +47,12 @@ const SmartRecognition = () => {
 
         await new Promise(resolve => setTimeout(resolve, 3000));
 
+        const modelIndex = trainedModels.length % DETERMINISTIC_ACCURACY.length;
+
         const newModel = {
             id: Date.now(),
             name: `${documentType} Model v2.0`,
-            accuracy: 95 + Math.random() * 3,
+            accuracy: DETERMINISTIC_ACCURACY[modelIndex],
             documents: trainingFiles.length,
             lastTrained: new Date().toISOString().split('T')[0]
         };
@@ -57,13 +64,19 @@ const SmartRecognition = () => {
     const recognizeDocuments = async (files) => {
         const results = [];
 
-        for (const file of files) {
+        for (let i = 0; i < files.length; i += 1) {
+            const file = files[i];
+            const cycleIndex = (recognitionResults.length + i) % DETERMINISTIC_TYPE_INDEX.length;
+            const docIndex = DETERMINISTIC_TYPE_INDEX[cycleIndex] % documentTypes.length;
+            const confidenceBump = DETERMINISTIC_CONFIDENCE_BUMP[cycleIndex];
+            const extractedFields = DETERMINISTIC_FIELDS[cycleIndex];
+
             const result = {
                 filename: file.name,
                 recognized: true,
-                documentType: documentTypes[Math.floor(Math.random() * documentTypes.length)].name,
-                confidence: Math.round(confidence + Math.random() * 10),
-                extractedFields: Math.floor(Math.random() * 15) + 5,
+                documentType: documentTypes[docIndex].name,
+                confidence: Math.min(99, confidence + confidenceBump),
+                extractedFields,
                 timestamp: new Date().toLocaleString()
             };
 

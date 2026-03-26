@@ -11,50 +11,33 @@ const SystemHealthWidget = () => {
         loading: false,
         error: null,
         metrics: {
-            apiLatency: 0,
-            databaseUsage: 0,
-            cacheHitRate: 0,
-            messageQueueBacklog: 0,
+            apiLatency: null,
+            databaseUsage: null,
+            cacheHitRate: null,
+            messageQueueBacklog: null,
         },
     });
 
-    // Get real system metrics
     const fetchMetrics = async () => {
-        try {
-            const metricsRes = await axios.get("/api/v1/system/metrics", {
-                timeout: 5000,
-            }).catch(() => null);
-
-            if (metricsRes?.data) {
-                return {
-                    apiLatency: metricsRes.data.api_latency_ms || 0,
-                    databaseUsage: metricsRes.data.database_usage_percent || 0,
-                    cacheHitRate: metricsRes.data.cache_hit_rate_percent || 0,
-                    messageQueueBacklog: metricsRes.data.message_queue_backlog || 0,
-                };
-            }
-        } catch (err) {
-            console.error("Failed to fetch metrics:", err);
-        }
-
-        // Fallback to mock data for demo
+        const metricsRes = await axios.get("/api/v1/system/metrics", {
+            timeout: 5000,
+        });
         return {
-            apiLatency: Math.floor(Math.random() * 50),
-            databaseUsage: Math.floor(Math.random() * 80),
-            cacheHitRate: Math.floor(Math.random() * 100),
-            messageQueueBacklog: Math.floor(Math.random() * 100),
+            apiLatency: metricsRes.data.api_latency_ms ?? null,
+            databaseUsage: metricsRes.data.database_usage_percent ?? null,
+            cacheHitRate: metricsRes.data.cache_hit_rate_percent ?? null,
+            messageQueueBacklog: metricsRes.data.message_queue_backlog ?? null,
         };
     };
 
-    // Quick system health check
     const performHealthCheck = async () => {
         setSystemHealth((prev) => ({ ...prev, loading: true, error: null }));
 
         const checks = [
             { name: "Database", endpoint: "/api/v1/health/db" },
-            { name: "API", endpoint: "/api/v1/health" },
-            { name: "Auth", endpoint: "/api/v1/auth/health" },
-            { name: "Cache", endpoint: "/api/v1/health/cache" },
+            { name: "API", endpoint: "/healthz" },
+            { name: "System", endpoint: "/api/v1/system/health" },
+            { name: "Cache", endpoint: "/api/v1/health/redis" },
         ];
 
         let errorCount = 0;
@@ -78,17 +61,32 @@ const SystemHealthWidget = () => {
         const status =
             errorCount === 0 ? "healthy" : errorCount <= 1 ? "warning" : "critical";
 
-        // Fetch real metrics
-        const metrics = await fetchMetrics();
-
-        setSystemHealth({
-            status,
-            errorCount,
-            lastCheck: new Date().toLocaleTimeString(),
-            loading: false,
-            error: null,
-            metrics,
-        });
+        try {
+            const metrics = await fetchMetrics();
+            setSystemHealth({
+                status,
+                errorCount,
+                lastCheck: new Date().toLocaleTimeString(),
+                loading: false,
+                error: null,
+                metrics,
+            });
+        } catch (err) {
+            console.error("Failed to fetch metrics:", err);
+            setSystemHealth({
+                status,
+                errorCount,
+                lastCheck: new Date().toLocaleTimeString(),
+                loading: false,
+                error: err?.response?.data?.detail || err?.message || "Failed to fetch health data",
+                metrics: {
+                    apiLatency: null,
+                    databaseUsage: null,
+                    cacheHitRate: null,
+                    messageQueueBacklog: null,
+                },
+            });
+        }
     };
 
     // Auto-check on mount
@@ -131,6 +129,22 @@ const SystemHealthWidget = () => {
     };
 
     const currentStatus = statusColors[systemHealth.status];
+
+    if (systemHealth.error && !systemHealth.loading && systemHealth.metrics.apiLatency == null) {
+        return (
+            <div className="rounded-2xl glass-15 p-5 shadow-xl shadow-black/35 border border-rose-500/30 bg-rose-500/10">
+                <div className="text-2xl text-rose-300 mb-2">⚠️</div>
+                <h2 className="text-sm font-semibold text-slate-50">Health Data Unavailable</h2>
+                <p className="text-xs text-rose-200 mt-2">{String(systemHealth.error)}</p>
+                <button
+                    onClick={performHealthCheck}
+                    className="mt-4 px-3 py-2 rounded-lg text-xs font-semibold border bg-slate-500/20 text-slate-200 border-slate-500/30 hover:bg-slate-500/30"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -190,7 +204,7 @@ const SystemHealthWidget = () => {
                     <div>
                         <p className="text-xs text-gray-400">API Gateway</p>
                         <p className="text-lg font-bold text-blue-300 mt-1">
-                            {systemHealth.metrics.apiLatency}ms
+                            {systemHealth.metrics.apiLatency != null ? `${systemHealth.metrics.apiLatency}ms` : "N/A"}
                         </p>
                         <p className="text-xs text-gray-500">Latency</p>
                     </div>
@@ -204,7 +218,7 @@ const SystemHealthWidget = () => {
                                 ? "text-amber-300"
                                 : "text-emerald-300"
                         }`}>
-                            {systemHealth.metrics.databaseUsage}%
+                            {systemHealth.metrics.databaseUsage != null ? `${systemHealth.metrics.databaseUsage}%` : "N/A"}
                         </p>
                         <p className="text-xs text-gray-500">Usage</p>
                     </div>
@@ -218,7 +232,7 @@ const SystemHealthWidget = () => {
                                 ? "text-amber-300"
                                 : "text-rose-300"
                         }`}>
-                            {systemHealth.metrics.cacheHitRate}%
+                            {systemHealth.metrics.cacheHitRate != null ? `${systemHealth.metrics.cacheHitRate}%` : "N/A"}
                         </p>
                         <p className="text-xs text-gray-500">Hit Rate</p>
                     </div>
@@ -232,7 +246,7 @@ const SystemHealthWidget = () => {
                                 ? "text-amber-300"
                                 : "text-emerald-300"
                         }`}>
-                            {systemHealth.metrics.messageQueueBacklog}
+                            {systemHealth.metrics.messageQueueBacklog != null ? systemHealth.metrics.messageQueueBacklog : "N/A"}
                         </p>
                         <p className="text-xs text-gray-500">Backlog</p>
                     </div>

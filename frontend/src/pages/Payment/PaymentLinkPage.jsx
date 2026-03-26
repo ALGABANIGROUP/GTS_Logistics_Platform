@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCurrencyStore } from "../stores/useCurrencyStore";
+import { useCurrencyStore } from "../../stores/useCurrencyStore";
 import {
   FaArrowRight,
   FaCheckCircle,

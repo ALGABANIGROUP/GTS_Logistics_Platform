@@ -167,7 +167,7 @@ export function PaymentSuccessPage() {
                 </div>
             </div>
 
-            <style jsx>{`
+            <style>{`
                 .payment-status-page {
                     min-height: 100vh;
                     display: flex;

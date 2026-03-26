@@ -1,13 +1,5 @@
-import React from 'react';
+import AIDocumentsManagerPage from "../../pages/ai-bots/AIDocumentsManager.jsx";
 
-const AIDocumentsManager = () => {
-    return (
-        <div className="bot-page">
-            <h1>AI Documents Manager</h1>
-            <p>Document archiving, expiry alerts, and file control system.</p>
-            <div className="placeholder">Control panel coming soon...</div>
-        </div>
-    );
-};
-
-export default AIDocumentsManager;
+export default function AIDocumentsManager(props) {
+  return <AIDocumentsManagerPage {...props} />;
+}

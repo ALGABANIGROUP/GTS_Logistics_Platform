@@ -1,83 +1,139 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import axiosClient from "../../api/axiosClient";
+
+const cardClass =
+  "rounded-2xl border border-slate-700/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl";
 
 export default function SupportCenter() {
-    return (
-        <div className="p-6">
-            <h1 className="text-3xl font-bold mb-6 text-white">🆘 Support Center</h1>
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-            {/* AI Bot Support Notice */}
-            <div className="mb-6 rounded-2xl border border-blue-500/60 bg-gradient-to-r from-blue-900/60 to-cyan-900/60 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
-                <div className="flex items-start gap-4">
-                    <div className="text-4xl">🤖</div>
-                    <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white mb-2">AI-Powered Support via Customer Service Bot</h3>
-                        <p className="text-slate-200 mb-4">
-                            All support requests are now handled by our intelligent Customer Service Bot with 24/7 availability and instant responses.
-                        </p>
-                        <a
-                            href="/ai-bots/customer-service"
-                            className="inline-flex items-center gap-2 bg-blue-500/80 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold transition backdrop-blur-sm"
-                        >
-                            <span>💬</span>
-                            <span>Chat with Customer Service Bot</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+  useEffect(() => {
+    let active = true;
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl transition duration-200 hover:border-blue-500/50">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center text-white">
-                        <span className="mr-2">📧</span> Contact Support
-                    </h2>
-                    <p className="text-slate-300 mb-4">
-                        For technical assistance, platform issues, or general inquiries:
-                    </p>
-                    <a
-                        href="mailto:support@gabanistore.com"
-                        className="inline-block bg-blue-600/80 text-white px-6 py-3 rounded-lg hover:bg-blue-600 backdrop-blur-sm transition"
-                    >
-                        support@gabanistore.com
-                    </a>
-                </div>
+    const loadStats = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await axiosClient.get("/api/v1/support/stats");
+        if (!active) return;
+        setStats(response.data || null);
+      } catch (err) {
+        if (!active) return;
+        setError(err?.response?.data?.detail || "Failed to load support statistics.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
-                <div className="rounded-2xl border border-slate-700/60 bg-slate-900/60 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl transition duration-200 hover:border-green-500/50">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center text-white">
-                        <span className="mr-2">🏢</span> Operations Team
-                    </h2>
-                    <p className="text-slate-300 mb-4">
-                        For business operations, logistics, and freight management:
-                    </p>
-                    <a
-                        href="mailto:operations@gabanilogistics.com"
-                        className="inline-block bg-green-600/80 text-white px-6 py-3 rounded-lg hover:bg-green-600 backdrop-blur-sm transition"
-                    >
-                        operations@gabanilogistics.com
-                    </a>
-                </div>
-            </div>
+    loadStats();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-            <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
-                <h2 className="text-xl font-semibold mb-4 text-white">📚 Quick Links</h2>
-                <ul className="space-y-2">
-                    <li>
-                        <a href="/emails" className="text-blue-400 hover:text-blue-300 hover:underline transition">📬 Email Command Center</a>
-                    </li>
-                    <li>
-                        <a href="/admin/settings" className="text-blue-400 hover:text-blue-300 hover:underline transition">⚙️ Platform Settings</a>
-                    </li>
-                    <li>
-                        <a href="/admin/system-health" className="text-blue-400 hover:text-blue-300 hover:underline transition">🏥 System Health</a>
-                    </li>
-                    <li>
-                        <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline transition">🔗 API Documentation</a>
-                    </li>
-                </ul>
-            </div>
+  return (
+    <div className="space-y-6 p-6">
+      <div className="rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-900/60 to-cyan-900/60 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl">
+        <h1 className="text-3xl font-bold text-white">Support Center</h1>
+        <p className="mt-2 max-w-3xl text-sm text-slate-200">
+          Centralized support visibility for ticket flow, response pace, and agent performance.
+        </p>
+      </div>
 
-            <div className="mt-6 text-center text-slate-400 text-sm">
-                <p>Response Time: Within 24 hours | Available: Monday - Friday, 9 AM - 6 PM PST</p>
-            </div>
+      {error ? (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          {error}
         </div>
-    );
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          ["Total Tickets", stats?.total_tickets ?? 0],
+          ["Open Tickets", stats?.open_tickets ?? 0],
+          ["Resolved Today", stats?.resolved_today ?? 0],
+          ["Active Agents", stats?.active_agents ?? 0],
+        ].map(([label, value]) => (
+          <div key={label} className={cardClass}>
+            <div className="text-sm text-slate-400">{label}</div>
+            <div className="mt-2 text-3xl font-bold text-white">
+              {loading ? "..." : value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className={cardClass}>
+          <h2 className="text-lg font-semibold text-white">Daily Trend</h2>
+          <div className="mt-4 space-y-3">
+            {(stats?.daily_stats || []).map((row) => (
+              <div
+                key={row.date}
+                className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-sm"
+              >
+                <div className="text-slate-300">{row.date}</div>
+                <div className="flex gap-4 text-slate-200">
+                  <span>Created: {row.tickets_created}</span>
+                  <span>Resolved: {row.tickets_resolved}</span>
+                  <span>Avg: {row.avg_response_time}s</span>
+                </div>
+              </div>
+            ))}
+            {!loading && !(stats?.daily_stats || []).length ? (
+              <div className="text-sm text-slate-400">No daily support data available.</div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className={cardClass}>
+          <h2 className="text-lg font-semibold text-white">Agent Performance</h2>
+          <div className="mt-4 space-y-3">
+            {(stats?.agent_performance || []).map((agent) => (
+              <div
+                key={agent.name}
+                className="rounded-xl border border-white/5 bg-white/5 px-4 py-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-white">{agent.name}</div>
+                  <div className="text-sm text-emerald-300">{agent.satisfaction}% satisfaction</div>
+                </div>
+                <div className="mt-2 text-sm text-slate-300">
+                  Tickets handled: {agent.tickets_handled} | Avg response: {agent.avg_response}s
+                </div>
+              </div>
+            ))}
+            {!loading && !(stats?.agent_performance || []).length ? (
+              <div className="text-sm text-slate-400">No agent performance data available.</div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className={cardClass}>
+        <h2 className="text-lg font-semibold text-white">Quick Links</h2>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a
+            href="/admin/support/tickets"
+            className="rounded-xl bg-blue-500/20 px-4 py-2 text-sm font-medium text-blue-200 transition hover:bg-blue-500/30"
+          >
+            Support Tickets
+          </a>
+          <a
+            href="/ai-bots/customer-service"
+            className="rounded-xl bg-cyan-500/20 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/30"
+          >
+            Customer Service Bot
+          </a>
+          <a
+            href="/admin/system-health"
+            className="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-white/15"
+          >
+            System Health
+          </a>
+        </div>
+      </div>
+    </div>
+  );
 }

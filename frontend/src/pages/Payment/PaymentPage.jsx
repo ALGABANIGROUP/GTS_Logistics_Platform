@@ -393,7 +393,7 @@ Reference: Invoice #${invoiceId}
       </div>
 
       {/* Styles */}
-      <style jsx>{`
+      <style>{`
         .payment-page {
           max-width: 1000px;
           margin: 0 auto;

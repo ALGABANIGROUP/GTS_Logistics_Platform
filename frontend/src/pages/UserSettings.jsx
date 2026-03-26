@@ -355,8 +355,8 @@ const UserSettings = () => {
                                             type="text"
                                             value={profileForm.name || ''}
                                             onChange={(e) => handleProfileChange('name', e.target.value)}
-                                            className="w-full px-3 py-1 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-                                            placeholder="Enter your full name"
+                                            className="w-full px-3 py-1 bg-slate-800/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                                            title="Enter your full name"
                                         />
                                     ) : (
                                         <p className="text-white">{userData.name || 'Not provided'}</p>
@@ -462,8 +462,8 @@ const UserSettings = () => {
                                 type="text"
                                 value={newLocation}
                                 onChange={(e) => setNewLocation(e.target.value)}
-                                placeholder="Enter new location (e.g., Riyadh, Saudi Arabia)"
-                                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                                title="Enter new location (e.g., Riyadh, Saudi Arabia)"
+                                className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                             />
                             <p className="text-xs text-slate-400 mt-1">
                                 ⚠️ Location changes require admin approval for security reasons
@@ -559,8 +559,8 @@ const UserSettings = () => {
                             type="password"
                             value={passwordForm.currentPassword}
                             onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-                            placeholder="Enter your current password"
+                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                            title="Enter your current password"
                         />
                     </div>
 
@@ -572,8 +572,8 @@ const UserSettings = () => {
                             type="password"
                             value={passwordForm.newPassword}
                             onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-                            placeholder="Enter your new password"
+                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                            title="Enter your new password"
                         />
                         <p className="text-xs text-slate-400 mt-1">
                             Password must be at least 8 characters long
@@ -588,8 +588,8 @@ const UserSettings = () => {
                             type="password"
                             value={passwordForm.confirmPassword}
                             onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-                            placeholder="Confirm your new password"
+                            className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                            title="Confirm your new password"
                         />
                     </div>
 

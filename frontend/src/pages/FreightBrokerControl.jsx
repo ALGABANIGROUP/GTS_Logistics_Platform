@@ -76,8 +76,8 @@ const FreightBrokerControl = () => {
   });
 
   const canadianProvinces = [
-    "Alberta (AB)", "British Columbia (BC)", "Manitoba (MB)", 
-    "New Brunswick (NB)", "Newfoundland and Labrador (NL)", 
+    "Alberta (AB)", "British Columbia (BC)", "Manitoba (MB)",
+    "New Brunswick (NB)", "Newfoundland and Labrador (NL)",
     "Nova Scotia (NS)", "Ontario (ON)", "Prince Edward Island (PE)",
     "Quebec (QC)", "Saskatchewan (SK)", "Northwest Territories (NT)",
     "Nunavut (NU)", "Yukon (YT)"
@@ -100,7 +100,7 @@ const FreightBrokerControl = () => {
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         // Map API response to component format
@@ -151,15 +151,15 @@ const FreightBrokerControl = () => {
   const handleUnlockLoad = (loadId) => {
     if (viewsLeft > 0) {
       // Update the unlocked state for the load
-      const updatedLoads = loads.map(load => 
+      const updatedLoads = loads.map(load =>
         load.id === loadId ? { ...load, unlocked: true } : load
       );
-      
+
       // Also update selectedLoad if it's the one being unlocked
       if (selectedLoad?.id === loadId) {
         setSelectedLoad({ ...selectedLoad, unlocked: true });
       }
-      
+
       setLoads(updatedLoads);
       setViewsLeft(viewsLeft - 1);
     } else {
@@ -228,7 +228,7 @@ const FreightBrokerControl = () => {
             </button>
           </div>
           <p className="text-gray-600 mb-4">Configure your shipping routes and preferences</p>
-          
+
           <div className="space-y-4">
             {routes.map((route, index) => (
               <div key={route.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
@@ -281,7 +281,7 @@ const FreightBrokerControl = () => {
                     Search
                   </button>
                   {routes.length > 1 && (
-                    <button 
+                    <button
                       onClick={() => handleRemoveRoute(route.id)}
                       className="border border-red-600/50 text-red-400 px-3 py-2 rounded-lg hover:bg-red-500/20 backdrop-blur-sm"
                     >
@@ -307,28 +307,28 @@ const FreightBrokerControl = () => {
                   <span className="bg-white/10 backdrop-blur-sm text-gray-200 px-3 py-1 rounded-full text-sm border border-white/20">{loads.length} loads</span>
                 </div>
                 <div className="flex gap-2">
-                  <input 
-                    placeholder="Search origin..." 
-                    className="flex-1 px-3 py-2 border border-white/20 rounded-md bg-white/5 backdrop-blur-sm text-white placeholder-gray-500"
+                  <input
+                    placeholder="Search origin..."
+                    className="flex-1 px-3 py-2 border border-white/20 rounded-md bg-white/5 backdrop-blur-sm text-white"
                     value={searchFilters.origin}
-                    onChange={(e) => setSearchFilters({...searchFilters, origin: e.target.value})}
+                    onChange={(e) => setSearchFilters({ ...searchFilters, origin: e.target.value })}
                   />
-                  <input 
+                  <input
                     placeholder="Search destination..."
-                    className="flex-1 px-3 py-2 border border-white/20 rounded-md bg-white/5 backdrop-blur-sm text-white placeholder-gray-500"
+                    className="flex-1 px-3 py-2 border border-white/20 rounded-md bg-white/5 backdrop-blur-sm text-white"
                     value={searchFilters.destination}
-                    onChange={(e) => setSearchFilters({...searchFilters, destination: e.target.value})}
+                    onChange={(e) => setSearchFilters({ ...searchFilters, destination: e.target.value })}
                   />
                   <button onClick={handleSearch} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                     🔍 Search
                   </button>
                 </div>
               </div>
-              
+
               <div className="p-4">
                 {loading ? (
                   <div className="space-y-4">
-                    {[1,2,3].map(i => (
+                    {[1, 2, 3].map(i => (
                       <div key={i} className="animate-pulse p-4 border rounded-lg">
                         <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -340,22 +340,20 @@ const FreightBrokerControl = () => {
                     {loads.map((load, index) => (
                       <div
                         key={index}
-                        className={`p-4 border rounded-lg cursor-pointer transition-all backdrop-blur-sm ${
-                          selectedLoad?.id === load.id ? 'bg-blue-500/30 border-blue-400' : 'border-white/20 bg-white/5 hover:bg-white/10'
-                        }`}
+                        className={`p-4 border rounded-lg cursor-pointer transition-all backdrop-blur-sm ${selectedLoad?.id === load.id ? 'bg-blue-500/30 border-blue-400' : 'border-white/20 bg-white/5 hover:bg-white/10'
+                          }`}
                         onClick={() => setSelectedLoad(load)}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
                             <span className="bg-white/10 backdrop-blur-sm text-gray-300 px-2 py-1 rounded text-xs border border-white/20">{load.age}</span>
-                            <span className={`px-2 py-1 rounded text-xs font-semibold border backdrop-blur-sm ${
-                              load.price ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-white/10 text-gray-300 border-white/20'
-                            }`}>
+                            <span className={`px-2 py-1 rounded text-xs font-semibold border backdrop-blur-sm ${load.price ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-white/10 text-gray-300 border-white/20'
+                              }`}>
                               {load.price ? formatCurrency(load.price) : '--'}
                             </span>
                           </div>
                           {viewsLeft > 0 && !load.unlocked && (
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleUnlockLoad(load.id);
@@ -366,7 +364,7 @@ const FreightBrokerControl = () => {
                             </button>
                           )}
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           <div className="flex items-start gap-1">
                             <span className="text-gray-400 mt-1">📍</span>
@@ -385,7 +383,7 @@ const FreightBrokerControl = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex justify-between items-center mt-3 text-xs">
                           <div className="flex items-center gap-2">
                             <span className="bg-white/10 backdrop-blur-sm px-2 py-1 rounded text-gray-300 border border-white/20">{load.distance}mi</span>
@@ -409,7 +407,7 @@ const FreightBrokerControl = () => {
                 <h2 className="text-xl font-bold flex items-center gap-2 text-white">
                   🚛 Trip Details
                 </h2>
-                
+
                 {/* Route Info */}
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
@@ -515,16 +513,15 @@ const FreightBrokerControl = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-400">Rate per Mile</span>
                         <span className="font-medium text-gray-300">
-                          {selectedLoad.distance ? 
+                          {selectedLoad.distance ?
                             formatCurrency((selectedLoad.price / selectedLoad.distance).toFixed(2)) : '--'
                           }/mi
                         </span>
                       </div>
                       <div className="flex justify-between pt-2 border-t border-white/10">
                         <span className="font-semibold text-white">Est. Profit</span>
-                        <span className={`font-bold ${
-                          calculateProfit(selectedLoad) > 0 ? 'text-green-400' : 'text-red-400'
-                        }`}>
+                        <span className={`font-bold ${calculateProfit(selectedLoad) > 0 ? 'text-green-400' : 'text-red-400'
+                          }`}>
                           {formatCurrency(calculateProfit(selectedLoad).toFixed(0))} CAD
                         </span>
                       </div>
@@ -599,7 +596,7 @@ const FreightBrokerControl = () => {
             📈 AI Recommended Loads - Based on Your Search History
           </h2>
           <p className="text-gray-400 mb-4">Personalized matches for your equipment and routes</p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {mockRecommendations.map((load, index) => (
               <div key={index} className="p-3 border border-white/20 rounded-lg bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all">
@@ -648,7 +645,7 @@ const FreightBrokerControl = () => {
                     <input
                       type="number"
                       value={botSettings.minRate}
-                      onChange={(e) => setBotSettings({...botSettings, minRate: parseInt(e.target.value)})}
+                      onChange={(e) => setBotSettings({ ...botSettings, minRate: parseInt(e.target.value) })}
                       className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400"
                     />
                   </div>
@@ -663,7 +660,7 @@ const FreightBrokerControl = () => {
                   <input
                     type="number"
                     value={botSettings.maxDistance}
-                    onChange={(e) => setBotSettings({...botSettings, maxDistance: parseInt(e.target.value)})}
+                    onChange={(e) => setBotSettings({ ...botSettings, maxDistance: parseInt(e.target.value) })}
                     className="w-full mt-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400"
                   />
                 </div>
@@ -704,7 +701,7 @@ const FreightBrokerControl = () => {
                 <h3 className="text-lg font-semibold text-white mb-3">📊 Sort Preferences</h3>
                 <select
                   value={botSettings.defaultSortBy}
-                  onChange={(e) => setBotSettings({...botSettings, defaultSortBy: e.target.value})}
+                  onChange={(e) => setBotSettings({ ...botSettings, defaultSortBy: e.target.value })}
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-400"
                 >
                   <option value="distance">Distance (Nearest First)</option>
@@ -722,7 +719,7 @@ const FreightBrokerControl = () => {
                     <input
                       type="checkbox"
                       checked={botSettings.notificationsEnabled}
-                      onChange={(e) => setBotSettings({...botSettings, notificationsEnabled: e.target.checked})}
+                      onChange={(e) => setBotSettings({ ...botSettings, notificationsEnabled: e.target.checked })}
                       className="sr-only peer"
                     />
                     <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform peer-checked:translate-x-6`}></div>
@@ -739,7 +736,7 @@ const FreightBrokerControl = () => {
                     <input
                       type="checkbox"
                       checked={botSettings.autoFilterUSD}
-                      onChange={(e) => setBotSettings({...botSettings, autoFilterUSD: e.target.checked})}
+                      onChange={(e) => setBotSettings({ ...botSettings, autoFilterUSD: e.target.checked })}
                       className="sr-only peer"
                     />
                     <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform peer-checked:translate-x-6`}></div>
@@ -771,7 +768,7 @@ const FreightBrokerControl = () => {
   );
 };
 
-// Mock Data - Canadian Cross Border Loads
+// Canadian Cross Border Loads
 const mockLoads = [
   {
     id: 1,

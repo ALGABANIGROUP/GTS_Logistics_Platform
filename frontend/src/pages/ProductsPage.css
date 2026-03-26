@@ -1,0 +1,334 @@
+/* Products Page Styles */
+.products-page {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8fafc;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Hero Section */
+.products-hero {
+    background: linear-gradient(135deg, #0b2b3b 0%, #1b4f6e 100%);
+    padding: 4rem 1.5rem;
+    text-align: center;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary-large {
+    background: #ff8c42;
+    color: white;
+    border: none;
+    padding: 0.9rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-large:hover {
+    background: #ff7518;
+    transform: translateY(-2px);
+}
+
+.btn-secondary-large {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    padding: 0.9rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-large:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Freight Dashboard Section */
+.freight-dashboard-section {
+    padding: 3rem 0;
+    background: #f4f7fc;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.dashboard-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a2c3e;
+    margin-bottom: 0.5rem;
+}
+
+.live-badge {
+    font-size: 0.8rem;
+    background: #eef2f8;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-weight: 500;
+    color: #2c7da0;
+    margin-left: 12px;
+}
+
+.dashboard-header p {
+    color: #4a627a;
+    font-size: 1rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.3rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 24px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5b7a9a;
+    letter-spacing: 1px;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.stat-title i {
+    font-size: 1rem;
+    color: #2c7da0;
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #0a2f44;
+    margin-bottom: 0.3rem;
+}
+
+.stat-sub {
+    font-size: 0.7rem;
+    color: #6b8aae;
+}
+
+.highlight-card {
+    background: linear-gradient(125deg, #1f5e7e, #0d3f58);
+}
+
+.highlight-card .stat-title,
+.highlight-card .stat-number,
+.highlight-card .stat-sub {
+    color: white;
+}
+
+.highlight-card .stat-title i {
+    color: #c9e9ff;
+}
+
+/* Integration Section */
+.integration-section {
+    background: white;
+    border-radius: 28px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.integration-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a2c3e;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 4px solid #2c7da0;
+    padding-left: 1rem;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem;
+}
+
+.integration-card {
+    text-align: center;
+    padding: 1.2rem;
+    background: #f8fafc;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.integration-card i {
+    font-size: 2.2rem;
+    color: #1f5e7e;
+    margin-bottom: 0.6rem;
+}
+
+.integration-card h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a2c3e;
+    margin-bottom: 0.4rem;
+}
+
+.integration-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 30px;
+    background: #eef3fc;
+    color: #1f5e7e;
+    font-weight: 500;
+}
+
+.integration-badge.connected {
+    background: #e0f2e9;
+    color: #1e7b4a;
+}
+
+.coming-soon {
+    background: #fef9e6;
+    border: 1px dashed #ffc107;
+}
+
+.coming-soon i {
+    color: #ffc107;
+}
+
+.not-integrated {
+    opacity: 0.7;
+    background: #f5f5f5;
+}
+
+.dashboard-footer {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #6c8db0;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Features Section */
+.products-features {
+    padding: 4rem 0;
+    background: white;
+}
+
+.products-features h2 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a2c3e;
+    margin-bottom: 2.5rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 24px;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card i {
+    font-size: 2.5rem;
+    color: #1f5e7e;
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a2c3e;
+    margin-bottom: 0.8rem;
+}
+
+.feature-card p {
+    color: #4a627a;
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+    }
+
+    .dashboard-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 1.6rem;
+    }
+
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}

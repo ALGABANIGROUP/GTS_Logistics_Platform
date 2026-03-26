@@ -19,7 +19,31 @@ const QUICK_ACTIONS = [
 export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
     const isPreview = mode === "preview";
     const [kpiData, setKpiData] = useState(null);
+    const [trendData, setTrendData] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const loadDashboardData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [metricsRes, trendsRes] = await Promise.all([
+                axiosClient.get("/coordinator/dashboard/metrics"),
+                axiosClient.get("/coordinator/analytics/trends"),
+            ]);
+            setKpiData(metricsRes?.data?.metrics || null);
+            setTrendData(Array.isArray(trendsRes?.data?.trends) ? trendsRes.data.trends : []);
+        } catch (error) {
+            setKpiData(null);
+            setTrendData([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isPreview) {
+            loadDashboardData();
+        }
+    }, [isPreview, loadDashboardData]);
 
     const botConfig = {
         displayName: "Executive Intelligence (GIT)",
@@ -42,7 +66,7 @@ export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
             <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-900/30 via-slate-900/90 to-purple-900/30 p-5 backdrop-blur">
                 <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-3xl shadow-lg">
-                        
+
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-white">Executive Intelligence</h1>
@@ -52,8 +76,8 @@ export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
                     </div>
                     <div className="ml-auto">
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPreview
-                                ? "bg-amber-500/20 text-amber-300"
-                                : "bg-emerald-500/20 text-emerald-300"
+                            ? "bg-amber-500/20 text-amber-300"
+                            : "bg-emerald-500/20 text-emerald-300"
                             }`}>
                             {isPreview ? "Preview Mode" : "Active"}
                         </span>
@@ -62,11 +86,31 @@ export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
 
                 {/* Executive Dashboard Stats */}
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                    <QuickStat label="Revenue" value="$2.4M" trend="+12%" icon="" />
-                    <QuickStat label="Active Loads" value="847" trend="+8%" icon="" />
-                    <QuickStat label="On-Time Rate" value="94.2%" trend="+2.1%" icon="" />
-                    <QuickStat label="Profit Margin" value="18.5%" trend="+1.2%" icon="" />
-                    <QuickStat label="Risk Score" value="Low" icon="" />
+                    <QuickStat
+                        label="Daily Revenue"
+                        value={formatCurrency(kpiData?.financial?.daily_revenue)}
+                        icon=""
+                    />
+                    <QuickStat
+                        label="Monthly Revenue"
+                        value={formatCurrency(kpiData?.financial?.monthly_revenue)}
+                        icon=""
+                    />
+                    <QuickStat
+                        label="Completed Today"
+                        value={formatCount(kpiData?.shipments?.completed_today)}
+                        icon=""
+                    />
+                    <QuickStat
+                        label="Active Shipments"
+                        value={formatCount(kpiData?.shipments?.total_active)}
+                        icon=""
+                    />
+                    <QuickStat
+                        label="Total Customers"
+                        value={formatCount(kpiData?.customers?.total_customers)}
+                        icon=""
+                    />
                 </div>
             </div>
 
@@ -76,22 +120,51 @@ export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4 lg:col-span-2">
                     <h3 className="mb-3 text-sm font-semibold text-white"> Key Performance Indicators</h3>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <KPICard title="Revenue Growth" value="12.4%" target="10%" status="above" />
-                        <KPICard title="Customer Retention" value="94%" target="90%" status="above" />
-                        <KPICard title="Operating Costs" value="$1.2M" target="$1.3M" status="below" />
-                        <KPICard title="Fleet Utilization" value="87%" target="85%" status="above" />
+                        <KPICard
+                            title="Monthly Revenue"
+                            value={formatCurrency(kpiData?.financial?.monthly_revenue)}
+                            target="Based on live payments"
+                            status="above"
+                        />
+                        <KPICard
+                            title="Daily Revenue"
+                            value={formatCurrency(kpiData?.financial?.daily_revenue)}
+                            target="Current day"
+                            status="above"
+                        />
+                        <KPICard
+                            title="Completed Shipments"
+                            value={formatCount(kpiData?.shipments?.completed_today)}
+                            target="Current day"
+                            status="above"
+                        />
+                        <KPICard
+                            title="Customer Base"
+                            value={formatCount(kpiData?.customers?.total_customers)}
+                            target="Current total"
+                            status="above"
+                        />
                     </div>
                 </div>
 
                 {/* Risk Assessment */}
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                     <h3 className="mb-3 text-sm font-semibold text-white"> Risk Assessment</h3>
-                    <div className="space-y-2">
-                        <RiskItem level="low" text="Market Volatility" />
-                        <RiskItem level="low" text="Operational Risk" />
-                        <RiskItem level="medium" text="Fuel Price Risk" />
-                        <RiskItem level="low" text="Regulatory Risk" />
-                    </div>
+                    {trendData.length === 0 ? (
+                        <div className="text-xs text-slate-400">
+                            {loading ? "Loading trend indicators..." : "No trend indicators available."}
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {trendData.map((trend) => (
+                                <RiskItem
+                                    key={trend.metric}
+                                    level={mapTrendLevel(trend.trend)}
+                                    text={`${trend.metric}: ${trend.value ?? "n/a"}`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -104,8 +177,8 @@ export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
                             key={action.id}
                             disabled={isPreview}
                             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${isPreview
-                                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white shadow hover:from-indigo-500/80 hover:to-purple-500/80"
+                                ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                                : "bg-gradient-to-r from-indigo-600/80 to-purple-600/80 text-white shadow hover:from-indigo-500/80 hover:to-purple-500/80"
                                 }`}
                         >
                             <span>{action.icon}</span>
@@ -123,6 +196,30 @@ export default function ExecutiveIntelligenceInterface({ mode = "active" }) {
             />
         </div>
     );
+}
+
+function formatCurrency(value) {
+    if (typeof value !== "number") {
+        return "N/A";
+    }
+    return `$${value.toLocaleString()}`;
+}
+
+function formatCount(value) {
+    if (typeof value !== "number") {
+        return "N/A";
+    }
+    return value.toLocaleString();
+}
+
+function mapTrendLevel(trend) {
+    if (trend === "up") {
+        return "low";
+    }
+    if (trend === "down") {
+        return "high";
+    }
+    return "medium";
 }
 
 function QuickStat({ label, value, trend, icon }) {

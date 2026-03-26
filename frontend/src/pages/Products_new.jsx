@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import bgLogin from '../assets/bg_login.png';
-import gtsLogo from '../assets/gts_logo.png';
+import bgLogin from '../assets/bg-login.jpg';
+import gtsLogo from '../assets/gts-logo.png';
 
 const Products = () => {
     const [activeCategory, setActiveCategory] = useState('all');
@@ -420,4 +420,3 @@ const Products = () => {
 };
 
 export default Products;
-

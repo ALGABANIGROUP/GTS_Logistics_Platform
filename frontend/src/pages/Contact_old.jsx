@@ -172,7 +172,7 @@ const Contact = () => {
                                 value={userInput}
                                 onChange={(e) => setUserInput(e.target.value)}
                                 placeholder="Ask about pricing, features, demos, support, or anything else..."
-                                className="flex-1 px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm"
+                                className="flex-1 px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white text-sm"
                                 disabled={chatLoading}
                             />
                             <button
@@ -211,7 +211,7 @@ const Contact = () => {
                                                     value={formData.name}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-400"
+                                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-400"
                                                     placeholder="Your full name"
                                                 />
                                             </div>
@@ -223,7 +223,7 @@ const Contact = () => {
                                                     value={formData.email}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-400"
+                                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-400"
                                                     placeholder="your@email.com"
                                                 />
                                             </div>
@@ -237,7 +237,7 @@ const Contact = () => {
                                                     name="phone"
                                                     value={formData.phone}
                                                     onChange={handleChange}
-                                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-400"
+                                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-400"
                                                     placeholder="+1 (555) 123-4567"
                                                 />
                                             </div>
@@ -265,7 +265,7 @@ const Contact = () => {
                                                 name="company"
                                                 value={formData.company}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-400"
+                                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-400"
                                                 placeholder="Your company name"
                                             />
                                         </div>
@@ -278,7 +278,7 @@ const Contact = () => {
                                                 onChange={handleChange}
                                                 required
                                                 rows="5"
-                                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-400 resize-none"
+                                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-red-400 resize-none"
                                                 placeholder="Tell us how we can help you..."
                                             />
                                         </div>

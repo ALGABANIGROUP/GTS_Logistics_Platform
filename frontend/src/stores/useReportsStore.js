@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Report, PredefinedReport } from "../models/Report";
-import { downloadBlob, exportWorkbookXml, openPrintDocument } from "../utils/exportUtils";
-import { getDocumentLogoDataUrl } from "../utils/documentBranding";
+import { downloadBlob } from "../utils/exportUtils";
 import axiosClient from "../api/axiosClient";
 
 const CATEGORY_LIST = [
@@ -136,42 +135,39 @@ export const useReportsStore = create(
             fetchReports: async (filters = {}) => {
                 set({ loading: true, error: null });
                 try {
-                    try {
-                        const params = buildReportQueryParams(filters);
-                        const [listResponse, statsResponse] = await Promise.all([
-                            axiosClient.get("/api/v1/reports/list", { params }),
-                            axiosClient.get("/api/v1/reports/stats"),
-                        ]);
+                    const params = buildReportQueryParams(filters);
+                    const [listResponse, statsResponse] = await Promise.all([
+                        axiosClient.get("/api/v1/reports/list", { params }),
+                        axiosClient.get("/api/v1/reports/stats"),
+                    ]);
 
-                        const realReports = listResponse?.data?.reports || [];
-                        if (Array.isArray(realReports) && realReports.length) {
-                            const reports = realReports.map((report) => new Report(report));
-                            const fallbackStats = buildStatsFromReports(reports, get().categories);
-                            const backendStats = statsResponse?.data || {};
-                            set({
-                                reports,
-                                stats: {
-                                    total: backendStats.total ?? fallbackStats.total,
-                                    active: backendStats.active ?? fallbackStats.active,
-                                    scheduled: backendStats.scheduled ?? fallbackStats.scheduled,
-                                    byCategory: backendStats.byCategory ?? fallbackStats.byCategory,
-                                    recent: fallbackStats.recent,
-                                },
-                            });
-                            return;
-                        }
-                    } catch (apiError) {
-                        console.warn("Failed to fetch real reports data, falling back to mock data:", apiError);
-                    }
-
-                    const mockReports = get().generateMockReports(15);
+                    const realReports = Array.isArray(listResponse?.data?.reports)
+                        ? listResponse.data.reports
+                        : [];
+                    const reports = realReports.map((report) => new Report(report));
+                    const fallbackStats = buildStatsFromReports(reports, get().categories);
+                    const backendStats = statsResponse?.data || {};
                     set({
-                        reports: mockReports,
-                        stats: buildStatsFromReports(mockReports, get().categories),
+                        reports,
+                        stats: {
+                            total: backendStats.total ?? fallbackStats.total,
+                            active: backendStats.active ?? fallbackStats.active,
+                            scheduled: backendStats.scheduled ?? fallbackStats.scheduled,
+                            byCategory: backendStats.byCategory ?? fallbackStats.byCategory,
+                            recent: fallbackStats.recent,
+                        },
                     });
-                    get().updateStats();
                 } catch (error) {
-                    set({ error: error?.message || "Failed to load reports" });
+                    set({
+                        reports: [],
+                        stats: buildStatsFromReports([], get().categories),
+                        error:
+                            error?.response?.data?.detail ||
+                            error?.response?.data?.message ||
+                            error?.message ||
+                            "Failed to load reports",
+                    });
+                    throw error;
                 } finally {
                     set({ loading: false });
                 }
@@ -220,158 +216,15 @@ export const useReportsStore = create(
                     });
                     return reportData;
                 } catch (apiError) {
-                    console.warn("Live report generation failed, falling back to local generator:", apiError);
-                }
-
-                const reportInstance = report instanceof Report ? report : new Report(report);
-                const reportData = await get().generateReportData(reportInstance, options);
-
-                reportInstance.lastGeneratedAt = new Date().toISOString();
-                reportInstance.generationCount = (reportInstance.generationCount || 0) + 1;
-                reportInstance.addToHistory("generated", {
-                    options,
-                    dataPoints: reportData.data?.length || 0,
-                    timestamp: new Date().toISOString(),
-                });
-
-                await get().updateReport(reportId, reportInstance);
-                return reportData;
-            },
-
-            generateReportData: async (report) => {
-                const dateRange = report.calculateDateRange();
-                const { start, end } = dateRange;
-                const data = [];
-                const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-                for (let i = 0; i < Math.min(daysDiff, report.settings.dataPoints); i += 1) {
-                    const date = new Date(start);
-                    date.setDate(start.getDate() + i);
-
-                    const baseData = {
-                        date: date.toISOString().split("T")[0],
-                        timestamp: date.toISOString(),
-                        value: Math.random() * 1000 + 500,
-                        count: Math.floor(Math.random() * 100) + 10,
-                        percentage: Math.random() * 100,
-                        duration: Math.random() * 3600 + 600,
-                    };
-
-                    report.metrics.forEach((metric) => {
-                        switch (metric.type) {
-                            case "currency":
-                                baseData[metric.id] = Math.random() * 10000 + 1000;
-                                break;
-                            case "count":
-                                baseData[metric.id] = Math.floor(Math.random() * 1000) + 100;
-                                break;
-                            case "percentage":
-                                baseData[metric.id] = Math.random() * 100;
-                                break;
-                            case "duration":
-                                baseData[metric.id] = Math.random() * 3600 + 600;
-                                break;
-                            default:
-                                baseData[metric.id] = Math.random() * 1000;
-                        }
+                    set({
+                        error:
+                            apiError?.response?.data?.detail ||
+                            apiError?.response?.data?.message ||
+                            apiError?.message ||
+                            "Failed to generate report",
                     });
-
-                    data.push(baseData);
+                    throw apiError;
                 }
-
-                const summary = get().analyzeData(data, report.metrics);
-                const charts = get().generateCharts(data, report.charts);
-                const insights = get().extractInsights(data, report.metrics);
-
-                return {
-                    report: report.toJSON(),
-                    data,
-                    summary,
-                    charts,
-                    insights,
-                    metadata: {
-                        generatedAt: new Date().toISOString(),
-                        dataPoints: data.length,
-                        dateRange: {
-                            start: start.toISOString(),
-                            end: end.toISOString(),
-                            days: daysDiff,
-                        },
-                        filters: report.criteria.filters,
-                    },
-                };
-            },
-
-            analyzeData: (data, metrics) => {
-                if (!data.length) return {};
-
-                const summary = {};
-                metrics.forEach((metric) => {
-                    const values = data.map((d) => d[metric.id]).filter((v) => v != null);
-                    if (values.length > 0) {
-                        summary[metric.id] = {
-                            name: metric.name,
-                            type: metric.type,
-                            total: values.reduce((a, b) => a + b, 0),
-                            average: values.reduce((a, b) => a + b, 0) / values.length,
-                            min: Math.min(...values),
-                            max: Math.max(...values),
-                            count: values.length,
-                            lastValue: values[values.length - 1],
-                            change: values.length > 1 ? ((values[values.length - 1] - values[0]) / values[0] * 100) : 0,
-                        };
-                    }
-                });
-
-                return summary;
-            },
-
-            generateCharts: (data, chartConfigs) =>
-                (chartConfigs || []).map((config) => ({
-                    id: `chart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    type: config.type,
-                    title: config.title,
-                    data: data.map((d) => ({ x: d[config.dimension], y: d[config.metric] })),
-                    config: {
-                        backgroundColor: "rgba(59, 130, 246, 0.1)",
-                        borderColor: "#3B82F6",
-                        pointBackgroundColor: "#3B82F6",
-                    },
-                })),
-
-            extractInsights: (data, metrics) => {
-                const insights = [];
-                if (data.length < 2) return insights;
-
-                metrics.forEach((metric) => {
-                    const values = data.map((d) => d[metric.id]);
-                    const firstValue = values[0];
-                    const lastValue = values[values.length - 1];
-                    const change = ((lastValue - firstValue) / firstValue) * 100;
-
-                    if (Math.abs(change) > 10) {
-                        insights.push({
-                            type: change > 0 ? "increase" : "decrease",
-                            metric: metric.name,
-                            change: Math.abs(change).toFixed(1),
-                            description: `${metric.name} ${change > 0 ? "increased" : "decreased"} by ${Math.abs(change).toFixed(1)}% during the period`,
-                            significance: Math.abs(change) > 50 ? "high" : Math.abs(change) > 20 ? "medium" : "low",
-                        });
-                    }
-
-                    const maxValue = Math.max(...values);
-                    if (maxValue > firstValue * 2) {
-                        insights.push({
-                            type: "peak",
-                            metric: metric.name,
-                            value: maxValue.toFixed(0),
-                            description: `${metric.name} reached a peak value (${maxValue.toFixed(0)}) during the period`,
-                            significance: "medium",
-                        });
-                    }
-                });
-
-                return insights.slice(0, 5);
             },
 
             exportReport: async (reportId, format, options = {}) => {
@@ -386,108 +239,15 @@ export const useReportsStore = create(
                     downloadBlob(fileName, response.data);
                     return { fileName, format: extension, size: `${response.data?.size || 0} bytes` };
                 } catch (apiError) {
-                    console.warn("Live report export failed, falling back to local export:", apiError);
+                    set({
+                        error:
+                            apiError?.response?.data?.detail ||
+                            apiError?.response?.data?.message ||
+                            apiError?.message ||
+                            "Failed to export report",
+                    });
+                    throw apiError;
                 }
-
-                const reportData = await get().generateReport(reportId, options);
-
-                switch (format) {
-                    case "pdf":
-                        return get().exportToPDF(reportData, options);
-                    case "excel":
-                        return get().exportToExcel(reportData, options);
-                    case "csv":
-                        return get().exportToCSV(reportData, options);
-                    case "json":
-                        return get().exportToJSON(reportData, options);
-                    default:
-                        throw new Error("Unsupported export format");
-                }
-            },
-
-            exportToPDF: async (reportData) => {
-                const reportName = reportData.report.name || "Report";
-                const fileName = reportData.report.generateFileName("pdf");
-                const logoDataUrl = await getDocumentLogoDataUrl();
-
-                openPrintDocument({
-                    title: reportName,
-                    subtitle: `Generated: ${new Date().toLocaleString()}`,
-                    logoDataUrl,
-                    sections: [
-                        {
-                            type: "list",
-                            title: "Summary",
-                            items: Object.values(reportData.summary || {}).slice(0, 6).map((metric) =>
-                                `${metric.name}: ${metric.average?.toFixed?.(2) ?? metric.total ?? "-"}`
-                            ),
-                        },
-                        {
-                            type: "list",
-                            title: "Insights",
-                            items: (reportData.insights || []).map((insight) => insight.description),
-                        },
-                        {
-                            type: "table",
-                            title: "Data Preview",
-                            headers: Object.keys(reportData.data?.[0] || {}),
-                            rows: (reportData.data || []).slice(0, 25).map((row) => Object.values(row || {})),
-                        },
-                    ],
-                });
-
-                return { fileName, format: "pdf", size: "~60KB" };
-            },
-
-            exportToExcel: async (reportData) => {
-                const fileName = reportData.report.generateFileName("xls");
-                const dataRows = reportData.data || [];
-                const headers = Object.keys(dataRows[0] || {});
-
-                exportWorkbookXml({
-                    fileName,
-                    sheets: [
-                        {
-                            name: "Summary",
-                            headers: ["Metric", "Value"],
-                            rows: Object.values(reportData.summary || {}).map((metric) => [
-                                metric.name,
-                                metric.average?.toFixed?.(2) ?? metric.total ?? "",
-                            ]),
-                        },
-                        {
-                            name: "Report",
-                            headers,
-                            rows: dataRows.map((row) => headers.map((header) => row?.[header] ?? "")),
-                        },
-                    ],
-                });
-
-                return { fileName, format: "xls", size: "~120KB" };
-            },
-
-            exportToCSV: (reportData) => {
-                const fileName = reportData.report.generateFileName("csv");
-                const rows = reportData.data || [];
-                const headers = Object.keys(rows[0] || {});
-                const csvContent = [
-                    headers.join(","),
-                    ...rows.map((row) => headers.map((header) => `"${row[header] ?? ""}"`).join(",")),
-                ].join("\n");
-
-                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                downloadBlob(fileName, blob);
-
-                return { fileName, format: "csv", size: "~500KB" };
-            },
-
-            exportToJSON: (reportData) => {
-                const fileName = reportData.report.generateFileName("json");
-                const blob = new Blob([JSON.stringify(reportData, null, 2)], {
-                    type: "application/json;charset=utf-8;",
-                });
-                downloadBlob(fileName, blob);
-                return { fileName, format: "json", size: "~1MB" };
             },
 
             scheduleReport: async (reportId, schedule) => {
@@ -521,29 +281,6 @@ export const useReportsStore = create(
                 set((state) => ({ reports: [duplicated, ...state.reports] }));
                 get().updateStats();
                 return duplicated;
-            },
-
-            generateMockReports: (count) => {
-                const categories = ["users", "system", "sales", "shipments", "finance"];
-                const statuses = ["draft", "active", "archived"];
-
-                return Array.from({ length: count }, (_, i) => {
-                    const category = categories[i % categories.length];
-                    return new Report({
-                        id: `report_${i + 1}`,
-                        name: `${get().getCategoryName(category)} Report ${i + 1}`,
-                        description: `Detailed ${get().getCategoryName(category).toLowerCase()} report for the system`,
-                        category,
-                        type: i % 3 === 0 ? "predefined" : "custom",
-                        status: statuses[i % statuses.length],
-                        createdBy: `user_${Math.floor(Math.random() * 10) + 1}`,
-                        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                        updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                        lastGeneratedAt: Math.random() > 0.3 ? new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString() : null,
-                        generationCount: Math.floor(Math.random() * 100),
-                        tags: Math.random() > 0.5 ? ["favorite", "monthly"] : ["monthly"],
-                    });
-                });
             },
 
             getCategoryName: (categoryId) => {

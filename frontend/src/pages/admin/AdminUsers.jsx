@@ -39,11 +39,9 @@ export default function AdminUsers() {
 function AdminUsersContent() {
   // State management
   const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [apiDisconnected, setApiDisconnected] = useState(false);
   const [serverStats, setServerStats] = useState(null);
 
   // Filters
@@ -80,78 +78,51 @@ function AdminUsersContent() {
   // Load data
   useEffect(() => {
     loadUsers();
-    loadRoles();
     loadStats();
   }, []);
 
   const loadUsers = async () => {
     setLoading(true);
     setError("");
-    setApiDisconnected(false);
     try {
-      try {
-        const [res, activityRes] = await Promise.all([
-          axiosClient.get("/api/v1/admin/users/management"),
-          axiosClient.get("/api/v1/admin/users/activity/recent?limit=100").catch(() => ({ data: [] })),
-        ]);
-        const userList = res?.data?.users || res?.data?.data?.users || res?.data?.data || res?.data || [];
-        const activityList = activityRes?.data || [];
-        const lastLoginById = new Map();
-        const lastLoginByEmail = new Map();
+      const [res, activityRes] = await Promise.all([
+        axiosClient.get("/api/v1/admin/users/management"),
+        axiosClient.get("/api/v1/admin/users/activity/recent?limit=100").catch(() => ({ data: [] })),
+      ]);
+      const userList = res?.data?.users || res?.data?.data?.users || res?.data?.data || res?.data || [];
+      const activityList = activityRes?.data || [];
+      const lastLoginById = new Map();
+      const lastLoginByEmail = new Map();
 
-        if (Array.isArray(activityList)) {
-          activityList.forEach((item) => {
-            if (item?.user_id != null) lastLoginById.set(String(item.user_id), item.last_login || item.lastLogin || null);
-            if (item?.email) lastLoginByEmail.set(String(item.email).toLowerCase(), item.last_login || item.lastLogin || null);
-          });
-        }
-
-        const normalizedUsers = Array.isArray(userList) ? userList.map((user) => {
-          const fallbackLogin =
-            user?.last_login ||
-            user?.lastLogin ||
-            user?.last_login_at ||
-            user?.lastLoginAt ||
-            lastLoginById.get(String(user.id)) ||
-            lastLoginByEmail.get(String(user.email || "").toLowerCase()) ||
-            null;
-
-          return {
-            ...user,
-            last_login: user?.last_login || fallbackLogin,
-          };
-        }) : [];
-
-        setUsers(normalizedUsers);
-      } catch (apiErr) {
-        // API not available, use mock data
-        console.debug("Users API not available, using mock data", apiErr?.message);
-        setApiDisconnected(true);
-        setUsers([]);
+      if (Array.isArray(activityList)) {
+        activityList.forEach((item) => {
+          if (item?.user_id != null) lastLoginById.set(String(item.user_id), item.last_login || item.lastLogin || null);
+          if (item?.email) lastLoginByEmail.set(String(item.email).toLowerCase(), item.last_login || item.lastLogin || null);
+        });
       }
+
+      const normalizedUsers = Array.isArray(userList) ? userList.map((user) => {
+        const fallbackLogin =
+          user?.last_login ||
+          user?.lastLogin ||
+          user?.last_login_at ||
+          user?.lastLoginAt ||
+          lastLoginById.get(String(user.id)) ||
+          lastLoginByEmail.get(String(user.email || "").toLowerCase()) ||
+          null;
+
+        return {
+          ...user,
+          last_login: user?.last_login || fallbackLogin,
+        };
+      }) : [];
+
+      setUsers(normalizedUsers);
     } catch (err) {
       setError(err?.response?.data?.detail || err?.message || "Failed to load users");
       setUsers([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadRoles = async () => {
-    try {
-      const res = await axiosClient.get("/api/v1/admin/users/roles");
-      const roleList = res?.data?.roles || res?.data?.data?.roles || res?.data?.data || res?.data || [];
-      setRoles(Array.isArray(roleList) ? roleList : []);
-      setApiDisconnected(false);
-    } catch (err) {
-      console.debug("Failed to load roles, using defaults:", err?.message);
-      // Load default roles when API unavailable
-      setRoles([
-        { key: "admin", name_en: "Administrator", name_ar: "Administrator" },
-        { key: "user", name_en: "User", name_ar: "User" },
-        { key: "driver", name_en: "Driver", name_ar: "Driver" },
-      ]);
-      setApiDisconnected(true);
     }
   };
 
@@ -219,10 +190,6 @@ function AdminUsersContent() {
   };
 
   const handleCreate = async () => {
-    if (apiDisconnected) {
-      setError("Cannot create users while API is disconnected. Please wait for the backend to be available.");
-      return;
-    }
     if (!formData.email || !formData.password) {
       setError("Email and password are required");
       return;
@@ -249,10 +216,6 @@ function AdminUsersContent() {
   };
 
   const handleEdit = async () => {
-    if (apiDisconnected) {
-      setError("Cannot edit users while API is disconnected. Please wait for the backend to be available.");
-      return;
-    }
     if (!selectedUser) return;
 
     try {
@@ -278,10 +241,6 @@ function AdminUsersContent() {
   };
 
   const handleDelete = async () => {
-    if (apiDisconnected) {
-      setError("Cannot delete users while API is disconnected. Please wait for the backend to be available.");
-      return;
-    }
     if (!selectedUser || !deleteReason) {
       setError("Please select a reason for deletion");
       return;
@@ -352,10 +311,6 @@ function AdminUsersContent() {
   const clearSelection = () => setSelectedIds([]);
 
   const handleBulkDisable = async (confirmed = false) => {
-    if (apiDisconnected) {
-      setError("Cannot update users while API is disconnected. Please wait for the backend to be available.");
-      return;
-    }
     if (!selectedCount) return;
     if (!confirmed) {
       setConfirmAction({
@@ -390,10 +345,6 @@ function AdminUsersContent() {
   };
 
   const handleBulkDelete = async (confirmed = false) => {
-    if (apiDisconnected) {
-      setError("Cannot delete users while API is disconnected. Please wait for the backend to be available.");
-      return;
-    }
     if (!selectedCount) return;
     if (!confirmed) {
       setConfirmAction({
@@ -573,21 +524,6 @@ function AdminUsersContent() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
-        </div>
-      )}
-
-      {/* API Disconnected Warning */}
-      {apiDisconnected && !error && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>Backend API is currently unavailable. Operations are limited to offline mode only.</span>
-          </div>
-          <button onClick={() => location.reload()} className="text-yellow-900 hover:text-yellow-700 font-medium">
-            Retry
           </button>
         </div>
       )}

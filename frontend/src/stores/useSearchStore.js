@@ -38,7 +38,14 @@ const DEFAULT_SETTINGS = {
     language: "ar",
 };
 
-const buildMockUsers = (count = 50) =>
+const deterministicOffsetMs = (index, windowDays) => {
+    const hours = ((index * 7 + 11) % (windowDays * 24));
+    return hours * 60 * 60 * 1000;
+};
+
+const deterministicIdSuffix = (seed) => `k${(seed * 2654435761 >>> 0).toString(36)}`;
+
+const buildSeedUsers = (count = 50) =>
     Array.from({ length: count }, (_, i) => ({
         id: `user_${i + 1}`,
         name: `User ${i + 1}`,
@@ -46,21 +53,21 @@ const buildMockUsers = (count = 50) =>
         role: i % 5 === 0 ? "admin" : "user",
         department: i % 3 === 0 ? "Operations" : i % 3 === 1 ? "Sales" : "Support",
         status: i % 10 === 0 ? "inactive" : "active",
-        createdAt: new Date(Date.now() - Math.random() * 360 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - deterministicOffsetMs(i + 1, 360)).toISOString(),
     }));
 
-const buildMockRoles = (count = 10) => {
+const buildSeedRoles = (count = 10) => {
     const roles = ["admin", "user", "manager", "viewer", "editor"];
     return Array.from({ length: count }, (_, i) => ({
         id: `role_${i + 1}`,
         name: roles[i % roles.length],
         description: `Role profile: ${roles[i % roles.length]}`,
         permissions: ["read", "write"].slice(0, (i % 2) + 1),
-        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - deterministicOffsetMs(i + 1, 30)).toISOString(),
     }));
 };
 
-const buildMockNotifications = (count = 100) => {
+const buildSeedNotifications = (count = 100) => {
     const categories = ["system", "user", "security", "update"];
     return Array.from({ length: count }, (_, i) => ({
         id: `notification_${i + 1}`,
@@ -68,11 +75,11 @@ const buildMockNotifications = (count = 100) => {
         message: `System notification ${i + 1}`,
         category: categories[i % categories.length],
         read: i % 3 === 0,
-        createdAt: new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - deterministicOffsetMs(i + 1, 3)).toISOString(),
     }));
 };
 
-const buildMockShipments = (count = 80) => {
+const buildSeedShipments = (count = 80) => {
     const statuses = ["in_transit", "delivered", "pending", "cancelled"];
     const cities = ["Toronto", "Montreal", "Vancouver", "Calgary", "Ottawa"];
     return Array.from({ length: count }, (_, i) => ({
@@ -82,10 +89,11 @@ const buildMockShipments = (count = 80) => {
         origin: cities[i % cities.length],
         destination: cities[(i + 2) % cities.length],
         carrier: `Carrier ${i % 6}`,
-        createdAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - deterministicOffsetMs(i + 1, 14)).toISOString(),
     }));
 };
-const buildMockReports = (count = 30) => {
+
+const buildSeedReports = (count = 30) => {
     const categories = ["users", "system", "sales", "shipments"];
     return Array.from({ length: count }, (_, i) => ({
         id: `report_${i + 1}`,
@@ -93,8 +101,8 @@ const buildMockReports = (count = 30) => {
         description: `Analytics report for ${categories[i % categories.length]}`,
         category: categories[i % categories.length],
         tags: ["monthly", "analysis"].slice(0, (i % 2) + 1),
-        createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - deterministicOffsetMs(i + 1, 7)).toISOString(),
+        updatedAt: new Date(Date.now() - deterministicOffsetMs(i + 3, 1)).toISOString(),
     }));
 };
 export const useSearchStore = create(
@@ -192,8 +200,8 @@ export const useSearchStore = create(
                     const reports = useReportsStore.getState?.().reports || [];
 
                     await Promise.all([
-                        get().updateIndex("users", buildMockUsers(80)),
-                        get().updateIndex("roles", buildMockRoles(12)),
+                        get().updateIndex("users", buildSeedUsers(80)),
+                        get().updateIndex("roles", buildSeedRoles(12)),
                         get().updateIndex(
                             "reports",
                             reports.length > 0
@@ -206,10 +214,10 @@ export const useSearchStore = create(
                                     createdAt: report.createdAt,
                                     updatedAt: report.updatedAt,
                                 }))
-                                : buildMockReports(40)
+                                : buildSeedReports(40)
                         ),
-                        get().updateIndex("notifications", buildMockNotifications(120)),
-                        get().updateIndex("shipments", buildMockShipments(60)),
+                        get().updateIndex("notifications", buildSeedNotifications(120)),
+                        get().updateIndex("shipments", buildSeedShipments(60)),
                     ]);
                 } catch (error) {
                     set({ error: error?.message || "Failed to rebuild indices" });
@@ -221,7 +229,7 @@ export const useSearchStore = create(
 
             saveSearch: async (name, query, criteria = {}) => {
                 const savedSearch = {
-                    id: `search_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+                    id: `search_${Date.now()}_${deterministicIdSuffix((get().stats.totalSearches || 0) + 1)}`,
                     name,
                     query,
                     criteria,

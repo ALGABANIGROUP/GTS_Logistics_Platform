@@ -15,7 +15,6 @@ export default function FinanceDashboard({ zeroMode = FINANCE_ZERO_MODE }) {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(!zeroMode);
     const [error, setError] = useState("");
-    const [seeding, setSeeding] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -104,19 +103,6 @@ export default function FinanceDashboard({ zeroMode = FINANCE_ZERO_MODE }) {
         }));
     }, [dashboard, zeroMode]);
 
-    const handleSeedDemoData = async () => {
-        setSeeding(true);
-        setError("");
-        try {
-            await financeApi.bootstrapDemoData();
-            window.location.reload();
-        } catch (err) {
-            setError(err?.response?.data?.detail || err?.message || "Failed to create demo finance data.");
-        } finally {
-            setSeeding(false);
-        }
-    };
-
     return (
         <div className="fin-section">
             <div className="fin-section-header">
@@ -133,9 +119,6 @@ export default function FinanceDashboard({ zeroMode = FINANCE_ZERO_MODE }) {
                     </select>
                     <button className="fin-btn ghost" onClick={() => window.location.reload()} disabled={zeroMode || loading}>
                         Refresh
-                    </button>
-                    <button className="fin-btn" onClick={handleSeedDemoData} disabled={zeroMode || loading || seeding}>
-                        {seeding ? "Seeding..." : "Seed Demo Data"}
                     </button>
                 </div>
             </div>

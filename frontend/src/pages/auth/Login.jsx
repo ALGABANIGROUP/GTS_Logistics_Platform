@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import gtsLogo from '../../assets/gts_logo.png';
 import bgLogin from '../../assets/bg_login.png';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +11,19 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, authReady, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!authReady || !isAuthenticated) {
+      return;
+    }
+
+    const next = new URLSearchParams(location.search).get('next');
+    navigate(next || '/dashboard', { replace: true });
+  }, [authReady, isAuthenticated, location.search, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,16 +69,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual login API call
       console.log('Login attempt:', formData);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // For now, just navigate to dashboard
-      navigate('/dashboard');
+      await login(formData.email, formData.password, rememberMe);
+      const next = new URLSearchParams(location.search).get('next');
+      navigate(next || '/dashboard', { replace: true });
     } catch (error) {
-      setErrors({ general: 'Login failed. Please try again.' });
+      setErrors({ general: error.message || 'Login failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -140,6 +149,8 @@ const Login = () => {
                 <label className="flex items-center">
                   <input
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 text-red-600 bg-white/5 border-white/20 rounded focus:ring-red-500 focus:ring-2"
                   />
                   <span className="ml-2 text-sm text-gray-300">Remember me</span>

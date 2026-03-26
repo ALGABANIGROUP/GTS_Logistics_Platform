@@ -98,6 +98,7 @@ const AILegalConsultantComponent = React.lazy(() => import("./components/bots/AI
 const AISafetyManagerComponent = React.lazy(() => import("./components/bots/AISafetyManager"));
 const AISalesTeamComponent = React.lazy(() => import("./components/bots/AISalesTeam"));
 const AISecurityManagerComponent = React.lazy(() => import("./components/bots/AISecurityManager"));
+const FreightPulseDashboard = React.lazy(() => import("./pages/FreightPulseDashboard"));
 const AIPartnerManagerComponent = React.lazy(() => import("./components/bots/AIPartnerManager"));
 const FreightBrokerDashboard = React.lazy(() => import("./components/bots/FreightBrokerDashboard"));
 const FreightBrokerControlPanel = React.lazy(() => import("./components/bots/FreightBrokerControlPanel"));
@@ -192,6 +193,7 @@ const Privacy = React.lazy(() => import("./pages/Privacy"));
 const Terms = React.lazy(() => import("./pages/Terms"));
 const Legal = React.lazy(() => import("./pages/Legal"));
 const Contact = React.lazy(() => import("./pages/Contact"));
+const PublicContentPage = React.lazy(() => import("./pages/PublicContentPage"));
 
 /** Simple error boundary so the app doesn't go blank-white on runtime errors */
 class ErrorBoundary extends React.Component {
@@ -350,6 +352,22 @@ const App = () => {
               <Route path="/terms" element={<Terms />} />
               <Route path="/legal" element={<Legal />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/blog" element={<PublicContentPage />} />
+              <Route path="/blog/:slug" element={<PublicContentPage />} />
+              <Route path="/podcasts" element={<PublicContentPage />} />
+              <Route path="/podcast/:slug" element={<PublicContentPage />} />
+              <Route path="/webinars" element={<PublicContentPage />} />
+              <Route path="/webinars/:slug" element={<PublicContentPage />} />
+              <Route path="/stories" element={<PublicContentPage />} />
+              <Route path="/press" element={<PublicContentPage />} />
+              <Route path="/community" element={<PublicContentPage />} />
+              <Route path="/alerts" element={<PublicContentPage />} />
+              <Route path="/emergency" element={<PublicContentPage />} />
+              <Route path="/partners" element={<PublicContentPage />} />
+              <Route path="/fraud-prevention" element={<PublicContentPage />} />
+              <Route path="/find-loads" element={<PublicContentPage />} />
+              <Route path="/resources/:slug" element={<PublicContentPage />} />
+              <Route path="/tools/:toolSlug" element={<PublicContentPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/logout" element={<LogoutPage />} />
               <Route path="/account-inactive" element={<AccountInactive />} />

@@ -249,7 +249,7 @@ export function PaymentFailedPage() {
             </div>
 
             {/* Styles */}
-            <style jsx>{`
+            <style>{`
         .payment-failed-page {
           min-height: 100vh;
           background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);

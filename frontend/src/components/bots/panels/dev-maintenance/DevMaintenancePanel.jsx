@@ -1,58 +1,162 @@
-// src/components/bots/panels/dev-maintenance/DevMaintenancePanel.jsx
-import React, { useState, useEffect } from 'react';
-import DevMaintenanceLiveChat from './DevMaintenanceLiveChat';
-import DevMaintenanceControlPanel from '../../DevMaintenanceControlPanel';
-import './DevMaintenancePanel.css';
+import React, { useEffect, useState } from "react";
+import axiosClient from "../../../../api/axiosClient";
+import DevMaintenanceLiveChat from "./DevMaintenanceLiveChat";
+import DevMaintenanceControlPanel from "../../DevMaintenanceControlPanel";
+import "./DevMaintenancePanel.css";
+
+const SystemMonitoringView = ({ health, loading, error }) => (
+    <div style={{ padding: "24px", color: "white" }}>
+        <h2>System Monitoring</h2>
+        {error ? <p style={{ color: "#fca5a5" }}>{error}</p> : null}
+        {loading ? (
+            <p>Loading system metrics...</p>
+        ) : (
+            <div style={{ display: "grid", gap: "12px", maxWidth: "760px" }}>
+                <div>Status: {health?.status || "unknown"}</div>
+                <div>Database: {health?.database?.status || health?.checks?.database?.status || "unknown"}</div>
+                <div>Environment: {health?.environment || "unknown"}</div>
+            </div>
+        )}
+    </div>
+);
+
+const BugTrackerView = ({ tickets, loading }) => (
+    <div style={{ padding: "24px", color: "white" }}>
+        <h2>Bug Tracker</h2>
+        {loading ? (
+            <p>Loading support tickets...</p>
+        ) : tickets.length === 0 ? (
+            <p>No open maintenance tickets.</p>
+        ) : (
+            <div style={{ display: "grid", gap: "12px" }}>
+                {tickets.map((ticket) => (
+                    <div key={ticket.id} style={{ border: "1px solid rgba(148, 163, 184, 0.2)", borderRadius: "12px", padding: "14px" }}>
+                        <div style={{ fontWeight: 700 }}>{ticket.issue}</div>
+                        <div style={{ color: "#94a3b8", fontSize: "14px" }}>{ticket.user} • {ticket.priority}</div>
+                        <div style={{ marginTop: "8px" }}>{ticket.description}</div>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+);
+
+const DeploymentsView = ({ developments, loading }) => (
+    <div style={{ padding: "24px", color: "white" }}>
+        <h2>Deployment Pipeline</h2>
+        {loading ? (
+            <p>Loading development queue...</p>
+        ) : developments.length === 0 ? (
+            <p>No pending development items.</p>
+        ) : (
+            <div style={{ display: "grid", gap: "12px" }}>
+                {developments.map((dev) => (
+                    <div key={dev.id} style={{ border: "1px solid rgba(148, 163, 184, 0.2)", borderRadius: "12px", padding: "14px" }}>
+                        <div style={{ fontWeight: 700 }}>{dev.title}</div>
+                        <div style={{ color: "#94a3b8", fontSize: "14px" }}>{dev.status} • {dev.priority}</div>
+                        <div style={{ marginTop: "8px" }}>{dev.description}</div>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+);
+
+const SecurityView = ({ reports, loading }) => {
+    const latest = reports[0] || null;
+    return (
+        <div style={{ padding: "24px", color: "white" }}>
+            <h2>Security Dashboard</h2>
+            {loading ? (
+                <p>Loading maintenance reports...</p>
+            ) : !latest ? (
+                <p>No security-related maintenance report available.</p>
+            ) : (
+                <div style={{ border: "1px solid rgba(148, 163, 184, 0.2)", borderRadius: "12px", padding: "14px", maxWidth: "760px" }}>
+                    <div style={{ fontWeight: 700 }}>Latest report: {latest.date}</div>
+                    <div style={{ color: "#94a3b8", fontSize: "14px" }}>Status: {latest.status} • Uptime: {latest.uptime}</div>
+                    <ul style={{ marginTop: "10px", paddingLeft: "18px" }}>
+                        {(latest.recommendations || []).map((item, index) => (
+                            <li key={index}>{item}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const DevMaintenancePanel = () => {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState("dashboard");
     const [botConfig, setBotConfig] = useState(null);
-    const [liveStats, setLiveStats] = useState({
-        systemUptime: '99.97%',
-        activeIssues: 0,
-        pendingDeployments: 2,
-        avgResponseTime: '142ms'
-    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [health, setHealth] = useState(null);
+    const [tickets, setTickets] = useState([]);
+    const [developments, setDevelopments] = useState([]);
+    const [reports, setReports] = useState([]);
 
     useEffect(() => {
-        initializeBotConfig();
-    }, []);
-
-    const initializeBotConfig = () => {
-        const config = {
+        setBotConfig({
             name: "AI Development & Maintenance Bot",
             description: "Technical support, bug tracking, and system monitoring",
             status: "active",
             version: "2.4.1",
-            lastUpdated: new Date().toISOString().split('T')[0],
-
             tabs: [
-                { id: 'dashboard', name: 'Control Panel', icon: '🎛️' },
-                { id: 'livechat', name: 'Live Support', icon: '💬' },
-                { id: 'monitoring', name: 'System Monitor', icon: '📊' },
-                { id: 'bugs', name: 'Bug Tracker', icon: '🐛' },
-                { id: 'deployments', name: 'Deployments', icon: '🚀' },
-                { id: 'security', name: 'Security', icon: '🔒' }
-            ]
-        };
+                { id: "dashboard", name: "Control Panel" },
+                { id: "livechat", name: "Live Support" },
+                { id: "monitoring", name: "System Monitor" },
+                { id: "bugs", name: "Bug Tracker" },
+                { id: "deployments", name: "Deployments" },
+                { id: "security", name: "Security" },
+            ],
+        });
+    }, []);
 
-        setBotConfig(config);
-    };
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const [healthRes, reportsRes, devRes, ticketsRes] = await Promise.all([
+                    axiosClient.get("/api/v1/system/health"),
+                    axiosClient.get("/api/v1/maintenance/reports"),
+                    axiosClient.get("/api/v1/maintenance/suggested-developments"),
+                    axiosClient.get("/api/v1/maintenance/support-tickets"),
+                ]);
+                if (!mounted) return;
+                setHealth(healthRes?.data || null);
+                setReports(reportsRes?.data?.reports || []);
+                setDevelopments(devRes?.data?.developments || []);
+                setTickets(ticketsRes?.data?.tickets || []);
+            } catch (err) {
+                if (!mounted) return;
+                setError(err?.response?.data?.detail || err?.message || "Failed to load maintenance telemetry.");
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'dashboard':
+            case "dashboard":
                 return <DevMaintenanceControlPanel mode="active" />;
-            case 'livechat':
+            case "livechat":
                 return <DevMaintenanceLiveChat />;
-            case 'monitoring':
-                return <SystemMonitoringView />;
-            case 'bugs':
-                return <BugTrackerView />;
-            case 'deployments':
-                return <DeploymentsView />;
-            case 'security':
-                return <SecurityView />;
+            case "monitoring":
+                return <SystemMonitoringView health={health} loading={loading} error={error} />;
+            case "bugs":
+                return <BugTrackerView tickets={tickets} loading={loading} />;
+            case "deployments":
+                return <DeploymentsView developments={developments} loading={loading} />;
+            case "security":
+                return <SecurityView reports={reports} loading={loading} />;
             default:
                 return <DevMaintenanceControlPanel mode="active" />;
         }
@@ -61,163 +165,44 @@ const DevMaintenancePanel = () => {
     if (!botConfig) return <div className="loading-panel">Loading Dev & Maintenance Bot...</div>;
 
     return (
-        <div className="dev-maintenance-panel" style={{ background: '#0f172a', minHeight: '100vh' }}>
-            {/* Header */}
-            <div style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                backdropFilter: 'blur(20px)',
-                borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
-                padding: '16px 24px'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '24px'
-                        }}>
-                            🔧
-                        </div>
-                        <div>
-                            <h1 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
-                                {botConfig.name}
-                            </h1>
-                            <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>
-                                {botConfig.description}
-                            </p>
-                        </div>
+        <div className="dev-maintenance-panel" style={{ background: "#0f172a", minHeight: "100vh" }}>
+            <div style={{ background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(148, 163, 184, 0.2)", padding: "16px 24px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+                    <div>
+                        <h1 style={{ color: "white", fontSize: "20px", fontWeight: "bold", margin: 0 }}>{botConfig.name}</h1>
+                        <p style={{ color: "#94a3b8", fontSize: "14px", margin: "4px 0 0 0" }}>{botConfig.description}</p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{
-                            background: 'rgba(34, 197, 94, 0.2)',
-                            border: '1px solid rgba(34, 197, 94, 0.4)',
-                            borderRadius: '8px',
-                            padding: '6px 12px',
-                            color: '#22c55e',
-                            fontSize: '14px',
-                            fontWeight: '600'
-                        }}>
-                            {botConfig.status.toUpperCase()}
-                        </div>
-                        <div style={{ color: '#94a3b8', fontSize: '14px' }}>
-                            v{botConfig.version}
-                        </div>
+                    <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                        {loading ? "Loading..." : `Reports: ${reports.length} • Tickets: ${tickets.length} • Suggestions: ${developments.length}`}
                     </div>
-                </div>
-
-                {/* Stats Bar */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '16px',
-                    marginTop: '16px'
-                }}>
-                    {[
-                        { icon: '⚡', label: 'Uptime', value: liveStats.systemUptime },
-                        { icon: '🐛', label: 'Active Issues', value: liveStats.activeIssues },
-                        { icon: '🚀', label: 'Pending', value: liveStats.pendingDeployments },
-                        { icon: '📊', label: 'Response', value: liveStats.avgResponseTime }
-                    ].map((stat, i) => (
-                        <div key={i} style={{
-                            background: 'rgba(30, 41, 59, 0.4)',
-                            border: '1px solid rgba(148, 163, 184, 0.2)',
-                            borderRadius: '8px',
-                            padding: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px'
-                        }}>
-                            <span style={{ fontSize: '24px' }}>{stat.icon}</span>
-                            <div>
-                                <div style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>
-                                    {stat.value}
-                                </div>
-                                <div style={{ color: '#94a3b8', fontSize: '12px' }}>
-                                    {stat.label}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
                 </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
-                padding: '0 24px',
-                display: 'flex',
-                gap: '8px',
-                overflowX: 'auto'
-            }}>
-                {botConfig.tabs.map(tab => (
+            <div style={{ background: "rgba(15, 23, 42, 0.6)", borderBottom: "1px solid rgba(148, 163, 184, 0.2)", padding: "0 24px", display: "flex", gap: "8px", overflowX: "auto" }}>
+                {botConfig.tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         style={{
-                            background: activeTab === tab.id
-                                ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%)'
-                                : 'transparent',
-                            border: 'none',
-                            borderBottom: activeTab === tab.id ? '2px solid #8b5cf6' : '2px solid transparent',
-                            color: activeTab === tab.id ? 'white' : '#94a3b8',
-                            padding: '16px 24px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            transition: 'all 0.2s',
-                            whiteSpace: 'nowrap',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
+                            background: activeTab === tab.id ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                            border: "none",
+                            borderBottom: activeTab === tab.id ? "2px solid #3b82f6" : "2px solid transparent",
+                            color: activeTab === tab.id ? "white" : "#94a3b8",
+                            padding: "16px 20px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
                         }}
                     >
-                        <span>{tab.icon}</span>
-                        <span>{tab.name}</span>
+                        {tab.name}
                     </button>
                 ))}
             </div>
 
-            {/* Tab Content */}
-            <div>
-                {renderTabContent()}
-            </div>
+            <div>{renderTabContent()}</div>
         </div>
     );
 };
-
-// Placeholder components for other tabs
-const SystemMonitoringView = () => (
-    <div style={{ padding: '24px', color: 'white' }}>
-        <h2>System Monitoring</h2>
-        <p>Real-time system metrics and performance monitoring coming soon...</p>
-    </div>
-);
-
-const BugTrackerView = () => (
-    <div style={{ padding: '24px', color: 'white' }}>
-        <h2>Bug Tracker</h2>
-        <p>Comprehensive bug tracking and issue management coming soon...</p>
-    </div>
-);
-
-const DeploymentsView = () => (
-    <div style={{ padding: '24px', color: 'white' }}>
-        <h2>Deployment Pipeline</h2>
-        <p>CI/CD pipeline management and deployment tracking coming soon...</p>
-    </div>
-);
-
-const SecurityView = () => (
-    <div style={{ padding: '24px', color: 'white' }}>
-        <h2>Security Dashboard</h2>
-        <p>Security monitoring and threat detection coming soon...</p>
-    </div>
-);
 
 export default DevMaintenancePanel;

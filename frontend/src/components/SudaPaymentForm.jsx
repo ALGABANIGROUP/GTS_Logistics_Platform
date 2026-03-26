@@ -197,7 +197,7 @@ export function SudaPaymentForm({
       </div>
 
       {/* Styles */}
-      <style jsx>{`
+      <style>{`
         .suda-payment-form {
           max-width: 600px;
           margin: 0 auto;

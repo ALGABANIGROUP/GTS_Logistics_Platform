@@ -35,6 +35,8 @@ const DEAL_STAGES = {
 const SalesTeam = () => {
     const { user, token } = useAuth();
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [retryCount, setRetryCount] = useState(0);
     const [activeTab, setActiveTab] = useState('dashboard');
 
     // Data
@@ -68,12 +70,12 @@ const SalesTeam = () => {
 
     useEffect(() => {
         loadDashboard();
-    }, []);
+    }, [retryCount]);
 
     const loadDashboard = async () => {
         try {
             setLoading(true);
-            // Load real data from Sales Service (with fallback to mock data)
+            setError(null);
             const data = await salesService.getDashboardData();
 
             if (!data || !data.leads || !data.deals) {
@@ -169,11 +171,28 @@ const SalesTeam = () => {
             setForecast(realForecast);
             setActivities(recentActivities);
         } catch (error) {
-            // Silently fail - mock data is already being used
-            console.warn('Dashboard using fallback data');
+            console.error('Failed to load sales dashboard:', error);
+            setDashboard(null);
+            setLeads([]);
+            setDeals([]);
+            setCustomers([]);
+            setForecast(null);
+            setActivities([]);
+
+            if (error?.response?.status === 503) {
+                setError('Sales service is temporarily unavailable. Please try again later.');
+            } else if (error?.response?.status === 401) {
+                setError('Authentication required. Please sign in again.');
+            } else {
+                setError('Unable to load sales dashboard data.');
+            }
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRetry = () => {
+        setRetryCount((current) => current + 1);
     };
 
     const handleAddLead = async (e) => {
@@ -301,6 +320,24 @@ const SalesTeam = () => {
                         <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full"></div>
                     </div>
                     <p className="text-white text-xl mt-4">⏳ Loading Sales Dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-6">
+                <div className="max-w-lg w-full bg-slate-900/60 border border-slate-700/60 rounded-2xl p-8 text-center backdrop-blur-xl">
+                    <div className="text-5xl mb-4">⚠️</div>
+                    <h2 className="text-2xl font-black text-white mb-3">Unable to Load Sales Data</h2>
+                    <p className="text-slate-300 mb-6">{error}</p>
+                    <button
+                        onClick={handleRetry}
+                        className="bg-white/15 hover:bg-white/20 text-white font-bold px-5 py-3 rounded-xl border border-white/20 transition"
+                    >
+                        Retry
+                    </button>
                 </div>
             </div>
         );
@@ -837,7 +874,7 @@ const SalesTeam = () => {
                                         type="text"
                                         value={newLead.name}
                                         onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="e.g., John Doe"
                                         required
                                     />
@@ -848,7 +885,7 @@ const SalesTeam = () => {
                                         type="email"
                                         value={newLead.email}
                                         onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="example@company.com"
                                         required
                                     />
@@ -859,7 +896,7 @@ const SalesTeam = () => {
                                         type="tel"
                                         value={newLead.phone}
                                         onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="+1 (555) 000-0000"
                                     />
                                 </div>
@@ -869,7 +906,7 @@ const SalesTeam = () => {
                                         type="text"
                                         value={newLead.company}
                                         onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="Company name"
                                     />
                                 </div>
@@ -908,7 +945,7 @@ const SalesTeam = () => {
                                         type="number"
                                         value={newLead.budget}
                                         onChange={(e) => setNewLead({ ...newLead, budget: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="Amount"
                                     />
                                 </div>
@@ -934,7 +971,7 @@ const SalesTeam = () => {
                                         value={newLead.notes}
                                         onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
                                         rows="4"
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition resize-none"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition resize-none"
                                         placeholder="Any additional information about the lead..."
                                     />
                                 </div>
@@ -962,7 +999,7 @@ const SalesTeam = () => {
                                         type="text"
                                         value={newDeal.customer}
                                         onChange={(e) => setNewDeal({ ...newDeal, customer: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="Customer name"
                                         required
                                     />
@@ -973,7 +1010,7 @@ const SalesTeam = () => {
                                         type="number"
                                         value={newDeal.value}
                                         onChange={(e) => setNewDeal({ ...newDeal, value: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="Amount"
                                         required
                                     />
@@ -1000,7 +1037,7 @@ const SalesTeam = () => {
                                         max="100"
                                         value={newDeal.probability}
                                         onChange={(e) => setNewDeal({ ...newDeal, probability: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                         placeholder="e.g., 60"
                                         required
                                     />
@@ -1011,7 +1048,7 @@ const SalesTeam = () => {
                                         type="date"
                                         value={newDeal.expected_close}
                                         onChange={(e) => setNewDeal({ ...newDeal, expected_close: e.target.value })}
-                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+                                        className="w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
                                     />
                                 </div>
                             </div>
