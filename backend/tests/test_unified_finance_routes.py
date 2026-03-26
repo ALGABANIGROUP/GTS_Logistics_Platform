@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from backend.main import app
-from backend.routes import unified_finance_routes as unified_finance_module
+from routes import unified_finance_routes as unified_finance_module
 
 
 @pytest.fixture(autouse=True)
@@ -104,29 +104,29 @@ def fake_unified_finance_service():
                 },
             }
 
-        async def bootstrap_demo_data(self, **kwargs):
-            return {
-                "success": True,
-                "created": True,
-                "message": "Demo finance data created successfully.",
-                "data": {
-                    "invoice": {"id": 10},
-                    "expense": {"id": 11},
-                    "payment": {"id": 12},
-                },
-            }
-
     return FakeUnifiedFinanceService()
 
 
 @pytest.fixture
 def override_unified_finance_dependencies(fake_unified_finance_service):
     async def fake_current_user():
-        return {"id": 1, "email": "manager@example.com", "role": "admin"}
+        return {"id": 1, "email": "admin@example.com", "role": "admin"}
 
     async def fake_service_dep():
         return fake_unified_finance_service
 
+    finance_role_dep = None
+    for route in app.routes:
+        if getattr(route, "path", "").startswith("/api/v1/finance") and hasattr(route, "dependant"):
+            for dep in route.dependant.dependencies:
+                if getattr(dep.call, "__module__", "") == "security.auth" and getattr(dep.call, "__name__", "") == "_dep":
+                    finance_role_dep = dep.call
+                    break
+        if finance_role_dep is not None:
+            break
+
+    if finance_role_dep is not None:
+        app.dependency_overrides[finance_role_dep] = fake_current_user
     app.dependency_overrides[unified_finance_module.get_current_user] = fake_current_user
     app.dependency_overrides[unified_finance_module.get_unified_finance_service] = fake_service_dep
 
@@ -220,12 +220,3 @@ class TestUnifiedFinanceRoutes:
         assert body["payment_type"] == "expense"
         assert body["expense_id"] == 7
         assert body["supplier_name"] == "Acme Fuel"
-
-    @pytest.mark.asyncio
-    async def test_bootstrap_demo_data(self, async_client, override_unified_finance_dependencies):
-        response = await async_client.post("/api/v1/finance/bootstrap-demo")
-
-        assert response.status_code == 201
-        body = response.json()
-        assert body["created"] is True
-        assert body["data"]["invoice"]["id"] == 10

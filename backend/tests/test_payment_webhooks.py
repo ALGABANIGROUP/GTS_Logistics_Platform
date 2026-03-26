@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import json
 from types import SimpleNamespace
 
@@ -10,6 +11,8 @@ from backend.main import app
 from backend.models.payment import PaymentStatus
 from backend.services import payment_service as payment_service_module
 from backend.webhooks import payment_webhooks
+
+runtime_payment_webhooks = importlib.import_module("webhooks.payment_webhooks")
 
 
 class DummySudapay:
@@ -73,6 +76,17 @@ def override_payment_webhook_dependencies(fake_db):
 
     app.dependency_overrides[payment_webhooks.get_async_session] = _fake_db
     app.dependency_overrides[payment_webhooks.get_sudapay_service] = _fake_sudapay
+    app.dependency_overrides[runtime_payment_webhooks.get_async_session] = _fake_db
+    app.dependency_overrides[runtime_payment_webhooks.get_sudapay_service] = _fake_sudapay
+
+
+@pytest.fixture(autouse=True)
+def _force_valid_signature(monkeypatch):
+    monkeypatch.setattr(
+        runtime_payment_webhooks.SudapayService,
+        "verify_webhook_signature",
+        lambda self, payload, signature: signature == "valid-signature",
+    )
 
 
 def _headers(signature: str = "valid-signature") -> dict[str, str]:

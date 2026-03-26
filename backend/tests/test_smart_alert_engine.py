@@ -3,7 +3,15 @@ from __future__ import annotations
 import pytest
 
 from backend.core.alerts.smart_alert_engine import SmartAlertEngine
-from backend.routes.bot_collaboration import MockBotConnector
+
+
+class StubBotConnector:
+    def __init__(self, bot_name: str) -> None:
+        self.bot_name = bot_name
+        self.received: list[dict[str, object]] = []
+
+    async def receive_composite_alert(self, alert_data: dict[str, object]) -> None:
+        self.received.append(alert_data)
 
 
 @pytest.mark.asyncio
@@ -11,8 +19,8 @@ async def test_smart_alert_engine_creates_composite_and_resolves():
     engine = SmartAlertEngine()
     await engine.register_bot_connectors(
         {
-            "freight_broker": MockBotConnector("freight_broker"),
-            "dispatcher": MockBotConnector("dispatcher"),
+            "freight_broker": StubBotConnector("freight_broker"),
+            "dispatcher": StubBotConnector("dispatcher"),
         }
     )
 

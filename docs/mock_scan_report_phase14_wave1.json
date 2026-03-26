@@ -1,0 +1,924 @@
+{
+  "total_findings": 152,
+  "by_category": {
+    "backend_patterns": 83,
+    "frontend_patterns": 42,
+    "mock_mode_env": 7,
+    "mock_api_imports": 1,
+    "math_random": 19
+  },
+  "findings": [
+    {
+      "category": "backend_patterns",
+      "file": "backend/ai/roles/ai_operations_manager.py",
+      "line": 21,
+      "text": "# ---------- Provider registry (TruckerPath live/mock) ----------"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/ai/roles/ai_operations_manager.py",
+      "line": 27,
+      "text": "# ---------- Mock source as last resort ----------"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/ai/roles/mapleload.py",
+      "line": 9,
+      "text": "\"\"\"MapleLoad AI - Canadian freight sourcing agent (extensible stub).\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/ai/roles/mapleload.py",
+      "line": 376,
+      "text": "# Criteria placeholder for future rules; current logic is fixed."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/ai/roles/partner.py",
+      "line": 13,
+      "text": "Safe stub:"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/backend/config.py",
+      "line": 7,
+      "text": "- get_db: a legacy sync-style dependency placeholder (not supported)."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/backend/config.py",
+      "line": 45,
+      "text": "Legacy sync-style dependency placeholder."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/backend_legacy/config.py",
+      "line": 7,
+      "text": "- get_db: a legacy sync-style dependency placeholder (not supported)."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/backend_legacy/config.py",
+      "line": 46,
+      "text": "Legacy sync-style dependency placeholder."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/freight_bot.py",
+      "line": 121,
+      "text": "# Mock carrier data"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/freight_bot.py",
+      "line": 177,
+      "text": "# Calculate mock rate"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/freight_bot.py",
+      "line": 183,
+      "text": "# Estimate distance (mock)"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/legal_counsel.py",
+      "line": 160,
+      "text": "# Mock contract analysis"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/legal_counsel.py",
+      "line": 205,
+      "text": "# Generate mock deadlines"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/legal_counsel.py",
+      "line": 261,
+      "text": "# Mock compliance check"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/operations_manager.py",
+      "line": 75,
+      "text": "# Mock shipment data - replace with real DB query"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/safety_bot.py",
+      "line": 193,
+      "text": "# Simulate compliance check (mock 80% compliance rate)"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/safe_manager.py",
+      "line": 194,
+      "text": "# Simulate compliance check (mock 80% compliance rate)"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/sales_bot.py",
+      "line": 98,
+      "text": "activity_type: str  # call, email, meeting, demo, proposal"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/sales_bot.py",
+      "line": 188,
+      "text": "\"\"\"Initialize with demo leads and deals\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/bots/sales_bot.py",
+      "line": 189,
+      "text": "# Demo leads"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/core/deps.py",
+      "line": 5,
+      "text": "- Provides a minimal Depends() stub if FastAPI is not installed,"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/core/deps.py",
+      "line": 15,
+      "text": "# Fallback stub for environments where FastAPI is not installed (e.g., editors/linters)."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/email_bot/intelligent_processor.py",
+      "line": 10,
+      "text": "\"\"\"Simple keyword-based email classifier placeholder.\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/email_bot/intelligent_processor.py",
+      "line": 24,
+      "text": "\"\"\"Minimal priority queue placeholder for routing.\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/email_bot/intelligent_router.py",
+      "line": 25,
+      "text": "\"\"\"Placeholder for integrating with internal services.\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/email_service/intelligent_processor.py",
+      "line": 10,
+      "text": "\"\"\"Simple keyword-based email classifier placeholder.\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/email_service/intelligent_processor.py",
+      "line": 24,
+      "text": "\"\"\"Minimal priority queue placeholder for routing.\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/integrations/loadboards/base.py",
+      "line": 12,
+      "text": "\"\"\"Health check with the provider (mock or real).\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/integrations/truckerpath/tracking.py",
+      "line": 13,
+      "text": "\"carrier_name\": \"Demo Carrier\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/models/mixins.py",
+      "line": 2,
+      "text": "DEV stub for backend.models.mixins"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/models/user.py",
+      "line": 88,
+      "text": "default=\"demo\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/ai_general_manager.py",
+      "line": 45,
+      "text": "\"Gradually phase out the demo fallback in the frontend once this is stable.\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/ai_operations_api.py",
+      "line": 266,
+      "text": "\"message\": \"Legacy mock load import has been removed. Use the live AI operations endpoints instead.\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/bots_available_enhanced.py",
+      "line": 234,
+      "text": "\"demo\": [bot[\"id\"] for bot in ALL_BOTS if bot[\"subscription_required\"] == \"basic\"],"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/bots_mock_api.py",
+      "line": 65,
+      "text": "@router.get(\"/mock\", response_model=Dict[str, Any])"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/bots_mock_api.py",
+      "line": 75,
+      "text": "@router.get(\"/mock/stats\", response_model=BotStatsResponse)"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/bots_mock_api.py",
+      "line": 108,
+      "text": "@router.get(\"/mock/history\", response_model=Dict[str, Any])"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/bots_subscription.py",
+      "line": 62,
+      "text": "subscription_tier = \"demo\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/documents_routes.py",
+      "line": 10,
+      "text": "# In-memory demo store"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/freight_broker_canada.py",
+      "line": 241,
+      "text": "# Mock data based on actual load board data"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/maintenance_ai.py",
+      "line": 23,
+      "text": "# Get maintenance reports from database or generate mock data"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/ml_routes.py",
+      "line": 82,
+      "text": "# Mock recommendations based on customer ID"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/ml_routes.py",
+      "line": 245,
+      "text": "# Mock top performers"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/orchestration.py",
+      "line": 136,
+      "text": "# Mock data for demonstration - in real implementation, this would come from database"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/orchestration.py",
+      "line": 338,
+      "text": "# Mock operations storage - in real implementation, use database"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/orchestration.py",
+      "line": 527,
+      "text": "# Calculate mock statistics"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/reports_real_data.py",
+      "line": 252,
+      "text": "\"Campaign performance placeholder ready for live marketing data integration.\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/reports_routes.py",
+      "line": 35,
+      "text": "\"note\": \"Placeholder weekly report endpoint. Replace with real data later.\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/safety_routes.py",
+      "line": 62,
+      "text": "# Mock implementation"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/social_media_routes.py",
+      "line": 116,
+      "text": "# For now, return placeholder"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/routes/user_sessions.py",
+      "line": 106,
+      "text": "# For demo purposes, we'll create mock device/location info"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/safety/reports_generator.py",
+      "line": 47,
+      "text": "# Analyze incidents (mock data)"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/safety/traffic_analysis.py",
+      "line": 71,
+      "text": "# Fetch new data (mock implementation)"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/safety/weather_forecast.py",
+      "line": 134,
+      "text": "# Fallback to mock data if API fails"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/safety/weather_forecast.py",
+      "line": 135,
+      "text": "logger.warning(\"Using fallback mock weather data\")"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/schedulers/load_board_scheduler.py",
+      "line": 25,
+      "text": "Simple scheduled job placeholder for the load board monitor."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/schedulers/maintenance_scheduler.py",
+      "line": 17,
+      "text": "run = await create_maintenance_run(session, None)  # placeholder payload"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/schemas/expense.py",
+      "line": 25,
+      "text": "Simple scheduled job placeholder for the load board monitor."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/security/access_context.py",
+      "line": 85,
+      "text": "\"DEMO\": \"tms\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/security/quota_dependency.py",
+      "line": 60,
+      "text": "# For now, this is a placeholder that always passes"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/canadian_load_board_integration.py",
+      "line": 372,
+      "text": "# Mock implementation - replace with real market data API"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/chatgpt_service.py",
+      "line": 5,
+      "text": "configured. It no longer returns mock conversational responses in production"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/executive_dashboard.py",
+      "line": 171,
+      "text": "\"driver\": \"Demo Driver\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/executive_dashboard.py",
+      "line": 177,
+      "text": "\"name\": \"Demo Partner\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/ml_service.py",
+      "line": 31,
+      "text": "# This is a placeholder - adjust based on your actual Shipment model"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/ml_service.py",
+      "line": 57,
+      "text": "# Placeholder for driver performance collection"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/platform_settings_store.py",
+      "line": 186,
+      "text": "return _MASK_PLACEHOLDER"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/truckerpath_service.py",
+      "line": 101,
+      "text": "{ \"loads\": [...], \"total\": int, \"source\": \"mock\"|\"live\"|... }"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/unified_finance_service.py",
+      "line": 99,
+      "text": "description=\"Demo invoice settlement\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/unified_finance_service.py",
+      "line": 109,
+      "text": "\"message\": \"Demo finance data created successfully.\","
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/webhook_tasks.py",
+      "line": 40,
+      "text": "\"\"\"Placeholder DLQ hook (wired to log for now).\"\"\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/services/mailboxes/freight.py",
+      "line": 5,
+      "text": "🔄 Placeholder Load Board Fetcher"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/tms/permissions.py",
+      "line": 227,
+      "text": "# Placeholder implementation"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/tms/core/tms_core.py",
+      "line": 147,
+      "text": "# Returning True as placeholder here"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/tools/create_admin_user.py",
+      "line": 114,
+      "text": "placeholders = \", \".join(f\"${i}\" for i in range(1, len(values) + 1))"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/tools/create_admin_user.py",
+      "line": 119,
+      "text": "VALUES ({placeholders})"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/tools/use_working_bots.py",
+      "line": 63,
+      "text": "payload = {\"message\": test_message, \"context\": {\"demo\": True}}"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/tools/open_web_leads/adapters/demo_acme.py",
+      "line": 14,
+      "text": "source_name = \"demo-acme-logistics.com\""
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/training_center/main.py",
+      "line": 12,
+      "text": "with tempfile.TemporaryDirectory(prefix=\"training-center-demo-\") as temp_dir:"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/utils/backup_scheduler.py",
+      "line": 256,
+      "text": "Falls back to a placeholder file if pg_dump is not available."
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/utils/backup_scheduler.py",
+      "line": 280,
+      "text": "handle.write(\"-- GTS backup placeholder\\n\")"
+    },
+    {
+      "category": "backend_patterns",
+      "file": "backend/utils/backup_scheduler.py",
+      "line": 284,
+      "text": "logger.warning(\"Backup placeholder created: %s\", backup_path)"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/ConfigurableDashboard.jsx",
+      "line": 107,
+      "text": "// Simple placeholder rendering - in real implementation, these would be actual components"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/CurrencyConverter.jsx",
+      "line": 60,
+      "text": "className=\"w-full px-3 py-2 bg-slate-700/50 border border-slate-600/30 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-400\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/CurrencyConverter.jsx",
+      "line": 136,
+      "text": "<div>Rates are fixed for demo - can be connected to external API</div>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/NewsletterSignup.jsx",
+      "line": 80,
+      "text": "className=\"w-full pl-10 pr-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500 transition\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/Sidebar.jsx",
+      "line": 138,
+      "text": "{/* Expand/collapse button placeholder */}"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/StripePaymentForm.jsx",
+      "line": 55,
+      "text": "'::placeholder': { color: '#a0a0a0' }"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/MapleLoadControlPanel.jsx",
+      "line": 728,
+      "text": "{/* Canadian Map Placeholder */}"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/PartnerManagementControlPanel.jsx",
+      "line": 850,
+      "text": "log.status === 'mock' ? 'bg-gray-100 text-gray-800' :"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/customer-service/MessageCenter.jsx",
+      "line": 110,
+      "text": "setMessageContent(messageContent + placeholder);"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/documents-manager/AnalyticsDashboard.jsx",
+      "line": 153,
+      "text": "<div className=\"chart-placeholder\">"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/documents-manager/DocumentsManagerPanel.jsx",
+      "line": 120,
+      "text": "return <div className=\"section-card\"><h3> Reports</h3><p>Reports feature coming soon</p></div>;"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/documents-manager/DocumentsManagerPanel.jsx",
+      "line": 122,
+      "text": "return <div className=\"section-card\"><h3> Settings</h3><p>Settings feature coming soon</p></div>;"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/documents-manager/IntegrationsPanel.jsx",
+      "line": 390,
+      "text": "<div className=\"feature-desc\">Document-backed digital assets (coming soon)</div>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/legal-consultant/RiskPanel.jsx",
+      "line": 3,
+      "text": "// Placeholder UI: risk endpoints are part of review results and advisory; this view organizes summaries."
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/panels/system-admin/SecurityAudit.jsx",
+      "line": 216,
+      "text": "onClick={() => onNewNotification?.('Export feature coming soon', 'i')}"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/tabs/ExecuteTab.jsx",
+      "line": 124,
+      "text": "className=\"w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/tabs/ExecuteTab.jsx",
+      "line": 147,
+      "text": "className=\"w-full rounded-lg border border-white/10 bg-slate-900/50 px-3 py-2 font-mono text-xs text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/tabs/LogsTab.jsx",
+      "line": 227,
+      "text": "{/* Log Stream (placeholder for WebSocket) */}"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/bots/tabs/ScheduleTab.jsx",
+      "line": 203,
+      "text": "className=\"w-full rounded-lg border border-white/10 bg-slate-900/50 px-3 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/Map/TransportDashboard.jsx",
+      "line": 44,
+      "text": "console.warn('Using mock data:', error);"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/Map/TransportMap.jsx",
+      "line": 46,
+      "text": "// Default mock data for demonstration"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/reports/AdvancedReports.jsx",
+      "line": 45,
+      "text": "// Dummy report data"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/components/reports/AdvancedReports.jsx",
+      "line": 168,
+      "text": "{/* Chart placeholder */}"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/BotFeatures.jsx",
+      "line": 92,
+      "text": "const tierFetches = ['demo', 'basic', 'tms_pro', 'unified', 'enterprise'];"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/Contact.jsx",
+      "line": 207,
+      "text": "className=\"flex-1 px-4 py-2 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/CustomerServiceDemo.jsx",
+      "line": 11,
+      "text": "<h1 className=\"text-3xl font-bold text-white\">Customer Service Learning Demo</h1>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/FreightBrokerControl.jsx",
+      "line": 312,
+      "text": "className=\"flex-1 px-3 py-2 border border-white/20 rounded-md bg-white/5 backdrop-blur-sm text-white placeholder-gray-500\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/FreightBrokerControl.jsx",
+      "line": 318,
+      "text": "className=\"flex-1 px-3 py-2 border border-white/20 rounded-md bg-white/5 backdrop-blur-sm text-white placeholder-gray-500\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/FreightBrokerControl.jsx",
+      "line": 774,
+      "text": "// Mock Data - Canadian Cross Border Loads"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/SafetyManager.jsx",
+      "line": 351,
+      "text": "className=\"w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-5 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/SafetyManager.jsx",
+      "line": 363,
+      "text": "className=\"w-full bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-lg px-5 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none\""
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/admin/PlatformSettings.jsx",
+      "line": 600,
+      "text": "<div className=\"logo-placeholder\">No logo uploaded</div>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/admin/PlatformSettings.jsx",
+      "line": 1300,
+      "text": "<div className=\"logo-placeholder\">No background uploaded</div>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/ai-bots/BOT_ROUTING_GUIDE.js",
+      "line": 295,
+      "text": "*   - Mock data mode for inactive backends"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/auth/Login.jsx",
+      "line": 118,
+      "text": "className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-white/20'"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/auth/Login.jsx",
+      "line": 138,
+      "text": "className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent ${errors.password ? 'border-red-500' : 'border-white/2"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/Payment/PaymentLinkDemo.jsx",
+      "line": 25,
+      "text": "<h1 className=\"text-2xl font-bold text-slate-900 dark:text-white\">Payment Link Demo</h1>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/support/index.jsx",
+      "line": 177,
+      "text": "<p className=\"text-gray-500\">Chart placeholder</p>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/pages/support/index.jsx",
+      "line": 184,
+      "text": "<p className=\"text-gray-500\">Chart placeholder</p>"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/services/RoadAlertService.js",
+      "line": 25,
+      "text": "// Mock data for road conditions (TODO: Replace with real API)"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/stores/useRealDataStore.js",
+      "line": 4,
+      "text": "* Fetches actual data from database instead of mock data"
+    },
+    {
+      "category": "frontend_patterns",
+      "file": "frontend/src/utils/tierUtils.js",
+      "line": 2,
+      "text": "demo: 'free',"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "backend/.env.example",
+      "line": 63,
+      "text": "TRUCKERPATH_ENABLE_MOCK=true"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "backend/integrations/truckerpath/create_company.py",
+      "line": 14,
+      "text": "TRUCKERPATH_ENABLE_MOCK = os.getenv('TRUCKERPATH_ENABLE_MOCK', 'false').lower() in {'1', 'true', 'yes'}"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "backend/integrations/truckerpath/create_company.py",
+      "line": 40,
+      "text": "if TRUCKERPATH_ENABLE_MOCK:"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "backend/integrations/truckerpath/routes.py",
+      "line": 18,
+      "text": "TP_ENABLE_MOCK = os.getenv('TRUCKERPATH_ENABLE_MOCK', 'false').lower() in {'1', 'true', 'yes'}"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "backend/integrations/truckerpath/routes.py",
+      "line": 32,
+      "text": "if TP_ENABLE_MOCK:"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "scripts/no_mock_check.py",
+      "line": 27,
+      "text": "BANNED_ENV = re.compile(r\"enable_mock|demo_mode|mock_mode\", re.IGNORECASE)"
+    },
+    {
+      "category": "mock_mode_env",
+      "file": "scripts/no_mock_check.py",
+      "line": 134,
+      "text": "category=\"mock_mode_env\","
+    },
+    {
+      "category": "mock_api_imports",
+      "file": "frontend/src/services/RoadAlertService.js",
+      "line": 25,
+      "text": "// Mock data for road conditions (TODO: Replace with real API)"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/components/bots/panels/documents-manager/AIAssistant.jsx",
+      "line": 98,
+      "text": "const response = assistantResponses[Math.floor(Math.random() * assistantResponses.length)];"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/components/bots/panels/documents-manager/DocumentUploader.jsx",
+      "line": 43,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/components/bots/panels/finance-bot/PlatformExpenses.jsx",
+      "line": 97,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/components/bots/panels/finance-bot/PlatformExpenses.jsx",
+      "line": 107,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/contexts/NotificationContext.jsx",
+      "line": 103,
+      "text": "id: data.id || `notif_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/contexts/NotificationContext.jsx",
+      "line": 377,
+      "text": "const id = notificationData.id || `sched_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/models/Report.js",
+      "line": 3,
+      "text": "this.id = data.id || `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/models/Role.js",
+      "line": 25,
+      "text": "return colors[Math.floor(Math.random() * colors.length)]"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/LegalConsultantDashboard.jsx",
+      "line": 566,
+      "text": "setAnalyzedDocuments((prev) => prev + Math.floor(Math.random() * 4));"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/admin/AdminPanel.jsx",
+      "line": 35,
+      "text": "`GTS!${Math.random().toString(36).slice(2, 8)}A9`;"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AIGeneralManager.jsx",
+      "line": 89,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AIInformationCoordinator.jsx",
+      "line": 42,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AIIntelligenceBot.jsx",
+      "line": 58,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AILegalConsultant.jsx",
+      "line": 56,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AIOperationsManager.jsx",
+      "line": 40,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AISecurityManager.jsx",
+      "line": 48,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AISystemAdmin.jsx",
+      "line": 81,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/pages/ai-bots/AITrainerBot.jsx",
+      "line": 43,
+      "text": "id: Date.now() + Math.random(),"
+    },
+    {
+      "category": "math_random",
+      "file": "frontend/src/stores/useReportsStore.js",
+      "line": 272,
+      "text": "id: `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,"
+    }
+  ]
+}

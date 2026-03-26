@@ -27,6 +27,37 @@ def _override_webhook_secrets():
 def _override_db_dependency():
     async def _fake_db():
         class DummySession:
+            def __init__(self):
+                self._added: List[object] = []
+
+            def add(self, obj):
+                self._added.append(obj)
+
+            async def execute(self, statement, *args, **kwargs):
+                compiled_params = {}
+                try:
+                    compiled_params = statement.compile().params  # type: ignore[attr-defined]
+                except Exception:
+                    compiled_params = {}
+
+                idempotency_value = None
+                for key, value in compiled_params.items():
+                    if "idempotency_key" in str(key):
+                        idempotency_value = value
+                        break
+
+                class _Result:
+                    def __init__(self, scalar_value):
+                        self._scalar_value = scalar_value
+
+                    def scalar_one_or_none(self):
+                        return self._scalar_value
+
+                # Simulate idempotency hit for the duplicate test key.
+                if idempotency_value == "duplicate-key-123":
+                    return _Result("existing-webhook-id")
+                return _Result(None)
+
             async def commit(self):
                 return None
 
@@ -80,6 +111,7 @@ def _stub_webhook_service(monkeypatch):
             return None
 
     monkeypatch.setattr(webhooks_module, "WebhookService", DummyWebhookService)
+    monkeypatch.setattr("backend.routes.webhooks.WebhookService", DummyWebhookService)
     yield
 
 
@@ -87,10 +119,17 @@ def _stub_webhook_service(monkeypatch):
 def task_spy(monkeypatch):
     calls: List[Dict] = []
 
-    async def _fake_task(webhook_id: str, payload: Dict, client_info: Dict[str, str]):
-        calls.append({"webhook_id": webhook_id, "payload": payload, "client_info": client_info})
+    def _capture_add_task(self, func, *args, **kwargs):
+        calls.append(
+            {
+                "func": getattr(func, "__name__", str(func)),
+                "args": args,
+                "kwargs": kwargs,
+            }
+        )
+        return None
 
-    monkeypatch.setattr(webhooks_module, "process_tracking_webhook", _fake_task)
+    monkeypatch.setattr("starlette.background.BackgroundTasks.add_task", _capture_add_task)
     return calls
 
 
@@ -146,6 +185,7 @@ async def test_webhook_duplicate_idempotency(async_client, auth_headers, monkeyp
         return True
 
     monkeypatch.setattr(webhooks_module.WebhookService, "is_duplicate_idempotency_key", _dup, raising=False)
+    monkeypatch.setattr("backend.routes.webhooks.WebhookService.is_duplicate_idempotency_key", _dup, raising=False)
 
     payload = {
         "event": {

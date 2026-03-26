@@ -1,11 +1,21 @@
 from __future__ import annotations
 
+import importlib
 from types import SimpleNamespace
 
 import pytest
 
+from backend import main as main_module
 from backend.main import app
 from backend.routes import accounting_routes as accounting_module
+from backend.security import auth as backend_auth_module
+
+try:
+    import security.auth as runtime_auth_module
+except Exception:  # pragma: no cover
+    runtime_auth_module = None
+
+runtime_accounting_module = importlib.import_module("routes.accounting_routes")
 
 
 @pytest.fixture(autouse=True)
@@ -123,7 +133,14 @@ def override_accounting_dependencies(fake_accounting_service):
         return fake_accounting_service
 
     app.dependency_overrides[accounting_module.get_current_user] = fake_current_user
+    app.dependency_overrides[runtime_accounting_module.get_current_user] = fake_current_user
+    app.dependency_overrides[backend_auth_module.get_current_user] = fake_current_user
+    if runtime_auth_module is not None:
+        app.dependency_overrides[runtime_auth_module.get_current_user] = fake_current_user
+    if getattr(main_module, "get_current_user", None) is not None:
+        app.dependency_overrides[main_module.get_current_user] = fake_current_user
     app.dependency_overrides[accounting_module.get_accounting_service] = fake_accounting_service_dep
+    app.dependency_overrides[runtime_accounting_module.get_accounting_service] = fake_accounting_service_dep
 
 
 class TestAccountingRoutes:

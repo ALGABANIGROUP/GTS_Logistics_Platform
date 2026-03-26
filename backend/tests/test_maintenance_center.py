@@ -1,19 +1,44 @@
+import importlib
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from backend import main as main_module
 from backend.main import app
 from backend.security.auth import get_current_user
+from backend.security import auth as backend_auth_module
+
+try:
+    import security.auth as runtime_auth_module
+except Exception:  # pragma: no cover
+    runtime_auth_module = None
+
+runtime_maintenance_module = importlib.import_module("routes.maintenance_ai")
 
 
 @pytest.fixture
 def admin_override():
-    app.dependency_overrides[get_current_user] = lambda: {
+    async def _fake_admin_user():
+        return {
         "email": "admin@test.local",
         "role": "admin",
         "effective_role": "admin",
-    }
+        }
+
+    app.dependency_overrides[get_current_user] = _fake_admin_user
+    app.dependency_overrides[runtime_maintenance_module.get_current_user] = _fake_admin_user
+    app.dependency_overrides[backend_auth_module.get_current_user] = _fake_admin_user
+    if runtime_auth_module is not None:
+        app.dependency_overrides[runtime_auth_module.get_current_user] = _fake_admin_user
+    if getattr(main_module, "get_current_user", None) is not None:
+        app.dependency_overrides[main_module.get_current_user] = _fake_admin_user
     yield
     app.dependency_overrides.pop(get_current_user, None)
+    app.dependency_overrides.pop(runtime_maintenance_module.get_current_user, None)
+    app.dependency_overrides.pop(backend_auth_module.get_current_user, None)
+    if runtime_auth_module is not None:
+        app.dependency_overrides.pop(runtime_auth_module.get_current_user, None)
+    if getattr(main_module, "get_current_user", None) is not None:
+        app.dependency_overrides.pop(main_module.get_current_user, None)
 
 
 @pytest.fixture

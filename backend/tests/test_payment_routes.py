@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from datetime import datetime, date
 from types import SimpleNamespace
 
@@ -20,6 +21,8 @@ from backend.routes.payment_gateway import (
 )
 from backend.models.payment import CurrencyCode, Payment, PaymentGateway, PaymentStatus, Refund
 from backend.services.payment_service import PaymentService
+
+runtime_payment_module = importlib.import_module("routes.payment_gateway")
 
 
 class TestPaymentGatewaySchemas:
@@ -269,10 +272,15 @@ def override_payment_dependencies(fake_payment_service, fake_plan_invoice_servic
         return DummySudapay()
 
     app.dependency_overrides[payment_module.get_current_user] = fake_current_user
+    app.dependency_overrides[runtime_payment_module.get_current_user] = fake_current_user
     app.dependency_overrides[payment_module.get_payment_service] = fake_payment_service_dep
+    app.dependency_overrides[runtime_payment_module.get_payment_service] = fake_payment_service_dep
     app.dependency_overrides[get_plan_invoice_service] = fake_plan_invoice_service_dep
+    app.dependency_overrides[runtime_payment_module.get_plan_invoice_service] = fake_plan_invoice_service_dep
     app.dependency_overrides[payment_module.get_async_session] = fake_db
+    app.dependency_overrides[runtime_payment_module.get_async_session] = fake_db
     monkeypatch.setattr(payment_module, "get_sudapay_service", fake_sudapay_service)
+    monkeypatch.setattr(runtime_payment_module, "get_sudapay_service", fake_sudapay_service)
     return SimpleNamespace(
         payment_service=fake_payment_service,
         plan_invoice_service=fake_plan_invoice_service,
