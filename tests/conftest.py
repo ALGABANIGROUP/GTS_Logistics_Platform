@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.main import app
 from backend.database import Base, get_async_db
-from backend.auth import create_access_token
+from backend.security import create_access_token
 from backend.models.unified_models import UnifiedUser
 
 # Test database URL
@@ -112,13 +112,21 @@ async def admin_user(db_session: AsyncSession) -> UnifiedUser:
 @pytest.fixture
 def user_token(test_user: UnifiedUser) -> str:
     """Generate JWT token for test user"""
-    return create_access_token(data={"sub": test_user.email})
+    return create_access_token(
+        subject=getattr(test_user, "id", 0),
+        email=test_user.email,
+        role=getattr(test_user, "role", "user"),
+    )
 
 
 @pytest.fixture
 def admin_token(admin_user: UnifiedUser) -> str:
     """Generate JWT token for admin user"""
-    return create_access_token(data={"sub": admin_user.email})
+    return create_access_token(
+        subject=getattr(admin_user, "id", 0),
+        email=admin_user.email,
+        role=getattr(admin_user, "role", "super_admin"),
+    )
 
 
 @pytest.fixture

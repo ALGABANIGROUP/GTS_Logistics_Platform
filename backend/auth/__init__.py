@@ -8,6 +8,11 @@ Kept here to avoid heavy imports and optional dependencies.
 import bcrypt
 
 
+def create_access_token(*args, **kwargs):
+    from backend.security.auth import create_access_token as _create_access_token
+    return _create_access_token(*args, **kwargs)
+
+
 def _normalize_password(password: str) -> bytes:
     if not isinstance(password, str):
         password = str(password)
