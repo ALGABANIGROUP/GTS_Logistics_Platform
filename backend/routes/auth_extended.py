@@ -9,6 +9,7 @@ import hmac
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Dict, TYPE_CHECKING
+from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel, EmailStr, Field
@@ -167,6 +168,36 @@ def _hash_reset_token(token: str) -> str:
     return hmac.new(key, msg, hashlib.sha256).hexdigest()
 
 
+def _user_value(user: Any, field: str) -> Any:
+    if isinstance(user, dict):
+        return user.get(field)
+    return getattr(user, field, None)
+
+
+async def _load_reset_user_by_email(email: str, db: AsyncSession) -> Optional[Any]:
+    result = await db.execute(
+        text(
+            """
+            SELECT id, email, hashed_password, role, is_active
+            FROM users
+            WHERE lower(email) = lower(:email)
+            LIMIT 1
+            """
+        ),
+        {"email": str(email or "").strip().lower()},
+    )
+    row = result.mappings().first()
+    if not row:
+        return None
+    return SimpleNamespace(
+        id=int(row["id"]),
+        email=row["email"],
+        hashed_password=row["hashed_password"],
+        role=row.get("role"),
+        is_active=row.get("is_active"),
+    )
+
+
 async def _create_password_reset_token(user: UserModel, db: AsyncSession) -> str:
     await _ensure_reset_table(db)
 
@@ -182,7 +213,7 @@ async def _create_password_reset_token(user: UserModel, db: AsyncSession) -> str
             WHERE user_id = :user_id AND used_at IS NULL
             """
         ),
-        {"user_id": int(getattr(user, "id"))},
+        {"user_id": int(_user_value(user, "id"))},
     )
     await db.execute(
         text(
@@ -192,7 +223,7 @@ async def _create_password_reset_token(user: UserModel, db: AsyncSession) -> str
             """
         ),
         {
-            "user_id": int(getattr(user, "id")),
+            "user_id": int(_user_value(user, "id")),
             "token_hash": token_hash,
             "expires_at": expires_at,
         },
@@ -201,7 +232,7 @@ async def _create_password_reset_token(user: UserModel, db: AsyncSession) -> str
     return token
 
 
-async def _get_user_from_reset_token(token: str, db: AsyncSession) -> UserModel:
+async def _get_user_from_reset_token(token: str, db: AsyncSession) -> Any:
     error = HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Invalid or expired reset token",
@@ -230,12 +261,35 @@ async def _get_user_from_reset_token(token: str, db: AsyncSession) -> UserModel:
     if row["expires_at"] <= datetime.now(timezone.utc):
         raise error
 
-    stmt = select(UserModel).where(UserModel.id == int(row["user_id"]))  # type: ignore[arg-type]
-    user = (await db.execute(stmt)).scalar_one_or_none()
+    user = await _load_reset_user_by_email_by_id(int(row["user_id"]), db)
     if not user:
         raise error
 
     return user
+
+
+async def _load_reset_user_by_email_by_id(user_id: int, db: AsyncSession) -> Optional[Any]:
+    result = await db.execute(
+        text(
+            """
+            SELECT id, email, hashed_password, role, is_active
+            FROM users
+            WHERE id = :user_id
+            LIMIT 1
+            """
+        ),
+        {"user_id": int(user_id)},
+    )
+    row = result.mappings().first()
+    if not row:
+        return None
+    return SimpleNamespace(
+        id=int(row["id"]),
+        email=row["email"],
+        hashed_password=row["hashed_password"],
+        role=row.get("role"),
+        is_active=row.get("is_active"),
+    )
 
 
 def _build_reset_link(token: str) -> str:
@@ -421,12 +475,12 @@ async def request_reset(
     background: BackgroundTasks,
     db: AsyncSession = Depends(get_db_async),
 ) -> SimpleMessage:
-    user = await get_user_by_login(db, payload.email.lower())
+    user = await _load_reset_user_by_email(payload.email.lower(), db)
 
     if not user:
         return SimpleMessage(ok=True, message="If account exists, reset link was sent.")
 
-    role = str(getattr(user, "role", "")).lower()
+    role = str(_user_value(user, "role") or "").lower()
     if role not in ("admin", "super_admin"):
         return SimpleMessage(ok=True, message="If account exists, reset link was sent.")
 
@@ -457,7 +511,7 @@ async def reset_password(
 
     user = await _get_user_from_reset_token(payload.token, db)
 
-    current_hash = getattr(user, "hashed_password", None)
+    current_hash = _user_value(user, "hashed_password")
     if current_hash and verify_password(payload.new_password, current_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -465,9 +519,19 @@ async def reset_password(
         )
 
     new_hash = get_password_hash(payload.new_password)
-    setattr(user, "hashed_password", new_hash)
-
-    db.add(user)
+    await db.execute(
+        text(
+            """
+            UPDATE users
+            SET hashed_password = :new_hash
+            WHERE id = :user_id
+            """
+        ),
+        {
+            "new_hash": new_hash,
+            "user_id": int(_user_value(user, "id")),
+        },
+    )
 
     token_hash = _hash_reset_token(payload.token)
     result = await db.execute(
@@ -488,7 +552,7 @@ async def reset_password(
 
     await db.commit()
     try:
-        _send_password_changed_email(getattr(user, "email"))
+        _send_password_changed_email(str(_user_value(user, "email") or ""))
     except Exception:
         pass
     if log_audit_action:
@@ -496,8 +560,8 @@ async def reset_password(
             await log_audit_action(
                 request_id=None,
                 action="password_reset",
-                actor=str(getattr(user, "email", "unknown")),
-                details={"user_id": getattr(user, "id", None)},
+                actor=str(_user_value(user, "email") or "unknown"),
+                details={"user_id": _user_value(user, "id")},
                 session=db,
             )
         except Exception:

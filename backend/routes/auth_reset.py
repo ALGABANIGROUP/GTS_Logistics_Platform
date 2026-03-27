@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database.config import get_db_async
 from backend.security.auth import get_password_hash
@@ -26,9 +27,25 @@ class ForgotPasswordPayload(BaseModel):
 
 
 async def _load_user(email: str, db: AsyncSession) -> UserModel | None:
-    stmt = select(UserModel).where(UserModel.email == email.strip().lower())
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    result = await db.execute(
+        text(
+            """
+            SELECT id, email, hashed_password
+            FROM users
+            WHERE lower(email) = lower(:email)
+            LIMIT 1
+            """
+        ),
+        {"email": email.strip().lower()},
+    )
+    row = result.mappings().first()
+    if not row:
+        return None
+    return SimpleNamespace(
+        id=int(row["id"]),
+        email=row["email"],
+        hashed_password=row.get("hashed_password"),
+    )  # type: ignore[return-value]
 
 
 @router.post("/forgot-password")
@@ -66,7 +83,18 @@ async def reset_password(
 
     user = await _get_user_from_reset_token(token, db)
     hashed = get_password_hash(new_password)
-    setattr(user, "hashed_password", hashed)
-    db.add(user)
+    await db.execute(
+        text(
+            """
+            UPDATE users
+            SET hashed_password = :hashed_password
+            WHERE id = :user_id
+            """
+        ),
+        {
+            "hashed_password": hashed,
+            "user_id": int(getattr(user, "id")),
+        },
+    )
     await db.commit()
     return {"message": "Password has been reset successfully."}
