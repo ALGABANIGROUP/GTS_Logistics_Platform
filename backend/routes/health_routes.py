@@ -17,13 +17,18 @@ except Exception:
 
 router = APIRouter(prefix="/health", tags=["Health"])
 
+_session_import_error: Optional[str] = None
+
 
 def _try_import_async_session():
+    global _session_import_error
     try:
         from backend.database.session import get_async_session  # type: ignore
 
+        _session_import_error = None
         return get_async_session
-    except Exception:
+    except Exception as exc:
+        _session_import_error = str(exc)
         return None
 
 
@@ -107,7 +112,18 @@ async def ping() -> Dict[str, Any]:
 @router.get("/db")
 async def health_db(db: Optional[AsyncSession] = Depends(_session_dep)) -> Dict[str, Any]:
     if db is None:
-        raise HTTPException(status_code=503, detail={"ok": False, "service": "database", "error": "session unavailable"})
+        db_url = os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
+        detail: Dict[str, Any] = {
+            "ok": False,
+            "service": "database",
+            "error": "session unavailable",
+            "configured": bool(db_url),
+        }
+        if not db_url:
+            detail["hint"] = "Set DATABASE_URL (or ASYNC_DATABASE_URL) in environment variables"
+        if _session_import_error:
+            detail["import_error"] = _session_import_error
+        raise HTTPException(status_code=503, detail=detail)
 
     try:
         result = await asyncio.wait_for(
@@ -148,7 +164,14 @@ async def health_external() -> Dict[str, Any]:
 async def full_health(db: Optional[AsyncSession] = Depends(_session_dep)) -> Dict[str, Any]:
     finance: Dict[str, Any]
     if db is None:
-        finance = {"ok": False, "error": "session unavailable"}
+        db_url = os.getenv("DATABASE_URL") or os.getenv("ASYNC_DATABASE_URL")
+        finance = {
+            "ok": False,
+            "error": "session unavailable",
+            "configured": bool(db_url),
+        }
+        if _session_import_error:
+            finance["import_error"] = _session_import_error
     else:
         try:
             res = await db.execute(text("SELECT 1"))
