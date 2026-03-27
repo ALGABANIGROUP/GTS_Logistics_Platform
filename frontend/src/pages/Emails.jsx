@@ -70,8 +70,10 @@ const buildSyncMessage = (result) => {
 };
 
 const Emails = () => {
-  const { user } = useAuth();
-  const role = (user?.role || "").toString().toLowerCase();
+  const { user, role: authRole, authReady, isAuthenticated } = useAuth();
+  const role = (authRole || user?.effective_role || user?.role || "")
+    .toString()
+    .toLowerCase();
   // Match role hierarchy: owner/super_admin/admin can manage system mailboxes.
   const isAdmin = role === "super_admin" || role === "owner" || role === "admin";
   const canPollMailboxes = EMAIL_SYNC_ROLES.has(role);
@@ -183,6 +185,10 @@ const Emails = () => {
   };
 
   useEffect(() => {
+    if (!authReady || !isAuthenticated) {
+      return undefined;
+    }
+
     let mounted = true;
     const bootstrap = async () => {
       try {
@@ -206,7 +212,7 @@ const Emails = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [authReady, isAuthenticated, isAdmin]);
 
   useEffect(() => {
     if (!selectedMailbox?.id) return;
