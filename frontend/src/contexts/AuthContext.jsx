@@ -18,14 +18,59 @@ const API_URL = String(API_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, 
 
 const AuthContext = createContext();
 
-const unwrapUserPayload = (payload) => {
+const normalizeAuthPayload = (payload) => {
     if (!payload) {
         return null;
     }
-    if (payload.user && typeof payload.user === "object") {
-        return payload.user;
+
+    const rawUser =
+        payload.user && typeof payload.user === "object" ? payload.user : payload;
+    if (!rawUser || typeof rawUser !== "object") {
+        return null;
     }
-    return payload;
+
+    const entitlements =
+        payload.entitlements && typeof payload.entitlements === "object"
+            ? payload.entitlements
+            : {};
+    const planModules =
+        payload.plan && payload.plan.modules && typeof payload.plan.modules === "object"
+            ? payload.plan.modules
+            : {};
+    const moduleKeys = Array.isArray(entitlements.modules) ? entitlements.modules : [];
+    const modules = { ...planModules };
+    for (const key of moduleKeys) {
+        if (key) {
+            modules[key] = true;
+        }
+    }
+
+    const features = Array.isArray(entitlements.features)
+        ? entitlements.features
+        : Array.isArray(rawUser.features)
+            ? rawUser.features
+            : [];
+
+    const bots = Array.isArray(entitlements.bots)
+        ? entitlements.bots
+        : Array.isArray(rawUser.assigned_bots)
+            ? rawUser.assigned_bots
+            : [];
+
+    return {
+        ...rawUser,
+        permissions: Array.isArray(rawUser.permissions) ? rawUser.permissions : [],
+        features,
+        modules,
+        assigned_bots: Array.isArray(rawUser.assigned_bots) ? rawUser.assigned_bots : bots,
+        authMeta: {
+            entitlements,
+            tenant: payload.tenant || null,
+            plan: payload.plan || null,
+            system: payload.system || null,
+            bots,
+        },
+    };
 };
 
 const getApiErrorMessage = (error, fallbackMessage) =>
@@ -96,7 +141,7 @@ export const AuthProvider = ({ children }) => {
                     });
                     if (!cancelled) {
                         setToken(currentToken);
-                        setUser(unwrapUserPayload(response.data));
+                        setUser(normalizeAuthPayload(response.data));
                     }
                 }
             } catch (error) {
@@ -119,6 +164,25 @@ export const AuthProvider = ({ children }) => {
             cancelled = true;
         };
     }, [token]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return undefined;
+        }
+
+        const handleAuthExpired = () => {
+            clearAuthCache();
+            setToken("");
+            setUser(null);
+            setLoading(false);
+            setAuthReady(true);
+        };
+
+        window.addEventListener("auth:expired", handleAuthExpired);
+        return () => {
+            window.removeEventListener("auth:expired", handleAuthExpired);
+        };
+    }, []);
 
     const login = async (email, password, remember = false) => {
         try {
@@ -148,12 +212,12 @@ export const AuthProvider = ({ children }) => {
                 }
             }
 
-            let userPayload = unwrapUserPayload(response.data);
+            let userPayload = normalizeAuthPayload(response.data);
             try {
                 const userResponse = await axios.get(`${API_URL}/api/v1/auth/me`, {
                     headers: { Authorization: `Bearer ${access_token}` },
                 });
-                userPayload = unwrapUserPayload(userResponse.data) || userPayload;
+                userPayload = normalizeAuthPayload(userResponse.data) || userPayload;
             } catch (meError) {
                 console.warn("Auth /me fallback triggered:", meError);
             }
@@ -245,6 +309,10 @@ export const AuthProvider = ({ children }) => {
             register,
             logout,
             isAuthenticated: Boolean(user && token),
+            role: user?.effective_role || user?.role || "",
+            features: Array.isArray(user?.features) ? user.features : [],
+            modules: user?.modules && typeof user.modules === "object" ? user.modules : {},
+            authMeta: user?.authMeta || null,
             accountStatus: user?.status || user?.account_status || "active",
             permissions: Array.isArray(user?.permissions) ? user.permissions : [],
         }),

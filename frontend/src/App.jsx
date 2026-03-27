@@ -8,7 +8,6 @@ import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
 import RequireModule from "./components/RequireModule";
 import RequireFeature from "./components/RequireFeature";
-import Require from "./router/access";
 import NotFound from "./pages/NotFound";
 import PageTitleUpdater from "./components/PageTitleUpdater";
 
@@ -528,9 +527,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="ai.basic">
-                        <AIBotsHubDashboard />
-                      </Require>
+                      <RequireFeature featureKey="ai.basic">
+                          <AIBotsHubDashboard />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -900,9 +899,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="ai.basic">
-                        <AIBotControl />
-                      </Require>
+                      <RequireFeature featureKey="ai.basic">
+                          <AIBotControl />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1268,9 +1267,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="tms.core">
-                        <Shipments />
-                      </Require>
+                      <RequireFeature featureKey="tms.core">
+                          <Shipments />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1280,9 +1279,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="tms.core">
-                        <AddShipment />
-                      </Require>
+                      <RequireFeature featureKey="tms.core">
+                          <AddShipment />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1292,9 +1291,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="dispatcher.core">
-                        <Dispatch />
-                      </Require>
+                      <RequireFeature featureKey="dispatcher.core">
+                          <Dispatch />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1304,9 +1303,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="dispatcher.core">
-                        <Drivers />
-                      </Require>
+                      <RequireFeature featureKey="dispatcher.core">
+                          <Drivers />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1316,9 +1315,9 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <Require feature="loadboard.core">
-                        <LoadBoardMarket />
-                      </Require>
+                      <RequireFeature featureKey="loadboard.core">
+                          <LoadBoardMarket />
+                        </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1656,9 +1655,9 @@ const App = () => {
                 path="/admin"
                 element={
                   <RequireAuth>
-                    <Require roles={["admin", "system_admin", "owner", "super_admin"]}>
+                    <RequireAuth roles={["admin", "system_admin", "owner", "super_admin"]}>
                       <AdminLayout />
-                    </Require>
+                    </RequireAuth>
                   </RequireAuth>
                 }
               >
