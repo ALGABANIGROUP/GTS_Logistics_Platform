@@ -2,6 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
+import { API_BASE_URL } from '../config/env';
+
+const CONTACT_RESPONSE_TIME = '24 hours';
+
+const buildApiUrl = (path) => `${String(API_BASE_URL || '').replace(/\/+$/, '')}${path}`;
+
+const readResponsePayload = async (response) => {
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return { message: text || response.statusText };
+};
 
 const Contact = () => {
   const location = useLocation();
@@ -21,16 +36,7 @@ const Contact = () => {
   ]);
   const [userInput, setUserInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
-  const [config, setConfig] = useState({});
   const [registrationMessage, setRegistrationMessage] = useState(null);
-
-  // Load contact config
-  useEffect(() => {
-    fetch('/api/contact/config')
-      .then(res => res.json())
-      .then(data => setConfig(data))
-      .catch(err => console.error('Failed to load config:', err));
-  }, []);
 
   useEffect(() => {
     if (location.state?.message) {
@@ -48,7 +54,7 @@ const Contact = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch(buildApiUrl('/api/contact'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,14 +62,18 @@ const Contact = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data = await readResponsePayload(response);
 
       if (response.ok) {
         setSubmitted(true);
         setFormData({ name: '', email: '', phone: '', company: '', message: '', inquiryType: 'general' });
         setTimeout(() => setSubmitted(false), 10000);
       } else {
-        setError(data.message || 'Failed to send message. Please try again.');
+        const fallbackMessage =
+          response.status === 404
+            ? 'Contact form service is not available yet. Please email sales@gtslogistics.com or support@gtslogistics.com.'
+            : 'Failed to send message. Please try again.';
+        setError(data.message || fallbackMessage);
       }
     } catch (err) {
       setError('Network error. Please check your connection and try again.');
@@ -87,16 +97,28 @@ const Contact = () => {
     setUserInput('');
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(buildApiUrl('/api/v1/support/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userMessage, context: 'sales_marketing' }),
+        body: JSON.stringify({ message: userMessage }),
       });
 
-      const data = await response.json();
-      const botReply = data.reply || "Thanks for reaching out! Our team will get back to you shortly.";
+      const data = await readResponsePayload(response);
+
+      if (!response.ok) {
+        const fallbackReply =
+          response.status === 401 || response.status === 403
+            ? 'Live support chat currently requires sign-in. Please log in or email sales@gtslogistics.com.'
+            : 'Live support chat is temporarily unavailable. Please try again later or email support@gtslogistics.com.';
+        throw new Error(data.message || fallbackReply);
+      }
+
+      const botReply =
+        data.response ||
+        data.reply ||
+        "Thanks for reaching out! Our team will get back to you shortly.";
 
       setChatMessages(prev => [...prev, {
         role: 'bot',
@@ -107,7 +129,9 @@ const Contact = () => {
       console.error('Chat error:', err);
       setChatMessages(prev => [...prev, {
         role: 'bot',
-        message: 'Sorry, I am having trouble connecting. Please try again or email us directly at support@gtslogistics.com.',
+        message:
+          err?.message ||
+          'Sorry, I am having trouble connecting. Please try again or email us directly at support@gtslogistics.com.',
         timestamp: new Date()
       }]);
     } finally {
@@ -229,7 +253,7 @@ const Contact = () => {
                 <div className="text-center py-8">
                   <div className="text-green-400 text-4xl mb-3">✓</div>
                   <p className="text-white">Thank you for contacting us!</p>
-                  <p className="text-gray-400 text-sm mt-2">Our team will respond within {config.response_time || '24 hours'}.</p>
+                  <p className="text-gray-400 text-sm mt-2">Our team will respond within {CONTACT_RESPONSE_TIME}.</p>
                   <button
                     onClick={() => setSubmitted(false)}
                     className="mt-4 px-4 py-2 border border-white/30 text-white rounded-lg hover:bg-white/10 transition text-sm"
