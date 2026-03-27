@@ -287,6 +287,7 @@ async def _get_user_by_email(email: str, db: Optional[AsyncSession] = None) -> O
             "full_name": getattr(user, "full_name", None),
             "is_active": getattr(user, "is_active", True),
             "is_deleted": getattr(user, "is_deleted", False),
+            "token_version": int(getattr(user, "token_version", 0) or 0),
             "hashed_password": getattr(user, "hashed_password", None),
         }
     except Exception:
