@@ -38,8 +38,8 @@ class UnifiedPaymentCreateRequest(BaseModel):
     invoice_id: int | None = Field(default=None, gt=0)
     expense_id: int | None = Field(default=None, gt=0)
     amount: float = Field(..., gt=0)
-    currency: str = "SDG"
-    gateway: str = "sudapay"
+    currency: str = "USD"
+    gateway: str = "stripe"
     description: str | None = None
     supplier_name: str | None = None
     payment_date: date | None = None

@@ -32,7 +32,6 @@ from backend.models.user import User
 from backend.models.payment import PaymentStatus, PaymentGateway
 from backend.services.plan_invoice_service import PlanInvoiceService
 from backend.services.payment_service import PaymentService
-from backend.services.sudapay_service import SudapayService
 
 try:
     from backend.core.config import get_settings
@@ -46,17 +45,11 @@ if get_settings is not None:
         settings = get_settings()
     except Exception:
         settings = SimpleNamespace(
-            SUDAPAY_API_KEY="",
-            SUDAPAY_MERCHANT_ID="",
-            SUDAPAY_WEBHOOK_SECRET="",
             ENVIRONMENT="development",
             FRONTEND_URL="http://localhost:5173",
         )
 else:
     settings = SimpleNamespace(
-        SUDAPAY_API_KEY="",
-        SUDAPAY_MERCHANT_ID="",
-        SUDAPAY_WEBHOOK_SECRET="",
         ENVIRONMENT="development",
         FRONTEND_URL="http://localhost:5173",
     )
@@ -81,10 +74,10 @@ class PaymentCreateRequest(BaseModel):
 
     invoice_id: int = Field(..., description="Invoice ID")
     amount: float = Field(..., gt=0, description="Amount")
-    currency: str = Field(default="SDG", description="Currency (SDG/USD)")
+    currency: str = Field(default="USD", description="Currency (USD/CAD/EUR)")
     gateway: str = Field(
-        default="sudapay",
-        description="Payment gateway (sudapay, stripe, paypal)"
+        default="stripe",
+        description="Payment gateway (stripe, paypal)"
     )
     description: Optional[str] = Field(None, description="Payment description")
 
@@ -207,22 +200,11 @@ def _serialize_plan_invoice(invoice: Any) -> PlanInvoiceResponse:
 # ============================================================================
 
 
-async def get_sudapay_service() -> SudapayService:
-    """Return Sudapay service instance"""
-    return SudapayService(
-        api_key=settings.SUDAPAY_API_KEY,
-        merchant_id=settings.SUDAPAY_MERCHANT_ID,
-        webhook_secret=settings.SUDAPAY_WEBHOOK_SECRET,
-        sandbox=settings.ENVIRONMENT != "production",
-    )
-
-
 async def get_payment_service(
     db: AsyncSession = Depends(get_async_session),
-    sudapay: SudapayService = Depends(get_sudapay_service),
 ) -> PaymentService:
     """Return payment service instance"""
-    return PaymentService(db, sudapay)
+    return PaymentService(db, None)
 
 
 async def get_plan_invoice_service(
@@ -301,10 +283,16 @@ async def create_payment(
     Create a new payment transaction
 
     Supported gateway:
-    - SUDAPAY
+    - Stripe
+    - PayPal
     """
 
     try:
+        if request.gateway.strip().lower() == "sudapay":
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="Sudapay has been removed from GTS payments",
+            )
 
         logger.info(
             f"Creating payment: invoice_id={request.invoice_id}, "

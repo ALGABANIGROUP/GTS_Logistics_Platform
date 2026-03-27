@@ -64,7 +64,7 @@ export const createPayment = async (payload) => {
     return response?.data;
 };
 
-export const payInvoice = async (invoiceId, amount, gateway = "sudapay", extra = {}) => {
+export const payInvoice = async (invoiceId, amount, gateway = "stripe", extra = {}) => {
     return createPayment({
         payment_type: "invoice",
         invoice_id: invoiceId,
@@ -74,7 +74,7 @@ export const payInvoice = async (invoiceId, amount, gateway = "sudapay", extra =
     });
 };
 
-export const payExpense = async (expenseId, amount, supplierName, gateway = "sudapay", extra = {}) => {
+export const payExpense = async (expenseId, amount, supplierName, gateway = "stripe", extra = {}) => {
     return createPayment({
         payment_type: "expense",
         expense_id: expenseId,

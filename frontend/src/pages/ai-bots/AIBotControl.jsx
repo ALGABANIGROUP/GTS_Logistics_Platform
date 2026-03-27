@@ -14,7 +14,6 @@ import AIGeneralManager from "./AIGeneralManager.jsx";
 import AIIntelligenceBot from "./AIIntelligenceBot.jsx";
 import PaymentBotDashboard from "./PaymentBotDashboard.jsx";
 import AIPartnerManagementControlPage from "./wrappers/AIPartnerManagementControlPage.jsx";
-import SUDAPayBotDashboard from "./SUDAPayBotDashboard.jsx";
 import FreightBrokerControlPanel from "../../components/bots/FreightBrokerControlPanel.jsx";
 
 const DEFAULT_BOT = "operations_manager_bot";
@@ -36,7 +35,7 @@ export default function AIBotControl() {
     partner: "partner_manager",
     partner_management: "partner_manager",
     ai_partner_manager: "partner_manager",
-    sudapay: "sudapay",
+    sudapay: "payment_bot",
     payment: "payment_bot",
     mapleload_canada: "mapleload_bot",
     mapleload: "mapleload_bot",
@@ -81,9 +80,6 @@ export default function AIBotControl() {
     normalized === "finance_bot" ||
     normalized === "bot_finance" ||
     normalized === "finance";
-  const isSudapay =
-    normalized === "sudapay" ||
-    normalized === "sudapay_gateway";
   const isPayment =
     normalized === "payment" ||
     normalized === "payment_bot" ||
@@ -158,9 +154,6 @@ export default function AIBotControl() {
   }
   if (isPayment) {
     return <PaymentBotDashboard />;
-  }
-  if (isSudapay) {
-    return <SUDAPayBotDashboard />;
   }
   if (isPartnerManager) {
     return <AIPartnerManagementControlPage />;

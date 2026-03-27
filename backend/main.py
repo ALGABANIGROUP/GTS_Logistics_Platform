@@ -2560,7 +2560,7 @@ if enhanced_call_router:
 
 if payment_webhooks_router:
     app.include_router(payment_webhooks_router)
-    log.info("[main] payment webhooks routes mounted at /api/v1/webhooks/sudapay/*")
+    log.info("[main] legacy sudapay webhook endpoint disabled at /api/v1/webhooks/sudapay/*")
 
 if wise_webhooks_router:
     app.include_router(wise_webhooks_router)

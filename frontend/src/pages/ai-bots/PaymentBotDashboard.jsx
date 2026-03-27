@@ -163,7 +163,7 @@ export default function PaymentBotDashboard() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Payment Gateway Dashboard</h1>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              Secure payment processing powered by <strong className="text-blue-600">SUDAPAY</strong> and integrated with{" "}
+              Secure payment operations integrated with{" "}
               <strong className="text-purple-600">AI Finance Bot</strong>.
             </p>
           </div>

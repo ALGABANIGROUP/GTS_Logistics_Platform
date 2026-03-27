@@ -293,28 +293,6 @@ export const BOTS_REGISTRY = [
   },
   {
     id: 20,
-    key: "sudapay",
-    name: "SUDAPAY Payment Gateway",
-    description: "Secure payment processing, invoice management, and transaction tracking",
-    icon: "💳",
-    path: "/ai-bots/sudapay",
-    tier: "Enterprise",
-    category: "finance",
-    status: "active",
-    phase: "enterprise",
-    order: 20,
-    features: [
-      "Secure Payments",
-      "Invoice Management",
-      "Transaction History",
-      "Refund Processing",
-      "Webhook Integration",
-      "Multi-currency Support",
-    ],
-    aliases: ["sudapay", "payment", "payment_gateway"],
-  },
-  {
-    id: 21,
     key: "payment_bot",
     name: "Payment Gateway Dashboard",
     description: "Secure payment processing, invoice management, transaction tracking, and finance bot integration",
@@ -335,7 +313,7 @@ export const BOTS_REGISTRY = [
       "Finance Bot Integration",
       "Real-time Analytics",
     ],
-    aliases: ["payment_bot", "payment-gateway"],
+    aliases: ["payment_bot", "payment-gateway", "payment", "sudapay", "payment_gateway"],
   },
 ];
 

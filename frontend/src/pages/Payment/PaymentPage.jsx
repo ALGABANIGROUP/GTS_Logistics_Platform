@@ -1,6 +1,6 @@
 /**
  * PaymentPage Component - Main Payment Page
- * Provide complete payment experience with SUDAPAY
+ * Provide invoice payment instructions without Sudapay
  * 
  * Features:
  * - Display invoice data
@@ -17,7 +17,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import SudaPaymentForm from '../../components/SudaPaymentForm';
 import { readAuthToken } from '../../utils/authStorage';
 import { useCurrencyStore } from '../../stores/useCurrencyStore';
 
@@ -230,17 +229,16 @@ Reference: Invoice #${invoiceId}
         </div>
       )}
 
-      {/* Payment Form */}
       <div className="payment-form-section">
-        {invoice && (
-          <SudaPaymentForm
-            invoiceId={invoice.id}
-            amount={invoice.total_amount}
-            currency={invoice.currency || 'SDG'}
-            onSuccess={handlePaymentSuccess}
-            onError={handlePaymentError}
-          />
-        )}
+        <div className="invoice-summary">
+          <div className="summary-card">
+            <h3>Online gateway removed</h3>
+            <p>
+              Sudapay has been removed from GTS. Use the bank transfer details below or contact finance
+              support to arrange payment.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Stripe Climate Section */}
@@ -352,8 +350,8 @@ Reference: Invoice #${invoiceId}
         <div className="faq-item">
           <h4>How is payment made?</h4>
           <p>
-            Click the "Pay Now" button to be redirected to the secure SUDAPAY platform.
-            There you can choose your preferred payment method.
+            Online Sudapay checkout has been removed. Use bank transfer or contact finance support
+            for an approved payment method.
           </p>
         </div>
 

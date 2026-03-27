@@ -5,13 +5,13 @@ const API_BASE = '/api/v1/payments';
 const paymentApi = {
     async create(data) {
         try {
-            console.log('Creating payment with SUDAPAY:', data);
+            console.log('Creating payment:', data);
 
             const response = await axiosClient.post(`${API_BASE}/create`, {
                 invoice_id: data.invoice_id,
                 amount: data.amount,
-                currency: data.currency || 'SDG',
-                gateway: data.gateway || 'sudapay',
+                currency: data.currency || 'USD',
+                gateway: data.gateway || 'stripe',
                 description: data.description,
             });
 
@@ -148,7 +148,7 @@ const paymentApi = {
 
     async handleSudapaySuccess(paymentId) {
         try {
-            console.log('SUDAPAY success handler - loading payment state');
+            console.log('Legacy payment success handler - loading payment state');
             const result = await this.get(paymentId);
             console.log('Payment state loaded:', result);
             return result;
@@ -160,7 +160,7 @@ const paymentApi = {
 
     async handleSudapayFailure(paymentId, reason = 'Unknown error') {
         try {
-            console.log('SUDAPAY failure handler:', reason);
+            console.log('Legacy payment failure handler:', reason);
 
             return {
                 status: 'failed',
@@ -173,7 +173,7 @@ const paymentApi = {
         }
     },
 
-    formatAmount(amount, currency = 'SDG') {
+    formatAmount(amount, currency = 'USD') {
         const formatter = new Intl.NumberFormat('ar-SD', {
             style: 'currency',
             currency,
@@ -186,7 +186,6 @@ const paymentApi = {
 
     getGatewayName(gateway) {
         const gateways = {
-            sudapay: 'SUDAPAY',
             stripe: 'Stripe',
             paypal: 'PayPal',
         };

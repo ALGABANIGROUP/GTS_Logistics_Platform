@@ -36,7 +36,6 @@ from backend.models.payment import (
     TransactionType,
 )
 from backend.models.invoices import Invoice
-from backend.services.sudapay_service import SudapayService
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +75,13 @@ class PaymentService:
     Provides a unified interface for payment operations
     """
 
-    def __init__(self, db_session: AsyncSession, sudapay_service: SudapayService):
+    def __init__(self, db_session: AsyncSession, sudapay_service: Any | None = None):
         """
         Initialize Payment Service
         
         Args:
             db_session: AsyncSession for the database
-            sudapay_service: SudapayService instance
+            sudapay_service: Deprecated legacy gateway client
         """
         self.db = db_session
         self.sudapay = sudapay_service
@@ -114,8 +113,8 @@ class PaymentService:
         self,
         user_id: int,
         amount: float,
-        currency: str = "SDG",
-        gateway: str = "sudapay",
+        currency: str = "USD",
+        gateway: str = "stripe",
         invoice_id: Optional[int] = None,
         expense_id: Optional[int] = None,
         payment_type: str = "invoice",
@@ -130,8 +129,8 @@ class PaymentService:
         Args:
             user_id: User ID
             amount: Payment amount
-            currency: Currency (SDG, USD)
-            gateway: Payment gateway (sudapay, stripe, paypal)
+            currency: Currency (USD, CAD, EUR)
+            gateway: Payment gateway (stripe, paypal)
             invoice_id: Invoice ID for customer collections
             expense_id: Expense ID for supplier payouts
             payment_type: invoice or expense
@@ -265,8 +264,8 @@ class PaymentService:
         invoice_id: int,
         user_id: int,
         amount: float,
-        currency: str = "SDG",
-        gateway: str = "sudapay",
+        currency: str = "USD",
+        gateway: str = "stripe",
         description: Optional[str] = None,
         customer_email: Optional[str] = None,
         return_url: Optional[str] = None,
@@ -285,27 +284,13 @@ class PaymentService:
         )
 
         normalized_gateway = self._normalize_gateway(gateway)
-        if normalized_gateway is not PaymentGateway.SUDAPAY:
-            raise ValueError(f"Unsupported payment gateway: {gateway}")
-        if not self.sudapay:
-            raise ValueError("Sudapay service is not configured")
-
-        gateway_response = await self.sudapay.create_payment(
-            amount=amount,
-            currency=self._normalize_currency(currency).value,
-            reference_id=payment.reference_id,
-            description=description,
-            customer_email=customer_email,
-            return_url=return_url,
-            cancel_url=cancel_url,
-            metadata=metadata or {},
-        )
-        payment.gateway_transaction_id = gateway_response.payment_id
+        if normalized_gateway is PaymentGateway.SUDAPAY:
+            raise ValueError("Sudapay has been removed from GTS")
         await self.db.commit()
 
         return {
             "payment": payment,
-            "checkout_url": gateway_response.checkout_url,
+            "checkout_url": None,
             "public_payment_link": self.build_public_payment_link(payment.id),
             "gateway": normalized_gateway.value,
             "status": PaymentStatus.PENDING.value,
@@ -482,12 +467,6 @@ class PaymentService:
         gateway_metadata = metadata or {}
         payment_status = self._map_payment_gateway_status(gateway_metadata.get("status"))
 
-        if payment.payment_gateway == PaymentGateway.SUDAPAY and self.sudapay and payment.gateway_transaction_id:
-            gateway_payload = await self.sudapay.confirm_payment(payment.gateway_transaction_id)
-            resolved_gateway_txn = gateway_payload.get("payment_id") or resolved_gateway_txn
-            gateway_metadata = {**gateway_metadata, "gateway_confirmation": gateway_payload}
-            payment_status = self._map_payment_gateway_status(gateway_payload.get("status"))
-
         await self.record_transaction(
             payment_id=payment_id,
             transaction_type=TransactionType.PAYMENT.value,
@@ -523,29 +502,6 @@ class PaymentService:
             amount=amount,
             reason=reason,
         )
-
-        if payment.payment_gateway == PaymentGateway.SUDAPAY and self.sudapay and payment.gateway_transaction_id:
-            gateway_refund = await self.sudapay.refund_payment(
-                payment.gateway_transaction_id,
-                amount=amount,
-                reason=reason,
-            )
-            refund.gateway_refund_id = gateway_refund.get("refund_id")
-            refund_status = self._map_refund_gateway_status(gateway_refund.get("status"))
-            if refund_status == PaymentStatus.COMPLETED:
-                return await self.complete_refund(refund.id)
-
-            refund.status = refund_status
-            if refund_status in {PaymentStatus.FAILED, PaymentStatus.CANCELLED}:
-                await self.record_transaction(
-                    payment_id=payment_id,
-                    transaction_type=TransactionType.REFUND.value,
-                    amount=refund.amount,
-                    status=refund_status.value,
-                    gateway_response=gateway_refund,
-                )
-            await self.db.commit()
-            return refund
 
         return await self.complete_refund(refund.id)
 
@@ -672,7 +628,7 @@ class PaymentService:
         """Return a user-friendly gateway display name."""
         value = gateway.value if isinstance(gateway, PaymentGateway) else str(gateway or "")
         mapping = {
-            PaymentGateway.SUDAPAY.value: "Sudapay",
+            PaymentGateway.SUDAPAY.value: "Sudapay (removed)",
             PaymentGateway.STRIPE.value: "Stripe",
             PaymentGateway.PAYPAL.value: "PayPal",
         }

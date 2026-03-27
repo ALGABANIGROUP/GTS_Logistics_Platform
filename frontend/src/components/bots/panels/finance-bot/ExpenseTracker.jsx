@@ -81,7 +81,7 @@ export default function ExpenseTracker({ zeroMode = FINANCE_ZERO_MODE }) {
         const confirmed = window.confirm(`Record supplier payout for ${expense.vendor || "supplier"} (${formatCurrency(expense.amount)})?`);
         if (!confirmed) return;
         try {
-            await financeApi.payExpense(expense.id, Number(expense.amount || 0), expense.vendor || "Supplier", "sudapay");
+            await financeApi.payExpense(expense.id, Number(expense.amount || 0), expense.vendor || "Supplier", "stripe");
             await loadExpenses();
         } catch (err) {
             setError(err?.response?.data?.detail || err?.message || "Failed to record supplier payout.");

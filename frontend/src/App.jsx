@@ -39,7 +39,6 @@ const AIDocumentsManager = React.lazy(() => import("./pages/ai-bots/AIDocumentsM
 const AIDocumentsManagerPanel = React.lazy(() => import("./pages/ai-bots/AIDocumentsManagerPanel"));
 const AIFinanceBot = React.lazy(() => import("./pages/ai-bots/AIFinanceBot"));
 const PaymentBotDashboard = React.lazy(() => import("./pages/ai-bots/PaymentBotDashboard"));
-const SUDAPayBotDashboard = React.lazy(() => import("./pages/ai-bots/SUDAPayBotDashboard"));
 const PaymentPage = React.lazy(() => import("./pages/Payment/PaymentPage"));
 const PaymentSuccessPage = React.lazy(() => import("./pages/Payment/PaymentSuccessPage"));
 const PaymentFailedPage = React.lazy(() => import("./pages/Payment/PaymentFailedPage"));
@@ -1556,16 +1555,6 @@ const App = () => {
                 }
               />
               <Route
-                path="/ai-bots/sudapay"
-                element={
-                  <RequireAuth>
-                    <Layout>
-                      <SUDAPayBotDashboard />
-                    </Layout>
-                  </RequireAuth>
-                }
-              />
-              <Route
                 path="/ai-bots/payment"
                 element={
                   <RequireAuth>
@@ -1632,7 +1621,7 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <SUDAPayBotDashboard />
+                      <PaymentBotDashboard />
                     </Layout>
                   </RequireAuth>
                 }

@@ -92,7 +92,7 @@ const InvoiceManager = ({ zeroMode = FINANCE_ZERO_MODE }) => {
         const confirmed = window.confirm(`Record payment for ${invoice.number} (${formatCurrency(invoice.amount_usd)})?`);
         if (!confirmed) return;
         try {
-            await financeApi.payInvoice(invoice.id, Number(invoice.amount_usd || 0), "sudapay");
+            await financeApi.payInvoice(invoice.id, Number(invoice.amount_usd || 0), "stripe");
             await loadInvoices();
         } catch (err) {
             setError(err?.response?.data?.detail || err?.message || "Failed to record invoice payment.");
