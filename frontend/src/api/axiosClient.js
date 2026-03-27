@@ -155,6 +155,15 @@ const isHardAuthFailure = ({ status, url, detail, hadToken }) => {
   }
 
   const normalizedUrl = String(url || "").toLowerCase();
+  const normalizedDetail = String(detail || "").toLowerCase();
+
+  if (
+    normalizedDetail.includes("session revoked") ||
+    normalizedDetail.includes("refresh token revoked") ||
+    normalizedDetail.includes("refresh token expired")
+  ) {
+    return true;
+  }
 
   if (
     normalizedUrl.includes("/api/v1/auth/me") ||
@@ -419,8 +428,38 @@ axiosClient.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return axiosClient(originalRequest);
           }
-        } catch {
-          // ignore and fall through to clearAuthCache
+        } catch (refreshError) {
+          const refreshStatus = refreshError?.response?.status;
+          const refreshDetail =
+            refreshError?.response?.data?.detail ||
+            refreshError?.response?.data?.error ||
+            refreshError?.message ||
+            "";
+
+          if (
+            isHardAuthFailure({
+              status: refreshStatus || 401,
+              url: "/api/v1/auth/refresh",
+              detail: refreshDetail,
+              hadToken,
+            })
+          ) {
+            authTrace("Refresh token hard auth failure", {
+              status: refreshStatus,
+              detail: refreshDetail,
+            });
+            clearAuthCache();
+
+            const now = Date.now();
+            if (!window.__gtsAuthExpiredAt || now - window.__gtsAuthExpiredAt > 1000) {
+              window.__gtsAuthExpiredAt = now;
+              try {
+                window.dispatchEvent(
+                  new CustomEvent("auth:expired", { detail: { status: refreshStatus || 401, url: "/api/v1/auth/refresh" } })
+                );
+              } catch { }
+            }
+          }
         }
       }
 
