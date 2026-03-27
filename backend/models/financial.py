@@ -18,6 +18,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 from backend.database.base import Base
+from backend.models.invoices import Invoice
+from backend.models.payment import Payment
 
 
 class ExpenseStatus(enum.Enum):
@@ -94,40 +96,6 @@ class Expense(Base):
         return f"<Expense id={self.id} category={self.category} amount={self.amount}>"
 
 
-class Invoice(Base):
-    """Invoice model for billing"""
-    __tablename__ = "invoices"
-    __table_args__ = {"extend_existing": True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    invoice_number = Column(String(50), unique=True, nullable=False)
-    amount = Column(Float, nullable=False)
-    currency = Column(String(3), default="USD")
-    status = Column(String(20), default="pending")  # pending, paid, overdue, cancelled
-    due_date = Column(DateTime(timezone=True))
-    paid_date = Column(DateTime(timezone=True))
-    items = Column(JSON, default=[])  # List of invoice items
-    invoice_metadata = Column(JSON, default={})
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-
-class Payment(Base):
-    """Payment model for transactions"""
-    __tablename__ = "payments"
-    __table_args__ = {"extend_existing": True}
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    invoice_id = Column(Integer, ForeignKey("invoices.id"))
-    amount = Column(Float, nullable=False)
-    currency = Column(String(3), default="USD")
-    gateway = Column(String(50))  # stripe, wise, sudapay, bank
-    gateway_transaction_id = Column(String(200))
-    status = Column(String(20), default="pending")  # pending, completed, failed, refunded
-    payment_method = Column(String(50))
-    payment_metadata = Column(JSON, default={})
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    completed_at = Column(DateTime(timezone=True))
+# Use the canonical billing models to avoid duplicate SQLAlchemy registry entries
+# for Invoice/Payment when this module is imported by finance routes.
 
