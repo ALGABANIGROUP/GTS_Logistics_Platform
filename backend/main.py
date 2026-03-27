@@ -2066,7 +2066,7 @@ try:
 except Exception as e:
     log.warning("[router] auth mount failed: %s", e)
 
-if False and auth_me_router:  # Disabled to use simplified auth
+if auth_me_router:
     app.include_router(auth_me_router)
     log.info("[main] auth_me_router mounted at /api/v1/auth")
 else:
