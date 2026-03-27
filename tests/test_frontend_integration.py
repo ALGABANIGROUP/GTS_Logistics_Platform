@@ -4,8 +4,14 @@ Tests critical user flows and component functionality after package updates
 """
 import pytest
 import asyncio
-from playwright.async_api import async_playwright, expect
 import os
+
+playwright_async = pytest.importorskip(
+    "playwright.async_api",
+    reason="playwright is optional for frontend integration tests",
+)
+async_playwright = playwright_async.async_playwright
+expect = playwright_async.expect
 
 # Test configuration
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
