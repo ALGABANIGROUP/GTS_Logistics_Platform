@@ -2,13 +2,52 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+import importlib
 import logging
 import os
 import re
+import sys
 import time
 import tracemalloc
 from datetime import timedelta
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
+
+def _alias_backend_package(alias: str) -> None:
+    if alias in sys.modules:
+        return
+    try:
+        sys.modules[alias] = importlib.import_module(f"backend.{alias}")
+    except Exception:
+        return
+
+
+for _pkg_alias in (
+    "routes",
+    "services",
+    "bots",
+    "ai",
+    "core",
+    "billing",
+    "middleware",
+    "monitoring",
+    "webhooks",
+    "api",
+    "util",
+    "utils",
+    "maintenance",
+    "notifications",
+    "auth",
+    "data",
+    "database",
+    "models",
+    "security",
+    "training_center",
+    "social_media",
+    "schedulers",
+    "tms",
+):
+    _alias_backend_package(_pkg_alias)
 
 try:
     from dotenv import load_dotenv
@@ -99,7 +138,6 @@ except Exception as _e:
 
 
 # ========= App & deps =========
-from pathlib import Path
 
 from fastapi import FastAPI, Request, APIRouter, HTTPException, Depends
 from sqlalchemy import text
