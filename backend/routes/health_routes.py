@@ -5,7 +5,7 @@ import os
 import smtplib
 from typing import Any, Dict, Optional
 
-import aiohttp
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,10 +104,12 @@ async def _check_external_services() -> Dict[str, Any]:
     quo_api_key = os.getenv("QUO_API_KEY")
     if quo_api_key:
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-                headers = {"Authorization": f"Bearer {quo_api_key}"}
-                async with session.get("https://api.quo.audio/health", headers=headers) as response:
-                    services["quo_api"] = {"ok": response.status == 200, "status_code": response.status}
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    "https://api.quo.audio/health",
+                    headers={"Authorization": f"Bearer {quo_api_key}"},
+                )
+                services["quo_api"] = {"ok": response.status_code == 200, "status_code": response.status_code}
         except Exception as exc:
             services["quo_api"] = {"ok": False, "error": f"QUO API check failed: {exc}"}
     else:

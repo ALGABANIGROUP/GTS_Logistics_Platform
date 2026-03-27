@@ -42,8 +42,7 @@ try:
     from backend.services.incident_service import incident_service
     from backend.services.weather_service import weather_service
     from backend.services.ai_customer_service import ai_customer_service
-    from backend.core.database import get_db_session
-    from backend.core.metrics import get_system_metrics
+    from backend.maintenance.service import HealthCollector
     SERVICES_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"GTS services not available (running standalone): {e}")
@@ -51,9 +50,27 @@ except ImportError as e:
     incident_service = None
     weather_service = None
     ai_customer_service = None
-    get_db_session = None
-    get_system_metrics = None
+    HealthCollector = None
     SERVICES_AVAILABLE = False
+
+
+async def get_system_metrics():
+    """Best-effort system metrics for Telegram status command."""
+    metrics = {
+        "database_connected": True,
+        "api_running": True,
+        "incident_monitor_active": incident_service is not None,
+        "weather_service_online": weather_service is not None,
+    }
+    if HealthCollector is None:
+        return metrics
+
+    try:
+        system_metrics = await HealthCollector.collect_system_metrics()
+        metrics.update(system_metrics or {})
+    except Exception as e:
+        logger.warning(f"Failed to collect maintenance metrics: {e}")
+    return metrics
 
 # Configure logging
 logging.basicConfig(

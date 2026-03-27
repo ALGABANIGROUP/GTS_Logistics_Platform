@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import aiohttp
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +53,10 @@ class SpeechService:
         temp_path: Optional[Path] = None
         try:
             if audio_source.startswith(("http://", "https://")):
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60)) as session:
-                    async with session.get(audio_source) as response:
-                        response.raise_for_status()
-                        audio_data = await response.read()
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.get(audio_source)
+                    response.raise_for_status()
+                    audio_data = response.content
                 with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
                     tmp.write(audio_data)
                     temp_path = Path(tmp.name)

@@ -1,8 +1,8 @@
-import aiohttp
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import logging
+import httpx
 from backend.core.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -43,35 +43,34 @@ class WeatherService:
                 params["lat"] = lat
                 params["lon"] = lon
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/weather", params=params) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.get(f"{self.base_url}/weather", params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
 
-                        result = {
-                            "success": True,
-                            "city": data.get("name"),
-                            "country": data.get("sys", {}).get("country"),
-                            "temperature": data.get("main", {}).get("temp"),
-                            "feels_like": data.get("main", {}).get("feels_like"),
-                            "humidity": data.get("main", {}).get("humidity"),
-                            "pressure": data.get("main", {}).get("pressure"),
-                            "wind_speed": data.get("wind", {}).get("speed"),
-                            "wind_direction": data.get("wind", {}).get("deg"),
-                            "clouds": data.get("clouds", {}).get("all"),
-                            "description": data.get("weather", [{}])[0].get("description"),
-                            "icon": data.get("weather", [{}])[0].get("icon"),
-                            "timestamp": datetime.now().isoformat()
-                        }
+                    result = {
+                        "success": True,
+                        "city": data.get("name"),
+                        "country": data.get("sys", {}).get("country"),
+                        "temperature": data.get("main", {}).get("temp"),
+                        "feels_like": data.get("main", {}).get("feels_like"),
+                        "humidity": data.get("main", {}).get("humidity"),
+                        "pressure": data.get("main", {}).get("pressure"),
+                        "wind_speed": data.get("wind", {}).get("speed"),
+                        "wind_direction": data.get("wind", {}).get("deg"),
+                        "clouds": data.get("clouds", {}).get("all"),
+                        "description": data.get("weather", [{}])[0].get("description"),
+                        "icon": data.get("weather", [{}])[0].get("icon"),
+                        "timestamp": datetime.now().isoformat()
+                    }
 
-                        # Store in cache
-                        self.cache[cache_key] = (result, datetime.now())
+                    self.cache[cache_key] = (result, datetime.now())
 
-                        return result
-                    else:
-                        error = await resp.text()
-                        logger.error(f"Weather API error: {resp.status} - {error}")
-                        return {"success": False, "error": f"API error: {resp.status}"}
+                    return result
+
+                error = resp.text
+                logger.error(f"Weather API error: {resp.status_code} - {error}")
+                return {"success": False, "error": f"API error: {resp.status_code}"}
 
         except Exception as e:
             logger.error(f"Error fetching weather: {e}")
@@ -89,39 +88,38 @@ class WeatherService:
                 params["lat"] = lat
                 params["lon"] = lon
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.forecast_url, params=params) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.get(self.forecast_url, params=params)
+                if resp.status_code == 200:
+                    data = resp.json()
 
-                        forecasts = []
-                        for item in data.get("list", []):
-                            forecasts.append({
-                                "datetime": item.get("dt_txt"),
-                                "temperature": item.get("main", {}).get("temp"),
-                                "feels_like": item.get("main", {}).get("feels_like"),
-                                "humidity": item.get("main", {}).get("humidity"),
-                                "pressure": item.get("main", {}).get("pressure"),
-                                "wind_speed": item.get("wind", {}).get("speed"),
-                                "description": item.get("weather", [{}])[0].get("description"),
-                                "icon": item.get("weather", [{}])[0].get("icon"),
-                                "rain": item.get("rain", {}).get("3h", 0),
-                                "snow": item.get("snow", {}).get("3h", 0)
-                            })
+                    forecasts = []
+                    for item in data.get("list", []):
+                        forecasts.append({
+                            "datetime": item.get("dt_txt"),
+                            "temperature": item.get("main", {}).get("temp"),
+                            "feels_like": item.get("main", {}).get("feels_like"),
+                            "humidity": item.get("main", {}).get("humidity"),
+                            "pressure": item.get("main", {}).get("pressure"),
+                            "wind_speed": item.get("wind", {}).get("speed"),
+                            "description": item.get("weather", [{}])[0].get("description"),
+                            "icon": item.get("weather", [{}])[0].get("icon"),
+                            "rain": item.get("rain", {}).get("3h", 0),
+                            "snow": item.get("snow", {}).get("3h", 0)
+                        })
 
-                        # Analyze weather risks
-                        risks = self._analyze_weather_risks(forecasts)
+                    risks = self._analyze_weather_risks(forecasts)
 
-                        return {
-                            "success": True,
-                            "city": data.get("city", {}).get("name"),
-                            "country": data.get("city", {}).get("country"),
-                            "forecasts": forecasts,
-                            "risks": risks,
-                            "timestamp": datetime.now().isoformat()
-                        }
-                    else:
-                        return {"success": False, "error": f"API error: {resp.status}"}
+                    return {
+                        "success": True,
+                        "city": data.get("city", {}).get("name"),
+                        "country": data.get("city", {}).get("country"),
+                        "forecasts": forecasts,
+                        "risks": risks,
+                        "timestamp": datetime.now().isoformat()
+                    }
+
+                return {"success": False, "error": f"API error: {resp.status_code}"}
 
         except Exception as e:
             logger.error(f"Error fetching forecast: {e}")
