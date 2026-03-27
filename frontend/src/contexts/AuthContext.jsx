@@ -18,6 +18,22 @@ const API_URL = String(API_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, 
 
 const AuthContext = createContext();
 
+const unwrapUserPayload = (payload) => {
+    if (!payload) {
+        return null;
+    }
+    if (payload.user && typeof payload.user === "object") {
+        return payload.user;
+    }
+    return payload;
+};
+
+const getApiErrorMessage = (error, fallbackMessage) =>
+    error?.response?.data?.detail ||
+    error?.response?.data?.message ||
+    error?.message ||
+    fallbackMessage;
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
@@ -80,7 +96,7 @@ export const AuthProvider = ({ children }) => {
                     });
                     if (!cancelled) {
                         setToken(currentToken);
-                        setUser(response.data);
+                        setUser(unwrapUserPayload(response.data));
                     }
                 }
             } catch (error) {
@@ -132,17 +148,71 @@ export const AuthProvider = ({ children }) => {
                 }
             }
 
-            const userResponse = await axios.get(`${API_URL}/api/v1/auth/me`, {
-                headers: { Authorization: `Bearer ${access_token}` },
-            });
+            let userPayload = unwrapUserPayload(response.data);
+            try {
+                const userResponse = await axios.get(`${API_URL}/api/v1/auth/me`, {
+                    headers: { Authorization: `Bearer ${access_token}` },
+                });
+                userPayload = unwrapUserPayload(userResponse.data) || userPayload;
+            } catch (meError) {
+                console.warn("Auth /me fallback triggered:", meError);
+            }
+
+            if (!userPayload) {
+                throw new Error("Unable to load user profile after login");
+            }
 
             setToken(access_token);
-            setUser(userResponse.data);
+            setUser(userPayload);
 
-            return { success: true, user: userResponse.data };
+            return { success: true, user: userPayload };
         } catch (error) {
             console.error("Login error:", error);
-            throw new Error(error.response?.data?.detail || "Invalid email or password");
+            throw new Error(getApiErrorMessage(error, "Invalid email or password"));
+        }
+    };
+
+    const forgotPassword = async (email) => {
+        setLoading(true);
+        try {
+            const response = await axios.post(`${API_URL}/api/v1/auth/forgot-password`, {
+                email,
+            });
+            return {
+                success: true,
+                ...(response.data || {}),
+            };
+        } catch (error) {
+            console.error("Forgot password error:", error);
+            throw new Error(
+                getApiErrorMessage(
+                    error,
+                    "Unable to send reset instructions right now"
+                )
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPassword = async (resetToken, newPassword) => {
+        setLoading(true);
+        try {
+            const response = await axios.post(`${API_URL}/api/v1/auth/reset-password`, {
+                token: resetToken,
+                new_password: newPassword,
+            });
+            return {
+                success: true,
+                ...(response.data || {}),
+            };
+        } catch (error) {
+            console.error("Reset password error:", error);
+            throw new Error(
+                getApiErrorMessage(error, "Failed to reset password")
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -170,6 +240,8 @@ export const AuthProvider = ({ children }) => {
             loading,
             authReady,
             login,
+            forgotPassword,
+            resetPassword,
             register,
             logout,
             isAuthenticated: Boolean(user && token),

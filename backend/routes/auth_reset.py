@@ -42,7 +42,7 @@ async def forgot_password(
     if not user:
         return {"message": "If this email exists, a reset link has been sent."}
 
-    token = _create_password_reset_token(user)
+    token = await _create_password_reset_token(user, db)
     link = _build_reset_link(token)
 
     def _send_admin_reset_notice(requested_email: str) -> None:
