@@ -22,14 +22,26 @@ _session_import_error: Optional[str] = None
 
 def _try_import_async_session():
     global _session_import_error
+    import_errors = []
+
     try:
         from backend.database.session import get_async_session  # type: ignore
 
         _session_import_error = None
         return get_async_session
     except Exception as exc:
-        _session_import_error = str(exc)
-        return None
+        import_errors.append(f"backend.database.session: {exc}")
+
+    try:
+        from database.session import get_async_session  # type: ignore
+
+        _session_import_error = None
+        return get_async_session
+    except Exception as exc:
+        import_errors.append(f"database.session: {exc}")
+
+    _session_import_error = " | ".join(import_errors) if import_errors else "unknown import error"
+    return None
 
 
 _session_dep = _try_import_async_session()
