@@ -17,6 +17,7 @@ from backend.security.auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     _decode_token,
     _hash_refresh_token,
+    _issue_refresh_token,
     _rotate_refresh_token,
     create_access_token,
     get_current_user,
@@ -79,9 +80,11 @@ async def auth_token_compat(
             token_version=int(getattr(user, "token_version", 0) or 0),
         )
 
+        refresh_token = await _issue_refresh_token(db, int(getattr(user, "id")))
+
         return {
             "access_token": access_token,
-            "refresh_token": None,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
             "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             "user": {

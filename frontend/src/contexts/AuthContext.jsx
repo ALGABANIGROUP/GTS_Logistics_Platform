@@ -199,6 +199,7 @@ export const AuthProvider = ({ children }) => {
                 throw new Error("No access token received");
             }
 
+            clearAuthCache();
             writeAuthToken(access_token);
             if (refresh_token) {
                 writeRefreshToken(refresh_token);
