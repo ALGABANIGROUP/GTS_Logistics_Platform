@@ -25,9 +25,21 @@ import os
 import asyncio
 import logging
 from datetime import datetime
-from telegram import Bot
-from telegram.error import TelegramError
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, Application
+
+try:
+    from telegram import Bot
+    from telegram.error import TelegramError
+    from telegram.ext import CommandHandler, MessageHandler, filters, Application
+    TELEGRAM_AVAILABLE = True
+except ImportError:
+    Bot = None  # type: ignore[assignment]
+    TelegramError = Exception  # type: ignore[assignment]
+    CommandHandler = None  # type: ignore[assignment]
+    MessageHandler = None  # type: ignore[assignment]
+    filters = None  # type: ignore[assignment]
+    Application = None  # type: ignore[assignment]
+    TELEGRAM_AVAILABLE = False
+    logging.warning("python-telegram-bot not installed, Telegram bot features disabled")
 
 # Load environment variables
 try:
@@ -89,6 +101,11 @@ class GTSBot:
         self.bot = None
         self.running = False
 
+        if not TELEGRAM_AVAILABLE:
+            logger.warning("Telegram bot library not installed; bot disabled")
+            self.enabled = False
+            return
+
         if self.token and self.enabled:
             try:
                 self.bot = Bot(token=self.token)
@@ -115,6 +132,10 @@ class GTSBot:
 
     def run_polling(self):
         """Run the bot in polling mode for local development"""
+        if not TELEGRAM_AVAILABLE or Application is None or CommandHandler is None or MessageHandler is None or filters is None:
+            logger.warning("Telegram polling unavailable: python-telegram-bot not installed")
+            return
+
         if not self.token:
             logger.error("Telegram bot token not configured")
             return
@@ -574,6 +595,10 @@ gts_bot = GTSBot()
 
 async def start_telegram_bot():
     """Start the Telegram bot (for background operation)"""
+    if not TELEGRAM_AVAILABLE:
+        logger.warning("Telegram bot startup skipped: python-telegram-bot not installed")
+        return
+
     if not gts_bot.enabled or not gts_bot.bot:
         logger.warning("Telegram bot not configured or disabled")
         return

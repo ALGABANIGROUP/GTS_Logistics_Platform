@@ -6,10 +6,16 @@ Integrates with official Canadian freight market data sources and government sta
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-import aiohttp
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
+
+try:
+    import aiohttp
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    aiohttp = None  # type: ignore[assignment]
+    AIOHTTP_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -222,12 +228,17 @@ class CanadianMarketDataFetcher:
     def __init__(self):
         self.last_update: Dict[str, datetime] = {}
         self.price_history: Dict[str, List[Dict]] = {}
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: Optional[Any] = None
         self.cache_duration = timedelta(hours=1)
         self.data_cache: Dict[str, Dict[str, Any]] = {}
         
     async def initialize(self):
         """Initialize the fetcher with HTTP session"""
+        if not AIOHTTP_AVAILABLE or aiohttp is None:
+            logger.warning("[CanadianMarketDataFetcher] aiohttp not installed; using static market calculations only")
+            self.session = None
+            return
+
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=30),
             headers={

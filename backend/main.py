@@ -1360,7 +1360,7 @@ class OperationsManagerBot:
 
 def register_core_bots() -> None:
     try:
-        from bots.general_manager import GeneralManagerBot as RuntimeGeneralManagerBot
+        from backend.bots.general_manager import GeneralManagerBot as RuntimeGeneralManagerBot
 
         gm_bot = RuntimeGeneralManagerBot()
         gm_bot.name = "general_manager"
@@ -1371,8 +1371,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated General Manager bot, using fallback: {e}")
         ai_registry.register(GeneralManagerBot())
     try:
-        from bots.freight_broker import FreightBrokerBot as RuntimeFreightBrokerBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.freight_broker import FreightBrokerBot as RuntimeFreightBrokerBot
+        from backend.ai.registry_fill import AliasBot
 
         freight_bot = RuntimeFreightBrokerBot()
         freight_bot.name = "freight_broker"
@@ -1384,8 +1384,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Freight Broker bot, using fallback: {e}")
         ai_registry.register(FreightBrokerBot())
     try:
-        from bots.operations_manager import OperationsManagerBot as RuntimeOperationsManagerBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.operations_manager import OperationsManagerBot as RuntimeOperationsManagerBot
+        from backend.ai.registry_fill import AliasBot
 
         ops_bot = RuntimeOperationsManagerBot()
         ops_bot.name = "operations_manager"
@@ -1398,7 +1398,7 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Operations Manager bot, using fallback: {e}")
         ai_registry.register(OperationsManagerBot())
     try:
-        from bots.information_coordinator import InformationCoordinatorBot as RuntimeInformationCoordinatorBot
+        from backend.bots.information_coordinator import InformationCoordinatorBot as RuntimeInformationCoordinatorBot
 
         info_bot = RuntimeInformationCoordinatorBot()
         info_bot.name = "information_coordinator"
@@ -1408,8 +1408,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Information Coordinator bot: {e}")
     try:
-        from bots.legal_bot import LegalBot as RuntimeLegalBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.legal_bot import LegalBot as RuntimeLegalBot
+        from backend.ai.registry_fill import AliasBot
 
         legal_bot = RuntimeLegalBot()
         legal_bot.name = "legal_bot"
@@ -1421,8 +1421,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Legal Consultant bot: {e}")
     try:
-        from bots.security_manager import SecurityManagerBot as RuntimeSecurityManagerBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.security_manager import SecurityManagerBot as RuntimeSecurityManagerBot
+        from backend.ai.registry_fill import AliasBot
 
         security_bot = RuntimeSecurityManagerBot()
         security_bot.name = "security_bot"
@@ -1433,10 +1433,11 @@ def register_core_bots() -> None:
         log.info("[register] Security Manager bot registered with aliases")
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Security Manager bot, using fallback: {e}")
-        ai_registry.register(SecurityBot())
+        from backend.bots.security_bot import SecurityBot as RuntimeSecurityBot
+        ai_registry.register(RuntimeSecurityBot())
     try:
-        from bots.system_manager import SystemManagerBot as RuntimeSystemManagerBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.system_manager import SystemManagerBot as RuntimeSystemManagerBot
+        from backend.ai.registry_fill import AliasBot
 
         system_bot = RuntimeSystemManagerBot()
         system_bot.name = "system_bot"
@@ -1450,8 +1451,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated System Manager bot, using fallback: {e}")
         ai_registry.register(SystemBot())
     try:
-        from bots.maintenance_dev import MaintenanceDevBot as RuntimeMaintenanceDevBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.maintenance_dev import MaintenanceDevBot as RuntimeMaintenanceDevBot
+        from backend.ai.registry_fill import AliasBot
 
         maintenance_bot = RuntimeMaintenanceDevBot()
         maintenance_bot.name = "maintenance_dev"
@@ -1465,8 +1466,8 @@ def register_core_bots() -> None:
     ai_registry.register(FinanceBot())
     ai_registry.register(DocumentsManagerBot())
     try:
-        from bots.sales_intelligence import SalesIntelligenceBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.sales_intelligence import SalesIntelligenceBot
+        from backend.ai.registry_fill import AliasBot
 
         sales_bot = SalesIntelligenceBot()
         sales_bot.name = "sales_bot"
@@ -1479,8 +1480,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Sales bot: {e}")
     try:
-        from bots.marketing_manager import MarketingManagerBot as RuntimeMarketingManagerBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.marketing_manager import MarketingManagerBot as RuntimeMarketingManagerBot
+        from backend.ai.registry_fill import AliasBot
 
         marketing_bot = RuntimeMarketingManagerBot()
         marketing_bot.name = "marketing_manager"
@@ -1492,8 +1493,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Marketing Manager bot: {e}")
     try:
-        from bots.intelligence_bot import IntelligenceBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.intelligence_bot import IntelligenceBot
+        from backend.ai.registry_fill import AliasBot
 
         intelligence_bot = IntelligenceBot()
         intelligence_bot.name = "intelligence_bot"
@@ -1505,8 +1506,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Intelligence bot: {e}")
     try:
-        from bots.trainer_bot import TrainerBotRuntime
-        from ai.registry_fill import AliasBot
+        from backend.bots.trainer_bot import TrainerBotRuntime
+        from backend.ai.registry_fill import AliasBot
 
         trainer_bot = TrainerBotRuntime()
         trainer_bot.name = "trainer_bot"
@@ -1519,7 +1520,7 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register Trainer bot: {e}")
     try:
         from safety.main import AISafetyManagerBot
-        from ai.registry_fill import AliasBot
+        from backend.ai.registry_fill import AliasBot
 
         safety_bot = AISafetyManagerBot()
         safety_bot.name = "safety_bot"
@@ -1531,7 +1532,7 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Safety bot: {e}")
     try:
-        from bots.ai_dispatcher import AIDispatcherBot
+        from backend.bots.ai_dispatcher import AIDispatcherBot
         ai_registry.register(AIDispatcherBot())
         log.info("[register] AI Dispatcher bot registered")
     except Exception as e:
@@ -1539,8 +1540,8 @@ def register_core_bots() -> None:
     
     # Register MapleLoad Canada bot
     try:
-        from bots.mapleload_canada import MapleLoadCanadaBot
-        from ai.registry_fill import AliasBot
+        from backend.bots.mapleload_canada import MapleLoadCanadaBot
+        from backend.ai.registry_fill import AliasBot
 
         mapleload_bot = MapleLoadCanadaBot()
         mapleload_bot.name = "mapleload_bot"
@@ -1658,7 +1659,7 @@ async def on_startup():
     # -------- Priority 1: Initialize Sentry --------
     if init_sentry is not None:
         try:
-            from config import Settings
+            from backend.config import Settings
             settings = Settings()
             init_sentry(
                 dsn=getattr(settings, 'SENTRY_DSN', None),
@@ -1892,7 +1893,7 @@ async def on_startup():
     except Exception as e:
         log.warning("[startup] user column check failed: %s", e)
     try:
-        from ai.registry_fill import ensure_all_bots_registered
+        from backend.ai.registry_fill import ensure_all_bots_registered
 
         ensure_all_bots_registered(ai_registry)
     except Exception as e:
@@ -1974,8 +1975,8 @@ async def on_startup():
 
     # Initialize Market Data Service and MapleLoad Canada Bot
     try:
-        from services.market_data_service import initialize_market_data_service
-        from bots.mapleload_canada import initialize_mapleload_bot
+        from backend.services.market_data_service import initialize_market_data_service
+        from backend.bots.mapleload_canada import initialize_mapleload_bot
         
         await initialize_market_data_service()
         await initialize_mapleload_bot()
@@ -2039,8 +2040,8 @@ async def app_lifespan(_app: FastAPI):
     
     # Shutdown Market Data Service and MapleLoad Canada Bot
     try:
-        from services.market_data_service import shutdown_market_data_service
-        from bots.mapleload_canada import shutdown_mapleload_bot
+        from backend.services.market_data_service import shutdown_market_data_service
+        from backend.bots.mapleload_canada import shutdown_mapleload_bot
         
         await shutdown_market_data_service()
         await shutdown_mapleload_bot()

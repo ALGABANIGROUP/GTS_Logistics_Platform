@@ -14,7 +14,13 @@ from pydantic import BaseModel
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from telegram_bot import process_update
+
+try:
+    from telegram_bot import process_update, TELEGRAM_AVAILABLE
+except Exception as e:
+    process_update = None  # type: ignore[assignment]
+    TELEGRAM_AVAILABLE = False
+    logging.warning("Telegram webhook disabled: %s", e)
 
 log = logging.getLogger("gts.telegram_webhook")
 
@@ -38,6 +44,9 @@ async def telegram_webhook(request: Request):
     This endpoint receives updates from Telegram when configured as a webhook.
     The bot processes commands and messages here.
     """
+    if not TELEGRAM_AVAILABLE or process_update is None:
+        raise HTTPException(status_code=503, detail="Telegram webhook unavailable: python-telegram-bot not installed")
+
     try:
         # Get raw JSON data
         update_data = await request.json()
@@ -60,9 +69,9 @@ async def telegram_webhook(request: Request):
 async def telegram_webhook_health():
     """Health check endpoint for Telegram webhook."""
     return {
-        "status": "healthy",
+        "status": "healthy" if TELEGRAM_AVAILABLE else "disabled",
         "service": "telegram_webhook",
-        "message": "Telegram webhook endpoint is active"
+        "message": "Telegram webhook endpoint is active" if TELEGRAM_AVAILABLE else "Telegram webhook disabled: python-telegram-bot not installed"
     }
 
 
@@ -73,6 +82,9 @@ async def test_webhook(update: TelegramUpdate):
 
     Accepts a TelegramUpdate model for testing purposes.
     """
+    if not TELEGRAM_AVAILABLE or process_update is None:
+        raise HTTPException(status_code=503, detail="Telegram webhook unavailable: python-telegram-bot not installed")
+
     try:
         log.info(f"[test] Processing test update: {update.update_id}")
 

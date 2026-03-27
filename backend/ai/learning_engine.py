@@ -9,10 +9,24 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from enum import Enum
-import numpy as np
 from collections import defaultdict
 
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    np = None  # type: ignore[assignment]
+    NUMPY_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
+
+
+def _mean(values: List[float], default: float = 0.0) -> float:
+    if not values:
+        return default
+    if NUMPY_AVAILABLE and np is not None:
+        return float(np.mean(values))
+    return float(sum(values) / len(values))
 
 
 class LearningIntensity(str, Enum):
@@ -273,12 +287,12 @@ class BotLearningEngine:
         return {
             "error_count": len(error_samples),
             "error_types": dict(error_types),
-            "avg_error_severity": np.mean(error_severity) if error_severity else 0,
+            "avg_error_severity": _mean(error_severity, 0),
             "performance_count": len(performance_samples),
-            "avg_response_time": np.mean(response_times) if response_times else 0,
-            "avg_accuracy": np.mean(accuracies) if accuracies else 0.5,
+            "avg_response_time": _mean(response_times, 0),
+            "avg_accuracy": _mean(accuracies, 0.5),
             "feedback_count": len(feedback_samples),
-            "avg_feedback_score": np.mean(feedback_scores) if feedback_scores else 0.5,
+            "avg_feedback_score": _mean(feedback_scores, 0.5),
         }
     
     def _generate_adaptations(
@@ -486,9 +500,9 @@ class BotLearningEngine:
             "enabled_bots": sum(1 for p in self.learning_profiles.values() if p.enabled),
             "total_samples_collected": sum(len(s) for s in self.data_samples.values()),
             "total_adaptations": sum(p.adaptations_applied for p in self.learning_profiles.values()),
-            "average_accuracy": np.mean([p.accuracy_score for p in self.learning_profiles.values()]) if self.learning_profiles else 0,
-            "average_performance": np.mean([p.performance_score for p in self.learning_profiles.values()]) if self.learning_profiles else 0,
-            "average_reliability": np.mean([p.reliability_score for p in self.learning_profiles.values()]) if self.learning_profiles else 0,
+            "average_accuracy": _mean([p.accuracy_score for p in self.learning_profiles.values()], 0),
+            "average_performance": _mean([p.performance_score for p in self.learning_profiles.values()], 0),
+            "average_reliability": _mean([p.reliability_score for p in self.learning_profiles.values()], 0),
             "per_bot": per_bot_stats,
         }
 
