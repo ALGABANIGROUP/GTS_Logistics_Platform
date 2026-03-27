@@ -329,7 +329,8 @@ Fleet is operating normally."""
 **Error:** {str(e)}
 
 Please try again later."""
-        """Save conversation to history"""
+    def _save_conversation(self, session_id: str, user_id: str, message: str, response: str) -> None:
+        """Save conversation to history."""
         if session_id not in self.conversation_history:
             self.conversation_history[session_id] = []
 
@@ -340,7 +341,6 @@ Please try again later."""
             "timestamp": datetime.now().isoformat()
         })
 
-        # Keep only last 50 conversations
         if len(self.conversation_history[session_id]) > 50:
             self.conversation_history[session_id] = self.conversation_history[session_id][-50:]
 

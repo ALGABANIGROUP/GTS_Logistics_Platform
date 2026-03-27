@@ -856,6 +856,10 @@ DEFAULT_CORS_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "https://gabanilogistics.com",
+    "https://www.gabanilogistics.com",
+    "https://gtsdispatcher.com",
+    "https://www.gtsdispatcher.com",
+    "https://gts-logistics-platform.onrender.com",
 ]
 
 _allowed = os.getenv("GTS_CORS_ORIGINS") or os.getenv("ALLOWED_ORIGINS") or ""

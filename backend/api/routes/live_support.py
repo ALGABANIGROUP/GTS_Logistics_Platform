@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
 import logging
 
 from backend.services.live_support_service import LiveSupportService
-from backend.security.auth import get_current_user
+from backend.security.auth import get_current_user, _decode_token
 
 router = APIRouter(prefix="/api/v1/support", tags=["Live Support"])
 support_service = LiveSupportService()
@@ -23,13 +23,24 @@ class MessageResponse(BaseModel):
 @router.post("/chat", response_model=MessageResponse)
 async def chat(
     request: MessageRequest,
-    current_user = Depends(get_current_user)
+    http_request: Request,
 ):
     """
     Send message to live support and get intelligent response
     """
+    user_id = "public-contact"
+    auth_header = http_request.headers.get("Authorization", "").strip()
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            try:
+                claims = _decode_token(token)
+                user_id = str(claims.get("sub") or claims.get("id") or user_id)
+            except Exception:
+                logger.info("Live support chat proceeding without authenticated user context")
+
     result = await support_service.process_message(
-        user_id=str(current_user.get("id")),
+        user_id=user_id,
         message=request.message,
         session_id=request.session_id
     )
