@@ -88,7 +88,7 @@ class Incident(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
 
     remediation_actions = relationship(
-        "RemediationAction",
+        lambda: RemediationAction,
         back_populates="incident",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -124,7 +124,7 @@ class RemediationAction(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
 
     incident = relationship(
-        "Incident",
+        lambda: Incident,
         back_populates="remediation_actions",
         passive_deletes=True,
     )
