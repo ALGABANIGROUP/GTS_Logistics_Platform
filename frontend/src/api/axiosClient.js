@@ -178,6 +178,31 @@ const isHardAuthFailure = ({ status, url, detail, hadToken }) => {
   return false;
 };
 
+const shouldAutoLogoutOnFailure = ({ url }) => {
+  const normalizedUrl = String(url || "").toLowerCase();
+  return (
+    normalizedUrl.includes("/api/v1/auth/me") ||
+    normalizedUrl.includes("/api/v1/auth/refresh") ||
+    normalizedUrl.includes("/api/v1/auth/me/quick") ||
+    normalizedUrl.includes("/auth/me") ||
+    normalizedUrl.includes("/auth/refresh")
+  );
+};
+
+const emitAuthExpired = ({ status, url }) => {
+  clearAuthCache();
+
+  const now = Date.now();
+  if (!window.__gtsAuthExpiredAt || now - window.__gtsAuthExpiredAt > 1000) {
+    window.__gtsAuthExpiredAt = now;
+    try {
+      window.dispatchEvent(
+        new CustomEvent("auth:expired", { detail: { status, url } })
+      );
+    } catch { }
+  }
+};
+
 /**
  * Axios instance for API communication
  * - BASE_URL should NOT include /api/v1
@@ -448,16 +473,11 @@ axiosClient.interceptors.response.use(
               status: refreshStatus,
               detail: refreshDetail,
             });
-            clearAuthCache();
-
-            const now = Date.now();
-            if (!window.__gtsAuthExpiredAt || now - window.__gtsAuthExpiredAt > 1000) {
-              window.__gtsAuthExpiredAt = now;
-              try {
-                window.dispatchEvent(
-                  new CustomEvent("auth:expired", { detail: { status: refreshStatus || 401, url: "/api/v1/auth/refresh" } })
-                );
-              } catch { }
+            if (shouldAutoLogoutOnFailure({ url })) {
+              emitAuthExpired({
+                status: refreshStatus || 401,
+                url: "/api/v1/auth/refresh",
+              });
             }
           }
         }
@@ -469,16 +489,8 @@ axiosClient.interceptors.response.use(
           url,
           detail: error?.normalized?.detail,
         });
-        clearAuthCache();
-
-        const now = Date.now();
-        if (!window.__gtsAuthExpiredAt || now - window.__gtsAuthExpiredAt > 1000) {
-          window.__gtsAuthExpiredAt = now;
-          try {
-            window.dispatchEvent(
-              new CustomEvent("auth:expired", { detail: { status, url } })
-            );
-          } catch { }
+        if (shouldAutoLogoutOnFailure({ url })) {
+          emitAuthExpired({ status, url });
         }
       }
     }
