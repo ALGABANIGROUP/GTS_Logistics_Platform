@@ -7,8 +7,8 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 import logging
 
-from ..services.chat_service import chat_service
-from ..services.auth_service import get_current_user
+from backend.api.services.chat_service import chat_service
+from backend.api.services.auth_service import get_current_user
 
 logger = logging.getLogger(__name__)
 
