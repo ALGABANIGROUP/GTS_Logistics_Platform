@@ -10,6 +10,20 @@ jobs:
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_gts
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout
@@ -27,6 +41,10 @@ jobs:
           pip install pytest pytest-asyncio
 
       - name: Run backend tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost/test_gts
+          ASYNC_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost/test_gts
+          PYTEST_CURRENT_TEST: true
         run: pytest backend/tests -q --maxfail=1
 
   frontend-quality:

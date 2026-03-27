@@ -96,7 +96,7 @@ class DocumentsService {
     async saveOcrConfig(config) {
         try {
             localStorage.setItem("documents_ocr_config", JSON.stringify(config));
-        } catch (_) {
+        } catch {
             // Ignore storage failures.
         }
         return { ok: true, config };

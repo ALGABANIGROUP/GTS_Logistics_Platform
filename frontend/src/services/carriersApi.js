@@ -60,7 +60,7 @@ export const getRecentCarriers = async (limit = 10) => {
             params: { limit }
         });
         return normalizeListResponse(response?.data || {});
-    } catch (error) {
+    } catch {
         const fallback = await listCarriers({ page: 1, per_page: limit });
         return {
             items: fallback.items.slice(0, limit),

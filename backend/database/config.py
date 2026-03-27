@@ -161,11 +161,20 @@ def init_engines() -> None:
 def get_sessionmaker() -> async_sessionmaker[AsyncSession]:
     if _async_maker is None:
         init_engines()
-    assert _async_maker is not None
+    if _async_maker is None:
+        raise RuntimeError("Database sessionmaker is unavailable because no database DSN is configured")
     return _async_maker
 
 
-AsyncSessionLocal = get_sessionmaker()
+class _LazyAsyncSessionLocal:
+    """Backwards-compatible callable proxy for code that expects AsyncSessionLocal()."""
+
+    def __call__(self, *args, **kwargs):
+        maker = get_sessionmaker()
+        return maker(*args, **kwargs)
+
+
+AsyncSessionLocal = _LazyAsyncSessionLocal()
 
 
 # ---------------------------------------------------------------------
@@ -190,7 +199,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 async def async_ping() -> bool:
     if _async_engine is None:
         init_engines()
-    assert _async_engine is not None
+    if _async_engine is None:
+        return False
     async with _async_engine.connect() as conn:
         result = await conn.exec_driver_sql("SELECT 1")
         return result.scalar() == 1
