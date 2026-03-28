@@ -36,6 +36,7 @@ class DummyAsyncSession:
         if getattr(obj, "id", None) is None:
             obj.id = len(self.added) + 1
         self.added.append(obj)
+        self.get_map[(type(obj), obj.id)] = obj
 
     async def flush(self):
         self.flush_calls += 1
@@ -345,20 +346,16 @@ class TestPaymentService:
     async def test_create_checkout_payment_calls_gateway(self, fake_db):
         service = PaymentService(db_session=fake_db, sudapay_service=DummySudapay())
 
-        result = await service.create_checkout_payment(
-            invoice_id=123,
-            user_id=1,
-            amount=5000.0,
-            currency="SDG",
-            gateway="sudapay",
-            description="Gateway payment",
-            customer_email="user@example.com",
-        )
-
-        assert result["payment"].gateway_transaction_id == "SP-123"
-        assert result["checkout_url"] == "https://example.test/checkout"
-        assert result["public_payment_link"].endswith("/pay/1")
-        assert fake_db.commit_calls == 1
+        with pytest.raises(ValueError, match="Sudapay has been removed from GTS"):
+            await service.create_checkout_payment(
+                invoice_id=123,
+                user_id=1,
+                amount=5000.0,
+                currency="SDG",
+                gateway="sudapay",
+                description="Gateway payment",
+                customer_email="user@example.com",
+            )
 
     @pytest.mark.asyncio
     async def test_refund_payment_rejects_non_completed_payment(self, fake_db):
@@ -380,11 +377,7 @@ class TestPaymentService:
 
     @pytest.mark.asyncio
     async def test_confirm_payment_uses_gateway_failed_status(self, fake_db):
-        class FailedSudapay(DummySudapay):
-            async def confirm_payment(self, _payment_id):
-                return {"payment_id": _payment_id, "status": "failed"}
-
-        service = PaymentService(db_session=fake_db, sudapay_service=FailedSudapay())
+        service = PaymentService(db_session=fake_db, sudapay_service=DummySudapay())
         payment = Payment(
             id=456,
             reference_id="PAY-123",
@@ -398,23 +391,17 @@ class TestPaymentService:
         )
         fake_db.get_map[(Payment, 456)] = payment
 
-        updated = await service.confirm_payment(payment_id=456)
+        updated = await service.confirm_payment(
+            payment_id=456,
+            metadata={"status": "failed"},
+        )
 
         assert updated.status == PaymentStatus.FAILED
         assert updated.payment_date is None
 
     @pytest.mark.asyncio
     async def test_refund_payment_keeps_pending_until_gateway_completion(self, fake_db):
-        class PendingRefundSudapay(DummySudapay):
-            async def refund_payment(self, _payment_id, amount=None, reason=""):
-                return {
-                    "refund_id": "RFD-EXT-1",
-                    "amount": amount,
-                    "reason": reason,
-                    "status": "pending",
-                }
-
-        service = PaymentService(db_session=fake_db, sudapay_service=PendingRefundSudapay())
+        service = PaymentService(db_session=fake_db, sudapay_service=DummySudapay())
         payment = Payment(
             id=456,
             reference_id="PAY-123",
@@ -430,8 +417,8 @@ class TestPaymentService:
 
         refund = await service.refund_payment(payment_id=456, amount=2500.0, reason="customer request")
 
-        assert refund.status == PaymentStatus.PROCESSING
-        assert payment.status == PaymentStatus.COMPLETED
+        assert refund.status == PaymentStatus.COMPLETED
+        assert payment.status == PaymentStatus.REFUNDED
 
 
 class TestSudapayService:

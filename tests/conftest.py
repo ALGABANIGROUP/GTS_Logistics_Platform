@@ -42,6 +42,17 @@ def event_loop() -> Generator:
     """Create event loop for async tests"""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
+    loop.run_until_complete(test_engine.dispose())
+
+    try:
+        from backend.database import config as db_config
+
+        app_engine = getattr(db_config, "_async_engine", None)
+        if app_engine is not None:
+            loop.run_until_complete(app_engine.dispose())
+    except Exception:
+        pass
+
     loop.close()
 
 

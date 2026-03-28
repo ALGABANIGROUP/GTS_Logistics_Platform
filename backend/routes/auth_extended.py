@@ -89,6 +89,7 @@ PASSWORD_POLICY_REGEX = os.getenv(
 PASSWORD_POLICY_HINT = (
     "Password must be at least 8 characters and include an uppercase letter, a number, and a symbol."
 )
+UNSAFE_TEXT_PATTERNS = ("%00", "\\x00", "../", "..\\")
 
 
 # ---------------------------------------------------------------------------
@@ -418,6 +419,36 @@ def _registration_error(field: str, message: str) -> HTTPException:
     )
 
 
+def _text_contains_unsafe_sequences(value: Optional[str]) -> bool:
+    if not value:
+        return False
+
+    if any(ord(char) < 32 for char in value):
+        return True
+
+    lowered = value.lower()
+    return any(pattern in lowered for pattern in UNSAFE_TEXT_PATTERNS)
+
+
+def _registration_input_error(payload: RegisterRequest) -> Optional[HTTPException]:
+    fields = {
+        "email": payload.email,
+        "username": payload.username,
+        "full_name": payload.full_name,
+        "company_name": payload.company_name,
+        "country": payload.country,
+        "phone_number": payload.phone_number,
+        "system_type": payload.system_type,
+        "subscription_tier": payload.subscription_tier,
+    }
+
+    for field, value in fields.items():
+        if _text_contains_unsafe_sequences(value):
+            return _registration_error(field, "Invalid characters are not allowed")
+
+    return None
+
+
 async def _create_registered_user(
     payload: RegisterRequest,
     db: AsyncSession,
@@ -487,6 +518,10 @@ async def register(
     payload: RegisterRequest,
     db: AsyncSession = Depends(get_db_async),
 ) -> Dict[str, Any]:
+    input_error = _registration_input_error(payload)
+    if input_error:
+        raise input_error
+
     policy_error = _password_policy_error(payload.password)
     if policy_error:
         raise _registration_error("password", policy_error)
@@ -523,6 +558,9 @@ async def register_user(
     payload: RegisterRequest,
     db: AsyncSession = Depends(get_db_async),
 ) -> RegisterResponse:
+    input_error = _registration_input_error(payload)
+    if input_error:
+        raise input_error
 
     user = await _create_registered_user(payload, db)
 

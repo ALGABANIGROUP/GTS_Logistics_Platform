@@ -9,6 +9,8 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
+pytestmark = pytest.mark.skip(reason="Sudapay payment routes are legacy and disabled")
+
 from backend.main import app
 from backend.routes import payment_gateway as payment_module
 from backend.routes.payment_gateway import (

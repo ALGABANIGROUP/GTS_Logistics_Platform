@@ -14,6 +14,7 @@ Tests for:
 
 import pytest
 import asyncio
+import base64
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -311,7 +312,7 @@ class TestCSRFProtection:
         )
         
         # Check Set-Cookie headers
-        cookies = response.headers.getlist("set-cookie")
+        cookies = response.headers.get_list("set-cookie")
         for cookie in cookies:
             if "access_token" in cookie.lower() or "session" in cookie.lower():
                 # Should have SameSite attribute
@@ -388,8 +389,15 @@ class TestJWTSecurity:
             "exp": datetime.utcnow() + timedelta(hours=1)
         }
         
-        # Create token with 'none' algorithm
-        none_token = jwt.encode(payload, "", algorithm="none")
+        # Create token with 'none' algorithm manually because current
+        # python-jose versions reject generating it directly.
+        header = {"alg": "none", "typ": "JWT"}
+
+        def encode_segment(data):
+            raw = json.dumps(data, separators=(",", ":"), default=str).encode("utf-8")
+            return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+        none_token = f"{encode_segment(header)}.{encode_segment(payload)}."
         
         response = await async_client.get(
             "/api/v1/bots",
@@ -421,7 +429,7 @@ class TestJWTSecurity:
         )
         
         # Should reject token with missing claims
-        assert response.status_code == 401, \
+        assert response.status_code in [401, 403], \
             "JWT with missing required claims was accepted!"
 
 

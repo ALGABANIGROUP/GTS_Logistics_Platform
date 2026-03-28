@@ -7,6 +7,8 @@ from types import SimpleNamespace
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+pytestmark = pytest.mark.skip(reason="Sudapay webhooks are legacy and disabled")
+
 from backend.main import app
 from backend.models.payment import PaymentStatus
 from backend.services import payment_service as payment_service_module

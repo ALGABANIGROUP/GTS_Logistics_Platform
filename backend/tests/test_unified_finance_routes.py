@@ -194,7 +194,7 @@ class TestUnifiedFinanceRoutes:
                 "invoice_id": 1,
                 "amount": 500.0,
                 "currency": "USD",
-                "gateway": "sudapay",
+                "gateway": "stripe",
             },
         )
 
