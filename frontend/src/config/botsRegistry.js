@@ -313,7 +313,7 @@ export const BOTS_REGISTRY = [
       "Finance Bot Integration",
       "Real-time Analytics",
     ],
-    aliases: ["payment_bot", "payment-gateway", "payment", "sudapay", "payment_gateway"],
+    aliases: ["payment_bot", "payment-gateway", "payment", "stripe", "payment_gateway"],
   },
 ];
 

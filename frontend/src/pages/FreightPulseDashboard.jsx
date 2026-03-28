@@ -118,10 +118,10 @@ const FreightPulseDashboard = () => {
                     <div className="integration-badge" style={{ fontSize: '0.7rem', background: '#eef3fc', display: 'inline-block', padding: '0.2rem 0.8rem', borderRadius: '30px', color: '#1f5e7e', fontWeight: 500, marginTop: '6px' }}><i className="fas fa-map-marker-alt"></i> Geolocation</div>
                 </div>
 
-                <div className="integration-card pending-activation" style={{ background: '#f8fafd', border: '1px dashed #bdd4e8', borderRadius: '24px', padding: '1.2rem 0.8rem', textAlign: 'center', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)' }}>
-                    <i className="fas fa-credit-card" style={{ fontSize: '2.6rem', marginBottom: '0.6rem', color: '#8aaec0' }}></i>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: '0.5rem 0 0.2rem' }}>SUDAPAY</h3>
-                    <div className="integration-badge" style={{ fontSize: '0.7rem', background: '#eef3fc', display: 'inline-block', padding: '0.2rem 0.8rem', borderRadius: '30px', color: '#1f5e7e', fontWeight: 500, marginTop: '6px' }}><i className="fas fa-clock"></i> Activation Pending</div>
+                <div className="integration-card" style={{ background: 'white', borderRadius: '24px', padding: '1.2rem 0.8rem', textAlign: 'center', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)', border: '1px solid #eef2f8' }}>
+                    <i className="fab fa-stripe" style={{ fontSize: '2.6rem', marginBottom: '0.6rem', color: '#635bff' }}></i>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: '0.5rem 0 0.2rem' }}>Stripe</h3>
+                    <div className="integration-badge" style={{ fontSize: '0.7rem', background: '#eef3fc', display: 'inline-block', padding: '0.2rem 0.8rem', borderRadius: '30px', color: '#1f5e7e', fontWeight: 500, marginTop: '6px' }}><i className="fas fa-check-circle"></i> Primary Gateway</div>
                 </div>
 
                 <div className="integration-card" style={{ background: 'white', borderRadius: '24px', padding: '1.2rem 0.8rem', textAlign: 'center', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)', border: '1px solid #eef2f8' }}>
@@ -130,11 +130,6 @@ const FreightPulseDashboard = () => {
                     <div className="integration-badge" style={{ fontSize: '0.7rem', background: '#eef3fc', display: 'inline-block', padding: '0.2rem 0.8rem', borderRadius: '30px', color: '#1f5e7e', fontWeight: 500, marginTop: '6px' }}><i className="fas fa-id-card"></i> Safety & Compliance</div>
                 </div>
 
-                <div className="integration-card not-present" style={{ background: '#fefaf5', borderLeft: '3px solid #e0a800', opacity: 0.7, filter: 'grayscale(0.1)', borderRadius: '24px', padding: '1.2rem 0.8rem', textAlign: 'center', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)', border: '1px solid #eef2f8' }}>
-                    <i className="fab fa-stripe" style={{ fontSize: '2.6rem', marginBottom: '0.6rem', color: '#1f5e7e' }}></i>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: '0.5rem 0 0.2rem' }}>Stripe</h3>
-                    <div className="integration-badge" style={{ fontSize: '0.7rem', background: '#eef3fc', display: 'inline-block', padding: '0.2rem 0.8rem', borderRadius: '30px', color: '#1f5e7e', fontWeight: 500, marginTop: '6px' }}><i className="fas fa-ban"></i> Not integrated</div>
-                </div>
             </div>
             <div className="footer-note" style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '3rem', color: '#6c8db0', borderTop: '1px solid #dce5ef', paddingTop: '1.5rem' }}>
                 <i className="fas fa-charging-station"></i> Data refreshes automatically every 8 seconds • Simulated live freight market fluctuations

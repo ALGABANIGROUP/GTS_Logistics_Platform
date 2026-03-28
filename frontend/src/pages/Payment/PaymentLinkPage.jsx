@@ -241,7 +241,7 @@ export default function PaymentLinkPage() {
                 <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
                   <div className="text-sm text-slate-500 dark:text-slate-400">Gateway</div>
                   <div className="mt-1 font-medium text-slate-900 dark:text-white">
-                    {toDisplayString(paymentApi.getGatewayName(toDisplayString(payment.payment_gateway, "sudapay")))}
+                    {toDisplayString(paymentApi.getGatewayName(toDisplayString(payment.payment_gateway, "stripe")))}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
@@ -304,7 +304,7 @@ export default function PaymentLinkPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <FaCheckCircle className="mt-1 text-emerald-600" />
-                  SUDAPAY-first routing with existing payment API controls
+                  Stripe-only routing with the current payment API controls
                 </li>
                 <li className="flex items-start gap-2">
                   <FaCheckCircle className="mt-1 text-emerald-600" />
@@ -325,11 +325,11 @@ export default function PaymentLinkPage() {
               <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
                 <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-950/60">
                   <div className="font-medium text-slate-900 dark:text-white">Primary</div>
-                  <div>SUDAPAY</div>
+                  <div>Stripe</div>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-950/60">
                   <div className="font-medium text-slate-900 dark:text-white">Additional labels</div>
-                  <div>Stripe and PayPal remain represented in the unified dashboard and API naming.</div>
+                  <div>Bank transfer remains available as a manual fallback when checkout is not appropriate.</div>
                 </div>
               </div>
             </div>

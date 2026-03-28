@@ -304,23 +304,17 @@
                 <h3>Google Maps</h3>
                 <div class="integration-badge"><i class="fas fa-map-marker-alt"></i> Geolocation</div>
             </div>
-            <!-- SUDAPAY (coming soon) -->
-            <div class="integration-card coming-soon">
-                <i class="fas fa-credit-card"></i>
-                <h3>SUDAPAY</h3>
-                <div class="integration-badge"><i class="fas fa-clock"></i> Coming Soon</div>
+            <!-- Stripe -->
+            <div class="integration-card">
+                <i class="fab fa-stripe"></i>
+                <h3>Stripe</h3>
+                <div class="integration-badge"><i class="fas fa-check-circle"></i> Primary Gateway</div>
             </div>
             <!-- FMCSA -->
             <div class="integration-card">
                 <i class="fas fa-shield-alt"></i>
                 <h3>FMCSA</h3>
                 <div class="integration-badge"><i class="fas fa-id-card"></i> Safety & Compliance</div>
-            </div>
-            <!-- Stripe is intentionally marked as not integrated -->
-            <div class="integration-card not-present">
-                <i class="fab fa-stripe"></i>
-                <h3>Stripe</h3>
-                <div class="integration-badge"><i class="fas fa-ban"></i> Not integrated</div>
             </div>
         </div>
         <div class="footer-note">
@@ -440,7 +434,7 @@
             }
 
             // Additional safety: ensure that Stripe card clearly shows "Not integrated" and no arabic inside.
-            // Integration partners already display as per requirement (SUDAPAY coming soon, FMCSA active, etc.)
+            // Integration partners already display as per requirement (Stripe primary, FMCSA active, etc.)
             // No arabic text appears anywhere in the code nor DOM.
 
             // Keep the integration labels aligned with the intended design.
@@ -456,8 +450,8 @@
                 });
             });
 
-            // Stripe remains labeled as "Not integrated" by design.
-            // Additionally ensure SUDAPAY badge says "Coming Soon" not arabic.
+            // Stripe remains labeled as the active payment gateway.
+            // Additionally ensure the payment badge uses the current English label.
 
             console.log("Freight dashboard active | No Arabic in source code | Live refresh every 8 seconds");
 
@@ -492,7 +486,7 @@
             // We guarantee that 0 arabic characters exist in any script/style/html element content.
 
             // Additional integration partners requirement from text: 
-            // Integration Partners: QuickBooks, Salesforce, Google Maps, SUDAPAY (soon), FMCSA, Stripe not present.
+            // Integration Partners: QuickBooks, Salesforce, Google Maps, Stripe, FMCSA.
             // Exactly shown.
 
             // also we have included FontAwesome icons to make it visual.

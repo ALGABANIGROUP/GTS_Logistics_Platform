@@ -21,8 +21,6 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { PaymentPage } from '../pages/Payment/PaymentPage';
 import { PaymentSuccessPage } from '../pages/Payment/PaymentSuccessPage';
 import { PaymentFailedPage } from '../pages/Payment/PaymentFailedPage';
-import SUDAPayBotDashboard from '../pages/ai-bots/SUDAPayBotDashboard';
-import { SudaPaymentForm } from '../components/SudaPaymentForm';
 import { readAuthToken } from '../utils/authStorage';
 
 /**
@@ -40,15 +38,6 @@ export const paymentRoutes = [
                 meta: {
                     title: 'Payment',
                     description: 'Secure payment page',
-                    requiresAuth: true,
-                },
-            },
-            {
-                path: 'history',
-                element: <SUDAPayBotDashboard />,
-                meta: {
-                    title: 'Payment History',
-                    description: 'Payment activity and transaction history',
                     requiresAuth: true,
                 },
             },
@@ -210,7 +199,6 @@ export {
     PaymentPage,
     PaymentSuccessPage,
     PaymentFailedPage,
-    SudaPaymentForm,
 };
 
 /**
@@ -271,7 +259,7 @@ export {
  *        ↓
  *   PaymentPage component
  *        ↓
- *   SudaPaymentForm rendered
+ *   Stripe-only payment instructions rendered
  *        ↓
  *   User clicks "Pay Now"
  *        ↓
@@ -283,8 +271,8 @@ export {
  * Environment Variables Needed:
  * ═══════════════════════════════════════
  * REACT_APP_API_BASE_URL=http://localhost:8000
- * REACT_APP_PAYMENT_GATEWAY=sudapay
- * REACT_APP_DEFAULT_CURRENCY=SDG
+ * REACT_APP_PAYMENT_GATEWAY=stripe
+ * REACT_APP_DEFAULT_CURRENCY=USD
  * 
  * Mobile Screen Sizes:
  * ═══════════════════════════════════════

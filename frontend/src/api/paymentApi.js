@@ -1,6 +1,8 @@
 import axiosClient from './axiosClient';
 
 const API_BASE = '/api/v1/payments';
+const DEFAULT_CURRENCY = 'USD';
+const DEFAULT_GATEWAY = 'stripe';
 
 const paymentApi = {
     async create(data) {
@@ -10,8 +12,8 @@ const paymentApi = {
             const response = await axiosClient.post(`${API_BASE}/create`, {
                 invoice_id: data.invoice_id,
                 amount: data.amount,
-                currency: data.currency || 'SDG',
-                gateway: data.gateway || 'sudapay',
+                currency: data.currency || DEFAULT_CURRENCY,
+                gateway: data.gateway || DEFAULT_GATEWAY,
                 description: data.description,
             });
 
@@ -138,7 +140,7 @@ const paymentApi = {
                 amount: Number(item.amount || 0),
                 status: String(item.status || "").toLowerCase(),
                 method: this.getGatewayName(item.payment_gateway || item.gateway || "unknown"),
-                currency: item.currency || "SDG",
+                currency: item.currency || DEFAULT_CURRENCY,
                 reference_id: item.reference_id,
             })),
             payment_methods: Object.values(paymentMethodMap),
@@ -146,9 +148,9 @@ const paymentApi = {
         };
     },
 
-    async handleSudapaySuccess(paymentId) {
+    async handlePaymentSuccess(paymentId) {
         try {
-            console.log('Legacy payment success handler - loading payment state');
+            console.log('Loading payment state after gateway success');
             const result = await this.get(paymentId);
             console.log('Payment state loaded:', result);
             return result;
@@ -158,9 +160,9 @@ const paymentApi = {
         }
     },
 
-    async handleSudapayFailure(paymentId, reason = 'Unknown error') {
+    async handlePaymentFailure(paymentId, reason = 'Unknown error') {
         try {
-            console.log('Legacy payment failure handler:', reason);
+            console.log('Payment failure handler:', reason);
 
             return {
                 status: 'failed',
@@ -186,9 +188,7 @@ const paymentApi = {
 
     getGatewayName(gateway) {
         const gateways = {
-            sudapay: 'SUDAPAY',
             stripe: 'Stripe',
-            paypal: 'PayPal',
         };
         return gateways[gateway] || gateway;
     },

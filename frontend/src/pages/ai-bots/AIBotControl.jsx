@@ -35,7 +35,7 @@ export default function AIBotControl() {
     partner: "partner_manager",
     partner_management: "partner_manager",
     ai_partner_manager: "partner_manager",
-    sudapay: "payment_bot",
+    stripe: "payment_bot",
     payment: "payment_bot",
     mapleload_canada: "mapleload_bot",
     mapleload: "mapleload_bot",

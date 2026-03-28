@@ -1,6 +1,6 @@
 /**
  * PaymentPage Component - Main Payment Page
- * Provide invoice payment instructions without Sudapay
+ * Provide invoice payment instructions with Stripe as the only online gateway
  * 
  * Features:
  * - Display invoice data
@@ -32,8 +32,6 @@ export function PaymentPage() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedMethod, setSelectedMethod] = useState('stripe');
-
   const paymentStatus = searchParams.get('status');
   const paymentId = searchParams.get('payment_id');
 
@@ -232,17 +230,17 @@ Reference: Invoice #${invoiceId}
       <div className="payment-form-section">
         <div className="invoice-summary">
           <div className="summary-card">
-            <h3>Online gateway removed</h3>
+            <h3>Stripe is the only online gateway</h3>
             <p>
-              Sudapay has been removed from GTS. Use the bank transfer details below or contact finance
-              support to arrange payment.
+              Stripe is the approved checkout path for GTS. Bank transfer remains available below as an
+              offline fallback for customers who need manual settlement.
             </p>
           </div>
         </div>
       </div>
 
       {/* Stripe Climate Section */}
-      {selectedMethod === 'stripe' && invoice && (
+      {invoice && (
         <div className="stripe-climate-section">
           <div className="climate-card">
             <div className="climate-header">
@@ -350,8 +348,8 @@ Reference: Invoice #${invoiceId}
         <div className="faq-item">
           <h4>How is payment made?</h4>
           <p>
-            Online Sudapay checkout has been removed. Use bank transfer or contact finance support
-            for an approved payment method.
+            Stripe is the only approved online payment gateway. If you cannot pay online, use the bank
+            transfer details above or contact finance support for manual handling.
           </p>
         </div>
 

@@ -22,9 +22,7 @@ describe('paymentApi helpers', () => {
     });
 
     it('returns known gateway names', () => {
-        expect(paymentApi.getGatewayName('sudapay')).toContain('SUDAPAY');
         expect(paymentApi.getGatewayName('stripe')).toBe('Stripe');
-        expect(paymentApi.getGatewayName('paypal')).toBe('PayPal');
         expect(paymentApi.getGatewayName('other_gateway')).toBe('other_gateway');
     });
 
@@ -47,16 +45,16 @@ describe('paymentApi helpers', () => {
         const result = await paymentApi.create({
             invoice_id: 123,
             amount: 1000,
-            currency: 'SDG',
-            gateway: 'sudapay',
+            currency: 'USD',
+            gateway: 'stripe',
             description: 'test',
         });
 
         expect(axiosClient.post).toHaveBeenCalledWith('/api/v1/payments/create', {
             invoice_id: 123,
             amount: 1000,
-            currency: 'SDG',
-            gateway: 'sudapay',
+            currency: 'USD',
+            gateway: 'stripe',
             description: 'test',
         });
         expect(result.id).toBe(1);
@@ -79,8 +77,8 @@ describe('paymentApi helpers', () => {
         expect(axiosClient.post).toHaveBeenNthCalledWith(1, '/api/v1/payments/create', {
             invoice_id: 321,
             amount: 250,
-            currency: 'SDG',
-            gateway: 'sudapay',
+            currency: 'USD',
+            gateway: 'stripe',
             description: 'default-path',
         });
         expect(axiosClient.post).toHaveBeenNthCalledWith(2, '/api/v1/payments/18/refund', {
@@ -147,8 +145,8 @@ describe('paymentApi helpers', () => {
                     id: 1,
                     amount: 100,
                     status: 'completed',
-                    payment_gateway: 'sudapay',
-                    currency: 'SDG',
+                    payment_gateway: 'stripe',
+                    currency: 'USD',
                     created_at: '2026-03-28T00:00:00Z',
                     reference_id: 'REF-1',
                 },
@@ -172,10 +170,9 @@ describe('paymentApi helpers', () => {
         expect(stats.success_rate).toBe(50);
         expect(stats.pending_invoices).toBe(1);
         expect(stats.recent_payments).toHaveLength(2);
-        expect(stats.recent_payments[0].method).toBe('SUDAPAY');
+        expect(stats.recent_payments[0].method).toBe('Stripe');
         expect(stats.payment_methods).toEqual([
-            { name: 'SUDAPAY', usage_count: 1 },
-            { name: 'STRIPE', usage_count: 1 },
+            { name: 'STRIPE', usage_count: 2 },
         ]);
 
         historySpy.mockRestore();
@@ -197,11 +194,11 @@ describe('paymentApi helpers', () => {
         historySpy.mockRestore();
     });
 
-    it('handles sudapay success and failure handlers', async () => {
+    it('handles payment success and failure handlers', async () => {
         const getSpy = vi.spyOn(paymentApi, 'get').mockResolvedValue({ status: 'completed' });
 
-        const success = await paymentApi.handleSudapaySuccess(22);
-        const failure = await paymentApi.handleSudapayFailure(22, 'declined');
+        const success = await paymentApi.handlePaymentSuccess(22);
+        const failure = await paymentApi.handlePaymentFailure(22, 'declined');
 
         expect(getSpy).toHaveBeenCalledWith(22);
         expect(success.status).toBe('completed');
@@ -211,8 +208,8 @@ describe('paymentApi helpers', () => {
         getSpy.mockRestore();
     });
 
-    it('uses default failure reason for sudapay failure handler', async () => {
-        const result = await paymentApi.handleSudapayFailure(55);
+    it('uses default failure reason for payment failure handler', async () => {
+        const result = await paymentApi.handlePaymentFailure(55);
 
         expect(result.status).toBe('failed');
         expect(result.reason).toBe('Unknown error');
@@ -251,10 +248,10 @@ describe('paymentApi helpers', () => {
         await expect(paymentApi.getUserHistory({ limit: 5 })).rejects.toEqual(apiError);
     });
 
-    it('propagates sudapay success failure when confirm throws', async () => {
+    it('propagates payment success failure when payment lookup throws', async () => {
         const getSpy = vi.spyOn(paymentApi, 'get').mockRejectedValue(new Error('confirm-failed'));
 
-        await expect(paymentApi.handleSudapaySuccess(3)).rejects.toThrow('confirm-failed');
+        await expect(paymentApi.handlePaymentSuccess(3)).rejects.toThrow('confirm-failed');
 
         getSpy.mockRestore();
     });
@@ -268,12 +265,12 @@ describe('paymentApi helpers', () => {
         ).rejects.toEqual(apiError);
     });
 
-    it('throws when sudapay failure logger itself throws (catch branch)', async () => {
+    it('throws when payment failure logger itself throws (catch branch)', async () => {
         const logSpy = vi.spyOn(console, 'log').mockImplementationOnce(() => {
             throw new Error('log failed');
         });
 
-        await expect(paymentApi.handleSudapayFailure(77)).rejects.toThrow('log failed');
+        await expect(paymentApi.handlePaymentFailure(77)).rejects.toThrow('log failed');
 
         logSpy.mockRestore();
     });

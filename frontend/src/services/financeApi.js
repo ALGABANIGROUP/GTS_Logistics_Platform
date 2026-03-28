@@ -2,6 +2,7 @@ import axiosClient from "../api/axiosClient";
 
 const LEGACY_INVOICES_API = "/api/v1/invoices";
 const UNIFIED_FINANCE_API = "/api/v1/finance";
+const DEFAULT_GATEWAY = "stripe";
 
 const normalizeInvoices = (data) => {
     const items = Array.isArray(data) ? data : data?.items || [];
@@ -64,7 +65,7 @@ export const createPayment = async (payload) => {
     return response?.data;
 };
 
-export const payInvoice = async (invoiceId, amount, gateway = "stripe", extra = {}) => {
+export const payInvoice = async (invoiceId, amount, gateway = DEFAULT_GATEWAY, extra = {}) => {
     return createPayment({
         payment_type: "invoice",
         invoice_id: invoiceId,
@@ -74,7 +75,7 @@ export const payInvoice = async (invoiceId, amount, gateway = "stripe", extra = 
     });
 };
 
-export const payExpense = async (expenseId, amount, supplierName, gateway = "stripe", extra = {}) => {
+export const payExpense = async (expenseId, amount, supplierName, gateway = DEFAULT_GATEWAY, extra = {}) => {
     return createPayment({
         payment_type: "expense",
         expense_id: expenseId,

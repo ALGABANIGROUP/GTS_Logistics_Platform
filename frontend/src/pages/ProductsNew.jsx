@@ -137,10 +137,10 @@ const Products = () => {
                                 <span className="integration-badge connected">Geolocation</span>
                             </div>
 
-                            <div className="integration-card pending-activation">
-                                <i className="fas fa-credit-card"></i>
-                                <h4>SUDAPAY</h4>
-                                <span className="integration-badge">Activation Pending</span>
+                            <div className="integration-card">
+                                <i className="fab fa-stripe"></i>
+                                <h4>Stripe</h4>
+                                <span className="integration-badge connected">Primary Gateway</span>
                             </div>
 
                             <div className="integration-card">
@@ -149,11 +149,6 @@ const Products = () => {
                                 <span className="integration-badge connected">Safety & Compliance</span>
                             </div>
 
-                            <div className="integration-card not-integrated">
-                                <i className="fab fa-stripe"></i>
-                                <h4>Stripe</h4>
-                                <span className="integration-badge">Not integrated</span>
-                            </div>
                         </div>
                     </div>
 
