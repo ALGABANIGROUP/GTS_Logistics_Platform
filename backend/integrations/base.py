@@ -173,11 +173,12 @@ class BaseProvider(ABC):
                 if parsed_ts.tzinfo is None:
                     parsed_ts = parsed_ts.replace(tzinfo=timezone.utc)
                 now_utc = datetime.now(timezone.utc)
-                if now_utc - parsed_ts > timedelta(minutes=5):
-                    logger.warning("Webhook timestamp outside replay window")
+                diff_seconds = abs((now_utc - parsed_ts).total_seconds())
+                if diff_seconds > 300:
+                    logger.warning("Webhook timestamp outside replay window: %ss", int(diff_seconds))
                     return False
-            except Exception:
-                logger.warning("Webhook timestamp parsing failed")
+            except Exception as exc:
+                logger.warning("Webhook timestamp parsing failed: %s", exc)
                 return False
 
         clean_signature = signature.replace("sha256=", "")
