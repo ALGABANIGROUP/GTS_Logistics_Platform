@@ -7,23 +7,25 @@ import { useAuth } from "../contexts/AuthContext";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
   const { forgotPassword, loading } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus("");
+    setError("");
 
     try {
       const result = await forgotPassword(email);
       if (result.success) {
-        setStatus(
-          "If this email is registered, you will receive reset instructions shortly."
-        );
+        setStatus(result.message || "If the email is registered, you will receive a reset link.");
       }
     } catch (err) {
-      setStatus(
-        "If this email is registered, you will receive reset instructions shortly."
-      );
+      if (err?.detail?.message) {
+        setError(err.detail.message);
+        return;
+      }
+      setStatus("If the email is registered, you will receive a reset link.");
     }
   };
 
@@ -37,6 +39,11 @@ const ForgotPassword = () => {
         {status && (
           <div className="rounded-lg border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-100 shadow-sm">
             {status}
+          </div>
+        )}
+        {error && (
+          <div className="rounded-lg border border-rose-500/60 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-100 shadow-sm">
+            {error}
           </div>
         )}
 

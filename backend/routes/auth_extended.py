@@ -12,9 +12,10 @@ from typing import Any, Optional, Dict, TYPE_CHECKING
 from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 
 # ---------------------------------------------------------------------------
 # Imports
@@ -96,10 +97,17 @@ PASSWORD_POLICY_HINT = (
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50)
+    username: Optional[str] = Field(default=None, min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=128)
     full_name: Optional[str] = Field(None, max_length=200)
     role: Optional[str] = None
+    company_name: Optional[str] = Field(default=None, max_length=255)
+    country: Optional[str] = Field(default=None, max_length=100)
+    phone_number: Optional[str] = Field(default=None, max_length=50)
+    system_type: Optional[str] = Field(default=None, max_length=50)
+    subscription_tier: Optional[str] = Field(default=None, max_length=50)
+
+    model_config = ConfigDict(extra="ignore")
 
 
 class RegisterResponse(BaseModel):
@@ -403,6 +411,63 @@ def _password_policy_error(password: str) -> Optional[str]:
     return None
 
 
+def _registration_error(field: str, message: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail={"field": field, "message": message},
+    )
+
+
+async def _create_registered_user(
+    payload: RegisterRequest,
+    db: AsyncSession,
+) -> Any:
+    email = payload.email.strip().lower()
+    username = (payload.username or email.split("@")[0]).strip().lower()
+    company_name = (payload.company_name or "").strip()
+
+    existing_email = await db.execute(select(UserModel).where(func.lower(UserModel.email) == email))
+    if existing_email.scalar_one_or_none():
+        raise _registration_error("email", "This email is already registered")
+
+    existing_username = await db.execute(select(UserModel).where(func.lower(UserModel.username) == username))
+    if existing_username.scalar_one_or_none():
+        raise _registration_error("username", "Username is already taken")
+
+    if company_name and hasattr(UserModel, "company"):
+        existing_company = await db.execute(
+            select(UserModel).where(func.lower(func.trim(UserModel.company)) == company_name.lower())
+        )
+        if existing_company.scalar_one_or_none():
+            raise _registration_error("company_name", "Company name is already in use")
+
+    hashed = get_password_hash(payload.password)
+    user = UserModel(
+        email=email,
+        username=username,
+        hashed_password=hashed,
+        full_name=(payload.full_name or "").strip() or None,
+        role=(payload.role or "user").strip() or "user",
+        is_active=True,
+    )
+
+    if hasattr(user, "company"):
+        setattr(user, "company", company_name or None)
+    if hasattr(user, "country"):
+        setattr(user, "country", (payload.country or "").strip() or None)
+    if hasattr(user, "phone_number"):
+        setattr(user, "phone_number", (payload.phone_number or "").strip() or None)
+    if hasattr(user, "system_type"):
+        setattr(user, "system_type", (payload.system_type or "").strip() or None)
+    if hasattr(user, "subscription_tier"):
+        setattr(user, "subscription_tier", (payload.subscription_tier or "").strip() or None)
+
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 # ---------------------------------------------------------------------------
 # Router
 # ---------------------------------------------------------------------------
@@ -415,6 +480,41 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth – Extended"])
 # ---------------------------------------------------------------------------
 
 @router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+)
+async def register(
+    payload: RegisterRequest,
+    db: AsyncSession = Depends(get_db_async),
+) -> Dict[str, Any]:
+    policy_error = _password_policy_error(payload.password)
+    if policy_error:
+        raise _registration_error("password", policy_error)
+
+    try:
+        user = await _create_registered_user(payload, db)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"field": "form", "message": "Registration failed"},
+        ) from exc
+
+    return {
+        "ok": True,
+        "message": "Registration successful",
+        "user": {
+            "id": int(getattr(user, "id")),
+            "email": getattr(user, "email"),
+            "username": getattr(user, "username"),
+            "full_name": getattr(user, "full_name", None),
+            "company_name": getattr(user, "company", None),
+        },
+    }
+
+
+@router.post(
     "/register-legacy",
     response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
@@ -424,36 +524,7 @@ async def register_user(
     db: AsyncSession = Depends(get_db_async),
 ) -> RegisterResponse:
 
-    email = payload.email.strip().lower()
-    username = payload.username.strip().lower()
-
-    existing_email = await get_user_by_login(db, email)
-    existing_username = await get_user_by_login(db, username)
-
-    if existing_email or existing_username:
-        raise HTTPException(
-            status_code=400,
-            detail="User with this email or username already exists",
-        )
-
-    hashed = get_password_hash(payload.password)
-    role = (payload.role or "customer").strip() or "customer"
-
-    kwargs: Dict[str, Any] = {
-        "email": email,
-        "username": username,
-        "hashed_password": hashed,
-        "role": role,
-        "is_active": True,
-    }
-
-    if hasattr(UserModel, "full_name") and payload.full_name:
-        kwargs["full_name"] = payload.full_name
-
-    user = UserModel(**kwargs)  # type: ignore[arg-type]
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    user = await _create_registered_user(payload, db)
 
     return RegisterResponse(
         id=int(getattr(user, "id")),

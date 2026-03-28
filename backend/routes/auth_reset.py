@@ -57,7 +57,7 @@ async def forgot_password(
     email = payload.email.strip().lower()
     user = await _load_user(email, db)
     if not user:
-        return {"message": "If this email exists, a reset link has been sent."}
+        return {"message": "If the email is registered, you will receive a reset link.", "field": "email"}
 
     token = await _create_password_reset_token(user, db)
     link = _build_reset_link(token)
@@ -100,7 +100,7 @@ async def forgot_password(
 
     background.add_task(_dispatch_reset, email, link)
     background.add_task(_send_admin_reset_notice, email)
-    return {"message": "If this email exists, a reset link has been sent."}
+    return {"message": "If the email is registered, you will receive a reset link.", "field": "email"}
 
 
 @router.post("/reset-password-legacy", include_in_schema=False)

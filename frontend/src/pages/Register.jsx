@@ -37,6 +37,7 @@ export default function Register() {
   const [form, setForm] = useState({
     companyName: "",
     fullName: "",
+    username: "",
     email: "",
     phone: "",
     password: "",
@@ -53,11 +54,16 @@ export default function Register() {
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [planOptions, setPlanOptions] = useState(DEFAULT_PLAN_OPTIONS);
+  const hasValidationErrors = useMemo(
+    () => Object.values(errors).some(Boolean),
+    [errors]
+  );
 
   const requiredMissing = useMemo(() => {
     return (
       !form.companyName.trim() ||
       !form.fullName.trim() ||
+      !form.username.trim() ||
       !form.email.trim() ||
       !form.password.trim() ||
       !form.phone.trim() ||
@@ -70,6 +76,10 @@ export default function Register() {
       case "companyName":
       case "fullName":
         return value.trim() ? "" : "This field is required.";
+      case "username":
+        return value.trim().length >= 3
+          ? ""
+          : "Username must be at least 3 characters.";
       case "email":
         return isValidEmail(value) ? "" : "Enter a valid email address.";
       case "password":
@@ -94,6 +104,7 @@ export default function Register() {
     [
       "companyName",
       "fullName",
+      "username",
       "email",
       "password",
       "phone",
@@ -172,6 +183,7 @@ export default function Register() {
     setTouched({
       companyName: true,
       fullName: true,
+      username: true,
       email: true,
       password: true,
       phone: true,
@@ -192,27 +204,42 @@ export default function Register() {
         email: form.email.trim(),
         password: form.password,
         full_name: form.fullName.trim(),
-        country_iso2: form.country?.iso2 || "",
-        phone_e164: `${form.country?.callingCode || ""}${normalizedPhone}`,
+        username: form.username.trim(),
+        company_name: form.companyName.trim(),
+        country: form.country?.iso2 || "",
+        phone_number: `${form.country?.callingCode || ""}${normalizedPhone}`,
+        system_type: form.system,
+        subscription_tier: form.subscription,
+        role: form.role || "user",
       };
       const res = await axiosClient.post("/auth/register", payload);
       if (res.data && res.data.ok) {
-        setSuccessMessage("Request submitted successfully. We will review it shortly.");
+        setSuccessMessage("Registration successful! Please sign in.");
+        navigate("/login", { replace: true });
         return;
       }
-      setFormError("Unable to submit the request. Please try again.");
+      setFormError("Registration failed. Please try again.");
     } catch (err) {
       const status = err?.response?.status;
-      if (status === 422) {
+      const detail = err?.response?.data?.detail;
+      if (status === 400 && detail && typeof detail === "object") {
+        const fieldMap = {
+          company_name: "companyName",
+          full_name: "fullName",
+          phone_number: "phone",
+        };
+        const fieldKey = fieldMap[detail.field] || detail.field;
+        setErrors((curr) => ({ ...curr, [fieldKey]: detail.message || "Invalid value." }));
+      } else if (status === 422) {
         setFormError("Please review the highlighted fields.");
-      } else if (status === 409) {
-        setFormError("This email is already registered.");
       } else if (status === 401 || status === 403) {
         setFormError("Access denied. Please check your details.");
-      } else if (err?.response?.data?.detail || err?.response?.data?.message) {
-        setFormError("Unable to submit the request. Please try again.");
+      } else if (typeof detail === "string") {
+        setFormError(detail);
+      } else if (err?.response?.data?.message) {
+        setFormError(err.response.data.message);
       } else {
-        setSuccessMessage("Request submitted successfully. We will review it shortly.");
+        setFormError("Registration failed. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -234,9 +261,9 @@ export default function Register() {
       <div className="relative z-10 w-full h-full flex items-center justify-center px-4">
         <div className="w-full max-w-3xl">
           <div className="text-center mb-6">
-            <h1 className="text-white text-xl font-semibold">Request Access</h1>
+            <h1 className="text-white text-xl font-semibold">Create Account</h1>
             <p className="text-white/70 mt-2">
-              Choose your system, role, and subscription plan from the live billing catalog, then submit for review.
+              Create your GTS account, choose your system and plan, then sign in immediately after registration.
             </p>
           </div>
 
@@ -308,6 +335,24 @@ export default function Register() {
                       <div>
                         <input
                           className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                          placeholder="Username"
+                          name="username"
+                          autoComplete="username"
+                          value={form.username}
+                          onChange={onChange}
+                          onBlur={onBlur}
+                          aria-invalid={Boolean(touched.username && errors.username)}
+                          disabled={isSubmitting}
+                          required
+                        />
+                        <FormError message={touched.username ? errors.username : ""} className="mt-1" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
                           placeholder="Full Name"
                           name="fullName"
                           autoComplete="name"
@@ -339,6 +384,9 @@ export default function Register() {
                         />
                         <FormError message={touched.email ? errors.email : ""} className="mt-1" />
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <div className="flex">
                           <span className="inline-flex items-center rounded-l-xl border border-white/20 bg-white/5 backdrop-blur-md px-3 text-white/80">
@@ -359,9 +407,6 @@ export default function Register() {
                         </div>
                         <FormError message={touched.phone ? errors.phone : ""} className="mt-1" />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <div className="relative">
                           <input
@@ -389,22 +434,23 @@ export default function Register() {
                         </div>
                         <FormError message={touched.password ? errors.password : ""} className="mt-1" />
                       </div>
-                      <div>
-                        <CountrySelect
-                          value={form.country}
-                          invalid={Boolean(touched.country && errors.country)}
-                          disabled={isSubmitting}
-                          onChange={(next) => {
-                            setForm((prev) => ({ ...prev, country: next }));
-                            setTouched((prev) => ({ ...prev, country: true }));
-                            setErrors((curr) => ({
-                              ...curr,
-                              country: validateField("country", next?.iso2 || "", { ...form, country: next }),
-                            }));
-                          }}
-                        />
-                        <FormError message={touched.country ? errors.country : ""} className="mt-1" />
-                      </div>
+                    </div>
+
+                    <div>
+                      <CountrySelect
+                        value={form.country}
+                        invalid={Boolean(touched.country && errors.country)}
+                        disabled={isSubmitting}
+                        onChange={(next) => {
+                          setForm((prev) => ({ ...prev, country: next }));
+                          setTouched((prev) => ({ ...prev, country: true }));
+                          setErrors((curr) => ({
+                            ...curr,
+                            country: validateField("country", next?.iso2 || "", { ...form, country: next }),
+                          }));
+                        }}
+                      />
+                      <FormError message={touched.country ? errors.country : ""} className="mt-1" />
                     </div>
 
                     <details className="rounded-xl border border-white/20">
@@ -502,10 +548,10 @@ export default function Register() {
 
                   <button
                     type="submit"
-                    disabled={isSubmitting || requiredMissing || Object.keys(errors).length > 0}
+                    disabled={isSubmitting || requiredMissing || hasValidationErrors}
                     className="w-full rounded-xl bg-black/30 hover:bg-black/40 text-white font-semibold py-3 border border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? "Processing..." : "Submit Request"}
+                    {isSubmitting ? "Processing..." : "Create Account"}
                   </button>
 
                   <div className="pt-3 border-t border-white/10 flex justify-between text-sm">
@@ -530,7 +576,7 @@ export default function Register() {
           </GlassCard>
 
           <p className="text-center text-white/40 text-xs mt-4">
-            After approval, you will be redirected automatically to the system you selected.
+            Your system, role, and plan are stored during registration for a cleaner first login.
           </p>
         </div>
       </div>

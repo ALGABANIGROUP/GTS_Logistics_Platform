@@ -74,7 +74,9 @@ const normalizeAuthPayload = (payload) => {
 };
 
 const getApiErrorMessage = (error, fallbackMessage) =>
-    error?.response?.data?.detail ||
+    (typeof error?.response?.data?.detail === "object"
+        ? error?.response?.data?.detail?.message
+        : error?.response?.data?.detail) ||
     error?.response?.data?.message ||
     error?.message ||
     fallbackMessage;
@@ -286,7 +288,9 @@ export const AuthProvider = ({ children }) => {
             const response = await axios.post(`${API_URL}/api/v1/auth/register`, userData);
             return response.data;
         } catch (error) {
-            throw new Error(error.response?.data?.detail || "Registration failed");
+            const wrapped = new Error(getApiErrorMessage(error, "Registration failed"));
+            wrapped.detail = error?.response?.data?.detail;
+            throw wrapped;
         }
     };
 
