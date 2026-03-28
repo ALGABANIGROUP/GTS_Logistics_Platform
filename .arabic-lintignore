@@ -1,0 +1,16 @@
+# Legacy directories
+trainer_bot_advanced/
+scripts/
+GTS_Logistics_Platform/
+
+# Audit reports
+pre_upload_audit.txt
+pre_upload_audit_updated.txt
+
+# Temporary files
+run_telegram_bot.py
+
+# Explicit legacy files
+scripts/from fastapi import APIRouter, Depends.ps1
+scripts/seed_marketing_campaigns.py
+scripts/seed_real_incidents.py

@@ -8,6 +8,7 @@ import { execSync } from "child_process";
 
 const ROOT = process.cwd();
 const SCAN_STAGED_ONLY = process.argv.includes("--staged");
+const IGNORE_FILE = path.join(ROOT, ".arabic-lintignore");
 
 const EXTENSIONS = new Set([
     ".py",
@@ -33,6 +34,7 @@ const EXCLUDE_DIRS = new Set([
     "node_modules",
     ".git",
     ".venv",
+    "venv",
     "dist",
     "build",
     "coverage",
@@ -41,8 +43,49 @@ const EXCLUDE_DIRS = new Set([
     "__pycache__",
 ]);
 
+// Legacy paths that intentionally contain Arabic content.
+// Keep this list explicit to preserve strict linting in active code paths.
+const EXCLUDE_PATH_PREFIXES = [
+    "GTS_Logistics_Platform/",
+    "trainer_bot_advanced/",
+    "scripts/seed_",
+    "scripts/from fastapi import apirouter, depends.ps1",
+    "pre_upload_audit",
+    "run_telegram_bot.py",
+];
+
+function loadIgnorePrefixes() {
+    if (!fs.existsSync(IGNORE_FILE)) {
+        return [];
+    }
+
+    try {
+        return fs
+            .readFileSync(IGNORE_FILE, "utf8")
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .filter((line) => !line.startsWith("#"))
+            .map((line) => line.replace(/\\/g, "/"));
+    } catch (error) {
+        console.warn(`[arabic-lint] WARN: failed to read .arabic-lintignore: ${error.message}`);
+        return [];
+    }
+}
+
+const IGNORE_PATH_PREFIXES = [...EXCLUDE_PATH_PREFIXES, ...loadIgnorePrefixes()];
+
 // Arabic Unicode ranges
 const ARABIC_REGEX = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+function toRelativePosix(filePath) {
+    return path.relative(ROOT, filePath).replace(/\\/g, "/");
+}
+
+function isExcludedPath(filePath) {
+    const rel = toRelativePosix(filePath).toLowerCase();
+    return IGNORE_PATH_PREFIXES.some((prefix) => rel.startsWith(prefix.toLowerCase()));
+}
 
 /** Recursively walk and yield file paths */
 function* walk(dir) {
@@ -54,6 +97,7 @@ function* walk(dir) {
     }
     for (const entry of list) {
         const full = path.join(dir, entry.name);
+        if (isExcludedPath(full)) continue;
         if (entry.isDirectory()) {
             if (EXCLUDE_DIRS.has(entry.name)) continue;
             yield* walk(full);
@@ -81,6 +125,7 @@ function getStagedFiles() {
         .map((p) => p.trim())
         .filter(Boolean)
         .map((p) => path.resolve(ROOT, p))
+        .filter((absPath) => !isExcludedPath(absPath))
         .filter((absPath) => {
             if (!fs.existsSync(absPath)) return false;
             const ext = path.extname(absPath).toLowerCase();
