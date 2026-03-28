@@ -1523,7 +1523,7 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Trainer bot: {e}")
     try:
-        from safety.main import AISafetyManagerBot
+        from backend.safety.main import AISafetyManagerBot
         from backend.ai.registry_fill import AliasBot
 
         safety_bot = AISafetyManagerBot()
@@ -1534,7 +1534,20 @@ def register_core_bots() -> None:
         ai_registry.register(AliasBot(name="safety", target_key="safety_bot"))
         log.info("[register] Safety bot registered with aliases")
     except Exception as e:
-        log.warning(f"[register] Failed to register Safety bot: {e}")
+        log.warning(f"[register] Failed to register Safety bot from safety manager runtime, using fallback: {e}")
+        try:
+            from backend.bots.safety_bot import SafetyBot
+            from backend.ai.registry_fill import AliasBot
+
+            safety_bot = SafetyBot()
+            safety_bot.name = "safety_bot"
+            safety_bot.display_name = "Safety Bot"
+            ai_registry.register(safety_bot)
+            ai_registry.register(AliasBot(name="safety_manager", target_key="safety_bot"))
+            ai_registry.register(AliasBot(name="safety", target_key="safety_bot"))
+            log.info("[register] Fallback Safety bot registered with aliases")
+        except Exception as fallback_exc:
+            log.warning(f"[register] Failed to register Safety bot fallback: {fallback_exc}")
     try:
         from backend.bots.ai_dispatcher import AIDispatcherBot
         ai_registry.register(AIDispatcherBot())
@@ -1906,6 +1919,11 @@ async def on_startup():
     log.info("[startup] AI core bots registered: %s", ai_registry.list())
 
     try:
+        await _start_bot_os()
+    except Exception as e:
+        log.warning("[startup] BotOS initialization failed: %s", e)
+
+    try:
         from services.learning_bootstrap import register_default_learning_bots, learning_scheduler_loop
 
         learning_result = register_default_learning_bots()
@@ -2033,6 +2051,30 @@ async def on_shutdown():
         await stop_email_polling_task()
     except Exception:
         pass
+    try:
+        bot_os = getattr(app.state, "bot_os", None)
+        if bot_os is not None:
+            await bot_os.shutdown()
+            log.info("[shutdown] BotOS stopped")
+    except Exception as exc:
+        log.warning("[shutdown] BotOS shutdown failed: %s", exc)
+
+
+async def _start_bot_os() -> None:
+    session_factory = _get_session
+    if session_factory is None:
+        raise RuntimeError("async session factory is unavailable")
+
+    from backend.bots import init_bot_os
+
+    bot_os = init_bot_os(
+        bot_names_provider=lambda: list(ai_registry.list().keys()),
+        bot_getter=ai_registry.get,
+        session_factory=session_factory,
+    )
+    await bot_os.start()
+    app.state.bot_os = bot_os
+    log.info("[startup] BotOS initialized successfully")
 
 
 @asynccontextmanager

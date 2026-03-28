@@ -166,7 +166,7 @@ async def list_bots(current_user: Dict[str, Any] = Depends(get_current_user)) ->
 
         bot = registry.get(bot_key)
         status_data = await _safe_status(bot)
-        meta = bot_permissions.BOT_CAPABILITIES.get(bot_key, {})
+        meta = BOT_CAPABILITIES.get(bot_key, {})
         has_backend = _has_backend(bot_key)
         allowed_actions: List[str] = []
         if has_backend:
@@ -354,7 +354,7 @@ async def bot_capabilities(current_user: Dict[str, Any] = Depends(get_current_us
         decision = bot_access_policy.can_see_bot(role, features, bot_key)
         if not decision.get("allowed"):
             continue
-        meta = bot_permissions.BOT_CAPABILITIES.get(bot_key, {})
+        meta = BOT_CAPABILITIES.get(bot_key, {})
         items.append(
             {
                 "bot_key": bot_key,
@@ -391,7 +391,7 @@ async def bot_capability(
         reason = details.pop("reason", "role_not_allowed")
         raise ai_forbidden(reason, bot_key, **details)
 
-    meta = bot_permissions.BOT_CAPABILITIES.get(bot_key)
+    meta = BOT_CAPABILITIES.get(bot_key)
     if meta is None:
         raise HTTPException(status_code=404, detail=f"Capabilities not found for '{bot_key}'")
 
