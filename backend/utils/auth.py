@@ -6,8 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from backend.models.user import User
 from backend.database.config import get_db
+from backend.core.settings import settings
 import os
-JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
+DEFAULT_SECRET_KEY = 'dev-secret-change-me'
+JWT_SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or os.getenv('JWT_SECRET_KEY', DEFAULT_SECRET_KEY)
 JWT_ALGORITHM = 'HS256'
 
 class JWTBearer(HTTPBearer):
@@ -32,5 +34,7 @@ async def get_current_user(token: str=Depends(JWTBearer()), db: AsyncSession=Dep
         return user
     except JWTError:
         raise HTTPException(status_code=401, detail='Invalid token')
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f'Token validation error: {str(e)}')
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail='Token validation failed')

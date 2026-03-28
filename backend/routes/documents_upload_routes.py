@@ -34,7 +34,16 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_TYPES = {"pdf", "jpg", "jpeg", "png", "xlsx", "csv", "docx", "doc", "txt", "gif", "bmp", "tiff"}
 MAX_FILE_SIZE = 50 * 1024 * 1024
-SIGNING_SECRET = os.getenv("DOCUMENT_SIGNING_SECRET", "gts-documents-secret-2026")
+SIGNING_SECRET = (
+    os.getenv("DOCUMENT_SIGNING_SECRET")
+    or os.getenv("JWT_SECRET_KEY")
+    or os.getenv("SECRET_KEY")
+    or "dev-documents-secret-change-me"
+)
+
+if (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}:
+    if SIGNING_SECRET == "dev-documents-secret-change-me":
+        raise RuntimeError("DOCUMENT_SIGNING_SECRET (or platform secret) must be configured in production.")
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 

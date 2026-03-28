@@ -25,11 +25,15 @@ stripe_service = get_stripe_service()
 webhook_secret = settings.STRIPE_WEBHOOK_SECRET
 
 
+def _is_production() -> bool:
+    return (os.getenv("ENVIRONMENT") or settings.APP_ENV or "development").strip().lower() in {"production", "prod"}
+
+
 def verify_signature(payload: bytes, signature: str) -> bool:
     """Verify webhook signature from Stripe"""
     if not webhook_secret:
-        logger.warning("STRIPE_WEBHOOK_SECRET not configured - skipping signature verification")
-        return True  # Skip verification if no secret configured
+        logger.warning("STRIPE_WEBHOOK_SECRET not configured")
+        return not _is_production()
 
     try:
         # Stripe sends signature in format: t=1492774577,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd,v0=...

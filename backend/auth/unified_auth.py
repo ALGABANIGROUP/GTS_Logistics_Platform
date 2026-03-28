@@ -7,10 +7,12 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from sqlalchemy import text
 import logging
 
 from backend.models.user import User
 from backend.models.unified_models import UserSystemsAccess
+from backend.core.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +21,12 @@ class UnifiedAuthSystem:
     
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        self.SECRET_KEY = "your-secret-key-change-in-production"  # Must be changed from env
+        self.SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or "dev-secret-change-me"
         self.ALGORITHM = "HS256"
         self.ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Session timeout: 15 minutes of inactivity
+        env = (settings.APP_ENV or "development").strip().lower()
+        if env in {"production", "prod"} and self.SECRET_KEY == "dev-secret-change-me":
+            raise RuntimeError("Unified auth secret must not use the development default in production.")
     
     def hash_password(self, password: str) -> str:
         """Hash the password"""
@@ -40,33 +45,43 @@ class UnifiedAuthSystem:
         """
         
         # Search for user
-        user = await session.execute(
-            f"SELECT * FROM users WHERE email = '{email}'"
+        user_result = await session.execute(
+            text("SELECT id, email, full_name, is_active, password_hash FROM users WHERE email = :email"),
+            {"email": email},
         )
-        user = user.fetchone()
+        user = user_result.mappings().first()
         
         if not user:
             logger.warning(f"Failed login attempt: User {email} not found")
             return None
         
         # Verify password
-        if not self.verify_password(password, user.password_hash):
+        if not self.verify_password(password, str(user["password_hash"])):
             logger.warning(f"Failed login attempt: Incorrect password for user {email}")
             return None
         
         # Get available systems
-        access_query = f"""
-            SELECT system_type, access_level 
-            FROM user_systems_access 
-            WHERE user_id = '{user.id}' AND is_active = TRUE
-        """
+        access_result = await session.execute(
+            text(
+                """
+                SELECT system_type, access_level
+                FROM user_systems_access
+                WHERE user_id = :user_id AND is_active = TRUE
+                """
+            ),
+            {"user_id": str(user["id"])},
+        )
+        systems = [
+            {"system_type": row["system_type"], "access_level": row["access_level"]}
+            for row in access_result.mappings().all()
+        ]
         
         return {
-            "user_id": str(user.id),
-            "email": user.email,
-            "full_name": user.full_name,
-            "is_active": user.is_active,
-            "systems": []  # Will be populated from data
+            "user_id": str(user["id"]),
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "is_active": user["is_active"],
+            "systems": systems,
         }
     
     def create_access_token(

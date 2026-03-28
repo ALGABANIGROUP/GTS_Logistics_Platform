@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
@@ -93,8 +93,7 @@ class CarrierResponse(CarrierBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # List response schema
 class CarrierListResponse(BaseModel):

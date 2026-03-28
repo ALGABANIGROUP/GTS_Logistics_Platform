@@ -10,6 +10,7 @@ from sqlalchemy import and_, or_, func
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, ConfigDict, EmailStr
+import os
 
 from backend.security.auth import get_current_user
 from backend.security.passwords import hash_password
@@ -24,6 +25,15 @@ from backend.services.system_admin_bot import SystemAdminBot
 from backend.security.access_context import ROLE_PERMISSIONS
 
 router = APIRouter(prefix="/api/v1/admin/users", tags=["Admin Users"])
+
+
+def _is_production() -> bool:
+    return (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}
+
+
+def _require_non_production_debug_endpoint() -> None:
+    if _is_production():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
 async def check_admin_access(user: Dict[str, Any]):
@@ -278,6 +288,7 @@ async def list_bot_catalog(
 @router.get("/roles/test-raw", summary="Test roles without auth")
 async def test_roles_raw(session: AsyncSession = Depends(get_admin_session)):
     """Test endpoint to check if roles can be queried"""
+    _require_non_production_debug_endpoint()
     try:
         from sqlalchemy import text
         result = await session.execute(text("SELECT key, name_en, name_ar, permissions, is_system FROM roles LIMIT 5"))
@@ -309,12 +320,14 @@ async def test_roles_raw(session: AsyncSession = Depends(get_admin_session)):
 @router.get("/health-test", summary="Simple health test")
 def health_test():
     """Simple endpoint with no dependencies"""
+    _require_non_production_debug_endpoint()
     return {"status": "ok", "message": "Admin users router is working"}
 
 
 @router.get("/roles/public", summary="List roles (public, no auth)")
 async def list_roles_public():
     """List public role metadata for login, registration, and admin UI bootstrap."""
+    _require_non_production_debug_endpoint()
     try:
         from sqlalchemy import text
 
@@ -330,7 +343,6 @@ async def list_roles_public():
                 "name": r[1],
                 "name_en": r[2] or r[1] or r[0].replace("_", " ").title(),
                 "name_ar": r[3] or r[2] or r[1] or r[0].replace("_", " ").title(),
-                "permissions": r[4] or [],
                 "is_system": bool(r[5]),
             }
             for r in rows
@@ -359,10 +371,9 @@ async def list_roles_public():
                 "name": role_labels.get(key, key.replace("_", " ").title()),
                 "name_en": role_labels.get(key, key.replace("_", " ").title()),
                 "name_ar": role_labels.get(key, key.replace("_", " ").title()),
-                "permissions": sorted(list(permissions)),
                 "is_system": key in {"admin", "system_admin", "super_admin", "owner"},
             }
-            for key, permissions in sorted(ROLE_PERMISSIONS.items(), key=lambda item: item[0])
+            for key, _permissions in sorted(ROLE_PERMISSIONS.items(), key=lambda item: item[0])
         ]
         return {
             "status": "ok",
@@ -375,6 +386,7 @@ async def list_roles_public():
 @router.get("/roles/db-test", summary="Test database connection")
 async def test_db_connection(session: AsyncSession = Depends(get_admin_session)):
     """Test if we can connect to database"""
+    _require_non_production_debug_endpoint()
     try:
         from sqlalchemy import text
         result = await session.execute(text("SELECT 1"))
@@ -384,8 +396,11 @@ async def test_db_connection(session: AsyncSession = Depends(get_admin_session))
 
 
 @router.get("/roles", summary="List roles (compat)")
-async def list_roles_compat():
-    """List all roles - with fallback if auth fails"""
+async def list_roles_compat(
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """List all roles - admin access only."""
+    await check_admin_access(current_user)
     try:
         # Use raw SQL to avoid ORM issues
         from sqlalchemy import text
@@ -412,15 +427,7 @@ async def list_roles_compat():
         import traceback
         print(f"ERROR in list_roles_compat: {e}")
         traceback.print_exc()
-        # Return fallback default roles instead of crashing
-        return {
-            "roles": [
-                {"key": "admin", "name": "Admin", "name_en": "Administrator", "name_ar": "Administrator", "permissions": [], "is_system": True},
-                {"key": "user", "name": "User", "name_en": "User", "name_ar": "User", "permissions": [], "is_system": False},
-            ],
-            "status": "ok",
-            "warning": f"Using default roles due to: {str(e) [:50]}"
-        }
+        raise HTTPException(status_code=500, detail="Failed to load roles")
 
 
 @router.get("/org/tree", summary="Organization tree (compat)")

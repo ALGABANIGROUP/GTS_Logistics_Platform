@@ -8,8 +8,10 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, urlparse
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
+from backend.security.auth import get_current_user, oauth2_scheme
+from backend.security.rbac import has_required_role
 
 try:
     import httpx  # type: ignore
@@ -51,6 +53,25 @@ INTERNAL_API_TOKEN = (
 
 def _is_production() -> bool:
     return ENVIRONMENT == "production"
+
+
+def _require_admin_in_production(user: Dict[str, Any] | None) -> None:
+    if not _is_production():
+        return
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    if not has_required_role(str(user.get("role") or ""), ["admin"]):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+
+async def _get_current_user_optional(
+    request: Request,
+    token: Optional[str] = Depends(oauth2_scheme),
+) -> Dict[str, Any] | None:
+    auth = request.headers.get("authorization") or request.headers.get("Authorization") or ""
+    if not token and not auth.lower().startswith("bearer "):
+        return None
+    return await get_current_user(request, token)
 
 
 def _pg_connection_params_from_env() -> Optional[Dict[str, Any]]:
@@ -296,18 +317,24 @@ async def system_health():
 
 
 @router.get("/database/stats")
-async def database_stats():
+async def database_stats(
+    current_user: Dict[str, Any] | None = Depends(_get_current_user_optional),
+):
+    _require_admin_in_production(current_user)
     stats = await _database_stats()
     status_code = 200 if stats.get("ok") else 500
     return JSONResponse(status_code=status_code, content=stats)
 
 
 @router.get("/metrics")
-async def system_metrics():
+async def system_metrics(
+    current_user: Dict[str, Any] | None = Depends(_get_current_user_optional),
+):
     """
     Real-time system metrics endpoint.
     Returns: api_latency_ms, database_usage_percent, cache_hit_rate_percent, message_queue_backlog
     """
+    _require_admin_in_production(current_user)
     import time as time_module
     
     uptime = time.monotonic() - START_TIME
@@ -374,12 +401,19 @@ async def system_metrics():
 
 
 @router.get("/bots/status")
-async def bots_status():
+async def bots_status(
+    current_user: Dict[str, Any] | None = Depends(_get_current_user_optional),
+):
+    _require_admin_in_production(current_user)
     return await _get_bots_status()
 
 
 @router.get("/feature-flags")
-async def feature_flags(region: str = Query("GCC")):
+async def feature_flags(
+    region: str = Query("GCC"),
+    current_user: Dict[str, Any] | None = Depends(_get_current_user_optional),
+):
+    _require_admin_in_production(current_user)
     if features_for_region is None or normalize_region is None:
         return {"ok": False, "error": "feature_flags module not available"}
     flags = features_for_region(normalize_region(region))
@@ -387,8 +421,11 @@ async def feature_flags(region: str = Query("GCC")):
 
 
 @router.get("/issues")
-async def system_issues():
+async def system_issues(
+    current_user: Dict[str, Any] | None = Depends(_get_current_user_optional),
+):
     """Get system-level issues and alerts"""
+    _require_admin_in_production(current_user)
     return {
         "ok": True,
         "issues": []

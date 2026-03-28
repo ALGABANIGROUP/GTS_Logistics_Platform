@@ -9,6 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import os
 
 from ..config import settings
 from backend.database.config import get_db
@@ -19,9 +20,14 @@ from backend.models.user import User
 # Configuration
 # ---------------------------------------------------------------------------
 
-SECRET_KEY: str = settings.jwt_secret or "change-me"
+DEFAULT_SECRET_KEY = "dev-secret-change-me"
+SECRET_KEY: str = getattr(settings, "jwt_secret", None) or getattr(settings, "JWT_SECRET_KEY", None) or getattr(settings, "SECRET_KEY", None) or DEFAULT_SECRET_KEY
 ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 15  # Session timeout: 15 minutes of inactivity
+
+if (os.getenv("ENVIRONMENT") or getattr(settings, "APP_ENV", None) or "development").strip().lower() in {"production", "prod"}:
+    if SECRET_KEY == DEFAULT_SECRET_KEY:
+        raise RuntimeError("Auth service secret must not use the development default in production.")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

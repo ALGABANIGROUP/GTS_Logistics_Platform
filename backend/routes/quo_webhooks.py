@@ -21,11 +21,15 @@ def _get_secret() -> str:
     return (os.getenv("QUO_WEBHOOK_SECRET") or "").strip()
 
 
+def _is_production() -> bool:
+    return (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}
+
+
 def _verify_signature(*, body: bytes, signature: Optional[str], timestamp: Optional[str]) -> bool:
     secret = _get_secret()
     if not secret:
-        # If no secret configured, skip verification (development only)
-        return True
+        # Never fail open in production.
+        return not _is_production()
     if not signature or not timestamp:
         return False
     try:

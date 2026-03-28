@@ -20,10 +20,14 @@ router = APIRouter(prefix="/api/webhooks/wise", tags=["Wise Webhooks"])
 webhook_secret = os.getenv("WISE_WEBHOOK_SECRET", "")
 
 
+def _is_production() -> bool:
+    return (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}
+
+
 def verify_signature(payload: bytes, signature: str) -> bool:
     """Verify webhook signature"""
     if not webhook_secret:
-        return True  # Skip verification if no secret configured
+        return not _is_production()
 
     expected = hmac.new(
         webhook_secret.encode(),

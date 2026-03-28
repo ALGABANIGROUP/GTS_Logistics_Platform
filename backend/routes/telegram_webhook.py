@@ -27,6 +27,10 @@ log = logging.getLogger("gts.telegram_webhook")
 router = APIRouter(prefix="/api/v1/telegram", tags=["Telegram Webhook"])
 
 
+def _is_production() -> bool:
+    return (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}
+
+
 class TelegramUpdate(BaseModel):
     """Telegram update model for webhook payload."""
     update_id: int
@@ -82,6 +86,9 @@ async def test_webhook(update: TelegramUpdate):
 
     Accepts a TelegramUpdate model for testing purposes.
     """
+    if _is_production():
+        raise HTTPException(status_code=404, detail="Not found")
+
     if not TELEGRAM_AVAILABLE or process_update is None:
         raise HTTPException(status_code=503, detail="Telegram webhook unavailable: python-telegram-bot not installed")
 

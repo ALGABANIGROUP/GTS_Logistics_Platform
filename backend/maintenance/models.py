@@ -90,6 +90,7 @@ class Incident(Base):
     remediation_actions = relationship(
         lambda: RemediationAction,
         back_populates="incident",
+        overlaps="incident,remediation_actions",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
@@ -126,6 +127,7 @@ class RemediationAction(Base):
     incident = relationship(
         lambda: Incident,
         back_populates="remediation_actions",
+        overlaps="incident,remediation_actions",
         passive_deletes=True,
     )
 

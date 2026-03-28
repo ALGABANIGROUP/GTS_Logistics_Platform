@@ -9,13 +9,19 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
+from backend.core.settings import settings
 from backend.database.config import get_db
 from backend.models.user import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-SECRET_KEY = 'your_secret_key'
+DEFAULT_SECRET_KEY = 'dev-secret-change-me'
+SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or DEFAULT_SECRET_KEY
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Session timeout: 15 minutes of inactivity
+
+if (os.getenv("ENVIRONMENT") or settings.APP_ENV or "development").strip().lower() in {"production", "prod"}:
+    if SECRET_KEY == DEFAULT_SECRET_KEY:
+        raise RuntimeError("JWT secret must not use the development default in production.")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

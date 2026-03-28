@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, date
 from typing import List, Optional, Literal
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from uuid import UUID
 
 
@@ -84,8 +84,7 @@ class PartnerRead(BaseModel):
     joined_at: datetime
     last_login_at: Optional[datetime]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerListResponse(BaseModel):
@@ -109,8 +108,7 @@ class PartnerClientRead(BaseModel):
     total_orders: int = 0
     total_revenue: float = 0.0
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerClientListResponse(BaseModel):
@@ -139,8 +137,7 @@ class PartnerRevenueRow(BaseModel):
     period_month: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerRevenueListResponse(BaseModel):
@@ -185,8 +182,7 @@ class PartnerPayoutRead(BaseModel):
     paid_at: Optional[datetime]
     payment_reference: Optional[str]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerPayoutListResponse(BaseModel):
