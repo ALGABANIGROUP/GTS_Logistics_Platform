@@ -660,14 +660,14 @@ def generate_unique_id(route: APIRoute) -> str:
 
 ENABLE_OPENAPI = os.getenv("ENABLE_OPENAPI", "false").lower() in ("1", "true", "yes")
 
-
 @asynccontextmanager
 async def app_lifespan(_app: FastAPI):
-    await on_startup()
-    try:
+    late_lifespan = globals().get("_resolved_app_lifespan")
+    if late_lifespan is None:
         yield
-    finally:
-        await on_shutdown()
+        return
+    async with late_lifespan(_app):
+        yield
 
 
 app = FastAPI(
@@ -1620,6 +1620,7 @@ _docs_task: Optional[asyncio.Task] = None
 _legal_updates_task: Optional[asyncio.Task] = None
 _learning_scheduler_task: Optional[asyncio.Task] = None
 _maintenance_auto_repair_task: Optional[asyncio.Task] = None
+_telegram_task: Optional[asyncio.Task] = None
 
 
 async def _ops_monitor_loop():
@@ -1658,7 +1659,7 @@ async def _docs_scheduler_loop():
 
 # ---------------- Startup/Shutdown ----------------
 async def on_startup():
-    global _vdb, _ops_task, _docs_task, _legal_updates_task, _learning_scheduler_task, _maintenance_auto_repair_task
+    global _vdb, _ops_task, _docs_task, _legal_updates_task, _learning_scheduler_task, _maintenance_auto_repair_task, _telegram_task
     
     # -------- Priority 1: Initialize Sentry --------
     if init_sentry is not None:
@@ -1993,7 +1994,7 @@ async def on_startup():
         telegram_enabled = os.getenv("TELEGRAM_ENABLED", "false").lower() in ("1", "true", "yes")
         if telegram_enabled:
             from telegram_bot import start_telegram_bot
-            asyncio.create_task(start_telegram_bot())
+            _telegram_task = asyncio.create_task(start_telegram_bot())
             log.info("[startup] Telegram bot started")
         else:
             log.info("[startup] Telegram bot disabled")
@@ -2035,7 +2036,7 @@ async def on_shutdown():
 
 
 @asynccontextmanager
-async def app_lifespan(_app: FastAPI):
+async def _resolved_app_lifespan(_app: FastAPI):
     await on_startup()
     try:
         yield
@@ -2064,9 +2065,11 @@ except Exception as e:
 if system_readiness_router:
     app.include_router(system_readiness_router)
 try:
-    if auth_router:
-        # auth_router defines "/auth/*" paths, so mount at /api/v1
+    if auth_router and not auth_me_router:
+        # Mount legacy auth routes only when the modern /api/v1/auth router is unavailable.
         app.include_router(auth_router, prefix="/api/v1")
+    elif auth_router and auth_me_router:
+        log.info("[main] legacy auth_router skipped to avoid /api/v1/auth route shadowing")
 except Exception as e:
     log.warning("[router] auth mount failed: %s", e)
 
