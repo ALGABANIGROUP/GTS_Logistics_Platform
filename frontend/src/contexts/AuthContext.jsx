@@ -81,6 +81,40 @@ const getApiErrorMessage = (error, fallbackMessage) =>
     error?.message ||
     fallbackMessage;
 
+const getApiErrorDetail = (error) => error?.response?.data?.detail;
+
+const getFieldErrors = (detail) => {
+    if (!detail) {
+        return {};
+    }
+
+    if (Array.isArray(detail)) {
+        return detail.reduce((acc, item) => {
+            const field = Array.isArray(item?.loc) ? item.loc[item.loc.length - 1] : null;
+            const message = item?.msg;
+            if (field && message) {
+                acc[field] = message;
+            }
+            return acc;
+        }, {});
+    }
+
+    if (typeof detail === "object") {
+        if (detail.field && detail.message) {
+            return { [detail.field]: detail.message };
+        }
+
+        return Object.entries(detail).reduce((acc, [key, value]) => {
+            if (typeof value === "string") {
+                acc[key] = value;
+            }
+            return acc;
+        }, {});
+    }
+
+    return {};
+};
+
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
@@ -235,7 +269,28 @@ export const AuthProvider = ({ children }) => {
             return { success: true, user: userPayload };
         } catch (error) {
             console.error("Login error:", error);
-            throw new Error(getApiErrorMessage(error, "Invalid email or password"));
+            const detail = getApiErrorDetail(error);
+            const status = error?.response?.status || 0;
+            let message = getApiErrorMessage(error, "Invalid email or password");
+
+            if (status === 401) {
+                message = "Invalid email or password";
+            } else if (
+                (status === 400 || status === 403) &&
+                String(message).toLowerCase() === "account is not active"
+            ) {
+                message = "Account is disabled";
+            } else if (status === 422 && !message) {
+                message = "Email and password are required";
+            }
+
+            return {
+                success: false,
+                status,
+                detail,
+                fieldErrors: getFieldErrors(detail),
+                message,
+            };
         }
     };
 
