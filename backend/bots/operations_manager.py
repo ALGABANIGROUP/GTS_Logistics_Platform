@@ -1,11 +1,16 @@
 """
-Operations Manager Bot - Enhanced operations management
-Handles task assignment, shipment tracking, and operational issues
+Operations Manager Bot - enhanced operations orchestration.
+
+This bot now also coordinates external email-ready reports on behalf of
+department bots and enforces a lightweight RACI gate for outbound delivery.
 """
 
 import logging
 from datetime import datetime
 from typing import Dict, Any, List, Optional
+
+from backend.services.email_dispatcher import dispatch_email
+from backend.services.report_raci import can_send_report, requires_approval
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +45,8 @@ class OperationsManagerBot:
             return await self._handle_incident(payload)
         elif action == "performance_report":
             return await self._get_performance_report()
+        elif action == "coordinate_external_report":
+            return await self._coordinate_external_report(payload)
         else:
             return self._get_dashboard()
 
@@ -158,6 +165,54 @@ class OperationsManagerBot:
             "action": "performance_report"
         }
 
+    async def _coordinate_external_report(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Coordinate outbound report delivery using a simple RACI policy."""
+        report_type = str(payload.get("report_type") or "daily_operations_report").strip().lower()
+        source_bot = str(payload.get("source_bot") or "operations_manager").strip().lower()
+        recipients = payload.get("to") or payload.get("recipients") or []
+        subject = str(payload.get("subject") or f"{report_type.replace('_', ' ').title()}").strip()
+        body = str(payload.get("body") or "No report content supplied.").strip()
+
+        if not recipients:
+            return {"success": False, "error": "No recipients provided", "action": "coordinate_external_report"}
+
+        if not can_send_report(report_type, source_bot):
+            return {
+                "success": False,
+                "error": f"{source_bot} is not allowed to send {report_type}",
+                "requires_approval": True,
+                "action": "coordinate_external_report",
+            }
+
+        approval_required = requires_approval(report_type, source_bot)
+        cc = ["operations@gabanilogistics.com"] if source_bot != "operations_manager" else []
+        if approval_required:
+            cc.append("operations@gabanilogistics.com")
+
+        success = await dispatch_email(
+            bot_name="operations_manager",
+            to_email=recipients,
+            subject=subject,
+            body=body,
+            html=bool(payload.get("html", False)),
+            plain_text=None if payload.get("html", False) else body,
+            cc=cc,
+            audit_context={
+                "report_type": report_type,
+                "source_bot": source_bot,
+                "approval_required": approval_required,
+            },
+        )
+
+        return {
+            "success": success,
+            "report_type": report_type,
+            "source_bot": source_bot,
+            "approval_required": approval_required,
+            "coordinator": self.name,
+            "action": "coordinate_external_report",
+        }
+
     def _get_dashboard(self) -> Dict[str, Any]:
         """Return operations dashboard"""
         return {
@@ -171,7 +226,8 @@ class OperationsManagerBot:
                 "resource_optimization - Optimize resources",
                 "fleet_status - Fleet overview",
                 "incident_response - Handle incidents",
-                "performance_report - Performance metrics"
+                "performance_report - Performance metrics",
+                "coordinate_external_report - Coordinate outbound report delivery",
             ],
             "action": "dashboard"
         }

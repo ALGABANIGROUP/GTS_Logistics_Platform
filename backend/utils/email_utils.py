@@ -29,7 +29,7 @@ def _load_platform_logo_base64() -> str:
 _PLATFORM_LOGO_BASE64 = _load_platform_logo_base64()
 
 
-BOT_SENDERS = {
+BOT_EMAIL_MAPPING = {
     "operations": "operations@gabanilogistics.com",
     "operations_manager": "operations@gabanilogistics.com",
     "operations_manager_bot": "operations@gabanilogistics.com",
@@ -44,7 +44,7 @@ BOT_SENDERS = {
     "intel": "intel@gabanilogistics.com",
     "intelligence_bot": "strategy@gabanilogistics.com",
     "executive_intelligence": "strategy@gabanilogistics.com",
-    "general_manager": "gm@gabanilogistics.com",
+    "general_manager": "operations@gabanilogistics.com",
     "strategy_advisor": "strategy@gabanilogistics.com",
     "finance": "finance@gabanilogistics.com",
     "finance_bot": "finance@gabanilogistics.com",
@@ -69,11 +69,21 @@ BOT_SENDERS = {
     "system_admin": "admin@gabanilogistics.com",
     "system_manager_bot": "admin@gabanilogistics.com",
     "maintenance_dev": "devops@gabanilogistics.com",
-    "partner_manager": "partners@gabanilogistics.com",
+    "partner_manager": "investments@gabanilogistics.com",
+    "partner_bot": "investments@gabanilogistics.com",
     "security": "security@gabanistore.com",
     "security_manager": "security@gabanistore.com",
     "security_manager_bot": "security@gabanistore.com",
+    "system_bot": "admin@gabanilogistics.com",
+    "freight_bot": "freight@gabanilogistics.com",
+    "safety_bot": "safety@gabanilogistics.com",
+    "accounts": "accounts@gabanilogistics.com",
+    "ai_dispatcher": "aidispatcher@gabanistore.com",
+    "aidispatcher": "aidispatcher@gabanistore.com",
 }
+
+# Backward-compatible alias used by older routes and scripts.
+BOT_SENDERS = BOT_EMAIL_MAPPING
 
 
 def _normalize_recipients(to: Sequence[str] | str) -> list[str]:
@@ -194,10 +204,15 @@ def _resolve_sender_credentials(
 
 def resolve_bot_email(bot_name: str) -> str:
     key = (bot_name or "").strip().lower().replace("-", "_").replace(" ", "_")
-    resolved = BOT_SENDERS.get(key)
+    resolved = BOT_EMAIL_MAPPING.get(key)
     if resolved:
         return resolved
     return settings.SMTP_FROM or settings.SMTP_USER or "no-reply@gabanilogistics.com"
+
+
+def get_bot_email(bot_name: str) -> str:
+    """Return the approved sender mailbox for a bot."""
+    return resolve_bot_email(bot_name)
 
 
 def send_email(

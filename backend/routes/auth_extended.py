@@ -302,12 +302,9 @@ def _build_reset_link(token: str) -> str:
 
 def _send_reset_email(to_email: str, reset_link: str) -> None:
     try:
-        from backend.utils.email_utils import send_email  # type: ignore
+        from backend.services.email_dispatcher import dispatch_email_sync  # type: ignore
     except Exception:
-        try:
-            from utils.email_utils import send_email  # type: ignore
-        except Exception:
-            send_email = None  # type: ignore
+        dispatch_email_sync = None  # type: ignore
 
     subject = "GTS Password Reset"
     body = f"""<!DOCTYPE html>
@@ -325,13 +322,15 @@ def _send_reset_email(to_email: str, reset_link: str) -> None:
   </body>
 </html>"""
 
-    if send_email:
-        send_email(
+    if dispatch_email_sync:
+        dispatch_email_sync(
+            bot_name="operations_manager",
+            to_email=to_email,
             subject=subject,
             body=body,
-            to=[to_email],
             html=True,
-            from_email=PASSWORD_RESET_SENDER,
+            plain_text=f"Reset your password using this link: {reset_link}",
+            audit_context={"category": "password_reset"},
         )
         return
 
@@ -345,12 +344,9 @@ def _send_reset_email(to_email: str, reset_link: str) -> None:
 
 def _send_password_changed_email(to_email: str) -> None:
     try:
-        from backend.utils.email_utils import send_email  # type: ignore
+        from backend.services.email_dispatcher import dispatch_email_sync  # type: ignore
     except Exception:
-        try:
-            from utils.email_utils import send_email  # type: ignore
-        except Exception:
-            send_email = None  # type: ignore
+        dispatch_email_sync = None  # type: ignore
 
     subject = "Your password was changed"
     body = """<!DOCTYPE html>
@@ -362,13 +358,15 @@ def _send_password_changed_email(to_email: str) -> None:
   </body>
 </html>"""
 
-    if send_email:
-        send_email(
+    if dispatch_email_sync:
+        dispatch_email_sync(
+            bot_name="operations_manager",
+            to_email=to_email,
             subject=subject,
             body=body,
-            to=[to_email],
             html=True,
-            from_email=PASSWORD_RESET_SENDER,
+            plain_text="Your GTS account password was changed.",
+            audit_context={"category": "password_change_notice"},
         )
         return
 
@@ -380,19 +378,23 @@ def _send_password_changed_email(to_email: str) -> None:
 
 def _send_admin_reset_requested_email(target_email: str) -> None:
     try:
-        from backend.utils.email_utils import send_admin_notification  # type: ignore
+        from backend.services.email_dispatcher import dispatch_email_sync  # type: ignore
     except Exception:
-        try:
-            from utils.email_utils import send_admin_notification  # type: ignore
-        except Exception:
-            send_admin_notification = None  # type: ignore
+        dispatch_email_sync = None  # type: ignore
 
-    if not send_admin_notification:
+    if not dispatch_email_sync:
         return
 
     subject = "Password reset requested"
     body = f"Password reset requested for account: {target_email}"
-    send_admin_notification(subject=subject, body=body, html=False, bot_name="service")
+    dispatch_email_sync(
+        bot_name="operations_manager",
+        to_email=os.getenv("ADMIN_EMAIL") or PASSWORD_RESET_SENDER,
+        subject=subject,
+        body=body,
+        html=False,
+        audit_context={"category": "password_reset_admin_notice", "requested_email": target_email},
+    )
 
 
 def _password_policy_error(password: str) -> Optional[str]:
