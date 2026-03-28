@@ -10,8 +10,8 @@ const paymentApi = {
             const response = await axiosClient.post(`${API_BASE}/create`, {
                 invoice_id: data.invoice_id,
                 amount: data.amount,
-                currency: data.currency || 'USD',
-                gateway: data.gateway || 'stripe',
+                currency: data.currency || 'SDG',
+                gateway: data.gateway || 'sudapay',
                 description: data.description,
             });
 
@@ -186,6 +186,7 @@ const paymentApi = {
 
     getGatewayName(gateway) {
         const gateways = {
+            sudapay: 'SUDAPAY',
             stripe: 'Stripe',
             paypal: 'PayPal',
         };

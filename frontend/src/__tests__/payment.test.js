@@ -140,6 +140,63 @@ describe('paymentApi helpers', () => {
         expect(history).toEqual([]);
     });
 
+    it('aggregates payment stats from user history items', async () => {
+        const historySpy = vi.spyOn(paymentApi, 'getUserHistory').mockResolvedValue({
+            items: [
+                {
+                    id: 1,
+                    amount: 100,
+                    status: 'completed',
+                    payment_gateway: 'sudapay',
+                    currency: 'SDG',
+                    created_at: '2026-03-28T00:00:00Z',
+                    reference_id: 'REF-1',
+                },
+                {
+                    id: 2,
+                    amount: 50,
+                    status: 'processing',
+                    gateway: 'stripe',
+                    currency: 'USD',
+                    created_at: '2026-03-28T00:05:00Z',
+                    reference_id: 'REF-2',
+                },
+            ],
+        });
+
+        const stats = await paymentApi.getStats({ limit: 5 });
+
+        expect(historySpy).toHaveBeenCalledWith({ limit: 5 });
+        expect(stats.total_payments).toBe(2);
+        expect(stats.total_amount).toBe(150);
+        expect(stats.success_rate).toBe(50);
+        expect(stats.pending_invoices).toBe(1);
+        expect(stats.recent_payments).toHaveLength(2);
+        expect(stats.recent_payments[0].method).toBe('SUDAPAY');
+        expect(stats.payment_methods).toEqual([
+            { name: 'SUDAPAY', usage_count: 1 },
+            { name: 'STRIPE', usage_count: 1 },
+        ]);
+
+        historySpy.mockRestore();
+    });
+
+    it('returns empty stats when user history has no items', async () => {
+        const historySpy = vi.spyOn(paymentApi, 'getUserHistory').mockResolvedValue([]);
+
+        const stats = await paymentApi.getStats();
+
+        expect(stats.total_payments).toBe(0);
+        expect(stats.total_amount).toBe(0);
+        expect(stats.success_rate).toBe(0);
+        expect(stats.pending_invoices).toBe(0);
+        expect(stats.recent_payments).toEqual([]);
+        expect(stats.payment_methods).toEqual([]);
+        expect(stats.items).toEqual([]);
+
+        historySpy.mockRestore();
+    });
+
     it('handles sudapay success and failure handlers', async () => {
         const getSpy = vi.spyOn(paymentApi, 'get').mockResolvedValue({ status: 'completed' });
 
