@@ -1,0 +1,26 @@
+name: No Mock/Demo Code Check
+
+on:
+    pull_request:
+        branches: [main, develop]
+    push:
+        branches: [main]
+
+jobs:
+    check-mock-code:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.11"
+
+            - name: Run no-mock guard
+              run: |
+                  python scripts/no_mock_check.py --report docs/mock_scan_report_ci.json
+
+            - name: Success message
+              run: echo "All checks passed - no mock/demo code found!"
