@@ -1,6 +1,13 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import pytest
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import backend.bots as bots_pkg
 from backend import main
@@ -81,3 +88,7 @@ async def test_list_bots_uses_imported_capabilities(monkeypatch: pytest.MonkeyPa
     assert result["count"] == 1
     assert result["bots"][0]["bot_key"] == "general_manager"
     assert result["bots"][0]["display_name"] == ai_bots_routes.BOT_CAPABILITIES["general_manager"]["name"]
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))
