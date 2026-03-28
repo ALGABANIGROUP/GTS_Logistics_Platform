@@ -8,6 +8,7 @@ import asyncio
 from typing import List, Dict, Optional
 from datetime import datetime
 import logging
+import os
 from math import radians, sin, cos, sqrt, atan2
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class TrafficAnalyzer:
     """Advanced traffic analysis and prediction engine"""
     
     def __init__(self):
-        self.api_key = "demo_traffic_key"
+        self.api_key = os.getenv("TRAFFIC_API_KEY", "").strip()
         self.base_url = "https://api.trafficdata.com/v1"
         self.cached_data = {}
         self.cache_expiry = {}

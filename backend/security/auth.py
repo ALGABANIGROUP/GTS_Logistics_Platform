@@ -43,7 +43,7 @@ except Exception:
 # ---------------------------------------------------------------------
 # Settings (Access + Refresh)
 # ---------------------------------------------------------------------
-DEFAULT_JWT_SECRET = "dev-secret-change-me"
+DEFAULT_JWT_SECRET = "development-placeholder-not-for-production"
 
 JWT_SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or DEFAULT_JWT_SECRET
 JWT_ALGORITHM = settings.JWT_ALGORITHM

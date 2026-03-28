@@ -38,11 +38,11 @@ SIGNING_SECRET = (
     os.getenv("DOCUMENT_SIGNING_SECRET")
     or os.getenv("JWT_SECRET_KEY")
     or os.getenv("SECRET_KEY")
-    or "dev-documents-secret-change-me"
+    or "development-documents-placeholder-not-for-production"
 )
 
 if (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}:
-    if SIGNING_SECRET == "dev-documents-secret-change-me":
+    if SIGNING_SECRET == "development-documents-placeholder-not-for-production":
         raise RuntimeError("DOCUMENT_SIGNING_SECRET (or platform secret) must be configured in production.")
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])

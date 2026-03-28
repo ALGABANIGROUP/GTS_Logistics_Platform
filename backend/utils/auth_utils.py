@@ -14,7 +14,7 @@ from backend.database.config import get_db
 from backend.models.user import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-DEFAULT_SECRET_KEY = 'dev-secret-change-me'
+DEFAULT_SECRET_KEY = 'development-placeholder-not-for-production'
 SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or DEFAULT_SECRET_KEY
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Session timeout: 15 minutes of inactivity

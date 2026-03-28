@@ -21,11 +21,11 @@ class UnifiedAuthSystem:
     
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        self.SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or "dev-secret-change-me"
+        self.SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or "development-placeholder-not-for-production"
         self.ALGORITHM = "HS256"
         self.ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Session timeout: 15 minutes of inactivity
         env = (settings.APP_ENV or "development").strip().lower()
-        if env in {"production", "prod"} and self.SECRET_KEY == "dev-secret-change-me":
+        if env in {"production", "prod"} and self.SECRET_KEY == "development-placeholder-not-for-production":
             raise RuntimeError("Unified auth secret must not use the development default in production.")
     
     def hash_password(self, password: str) -> str:

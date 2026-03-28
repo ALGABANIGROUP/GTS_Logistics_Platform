@@ -8,7 +8,7 @@ from backend.models.user import User
 from backend.database.config import get_db
 from backend.core.settings import settings
 import os
-DEFAULT_SECRET_KEY = 'dev-secret-change-me'
+DEFAULT_SECRET_KEY = 'development-placeholder-not-for-production'
 JWT_SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or os.getenv('JWT_SECRET_KEY', DEFAULT_SECRET_KEY)
 JWT_ALGORITHM = 'HS256'
 
