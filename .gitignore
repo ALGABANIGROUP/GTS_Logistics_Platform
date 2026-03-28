@@ -60,6 +60,7 @@ build/
 .DS_Store
 Thumbs.db
 desktop.ini
+GTS_Logistics_Platform/
 
 # --- Render / Neon / Host-specific ---
 *.render.log
