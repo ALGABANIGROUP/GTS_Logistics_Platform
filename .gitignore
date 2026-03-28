@@ -104,6 +104,7 @@ backups/
 # --- Local sensitive scratch files ---
 secrets.txt
 _leak_blob.txt
+backend/routes/auth_old.py
 
 # --- Uploads ---
 uploads/
