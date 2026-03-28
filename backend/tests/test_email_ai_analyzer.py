@@ -121,8 +121,13 @@ def test_detect_language_returns_arabic_for_arabic_text(mock_db):
         id=1,
         mailbox_id=1,
         direction="inbound",
-        subject="طلب عاجل",
-        body_preview="يرجى مراجعة الفاتورة المتأخرة اليوم",
+        subject="\u0637\u0644\u0628 \u0639\u0627\u062c\u0644",
+        body_preview=(
+            "\u064a\u0631\u062c\u0649 \u0645\u0631\u0627\u062c\u0639\u0629 "
+            "\u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 "
+            "\u0627\u0644\u0645\u062a\u0623\u062e\u0631\u0629 "
+            "\u0627\u0644\u064a\u0648\u0645"
+        ),
         from_addr="test@example.com",
     )
     analyzer = EmailAIAnalyzer(mock_db, FakeChatService(configured=False))
