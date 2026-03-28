@@ -388,7 +388,7 @@ export default function PlatformExpenses() {
 
     const runFileDelete = async (expenseId) => {
         try {
-            await axiosClient.delete(`/api/v1/platform/expenses/${expenseId}/delete-file`);
+            await axiosClient.delete(`/api/v1/platform/expenses/${expenseId}/attachment`);
             setFeedback({ type: "success", message: "Attachment deleted." });
             fetchExpenses();
         } catch (err) {

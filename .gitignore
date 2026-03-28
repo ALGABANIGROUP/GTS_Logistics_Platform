@@ -88,6 +88,7 @@ htmlcov/
 *.swp
 *.swo
 *.tmp
+.tmp_run_uvicorn.py
 # --- Compiled / Runtime artifacts ---
 *.exe
 *.pem
@@ -99,6 +100,10 @@ secrets/
 # --- Backups / Dumps ---
 backups/
 *.sql
+
+# --- Local sensitive scratch files ---
+secrets.txt
+_leak_blob.txt
 
 # --- Uploads ---
 uploads/

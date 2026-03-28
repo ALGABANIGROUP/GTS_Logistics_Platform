@@ -453,6 +453,15 @@ async def delete_expense_attachment(
         raise HTTPException(status_code=500, detail=f"Failed to delete attachment: {str(e)}")
 
 
+@router.delete("/expenses/{expense_id}/delete-file", status_code=204, include_in_schema=False)
+async def delete_expense_attachment_legacy(
+    expense_id: int,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Backward-compatible alias for older clients that still call delete-file."""
+    return await delete_expense_attachment(expense_id=expense_id, session=session)
+
+
 @router.post("/expenses/ai-extract-invoice", response_model=dict)
 async def extract_invoice_data(
     files: List[UploadFile] = File(...),
