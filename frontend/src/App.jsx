@@ -8,6 +8,7 @@ import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
 import RequireModule from "./components/RequireModule";
 import RequireFeature from "./components/RequireFeature";
+import CookieConsent from "./components/CookieConsent";
 import NotFound from "./pages/NotFound";
 import PageTitleUpdater from "./components/PageTitleUpdater";
 
@@ -337,6 +338,7 @@ const App = () => {
             pauseOnHover
             theme="light"
           />
+          <CookieConsent />
 
           <div className="app-root glass-page">
             <Routes>

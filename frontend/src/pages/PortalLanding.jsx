@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
-import CookieConsent from '../components/CookieConsent';
 import LiveLoadsTicker from '../components/LiveLoadsTicker';
 import MobileAppPromo from '../components/MobileAppPromo';
 import TrustBadges from '../components/TrustBadges';
@@ -367,9 +366,6 @@ const PortalLanding = () => {
 
         {/* Chat Support Button */}
         <ChatSupportButton />
-
-        {/* Cookie Consent */}
-        <CookieConsent />
       </div>
     </div>
   );
