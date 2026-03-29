@@ -529,8 +529,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="ai.basic">
-                          <AIBotsHubDashboard />
-                        </RequireFeature>
+                        <AIBotsHubDashboard />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -901,8 +901,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="ai.basic">
-                          <AIBotControl />
-                        </RequireFeature>
+                        <AIBotControl />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1269,8 +1269,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="tms.core">
-                          <Shipments />
-                        </RequireFeature>
+                        <Shipments />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1281,8 +1281,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="tms.core">
-                          <AddShipment />
-                        </RequireFeature>
+                        <AddShipment />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1293,8 +1293,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="dispatcher.core">
-                          <Dispatch />
-                        </RequireFeature>
+                        <Dispatch />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1305,8 +1305,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="dispatcher.core">
-                          <Drivers />
-                        </RequireFeature>
+                        <Drivers />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
@@ -1317,8 +1317,8 @@ const App = () => {
                   <RequireAuth>
                     <Layout>
                       <RequireFeature featureKey="loadboard.core">
-                          <LoadBoardMarket />
-                        </RequireFeature>
+                        <LoadBoardMarket />
+                      </RequireFeature>
                     </Layout>
                   </RequireAuth>
                 }
