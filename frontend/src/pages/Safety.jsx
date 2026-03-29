@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 function Safety() {
     const [incidents, setIncidents] = useState([]);
@@ -7,7 +10,7 @@ function Safety() {
     useEffect(() => {
         const fetchIncidents = async () => {
             try {
-                const response = await fetch("http://127.0.0.1:8000/safety/incidents");
+                const response = await fetch(`${API_ROOT}/safety/incidents`);
                 if (response.ok) {
                     const data = await response.json();
                     setIncidents(data);

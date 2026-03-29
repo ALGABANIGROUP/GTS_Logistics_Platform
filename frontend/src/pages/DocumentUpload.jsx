@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import InvoiceAIUpload from "../components/InvoiceAIUpload";
+import { API_BASE_URL } from "../config/env";
 
-const API_BASE = typeof window !== "undefined" ? "" : "http://localhost:8000";
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const getToken = () =>
   (typeof window !== "undefined" && (localStorage.getItem("gts_token") || localStorage.getItem("access_token"))) || "";
@@ -35,7 +36,7 @@ export default function DocumentUpload() {
   const uploadFile = async () => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch(`${API_BASE}/documents/upload-file/`, {
+    const res = await fetch(`${API_ROOT}/documents/upload-file/`, {
       method: "POST",
       headers: { ...authHeaders() },
       body: fd,
@@ -60,7 +61,7 @@ export default function DocumentUpload() {
       notify_before_days: Number(notifyDays) || 7,
       ...(owner_id ? { owner_id } : {}),
     };
-    const res = await fetch(`${API_BASE}/documents/`, {
+    const res = await fetch(`${API_ROOT}/documents/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

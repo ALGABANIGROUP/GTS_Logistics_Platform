@@ -93,7 +93,9 @@
     </div>
 
     <script>
-        const backendUrl = 'http://127.0.0.1:8000';
+        const backendUrl = window.location.hostname.endsWith('gtsdispatcher.com')
+            ? 'https://api.gtsdispatcher.com'
+            : '';
 
         function showResult(data, error = false) {
             const resultDiv = document.getElementById('result');

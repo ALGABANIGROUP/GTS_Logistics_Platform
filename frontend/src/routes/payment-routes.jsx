@@ -270,7 +270,7 @@ export {
  *
  * Environment Variables Needed:
  * ═══════════════════════════════════════
- * REACT_APP_API_BASE_URL=http://localhost:8000
+ * VITE_API_BASE_URL=https://api.gtsdispatcher.com
  * REACT_APP_PAYMENT_GATEWAY=stripe
  * REACT_APP_DEFAULT_CURRENCY=USD
  * 

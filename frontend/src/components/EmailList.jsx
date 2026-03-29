@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const EmailList = ({ onSelect }) => {
   const [emails, setEmails] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/emails")
+    fetch(`${API_ROOT}/api/emails`)
       .then((res) => res.json())
       .then((data) => setEmails(data.reverse()));
   }, []);

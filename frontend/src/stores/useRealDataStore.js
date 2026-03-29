@@ -7,6 +7,9 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 export const useRealDataStore = create(
     persist(
@@ -31,7 +34,7 @@ export const useRealDataStore = create(
                 set({ loadingReports: true, error: null });
                 try {
                     const token = localStorage.getItem("access_token");
-                    const response = await fetch("http://127.0.0.1:8000/api/v1/reports/real-data", {
+                    const response = await fetch(`${API_ROOT}/api/v1/reports/real-data`, {
                         headers: {
                             "Authorization": `Bearer ${token || ""}`,
                             "Content-Type": "application/json",
@@ -61,7 +64,7 @@ export const useRealDataStore = create(
                 set({ loadingAnalytics: true, error: null });
                 try {
                     const token = localStorage.getItem("access_token");
-                    const response = await fetch("http://127.0.0.1:8000/api/v1/reports/analytics", {
+                    const response = await fetch(`${API_ROOT}/api/v1/reports/analytics`, {
                         headers: {
                             "Authorization": `Bearer ${token || ""}`,
                             "Content-Type": "application/json",
@@ -108,7 +111,7 @@ export const useRealDataStore = create(
                 set({ loadingIntelligence: true, error: null });
                 try {
                     const token = localStorage.getItem("access_token");
-                    const response = await fetch("http://127.0.0.1:8000/api/v1/reports/shipments-market-intelligence", {
+                    const response = await fetch(`${API_ROOT}/api/v1/reports/shipments-market-intelligence`, {
                         headers: {
                             "Authorization": `Bearer ${token || ""}`,
                             "Content-Type": "application/json",

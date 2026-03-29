@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const AIReports = () => {
   const [reports, setReports] = useState([]);
@@ -8,7 +11,7 @@ const AIReports = () => {
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/ai/general/reports/${type}`);
+      const res = await fetch(`${API_ROOT}/ai/general/reports/${type}`);
       if (!res.ok) throw new Error("Failed to load reports");
       const data = await res.json();
       setReports(data);

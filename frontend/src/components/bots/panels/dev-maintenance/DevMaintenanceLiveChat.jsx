@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Code, Wrench, Terminal } from 'lucide-react';
+import { API_BASE_URL } from '../../../../config/env';
+
+const API_ROOT = String(API_BASE_URL || '').replace(/\/+$/, '');
 
 const DevMaintenanceLiveChat = () => {
     const [messages, setMessages] = useState([
@@ -38,8 +41,7 @@ const DevMaintenanceLiveChat = () => {
 
         try {
             // Call real AI API with full URL
-            const backendURL = 'http://127.0.0.1:8000';
-            const endpoint = `${backendURL}/api/v1/ai/maintenance/chat/ask`;
+            const endpoint = `${API_ROOT}/api/v1/ai/maintenance/chat/ask`;
 
             console.log('📤 Sending AI request to:', endpoint);
             console.log('📝 Message:', inputMessage);

@@ -299,17 +299,17 @@
  * ================================================================
  * 
  * Hub Dashboard:
- * http://localhost:5173/ai-bots/hub
+ * https://www.gtsdispatcher.com/ai-bots/hub
  * 
  * Individual Bots:
- * http://localhost:5173/ai-bots/general-manager
- * http://localhost:5173/ai-bots/freight-bookings
- * http://localhost:5173/ai-bots/data-coordinator
- * http://localhost:5173/ai-bots/finance-intelligence
- * http://localhost:5173/ai-bots/security-question
- * http://localhost:5173/ai-bots/sales-intelligence
- * http://localhost:5173/ai-bots/legal-counsel
- * http://localhost:5173/ai-bots/partner-management
+ * https://www.gtsdispatcher.com/ai-bots/general-manager
+ * https://www.gtsdispatcher.com/ai-bots/freight-bookings
+ * https://www.gtsdispatcher.com/ai-bots/data-coordinator
+ * https://www.gtsdispatcher.com/ai-bots/finance-intelligence
+ * https://www.gtsdispatcher.com/ai-bots/security-question
+ * https://www.gtsdispatcher.com/ai-bots/sales-intelligence
+ * https://www.gtsdispatcher.com/ai-bots/legal-counsel
+ * https://www.gtsdispatcher.com/ai-bots/partner-management
  * 
  * ================================================================
  * NEXT STEPS

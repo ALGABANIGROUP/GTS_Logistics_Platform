@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import TransportMap from './TransportMap';
 import './TransportDashboard.css';
+import { API_BASE_URL } from '../../config/env';
+
+const API_ROOT = String(API_BASE_URL || '').replace(/\/+$/, '');
 
 const TransportDashboard = () => {
     const [shipments, setShipments] = useState([]);
@@ -26,8 +29,8 @@ const TransportDashboard = () => {
         try {
             // Try to fetch from API
             const [shipmentsRes, trucksRes] = await Promise.all([
-                fetch('http://localhost:8000/api/v1/transport/shipments'),
-                fetch('http://localhost:8000/api/v1/transport/trucks')
+                fetch(`${API_ROOT}/api/v1/transport/shipments`),
+                fetch(`${API_ROOT}/api/v1/transport/trucks`)
             ]);
 
             if (shipmentsRes.ok && trucksRes.ok) {

@@ -7,6 +7,9 @@ import axios from "axios";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 // Fix for default markers not showing in leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -94,7 +97,7 @@ const FreightBrokerControl = () => {
   const fetchLoads = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/v1/freight/canadian-loads', {
+      const response = await fetch(`${API_ROOT}/api/v1/freight/canadian-loads`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

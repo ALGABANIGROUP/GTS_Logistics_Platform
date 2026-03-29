@@ -6,8 +6,20 @@ import {
   LineChart, Line, CartesianGrid, Legend
 } from "recharts";
 import Navbar from "../components/Navbar"; // Top Navigation Bar
+import { API_BASE_URL } from "../config/env";
 import { getDocumentLogoDataUrl } from "../utils/documentBranding";
 import { exportWorkbookXml, openPrintDocument } from "../utils/exportUtils";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
+const FREIGHT_UPDATES_WS_URL = (() => {
+  try {
+    const parsed = new URL(API_ROOT);
+    const protocol = parsed.protocol === "https:" ? "wss" : "ws";
+    return `${protocol}://${parsed.host}/ws/freight/updates`;
+  } catch {
+    return "";
+  }
+})();
 
 const CustomerDashboard = () => {
   // State declarations
@@ -40,12 +52,14 @@ const CustomerDashboard = () => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    socketRef.current = new WebSocket("ws://127.0.0.1:8000/ws/freight/updates");
+    if (!FREIGHT_UPDATES_WS_URL) return undefined;
+
+    socketRef.current = new WebSocket(FREIGHT_UPDATES_WS_URL);
     socketRef.current.onmessage = (event) => {
       const liveData = JSON.parse(event.data);
       setData((prev) => prev ? { ...prev, ...liveData } : liveData);
     };
-    return () => socketRef.current.close();
+    return () => socketRef.current?.close();
   }, []);
 
   // Export dashboard data to Excel

@@ -5,8 +5,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
+import { API_BASE_URL } from "../../config/env";
 
 const BOT_KEY = "maintenance_dev";
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 // Tab definitions
 const CONTROL_TABS = [
@@ -202,7 +204,7 @@ export default function DevMaintenanceControlPanel({ mode = "active" }) {
         setLoading(true);
         try {
             let endpoint = "";
-            const baseURL = "http://127.0.0.1:8000";
+            const baseURL = API_ROOT;
 
             // Map action names to endpoints
             switch (action) {

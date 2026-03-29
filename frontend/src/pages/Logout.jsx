@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -7,7 +10,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/login", {
+      const response = await fetch(`${API_ROOT}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -24,7 +27,7 @@ const Login = () => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     document.body.classList.add('logout');
     return () => document.body.classList.remove('logout');
   }, []);

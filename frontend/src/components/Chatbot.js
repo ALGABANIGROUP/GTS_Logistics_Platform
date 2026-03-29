@@ -1,6 +1,9 @@
 // frontend/src/components/Chatbot.jsx
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const Chatbot = () => {
     const [query, setQuery] = useState("");
@@ -52,7 +55,7 @@ const Chatbot = () => {
 
         try {
             const token = localStorage.getItem("access_token");
-            const res = await fetch("http://127.0.0.1:8000/chatbot/consult", {
+            const res = await fetch(`${API_ROOT}/chatbot/consult`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

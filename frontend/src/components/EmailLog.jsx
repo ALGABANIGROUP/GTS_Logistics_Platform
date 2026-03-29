@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const EmailLog = () => {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/emails/logs")
+    fetch(`${API_ROOT}/emails/logs`)
       .then((res) => res.json())
       .then((data) => setLogs(data));
   }, []);

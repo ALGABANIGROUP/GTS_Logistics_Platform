@@ -16,7 +16,7 @@ function buildCallsWsUrl() {
     const proto = window.location.protocol === "https:" ? "wss" : "ws";
     return `${proto}://${window.location.host}/api/v1/ws/live`;
   }
-  return "ws://127.0.0.1:8000/api/v1/ws/live";
+  return "wss://api.gtsdispatcher.com/api/v1/ws/live";
 }
 
 function normalizeCallPayload(msg) {

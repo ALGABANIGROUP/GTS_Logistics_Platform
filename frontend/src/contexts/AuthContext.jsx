@@ -14,7 +14,7 @@ import {
 } from "../utils/authStorage";
 import { API_BASE_URL } from "../config/env";
 
-const API_URL = String(API_BASE_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+const API_URL = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 const AuthContext = createContext();
 

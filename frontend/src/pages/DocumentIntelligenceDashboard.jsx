@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { API_BASE_URL } from "../config/env";
 
-const API_BASE = typeof window !== "undefined" ? "" : "http://localhost:8000";
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
 
 export default function DocumentIntelligenceDashboard() {
   const [summary, setSummary] = useState({
@@ -29,8 +30,8 @@ export default function DocumentIntelligenceDashboard() {
 
     try {
       const [sRes, eRes] = await Promise.all([
-        fetch(`${API_BASE}/ai/documents/status`),
-        fetch(`${API_BASE}/ai/documents/expiring`),
+        fetch(`${API_ROOT}/ai/documents/status`),
+        fetch(`${API_ROOT}/ai/documents/expiring`),
       ]);
 
       if (!sRes.ok) {
@@ -66,7 +67,7 @@ export default function DocumentIntelligenceDashboard() {
     setError("");
 
     try {
-      const r = await fetch(`${API_BASE}/documents/notify-expiring/`, {
+      const r = await fetch(`${API_ROOT}/documents/notify-expiring/`, {
         method: "POST",
       });
 

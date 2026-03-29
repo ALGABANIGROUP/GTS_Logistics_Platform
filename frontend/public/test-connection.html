@@ -141,10 +141,10 @@
     <div class="container">
         <h2>System Information</h2>
         <div class="test-item">
-            <strong>Frontend URL:</strong> <span id="frontend-url">http://127.0.0.1:5173</span>
+            <strong>Frontend URL:</strong> <span id="frontend-url">Loading...</span>
         </div>
         <div class="test-item">
-            <strong>Backend URL:</strong> <span id="backend-url">http://127.0.0.1:8000</span>
+            <strong>Backend URL:</strong> <span id="backend-url">Loading...</span>
         </div>
         <div class="test-item">
             <strong>Current Origin:</strong> <span id="current-origin"></span>
@@ -177,16 +177,15 @@
         <div id="custom-output" class="output hidden"></div>
     </div>
     <script>
-        const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-            ? ""
-            : "http://127.0.0.1:8000";
+        const IS_PRODUCTION_HOST = window.location.hostname.endsWith("gtsdispatcher.com");
+        const BACKEND_URL = IS_PRODUCTION_HOST ? "https://api.gtsdispatcher.com" : "";
         const FRONTEND_URL = window.location.origin;
         const IS_USING_PROXY = BACKEND_URL === "";
 
         document.getElementById("current-origin").textContent = window.location.origin;
         document.getElementById("frontend-url").textContent = FRONTEND_URL;
         if (IS_USING_PROXY) {
-            document.getElementById("backend-url").innerHTML = `<span class="proxy-badge">PROXY</span> /api → http://127.0.0.1:8000`;
+            document.getElementById("backend-url").innerHTML = `<span class="proxy-badge">PROXY</span> /api`;
             document.getElementById("connection-mode").innerHTML = `<span class="success-text">✅ Same-Origin (via Vite Proxy)</span>`;
         } else {
             document.getElementById("backend-url").textContent = BACKEND_URL;
@@ -295,7 +294,7 @@
                 const isCorsError = error.message.includes("CORS") || error.message.includes("Network") || error.message.includes("Failed to fetch");
                 const errorDetails = `Error Type: ${error.name}\nError Message: ${error.message}\n\n`;
                 const troubleshooting = isCorsError
-                    ? `⚠️ This appears to be a CORS/Network error.\n\nPossible causes:\n1. Backend not running on port 8000\n2. CORS headers not configured correctly\n3. Preflight (OPTIONS) request blocked\n4. Authorization header not explicitly allowed\n5. Using direct URL instead of proxy\n\n`
+                    ? `⚠️ This appears to be a CORS/Network error.\n\nPossible causes:\n1. Backend is not reachable\n2. CORS headers are not configured correctly\n3. Preflight (OPTIONS) request is blocked\n4. Authorization header is not explicitly allowed\n5. The request is bypassing the proxy or API host\n\n`
                     : "";
                 addTestResult(test.name, false, error.message, errorDetails + troubleshooting + `Full Stack:\n${error.stack}`);
             }
@@ -363,7 +362,7 @@
                 outputDiv.innerHTML = `<span class="${statusColor}">${response.ok ? '✅' : '⚠️'} Status ${response.status}</span>\n${corsInfo}\n<strong>Response Body:</strong>\n${JSON.stringify(data, null, 2)}`;
             } catch (error) {
                 outputDiv.classList.remove("hidden");
-                outputDiv.innerHTML = `<span class="error-text">❌ Error: ${error.message}</span>\n<strong>Details:</strong>\nError Name: ${error.name}\nError Type: ${error.constructor.name}\n<strong>Troubleshooting:</strong>\n1. Is the backend running on port 8000?\n2. Try: curl http://127.0.0.1:8000/api/v1/system/health\n3. Check backend logs for errors\n4. Verify CORS configuration includes Authorization header\n5. Check browser DevTools → Network tab for preflight OPTIONS request\n6. Are you using the Vite proxy? (should see "PROXY" badge above)\n<strong>Full Stack:</strong>\n${error.stack}`;
+                outputDiv.innerHTML = `<span class="error-text">❌ Error: ${error.message}</span>\n<strong>Details:</strong>\nError Name: ${error.name}\nError Type: ${error.constructor.name}\n<strong>Troubleshooting:</strong>\n1. Is the backend reachable?\n2. Try: curl ${IS_USING_PROXY ? `${window.location.origin}/api/v1/system/health` : `${BACKEND_URL}/api/v1/system/health`}\n3. Check backend logs for errors\n4. Verify CORS configuration includes Authorization header\n5. Check browser DevTools → Network tab for preflight OPTIONS request\n6. Are you using the Vite proxy? (should see "PROXY" badge above)\n<strong>Full Stack:</strong>\n${error.stack}`;
             }
         }
 

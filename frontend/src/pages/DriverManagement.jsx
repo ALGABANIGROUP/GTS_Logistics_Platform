@@ -4,13 +4,27 @@ import { useEffect, useState, useRef } from "react";
 import alertSound from "../assets/alert_critical.wav";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_BASE_URL } from "../config/env";
+
+const API_ROOT = String(API_BASE_URL || "").replace(/\/+$/, "");
+const DRIVER_ALERTS_WS_URL = (() => {
+  try {
+    const parsed = new URL(API_ROOT);
+    const protocol = parsed.protocol === "https:" ? "wss" : "ws";
+    return `${protocol}://${parsed.host}/ws/drivers/alerts`;
+  } catch {
+    return "";
+  }
+})();
 
 const DriverManagement = () => {
   const [alerts, setAlerts] = useState([]);
   const audioRef = useRef(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8000/ws/drivers/alerts");
+    if (!DRIVER_ALERTS_WS_URL) return undefined;
+
+    const ws = new WebSocket(DRIVER_ALERTS_WS_URL);
 
     ws.onmessage = (event) => {
       const alert = JSON.parse(event.data);

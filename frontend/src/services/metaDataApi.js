@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
-const API_BASE = globalThis.process?.env?.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = String(API_BASE_URL || '').replace(/\/+$/, '');
 
 export const getTrailerTypes = async () => {
   const res = await axios.get(`${API_BASE}/meta/trailer_types`);

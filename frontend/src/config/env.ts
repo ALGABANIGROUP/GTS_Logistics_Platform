@@ -1,6 +1,12 @@
-const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
+const DEFAULT_API_BASE_URL =
+  typeof window !== "undefined" && window.location.origin
+    ? window.location.origin
+    : "";
 const DEFAULT_WS_PATH = "/api/v1/ws";
-const DEFAULT_WS_URL = `ws://127.0.0.1:8000${DEFAULT_WS_PATH}`;
+const DEFAULT_WS_URL =
+  typeof window !== "undefined" && window.location.host
+    ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}${DEFAULT_WS_PATH}`
+    : "";
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
@@ -34,4 +40,6 @@ export const WS_BASE_URL =
 
 export const FRONTEND_BASE_URL =
   import.meta.env.VITE_FRONTEND_BASE_URL ||
-  "http://127.0.0.1:5173";
+  (typeof window !== "undefined" && window.location.origin
+    ? window.location.origin
+    : "");

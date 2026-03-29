@@ -5,6 +5,7 @@ import axiosClient from "../api/axiosClient";
 import SystemReadinessGate from "../components/SystemReadinessGate";
 import DevMaintenanceControlPanel from "../components/bots/DevMaintenanceControlPanel";
 import DevMaintenanceLiveChat from "../components/bots/panels/dev-maintenance/DevMaintenanceLiveChat";
+import { API_BASE_URL, WS_BASE_URL } from "../config/env";
 
 const DevMaintenanceDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -27,7 +28,7 @@ const DevMaintenanceDashboard = () => {
   const wsEnabled = String(import.meta.env.VITE_ENABLE_LIVE_WS || "").toLowerCase() === "true";
   const wsUrl =
     import.meta.env.VITE_WS_LIVE_URL ||
-    `${window.location.protocol === "https:" ? "wss" : "ws"}://127.0.0.1:8000/api/v1/ws/live`;
+    `${String(WS_BASE_URL || "").replace(/\/+$/, "")}/live`;
 
   const isCanceledError = (err) =>
     err?.name === "CanceledError" || err?.code === "ERR_CANCELED";

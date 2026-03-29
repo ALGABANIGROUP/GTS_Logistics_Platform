@@ -178,8 +178,18 @@ const isHardAuthFailure = ({ status, url, detail, hadToken }) => {
   return false;
 };
 
-const shouldAutoLogoutOnFailure = ({ url }) => {
+const shouldAutoLogoutOnFailure = ({ url, detail }) => {
   const normalizedUrl = String(url || "").toLowerCase();
+  const normalizedDetail = String(detail || "").toLowerCase();
+
+  if (
+    normalizedDetail.includes("session revoked") ||
+    normalizedDetail.includes("refresh token revoked") ||
+    normalizedDetail.includes("refresh token expired")
+  ) {
+    return true;
+  }
+
   return (
     normalizedUrl.includes("/api/v1/auth/me") ||
     normalizedUrl.includes("/api/v1/auth/refresh") ||
@@ -354,8 +364,8 @@ axiosClient.interceptors.response.use(
 
       console.error("Troubleshooting Steps:");
       console.error("   1. Is backend running? Check terminal for 'Uvicorn running'");
-      console.error("   2. Backend port 8000 check: http://127.0.0.1:8000/api/v1/system/health");
-      console.error("   3. Verify VITE_API_BASE_URL in frontend/.env = http://127.0.0.1:8000");
+      console.error(`   2. Backend health check: ${BASE_URL}/api/v1/system/health`);
+      console.error(`   3. Verify VITE_API_BASE_URL is set correctly. Current value: ${BASE_URL}`);
       console.error("   4. Restart Vite in frontend");
       console.groupEnd();
     }
@@ -473,7 +483,7 @@ axiosClient.interceptors.response.use(
               status: refreshStatus,
               detail: refreshDetail,
             });
-            if (shouldAutoLogoutOnFailure({ url })) {
+            if (shouldAutoLogoutOnFailure({ url, detail: refreshDetail })) {
               emitAuthExpired({
                 status: refreshStatus || 401,
                 url: "/api/v1/auth/refresh",
@@ -489,7 +499,7 @@ axiosClient.interceptors.response.use(
           url,
           detail: error?.normalized?.detail,
         });
-        if (shouldAutoLogoutOnFailure({ url })) {
+        if (shouldAutoLogoutOnFailure({ url, detail: error?.normalized?.detail })) {
           emitAuthExpired({ status, url });
         }
       }

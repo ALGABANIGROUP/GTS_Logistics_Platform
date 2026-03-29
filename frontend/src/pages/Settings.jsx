@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axiosClient from "../api/axiosClient";
+import { API_BASE_URL } from "../config/env";
 
 const Settings = () => {
   const [debugInfo, setDebugInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [apiBase] = useState(
-    import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
-  );
+  const [apiBase] = useState(API_BASE_URL || "");
   const [tokenPreview, setTokenPreview] = useState("");
 
   useEffect(() => {

@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_BASE_URL } from "../config/env";
 
 function getWsBaseUrl() {
   // Use VITE_API_BASE_URL and convert http(s) to ws(s)
-  let apiUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  let apiUrl = API_BASE_URL || "";
   if (apiUrl.startsWith("https://")) return apiUrl.replace("https://", "wss://");
   if (apiUrl.startsWith("http://")) return apiUrl.replace("http://", "ws://");
   return apiUrl;
