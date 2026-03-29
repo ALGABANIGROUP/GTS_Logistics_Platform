@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
+import SeoHead from '../components/SeoHead';
 
 const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
@@ -199,6 +200,17 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+      <SeoHead
+        title="Pricing - GTS Logistics"
+        description="Review GTS Logistics pricing for carriers, brokers, and shippers, including platform access, AI bots, and logistics automation tools."
+        keywords="gts pricing, freight broker pricing, logistics software pricing, load board pricing"
+        canonical="https://www.gtsdispatcher.com/pricing"
+        ogTitle="GTS Logistics Pricing"
+        ogDescription="Transparent pricing for carriers, brokers, shippers, and logistics teams."
+        ogUrl="https://www.gtsdispatcher.com/pricing"
+        twitterTitle="GTS Logistics Pricing"
+        twitterDescription="Transparent pricing for carriers, brokers, shippers, and logistics teams."
+      />
       <div className="min-h-screen bg-black/70">
         {/* Header */}
         <div className="container mx-auto px-4 py-4">

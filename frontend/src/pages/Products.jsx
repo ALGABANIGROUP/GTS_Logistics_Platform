@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import bgLogin from '../assets/bg_login.png';
 import gtsLogo from '../assets/gts_logo.png';
+import SeoHead from '../components/SeoHead';
 
 const Products = () => {
     const [activeCategory, setActiveCategory] = useState('all');
@@ -275,6 +276,17 @@ const Products = () => {
 
     return (
         <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+            <SeoHead
+                title="Products - GTS Logistics"
+                description="Discover GTS Logistics products including load boards, AI freight bots, telematics, compliance tools, and financial services for logistics teams."
+                keywords="gts products, load board platform, ai freight bots, telematics, logistics technology"
+                canonical="https://www.gtsdispatcher.com/products"
+                ogTitle="GTS Logistics Products"
+                ogDescription="Load boards, AI bots, financial services, and logistics technology from GTS Logistics."
+                ogUrl="https://www.gtsdispatcher.com/products"
+                twitterTitle="GTS Logistics Products"
+                twitterDescription="Load boards, AI bots, financial services, and logistics technology from GTS Logistics."
+            />
             <div className="min-h-screen bg-black/70">
                 {/* Header */}
                 <div className="container mx-auto px-4 py-4">

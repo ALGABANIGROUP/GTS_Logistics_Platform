@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
 import { API_BASE_URL } from '../config/env';
+import SeoHead from '../components/SeoHead';
 
 const CONTACT_RESPONSE_TIME = '24 hours';
 
@@ -145,6 +146,17 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+      <SeoHead
+        title="Contact GTS Logistics - Freight Broker Support"
+        description="Contact GTS Logistics for freight brokerage, load board support, partnership inquiries, and logistics platform assistance."
+        keywords="contact gts logistics, freight broker support, logistics contact, load board support"
+        canonical="https://www.gtsdispatcher.com/contact"
+        ogTitle="Contact GTS Logistics"
+        ogDescription="Reach GTS Logistics for freight brokerage, support, and partnership inquiries."
+        ogUrl="https://www.gtsdispatcher.com/contact"
+        twitterTitle="Contact GTS Logistics"
+        twitterDescription="Reach GTS Logistics for freight brokerage, support, and partnership inquiries."
+      />
       <div className="min-h-screen bg-black/70">
         {/* Header */}
         <div className="container mx-auto px-4 py-4">

@@ -2,10 +2,22 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
+import SeoHead from '../components/SeoHead';
 
 const About = () => {
     return (
         <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+            <SeoHead
+                title="About GTS Logistics - Freight Broker & Load Board Platform"
+                description="Learn about GTS Logistics, our freight brokerage operations, AI-driven logistics platform, and cross-border trade expertise."
+                keywords="about gts logistics, freight broker company, canada logistics, cross-border freight"
+                canonical="https://www.gtsdispatcher.com/about"
+                ogTitle="About GTS Logistics"
+                ogDescription="Learn about GTS Logistics, our mission, and our logistics operations."
+                ogUrl="https://www.gtsdispatcher.com/about"
+                twitterTitle="About GTS Logistics"
+                twitterDescription="Learn about GTS Logistics, our mission, and our logistics operations."
+            />
             <div className="min-h-screen bg-black/70">
                 {/* Header */}
                 <div className="container mx-auto px-4 py-4">

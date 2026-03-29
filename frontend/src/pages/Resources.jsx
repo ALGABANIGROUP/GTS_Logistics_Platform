@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
+import SeoHead from '../components/SeoHead';
 
 const Resources = () => {
     const [activeTab, setActiveTab] = useState('all');
@@ -75,6 +76,17 @@ const Resources = () => {
 
     return (
         <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+            <SeoHead
+                title="Resources - GTS Logistics"
+                description="Explore GTS Logistics resources, freight industry insights, webinars, podcasts, checklists, and tools for carriers, brokers, and shippers."
+                keywords="logistics resources, freight tools, trucking guides, freight webinars, logistics blog"
+                canonical="https://www.gtsdispatcher.com/resources"
+                ogTitle="GTS Logistics Resources"
+                ogDescription="Freight tools, webinars, guides, and industry resources from GTS Logistics."
+                ogUrl="https://www.gtsdispatcher.com/resources"
+                twitterTitle="GTS Logistics Resources"
+                twitterDescription="Freight tools, webinars, guides, and industry resources from GTS Logistics."
+            />
             <div className="min-h-screen bg-black/70">
                 {/* Header */}
                 <div className="container mx-auto px-4 py-4">
