@@ -184,12 +184,14 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 console.error("Auth init error:", error);
                 const status = error?.response?.status;
-                if (status === 401 || status === 403) {
-                    clearAuthCache();
-                }
                 if (!cancelled) {
-                    setToken("");
-                    setUser(null);
+                    // Do not clear auth state on transient 401 here.
+                    // axiosClient interceptor handles refresh and emits auth:expired for hard failures.
+                    if (status !== 401 && status !== 403) {
+                        clearAuthCache();
+                        setToken("");
+                        setUser(null);
+                    }
                 }
             } finally {
                 if (!cancelled) {
