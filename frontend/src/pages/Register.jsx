@@ -135,6 +135,7 @@ export default function Register() {
   const { disabled: registrationClosed, notice, reopenLabel, contactEmail } =
     registrationStatus;
   const companyRef = useRef(null);
+  const redirectTimerRef = useRef(null);
   const defaultCountry = COUNTRIES.find((c) => c.iso2 === "CA") || COUNTRIES[0];
   const allowedCountries = useMemo(
     () => COUNTRIES.filter((country) => ALLOWED_COUNTRY_CODES.includes(country.iso2)),
@@ -166,6 +167,7 @@ export default function Register() {
   const [touched, setTouched] = useState({});
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState({ type: "", text: "" });
   const [emailExistsError, setEmailExistsError] = useState("");
   const [companyExistsError, setCompanyExistsError] = useState("");
   const [checkingEmail, setCheckingEmail] = useState(false);
@@ -317,6 +319,14 @@ export default function Register() {
     });
   }, [defaultAllowedCountry]);
 
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
+
   const checkEmailAvailability = async (emailValue) => {
     const normalized = String(emailValue || "").trim().toLowerCase();
     if (!normalized || !isValidEmail(normalized)) {
@@ -389,6 +399,7 @@ export default function Register() {
     e.preventDefault();
     setFormError("");
     setSuccessMessage("");
+    setToastMessage({ type: "", text: "" });
 
     const nextErrors = validateAll();
     setErrors(nextErrors);
@@ -432,11 +443,16 @@ export default function Register() {
         plan: selectedPlan?.planCode || form.subscription,
       };
       const res = await axiosClient.post("/api/v1/auth/register", payload);
-      if (res.data && res.data.ok) {
-        setSuccessMessage("Registration successful! Please sign in.");
-        navigate("/login", { replace: true });
+      if (res?.status >= 200 && res?.status < 300 && res?.data?.ok) {
+        const message = "Registration successful! Please check your email to verify your account.";
+        setSuccessMessage(message);
+        setToastMessage({ type: "success", text: message });
+        redirectTimerRef.current = setTimeout(() => {
+          navigate("/login", { replace: true });
+        }, 3000);
         return;
       }
+      setToastMessage({ type: "error", text: "Registration failed. Please try again." });
       setFormError("Registration failed. Please try again.");
     } catch (err) {
       const status = err?.response?.status;
@@ -450,16 +466,22 @@ export default function Register() {
         };
         const fieldKey = fieldMap[detail.field] || detail.field;
         setErrors((curr) => ({ ...curr, [fieldKey]: detail.message || "Invalid value." }));
+        setToastMessage({ type: "error", text: detail.message || "Invalid value." });
       } else if (status === 422) {
         setFormError("Please review the highlighted fields.");
+        setToastMessage({ type: "error", text: "Please review the highlighted fields." });
       } else if (status === 401 || status === 403) {
         setFormError("Access denied. Please check your details.");
+        setToastMessage({ type: "error", text: "Access denied. Please check your details." });
       } else if (typeof detail === "string") {
         setFormError(detail);
+        setToastMessage({ type: "error", text: detail });
       } else if (err?.response?.data?.message) {
         setFormError(err.response.data.message);
+        setToastMessage({ type: "error", text: err.response.data.message });
       } else {
         setFormError("Registration failed. Please try again.");
+        setToastMessage({ type: "error", text: "Registration failed. Please try again." });
       }
     } finally {
       setIsSubmitting(false);
@@ -468,6 +490,14 @@ export default function Register() {
 
   return (
     <>
+      {toastMessage.text ? (
+        <div
+          className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm ${toastMessage.type === "success" ? "bg-green-600" : "bg-red-600"
+            }`}
+        >
+          {toastMessage.text}
+        </div>
+      ) : null}
       <Header hidePricing={true} />
       <div
         className="relative min-h-screen overflow-hidden"

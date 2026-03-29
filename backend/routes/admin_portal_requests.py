@@ -25,6 +25,11 @@ from backend.models.user import User
 from backend.security.hashing import get_password_hash
 from backend.config import settings
 
+try:
+    from backend.services.email_dispatcher import dispatch_email  # type: ignore
+except Exception:
+    dispatch_email = None  # type: ignore
+
 # --- DB dependency: get_db_async ---
 try:
     from backend.database.config import get_db_async  # type: ignore
@@ -69,6 +74,118 @@ async def admin_delete_portal_request(request_id: int, _=Depends(require_permiss
 @portal_router_v1.get("/requests")
 async def admin_list_requests_v1(limit: int = 100, status: Optional[str] = None):
     return await admin_list_requests(limit=limit, status=status)
+
+
+def _normalize_request_ids(payload: Dict[str, Any]) -> list[int]:
+    request_ids = (payload or {}).get("request_ids") or []
+    normalized: list[int] = []
+    for request_id in request_ids:
+        try:
+            normalized.append(int(request_id))
+        except Exception:
+            continue
+    return [rid for rid in normalized if rid > 0]
+
+
+@portal_router_v1.post("/requests/approve")
+async def bulk_approve_requests_v1(
+    payload: Dict[str, Any] = Body(default={}),
+    db: AsyncSession = Depends(get_db_async),
+    _=Depends(require_permission("requests.approve")),
+):
+    request_ids = _normalize_request_ids(payload)
+    if not request_ids:
+        raise HTTPException(status_code=400, detail="request_ids is required")
+
+    approved_count = 0
+    for req_id in request_ids:
+        rec = await get_portal_request_by_id(req_id)
+        if not rec:
+            continue
+        await update_portal_request_status(req_id, "approved", decided_by="admin")
+        approved_count += 1
+
+        if dispatch_email and rec.get("email"):
+            payment_link = f"https://www.gtsdispatcher.com/payment?request_id={req_id}"
+            try:
+                await dispatch_email(
+                    bot_name="operations_manager",
+                    to_email=rec["email"],
+                    subject="Your GTS account is approved - Complete Payment",
+                    body=f"""
+                    <h2>Request Approved</h2>
+                    <p>Your account request has been approved.</p>
+                    <p>Please complete your payment to activate your access:</p>
+                    <p><a href=\"{payment_link}\">Complete Payment</a></p>
+                    """,
+                    html=True,
+                )
+            except Exception:
+                pass
+
+    return {"success": True, "processed": approved_count}
+
+
+@portal_router_v1.post("/requests/deny")
+async def bulk_deny_requests_v1(
+    payload: Dict[str, Any] = Body(default={}),
+    _=Depends(require_permission("requests.deny")),
+):
+    request_ids = _normalize_request_ids(payload)
+    reason = ((payload or {}).get("reason") or "").strip()
+    if not request_ids:
+        raise HTTPException(status_code=400, detail="request_ids is required")
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    denied_count = 0
+    for req_id in request_ids:
+        rec = await get_portal_request_by_id(req_id)
+        if not rec:
+            continue
+        await update_portal_request_status(
+            req_id,
+            "rejected",
+            reason=reason,
+            decided_by="admin",
+        )
+        denied_count += 1
+
+        if dispatch_email and rec.get("email"):
+            try:
+                await dispatch_email(
+                    bot_name="operations_manager",
+                    to_email=rec["email"],
+                    subject="Your GTS account request has been reviewed",
+                    body=f"""
+                    <h2>Request Update</h2>
+                    <p>Your request was not approved at this time.</p>
+                    <p><strong>Reason:</strong> {reason}</p>
+                    """,
+                    html=True,
+                )
+            except Exception:
+                pass
+
+    return {"success": True, "processed": denied_count}
+
+
+@portal_router_v1.delete("/requests/delete")
+async def bulk_delete_requests_v1(
+    payload: Dict[str, Any] = Body(default={}),
+    _=Depends(require_permission("requests.delete")),
+):
+    request_ids = _normalize_request_ids(payload)
+    if not request_ids:
+        raise HTTPException(status_code=400, detail="request_ids is required")
+
+    deleted_count = 0
+    for req_id in request_ids:
+        deleted = await delete_portal_request(id=req_id)
+        if deleted:
+            deleted_count += 1
+
+    return {"success": True, "processed": deleted_count}
 
 
 @router.post("/requests/{req_id}/approve")

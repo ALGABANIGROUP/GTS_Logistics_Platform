@@ -46,6 +46,11 @@ try:
 except Exception:
     log_audit_action = None  # type: ignore
 
+try:
+    from backend.services.email_dispatcher import dispatch_email  # type: ignore
+except Exception:
+    dispatch_email = None  # type: ignore
+
 # ORM model import with TYPE_CHECKING for Pylance
 if TYPE_CHECKING:
     from backend.models.user import User as UserModel
@@ -530,6 +535,47 @@ async def _create_registered_user(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+
+    if dispatch_email:
+        try:
+            await dispatch_email(
+                bot_name="operations_manager",
+                to_email=email,
+                subject="Welcome to GTS Logistics",
+                body=f"""
+                <h2>Welcome to GTS Logistics!</h2>
+                <p>Your account has been created successfully.</p>
+                <p><strong>Role:</strong> {normalized_role}</p>
+                <p><strong>Plan:</strong> {selected_plan}</p>
+                <p><strong>System:</strong> {selected_system}</p>
+                <p>Please wait for admin approval. You will receive an email once your account is activated.</p>
+                """,
+                html=True,
+            )
+        except Exception:
+            pass
+
+        admin_email = os.getenv("REGISTRATION_ADMIN_EMAIL") or os.getenv("ADMIN_EMAIL") or "admin@gabanilogistics.com"
+        try:
+            await dispatch_email(
+                bot_name="operations_manager",
+                to_email=admin_email,
+                subject="New Registration Request",
+                body=f"""
+                <h2>New User Registration</h2>
+                <p><strong>Name:</strong> {(payload.full_name or '').strip() or '-'}</p>
+                <p><strong>Email:</strong> {email}</p>
+                <p><strong>Company:</strong> {company_name or '-'}</p>
+                <p><strong>Role:</strong> {normalized_role}</p>
+                <p><strong>Plan:</strong> {selected_plan}</p>
+                <p><strong>System:</strong> {selected_system}</p>
+                <p><a href="https://www.gtsdispatcher.com/admin/portal-requests">Review Request</a></p>
+                """,
+                html=True,
+            )
+        except Exception:
+            pass
+
     return user
 
 
