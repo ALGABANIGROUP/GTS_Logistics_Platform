@@ -286,8 +286,8 @@ axiosClient.interceptors.request.use(
     }
 
     // Some production proxies may drop Authorization for upstream apps.
-    // Send a secondary header that backend can use as a fallback.
-    if (token && !config?.headers?.["X-Access-Token"]) {
+    // Keep the fallback header in sync with the latest token on every request.
+    if (token) {
       config.headers = config.headers || {};
       config.headers["X-Access-Token"] = token;
     }
@@ -468,6 +468,7 @@ axiosClient.interceptors.response.use(
           if (newToken) {
             originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            originalRequest.headers["X-Access-Token"] = newToken;
             return axiosClient(originalRequest);
           }
         } catch (refreshError) {
