@@ -21,6 +21,15 @@ const MessageCenter = ({ onNotification }) => {
         scheduledTime: ''
     });
 
+    const createTemplateFromCampaign = (campaign, fallbackName) => ({
+        id: campaign.id || Date.now(),
+        name: fallbackName || campaign.name || 'Campaign Draft',
+        icon: '',
+        template: campaign.content || '',
+        variables: [],
+        category: campaign.type || 'custom'
+    });
+
     // Message templates with variables
     const messageTemplates = [
         {
@@ -169,6 +178,45 @@ const MessageCenter = ({ onNotification }) => {
         } catch (error) {
             console.error('Failed to send test message:', error);
         }
+    };
+
+    const editCampaignDraft = (campaign) => {
+        const template = createTemplateFromCampaign(campaign, campaign.name || 'Campaign Draft');
+        setSelectedTemplate(template);
+        setMessageContent(campaign.content || '');
+        setFormData({
+            name: campaign.name || '',
+            type: campaign.type || 'broadcast',
+            audience: campaign.audience || 'all',
+            audienceSize: campaign.audienceSize || 0,
+            schedule: campaign.schedule || 'now',
+            scheduledTime: campaign.scheduledTime || ''
+        });
+        setActiveTab('compose');
+        onNotification('Draft loaded into composer', '');
+    };
+
+    const duplicateCampaign = (campaign) => {
+        const duplicateName = campaign.name ? `${campaign.name} Copy` : 'Campaign Copy';
+        const template = createTemplateFromCampaign(campaign, duplicateName);
+        setSelectedTemplate(template);
+        setMessageContent(campaign.content || '');
+        setFormData({
+            name: duplicateName,
+            type: campaign.type || 'broadcast',
+            audience: campaign.audience || 'all',
+            audienceSize: campaign.audienceSize || 0,
+            schedule: 'now',
+            scheduledTime: ''
+        });
+        setActiveTab('compose');
+        onNotification('Campaign copied into composer as a new draft', '');
+    };
+
+    const sendPromptedTestMessage = async (campaignId) => {
+        const phone = window.prompt('Enter a phone number for the test message.');
+        if (!phone) return;
+        await testMessage(campaignId, phone.trim());
     };
 
     return (
@@ -439,12 +487,25 @@ const MessageCenter = ({ onNotification }) => {
                                             )}
                                             <button
                                                 className="test-btn"
-                                                onClick={() => testMessage(campaign.id, '+1234567890')}
+                                                onClick={() => sendPromptedTestMessage(campaign.id)}
                                             >
                                                  Test
                                             </button>
-                                            <button className="edit-btn"> Edit</button>
-                                            <button className="delete-btn"> Delete</button>
+                                            {campaign.status === 'draft' ? (
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => editCampaignDraft(campaign)}
+                                                >
+                                                     Edit Draft
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => duplicateCampaign(campaign)}
+                                                >
+                                                     Duplicate
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

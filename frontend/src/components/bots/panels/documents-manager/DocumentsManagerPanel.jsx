@@ -1,5 +1,6 @@
 // src/components/bots/panels/documents-manager/DocumentsManagerPanel.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DocumentsDashboard from './DocumentsDashboard';
 import DocumentUploader from './DocumentUploader';
 import DocumentLibrary from './DocumentLibrary';
@@ -17,6 +18,7 @@ import documentsService from '../../../../services/documentsService';
 import './DocumentsManagerPanel.css';
 
 const DocumentsManagerPanel = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [botConfig, setBotConfig] = useState(null);
     const [docStats, setDocStats] = useState({
@@ -117,9 +119,58 @@ const DocumentsManagerPanel = () => {
             case 'ai-assistant':
                 return <AIAssistant />;
             case 'reports':
-                return <div className="section-card"><h3> Reports</h3><p>Reports feature coming soon</p></div>;
+                return (
+                    <div className="section-card">
+                        <h3>Reports</h3>
+                        <p>Open the live reporting workspace or jump back to analytics for document KPIs.</p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                className="tab-btn active"
+                                onClick={() => navigate('/reports')}
+                            >
+                                Open Reports Workspace
+                            </button>
+                            <button
+                                type="button"
+                                className="tab-btn"
+                                onClick={() => setActiveTab('analytics')}
+                            >
+                                View Document Analytics
+                            </button>
+                        </div>
+                    </div>
+                );
             case 'settings':
-                return <div className="section-card"><h3> Settings</h3><p>Settings feature coming soon</p></div>;
+                return (
+                    <div className="section-card">
+                        <h3>Settings</h3>
+                        <p>Document security and platform-wide configuration already exist in live sections.</p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                className="tab-btn active"
+                                onClick={() => navigate('/admin/settings')}
+                            >
+                                Open Platform Settings
+                            </button>
+                            <button
+                                type="button"
+                                className="tab-btn"
+                                onClick={() => setActiveTab('security')}
+                            >
+                                Review Document Security
+                            </button>
+                            <button
+                                type="button"
+                                className="tab-btn"
+                                onClick={() => setActiveTab('integrations')}
+                            >
+                                Manage Integrations
+                            </button>
+                        </div>
+                    </div>
+                );
             default:
                 return <DocumentsDashboard stats={docStats} />;
         }

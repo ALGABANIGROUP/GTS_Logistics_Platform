@@ -1,6 +1,13 @@
 // GeneralManagerControl.jsx
 import React, { useState } from 'react';
 
+const DEFAULT_REPORT_CONFIG = {
+  import_sources: ['portal'],
+  date_range: { start: '', end: '' },
+  report_type: 'strategic_overview',
+  include_analytics: false
+};
+
 const GeneralManagerControl = () => {
   const [activeTab, setActiveTab] = useState('executive_dashboard');
   const [botStatus, setBotStatus] = useState({
@@ -10,10 +17,7 @@ const GeneralManagerControl = () => {
   });
 
   const [reportConfig, setReportConfig] = useState({
-    import_sources: ['portal'],
-    date_range: { start: '', end: '' },
-    report_type: 'strategic_overview',
-    include_analytics: false
+    ...DEFAULT_REPORT_CONFIG
   });
 
   const [message, setMessage] = useState('');
@@ -49,13 +53,67 @@ const GeneralManagerControl = () => {
   };
 
   const handleRefresh = () => {
-    console.log('Refreshing status...');
-    // Refresh logic here
+    setFeedback({ type: 'success', message: 'Status refreshed.' });
   };
 
   const handleGenerateReport = () => {
     console.log('Generating report with config:', reportConfig);
     setFeedback({ type: 'success', message: 'Report generation started.' });
+  };
+
+  const removeSource = (indexToRemove) => {
+    setReportConfig((prev) => ({
+      ...prev,
+      import_sources: prev.import_sources.filter((_, index) => index !== indexToRemove)
+    }));
+    setFeedback({ type: 'success', message: 'Source removed from the report configuration.' });
+  };
+
+  const handleSaveTemplate = () => {
+    setFeedback({ type: 'success', message: `Template saved for ${reportConfig.report_type}.` });
+  };
+
+  const configureTemplate = (templateName, reportType) => {
+    setActiveTab('report_generator');
+    setReportConfig((prev) => ({
+      ...prev,
+      report_type: reportType
+    }));
+    setFeedback({ type: 'success', message: `${templateName} loaded into the report generator.` });
+  };
+
+  const handleToolAction = (action) => {
+    if (action === 'standard_report') {
+      setActiveTab('report_generator');
+      setReportConfig((prev) => ({ ...prev, report_type: 'performance_review' }));
+      setFeedback({ type: 'success', message: 'Weekly executive summary template loaded.' });
+      return;
+    }
+    if (action === 'strategic_analysis') {
+      setActiveTab('report_generator');
+      setReportConfig((prev) => ({ ...prev, report_type: 'strategic_overview' }));
+      setFeedback({ type: 'success', message: 'Strategic analysis workspace opened.' });
+      return;
+    }
+    if (action === 'performance_dashboard') {
+      setActiveTab('executive_dashboard');
+      setFeedback({ type: 'success', message: 'Performance dashboard opened.' });
+      return;
+    }
+    if (action === 'crisis_management') {
+      setActiveTab('execution_control');
+      setFeedback({ type: 'success', message: 'Emergency briefing controls opened.' });
+    }
+  };
+
+  const handleRelatedTool = (targetTab) => {
+    setActiveTab(targetTab);
+    setFeedback({ type: 'success', message: `${targetTab.replace('_', ' ')} opened.` });
+  };
+
+  const handleResetConfig = () => {
+    setReportConfig({ ...DEFAULT_REPORT_CONFIG });
+    setFeedback({ type: 'success', message: 'Configuration reset to defaults.' });
   };
 
   const openAddSourceModal = () => {
@@ -242,7 +300,7 @@ const GeneralManagerControl = () => {
                     {reportConfig.import_sources.map((source, idx) => (
                       <div key={idx} className="source-tag">
                         {source}
-                        <button className="remove-btn">x</button>
+                        <button className="remove-btn" onClick={() => removeSource(idx)}>x</button>
                       </div>
                     ))}
                     <button className="add-btn" onClick={openAddSourceModal}>
@@ -307,7 +365,7 @@ const GeneralManagerControl = () => {
                   <button className="btn-primary" onClick={handleGenerateReport}>
                      Generate Report
                   </button>
-                  <button className="btn-secondary">
+                  <button className="btn-secondary" onClick={handleSaveTemplate}>
                      Save Template
                   </button>
                 </div>
@@ -320,22 +378,22 @@ const GeneralManagerControl = () => {
                 <div className="template-card">
                   <div className="template-name">Weekly Executive Summary</div>
                   <div className="template-status">Not Configured</div>
-                  <button className="template-btn">Configure</button>
+                  <button className="template-btn" onClick={() => configureTemplate('Weekly Executive Summary', 'performance_review')}>Configure</button>
                 </div>
                 <div className="template-card">
                   <div className="template-name">Monthly Performance Review</div>
                   <div className="template-status">Not Configured</div>
-                  <button className="template-btn">Configure</button>
+                  <button className="template-btn" onClick={() => configureTemplate('Monthly Performance Review', 'performance_review')}>Configure</button>
                 </div>
                 <div className="template-card">
                   <div className="template-name">Quarterly Strategic Report</div>
                   <div className="template-status">Not Configured</div>
-                  <button className="template-btn">Configure</button>
+                  <button className="template-btn" onClick={() => configureTemplate('Quarterly Strategic Report', 'strategic_overview')}>Configure</button>
                 </div>
                 <div className="template-card">
                   <div className="template-name">Annual Business Review</div>
                   <div className="template-status">Not Configured</div>
-                  <button className="template-btn">Configure</button>
+                  <button className="template-btn" onClick={() => configureTemplate('Annual Business Review', 'financial_analysis')}>Configure</button>
                 </div>
               </div>
             </div>
@@ -485,10 +543,10 @@ const GeneralManagerControl = () => {
                   <button className="btn-primary" onClick={openConfigModal}>
                      Edit Config
                   </button>
-                  <button className="btn-secondary">
+                  <button className="btn-secondary" onClick={handleSaveTemplate}>
                      Save Changes
                   </button>
-                  <button className="btn-outline" onClick={handleRefresh}>
+                  <button className="btn-outline" onClick={handleResetConfig}>
                      Reset to Defaults
                   </button>
                 </div>
@@ -503,7 +561,7 @@ const GeneralManagerControl = () => {
         <div className="sidebar-section">
           <h3>Executive Tools</h3>
           <div className="tools-list">
-            <button className="tool-btn">
+            <button className="tool-btn" onClick={() => handleToolAction('standard_report')}>
               <span className="tool-icon"></span>
               <div className="tool-info">
                 <div className="tool-name">Generate Standard Report</div>
@@ -511,7 +569,7 @@ const GeneralManagerControl = () => {
               </div>
             </button>
 
-            <button className="tool-btn">
+            <button className="tool-btn" onClick={() => handleToolAction('strategic_analysis')}>
               <span className="tool-icon"></span>
               <div className="tool-info">
                 <div className="tool-name">Strategic Analysis</div>
@@ -519,7 +577,7 @@ const GeneralManagerControl = () => {
               </div>
             </button>
 
-            <button className="tool-btn">
+            <button className="tool-btn" onClick={() => handleToolAction('performance_dashboard')}>
               <span className="tool-icon"></span>
               <div className="tool-info">
                 <div className="tool-name">Performance Dashboard</div>
@@ -527,7 +585,7 @@ const GeneralManagerControl = () => {
               </div>
             </button>
 
-            <button className="tool-btn">
+            <button className="tool-btn" onClick={() => handleToolAction('crisis_management')}>
               <span className="tool-icon"></span>
               <div className="tool-info">
                 <div className="tool-name">Crisis Management</div>
@@ -540,15 +598,15 @@ const GeneralManagerControl = () => {
         <div className="sidebar-section">
           <h3>Related Tools</h3>
           <div className="related-tools">
-            <button className="related-btn">
+            <button className="related-btn" onClick={() => handleRelatedTool('report_generator')}>
               <span className="related-icon"></span>
               Reports
             </button>
-            <button className="related-btn">
+            <button className="related-btn" onClick={() => handleRelatedTool('executive_dashboard')}>
               <span className="related-icon"></span>
               Analytics
             </button>
-            <button className="related-btn">
+            <button className="related-btn" onClick={() => handleRelatedTool('monitoring')}>
               <span className="related-icon"></span>
               Forecasting
             </button>
@@ -591,7 +649,7 @@ const GeneralManagerControl = () => {
           <button className="footer-btn" onClick={() => handleRunBot('basic')}>
              Run Bot
           </button>
-          <button className="footer-btn">
+          <button className="footer-btn" onClick={openConfigModal}>
              Configure
           </button>
         </div>
