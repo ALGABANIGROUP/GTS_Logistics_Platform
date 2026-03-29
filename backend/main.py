@@ -886,6 +886,7 @@ allow_headers = [
     "Content-Type",
     "Content-Language",
     "Authorization",  # ⚠️ CRITICAL: Must be explicit for Bearer tokens
+    "X-Access-Token",
     "X-Requested-With",
     "X-CSRF-Token",
     "Cache-Control",

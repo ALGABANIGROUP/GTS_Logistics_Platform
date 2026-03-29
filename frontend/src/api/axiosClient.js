@@ -285,6 +285,13 @@ axiosClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Some production proxies may drop Authorization for upstream apps.
+    // Send a secondary header that backend can use as a fallback.
+    if (token && !config?.headers?.["X-Access-Token"]) {
+      config.headers = config.headers || {};
+      config.headers["X-Access-Token"] = token;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

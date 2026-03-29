@@ -481,6 +481,16 @@ async def get_current_user(
             token = auth.split(" ", 1)[1].strip()
 
     if not token:
+        # Fallback for environments where reverse proxies strip Authorization.
+        token = (
+            request.headers.get("x-access-token")
+            or request.headers.get("X-Access-Token")
+            or ""
+        ).strip()
+        if token.lower().startswith("bearer "):
+            token = token.split(" ", 1)[1].strip()
+
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
     payload = _decode_token(token)
