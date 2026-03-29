@@ -482,385 +482,385 @@ export default function Register() {
 
         <div className="relative z-10 w-full min-h-screen flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-3xl">
-          <div className="text-center mb-6">
-            <h1 className="text-white text-xl font-semibold">
-              {step === "select" ? "Choose Your Plan" : "Complete Registration"}
-            </h1>
-            <p className="text-white/70 mt-2">
-              {step === "select"
-                ? "Pick your role and plan, then continue to account setup."
-                : "Finish your details to create your account."}
-            </p>
-          </div>
+            <div className="text-center mb-6">
+              <h1 className="text-white text-xl font-semibold">
+                {step === "select" ? "Choose Your Plan" : "Complete Registration"}
+              </h1>
+              <p className="text-white/70 mt-2">
+                {step === "select"
+                  ? "Pick your role and plan, then continue to account setup."
+                  : "Finish your details to create your account."}
+              </p>
+            </div>
 
-          <GlassCard className="w-full max-w-3xl max-h-[calc(100vh-140px)] flex flex-col overflow-hidden">
-            {registrationClosed ? (
-              <div className="flex flex-col items-center gap-4 text-center text-white">
-                <h2 className="text-2xl font-semibold">Registration is paused</h2>
-                <p className="text-sm text-white/80">{notice}</p>
-                {reopenLabel && (
+            <GlassCard className="w-full max-w-3xl max-h-[calc(100vh-140px)] flex flex-col overflow-hidden">
+              {registrationClosed ? (
+                <div className="flex flex-col items-center gap-4 text-center text-white">
+                  <h2 className="text-2xl font-semibold">Registration is paused</h2>
+                  <p className="text-sm text-white/80">{notice}</p>
+                  {reopenLabel && (
+                    <p className="text-xs text-white/60">
+                      Expected to reopen on {reopenLabel}.
+                    </p>
+                  )}
                   <p className="text-xs text-white/60">
-                    Expected to reopen on {reopenLabel}.
+                    Contact{" "}
+                    <a
+                      href={`mailto:${contactEmail}`}
+                      className="text-white underline"
+                    >
+                      {contactEmail}
+                    </a>{" "}
+                    for expedited approval.
                   </p>
-                )}
-                <p className="text-xs text-white/60">
-                  Contact{" "}
-                  <a
-                    href={`mailto:${contactEmail}`}
-                    className="text-white underline"
-                  >
-                    {contactEmail}
-                  </a>{" "}
-                  for expedited approval.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/login")}
-                    className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:border-white"
-                  >
-                    Back to login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/")}
-                    className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:border-white"
-                  >
-                    Back to portal
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                {successMessage && (
-                  <div className="mb-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-                    {successMessage}
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/login")}
+                      className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:border-white"
+                    >
+                      Back to login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/")}
+                      className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:border-white"
+                    >
+                      Back to portal
+                    </button>
                   </div>
-                )}
-                <FormError message={formError} className="mb-3 text-center" />
-                {step === "select" ? (
-                  <div className="space-y-5 overflow-y-auto max-h-[calc(100vh-220px)] pr-2">
-                    <div>
-                      <h3 className="text-white text-base font-semibold mb-3">What type of trucking business are you?</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {Object.entries(ROLE_LABELS).map(([roleKey, roleMeta]) => (
-                          <button
-                            key={roleKey}
-                            type="button"
-                            onClick={() => handleRoleChange(roleKey)}
-                            className={`rounded-xl border-2 p-4 text-left transition ${role === roleKey
+                </div>
+              ) : (
+                <>
+                  {successMessage && (
+                    <div className="mb-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                      {successMessage}
+                    </div>
+                  )}
+                  <FormError message={formError} className="mb-3 text-center" />
+                  {step === "select" ? (
+                    <div className="space-y-5 overflow-y-auto max-h-[calc(100vh-220px)] pr-2">
+                      <div>
+                        <h3 className="text-white text-base font-semibold mb-3">What type of trucking business are you?</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {Object.entries(ROLE_LABELS).map(([roleKey, roleMeta]) => (
+                            <button
+                              key={roleKey}
+                              type="button"
+                              onClick={() => handleRoleChange(roleKey)}
+                              className={`rounded-xl border-2 p-4 text-left transition ${role === roleKey
                                 ? "border-red-500 bg-red-500/10"
                                 : "border-white/20 bg-white/5 hover:bg-white/10"
-                              }`}
-                          >
-                            <h4 className="text-white font-semibold">{roleMeta.title}</h4>
-                            <p className="text-xs text-white/70 mt-1">{roleMeta.description}</p>
-                            <p className="text-sm text-red-400 mt-2 font-semibold">
-                              Starting at ${ROLE_PLANS[roleKey][0].priceCAD} CAD / month
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-white text-base font-semibold mb-3">Select your plan</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {(ROLE_PLANS[role] || []).map((plan) => (
-                          <div
-                            key={`${role}-${plan.planCode}`}
-                            className={`rounded-xl border p-4 ${plan.popular ? "border-red-500 bg-red-500/10" : "border-white/20 bg-white/5"}`}
-                          >
-                            {plan.popular ? (
-                              <span className="inline-block text-[11px] px-2 py-1 rounded-full bg-red-600 text-white mb-2">
-                                Most Popular
-                              </span>
-                            ) : null}
-                            <h4 className="text-lg font-bold text-white">{plan.name}</h4>
-                            <p className="text-white mt-1">
-                              <span className="text-2xl font-bold">${plan.priceCAD}</span>
-                              <span className="text-sm text-white/70"> CAD / {plan.period}</span>
-                            </p>
-                            <p className="text-xs text-white/60 mt-1">Approx. ${plan.priceUSD} USD</p>
-                            <ul className="mt-3 space-y-1.5 min-h-[84px]">
-                              {plan.features.map((feature, idx) => (
-                                <li key={idx} className="text-xs text-white/80 flex items-center gap-2">
-                                  <span className="text-green-400">✓</span>
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                            <button
-                              type="button"
-                              onClick={() => handleSelectPlan(plan)}
-                              className="mt-3 w-full rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 transition"
+                                }`}
                             >
-                              Complete Registration
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <form onSubmit={submit} className="flex flex-col gap-4">
-                    <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-260px)] pr-2">
-                      {selectedPlan ? (
-                        <div className="rounded-xl border border-white/20 bg-white/5 p-4">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                              <p className="text-white/70 text-xs uppercase tracking-wide">Selected plan</p>
-                              <h3 className="text-lg font-semibold text-white capitalize">{role} - {selectedPlan.name}</h3>
-                              <p className="text-sm text-white/80 mt-1">
-                                ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
-                                <span className="text-xs text-white/60 ml-2">Approx. ${selectedPlan.priceUSD} USD</span>
+                              <h4 className="text-white font-semibold">{roleMeta.title}</h4>
+                              <p className="text-xs text-white/70 mt-1">{roleMeta.description}</p>
+                              <p className="text-sm text-red-400 mt-2 font-semibold">
+                                Starting at ${ROLE_PLANS[roleKey][0].priceCAD} CAD / month
                               </p>
-                              <p className="text-xs text-white/60 mt-1">System: {selectedSystem.toUpperCase()}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setStep("select")}
-                              className="text-sm text-red-300 hover:text-red-200 transition"
-                            >
-                              Change Plan
                             </button>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {/* Basic info */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <input
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                            placeholder="Company Name"
-                            name="companyName"
-                            autoComplete="organization"
-                            value={form.companyName}
-                            onChange={onChange}
-                            onBlur={onBlur}
-                            aria-invalid={Boolean(touched.companyName && errors.companyName)}
-                            disabled={isSubmitting}
-                            ref={companyRef}
-                            required
-                          />
-                          <FormError
-                            message={companyExistsError || (touched.companyName ? errors.companyName : "")}
-                            className="mt-1"
-                          />
-                          {checkingCompany ? (
-                            <p className="mt-1 text-xs text-white/60">Checking company availability...</p>
-                          ) : null}
-                        </div>
-                        <div>
-                          <input
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                            placeholder="Username"
-                            name="username"
-                            autoComplete="username"
-                            value={form.username}
-                            onChange={onChange}
-                            onBlur={onBlur}
-                            aria-invalid={Boolean(touched.username && errors.username)}
-                            disabled={isSubmitting}
-                            required
-                          />
-                          <FormError message={touched.username ? errors.username : ""} className="mt-1" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <input
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                            placeholder="Full Name"
-                            name="fullName"
-                            autoComplete="name"
-                            value={form.fullName}
-                            onChange={onChange}
-                            onBlur={onBlur}
-                            aria-invalid={Boolean(touched.fullName && errors.fullName)}
-                            disabled={isSubmitting}
-                            required
-                          />
-                          <FormError message={touched.fullName ? errors.fullName : ""} className="mt-1" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <input
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                            placeholder="Email"
-                            type="email"
-                            name="email"
-                            autoComplete="email"
-                            value={form.email}
-                            onChange={onChange}
-                            onBlur={onBlur}
-                            aria-invalid={Boolean(touched.email && errors.email)}
-                            disabled={isSubmitting}
-                            required
-                          />
-                          <FormError
-                            message={emailExistsError || (touched.email ? errors.email : "")}
-                            className="mt-1"
-                          />
-                          {checkingEmail ? (
-                            <p className="mt-1 text-xs text-white/60">Checking email availability...</p>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="flex">
-                            <span className="inline-flex items-center rounded-l-xl border border-white/20 bg-white/5 backdrop-blur-md px-3 text-white/80">
-                              {form.country?.callingCode || "+--"}
-                            </span>
-                            <input
-                              className="w-full rounded-r-xl border border-white/20 bg-white/5 backdrop-blur-md border-l-0 px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                              placeholder="Phone"
-                              name="phone"
-                              autoComplete="tel"
-                              value={form.phone}
-                              onChange={onChange}
-                              onBlur={onBlur}
-                              aria-invalid={Boolean(touched.phone && errors.phone)}
-                              disabled={isSubmitting}
-                              required
-                            />
-                          </div>
-                          <FormError message={touched.phone ? errors.phone : ""} className="mt-1" />
-                        </div>
-                        <div>
-                          <div className="relative">
-                            <input
-                              className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 pr-12"
-                              placeholder="Password"
-                              type={showPassword ? "text" : "password"}
-                              name="password"
-                              autoComplete="new-password"
-                              value={form.password}
-                              onChange={onChange}
-                              onBlur={onBlur}
-                              aria-invalid={Boolean(touched.password && errors.password)}
-                              disabled={isSubmitting}
-                              required
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 text-xs"
-                              tabIndex={-1}
-                              onClick={() => setShowPassword((v) => !v)}
-                              disabled={isSubmitting}
-                            >
-                              {showPassword ? "Hide" : "Show"}
-                            </button>
-                          </div>
-                          <FormError message={touched.password ? errors.password : ""} className="mt-1" />
+                          ))}
                         </div>
                       </div>
 
                       <div>
-                        <CountrySelect
-                          value={form.country}
-                          countries={allowedCountries}
-                          invalid={Boolean(touched.country && errors.country)}
-                          disabled={isSubmitting}
-                          onChange={(next) => {
-                            setForm((prev) => ({ ...prev, country: next }));
-                            setTouched((prev) => ({ ...prev, country: true }));
-                            setErrors((curr) => ({
-                              ...curr,
-                              country: validateField("country", next?.iso2 || "", { ...form, country: next }),
-                            }));
-                          }}
-                        />
-                        <FormError message={touched.country ? errors.country : ""} className="mt-1" />
-                        <p className="mt-1 text-xs text-white/60">
-                          Registration is available only for Canada and the United States.
-                        </p>
+                        <h3 className="text-white text-base font-semibold mb-3">Select your plan</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {(ROLE_PLANS[role] || []).map((plan) => (
+                            <div
+                              key={`${role}-${plan.planCode}`}
+                              className={`rounded-xl border p-4 ${plan.popular ? "border-red-500 bg-red-500/10" : "border-white/20 bg-white/5"}`}
+                            >
+                              {plan.popular ? (
+                                <span className="inline-block text-[11px] px-2 py-1 rounded-full bg-red-600 text-white mb-2">
+                                  Most Popular
+                                </span>
+                              ) : null}
+                              <h4 className="text-lg font-bold text-white">{plan.name}</h4>
+                              <p className="text-white mt-1">
+                                <span className="text-2xl font-bold">${plan.priceCAD}</span>
+                                <span className="text-sm text-white/70"> CAD / {plan.period}</span>
+                              </p>
+                              <p className="text-xs text-white/60 mt-1">Approx. ${plan.priceUSD} USD</p>
+                              <ul className="mt-3 space-y-1.5 min-h-[84px]">
+                                {plan.features.map((feature, idx) => (
+                                  <li key={idx} className="text-xs text-white/80 flex items-center gap-2">
+                                    <span className="text-green-400">✓</span>
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                              <button
+                                type="button"
+                                onClick={() => handleSelectPlan(plan)}
+                                className="mt-3 w-full rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 transition"
+                              >
+                                Complete Registration
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={submit} className="flex flex-col gap-4">
+                      <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-260px)] pr-2">
+                        {selectedPlan ? (
+                          <div className="rounded-xl border border-white/20 bg-white/5 p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <p className="text-white/70 text-xs uppercase tracking-wide">Selected plan</p>
+                                <h3 className="text-lg font-semibold text-white capitalize">{role} - {selectedPlan.name}</h3>
+                                <p className="text-sm text-white/80 mt-1">
+                                  ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
+                                  <span className="text-xs text-white/60 ml-2">Approx. ${selectedPlan.priceUSD} USD</span>
+                                </p>
+                                <p className="text-xs text-white/60 mt-1">System: {selectedSystem.toUpperCase()}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setStep("select")}
+                                className="text-sm text-red-300 hover:text-red-200 transition"
+                              >
+                                Change Plan
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Basic info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <input
+                              className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                              placeholder="Company Name"
+                              name="companyName"
+                              autoComplete="organization"
+                              value={form.companyName}
+                              onChange={onChange}
+                              onBlur={onBlur}
+                              aria-invalid={Boolean(touched.companyName && errors.companyName)}
+                              disabled={isSubmitting}
+                              ref={companyRef}
+                              required
+                            />
+                            <FormError
+                              message={companyExistsError || (touched.companyName ? errors.companyName : "")}
+                              className="mt-1"
+                            />
+                            {checkingCompany ? (
+                              <p className="mt-1 text-xs text-white/60">Checking company availability...</p>
+                            ) : null}
+                          </div>
+                          <div>
+                            <input
+                              className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                              placeholder="Username"
+                              name="username"
+                              autoComplete="username"
+                              value={form.username}
+                              onChange={onChange}
+                              onBlur={onBlur}
+                              aria-invalid={Boolean(touched.username && errors.username)}
+                              disabled={isSubmitting}
+                              required
+                            />
+                            <FormError message={touched.username ? errors.username : ""} className="mt-1" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <input
+                              className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                              placeholder="Full Name"
+                              name="fullName"
+                              autoComplete="name"
+                              value={form.fullName}
+                              onChange={onChange}
+                              onBlur={onBlur}
+                              aria-invalid={Boolean(touched.fullName && errors.fullName)}
+                              disabled={isSubmitting}
+                              required
+                            />
+                            <FormError message={touched.fullName ? errors.fullName : ""} className="mt-1" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <input
+                              className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                              placeholder="Email"
+                              type="email"
+                              name="email"
+                              autoComplete="email"
+                              value={form.email}
+                              onChange={onChange}
+                              onBlur={onBlur}
+                              aria-invalid={Boolean(touched.email && errors.email)}
+                              disabled={isSubmitting}
+                              required
+                            />
+                            <FormError
+                              message={emailExistsError || (touched.email ? errors.email : "")}
+                              className="mt-1"
+                            />
+                            {checkingEmail ? (
+                              <p className="mt-1 text-xs text-white/60">Checking email availability...</p>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <div className="flex">
+                              <span className="inline-flex items-center rounded-l-xl border border-white/20 bg-white/5 backdrop-blur-md px-3 text-white/80">
+                                {form.country?.callingCode || "+--"}
+                              </span>
+                              <input
+                                className="w-full rounded-r-xl border border-white/20 bg-white/5 backdrop-blur-md border-l-0 px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                                placeholder="Phone"
+                                name="phone"
+                                autoComplete="tel"
+                                value={form.phone}
+                                onChange={onChange}
+                                onBlur={onBlur}
+                                aria-invalid={Boolean(touched.phone && errors.phone)}
+                                disabled={isSubmitting}
+                                required
+                              />
+                            </div>
+                            <FormError message={touched.phone ? errors.phone : ""} className="mt-1" />
+                          </div>
+                          <div>
+                            <div className="relative">
+                              <input
+                                className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 pr-12"
+                                placeholder="Password"
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                autoComplete="new-password"
+                                value={form.password}
+                                onChange={onChange}
+                                onBlur={onBlur}
+                                aria-invalid={Boolean(touched.password && errors.password)}
+                                disabled={isSubmitting}
+                                required
+                              />
+                              <button
+                                type="button"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 text-xs"
+                                tabIndex={-1}
+                                onClick={() => setShowPassword((v) => !v)}
+                                disabled={isSubmitting}
+                              >
+                                {showPassword ? "Hide" : "Show"}
+                              </button>
+                            </div>
+                            <FormError message={touched.password ? errors.password : ""} className="mt-1" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <CountrySelect
+                            value={form.country}
+                            countries={allowedCountries}
+                            invalid={Boolean(touched.country && errors.country)}
+                            disabled={isSubmitting}
+                            onChange={(next) => {
+                              setForm((prev) => ({ ...prev, country: next }));
+                              setTouched((prev) => ({ ...prev, country: true }));
+                              setErrors((curr) => ({
+                                ...curr,
+                                country: validateField("country", next?.iso2 || "", { ...form, country: next }),
+                              }));
+                            }}
+                          />
+                          <FormError message={touched.country ? errors.country : ""} className="mt-1" />
+                          <p className="mt-1 text-xs text-white/60">
+                            Registration is available only for Canada and the United States.
+                          </p>
+                        </div>
+
+                        <details className="rounded-xl border border-white/20">
+                          <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
+                            Plan and system summary
+                          </summary>
+                          <div className="px-4 pb-4 pt-2 space-y-3">
+                            <p className="text-sm text-white/80">
+                              Role: <span className="font-semibold capitalize">{role}</span>
+                            </p>
+                            <p className="text-sm text-white/80">
+                              Plan: <span className="font-semibold">{selectedPlan?.name}</span>
+                            </p>
+                            <p className="text-sm text-white/80">
+                              System: <span className="font-semibold uppercase">{selectedSystem}</span>
+                            </p>
+                          </div>
+                        </details>
+
+                        <details className="rounded-xl border border-white/20">
+                          <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
+                            More details (optional)
+                          </summary>
+                          <div className="px-4 pb-4 pt-2">
+                            <textarea
+                              className="w-full min-h-[80px] rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 resize-none"
+                              placeholder="Tell us anything else (optional)"
+                              name="comment"
+                              value={form.comment}
+                              onChange={onChange}
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </details>
                       </div>
 
-                      <details className="rounded-xl border border-white/20">
-                        <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
-                          Plan and system summary
-                        </summary>
-                        <div className="px-4 pb-4 pt-2 space-y-3">
-                          <p className="text-sm text-white/80">
-                            Role: <span className="font-semibold capitalize">{role}</span>
-                          </p>
-                          <p className="text-sm text-white/80">
-                            Plan: <span className="font-semibold">{selectedPlan?.name}</span>
-                          </p>
-                          <p className="text-sm text-white/80">
-                            System: <span className="font-semibold uppercase">{selectedSystem}</span>
-                          </p>
-                        </div>
-                      </details>
-
-                      <details className="rounded-xl border border-white/20">
-                        <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
-                          More details (optional)
-                        </summary>
-                        <div className="px-4 pb-4 pt-2">
-                          <textarea
-                            className="w-full min-h-[80px] rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 resize-none"
-                            placeholder="Tell us anything else (optional)"
-                            name="comment"
-                            value={form.comment}
-                            onChange={onChange}
-                            disabled={isSubmitting}
-                          />
-                        </div>
-                      </details>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || requiredMissing || hasValidationErrors || hasAvailabilityErrors}
-                      className="w-full rounded-xl bg-black/30 hover:bg-black/40 text-white font-semibold py-3 border border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? "Processing..." : "Create Account"}
-                    </button>
-
-                    <div className="pt-3 border-t border-white/10 flex justify-between text-sm">
                       <button
-                        type="button"
-                        className="text-white/70 hover:text-white transition"
-                        onClick={() => navigate("/login")}
+                        type="submit"
+                        disabled={isSubmitting || requiredMissing || hasValidationErrors || hasAvailabilityErrors}
+                        className="w-full rounded-xl bg-black/30 hover:bg-black/40 text-white font-semibold py-3 border border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Already have an account? Sign In
+                        {isSubmitting ? "Processing..." : "Create Account"}
                       </button>
-                      <button
-                        type="button"
-                        className="text-white/70 hover:text-white transition"
-                        onClick={() => navigate("/")}
-                      >
-                        Back to Portal
-                      </button>
-                    </div>
 
-                    <div className="text-center mt-2">
-                      <p className="text-white/70 text-sm">
-                        Already have an account?{" "}
-                        <Link to="/login" className="text-red-300 hover:text-red-200 underline underline-offset-2">
-                          Sign in
-                        </Link>
-                      </p>
-                    </div>
-                  </form>
-                )}
-              </>
-            )}
-          </GlassCard>
+                      <div className="pt-3 border-t border-white/10 flex justify-between text-sm">
+                        <button
+                          type="button"
+                          className="text-white/70 hover:text-white transition"
+                          onClick={() => navigate("/login")}
+                        >
+                          Already have an account? Sign In
+                        </button>
+                        <button
+                          type="button"
+                          className="text-white/70 hover:text-white transition"
+                          onClick={() => navigate("/")}
+                        >
+                          Back to Portal
+                        </button>
+                      </div>
 
-          <p className="text-center text-white/40 text-xs mt-4">
-            Your system, role, and plan are stored during registration for a cleaner first login.
-          </p>
+                      <div className="text-center mt-2">
+                        <p className="text-white/70 text-sm">
+                          Already have an account?{" "}
+                          <Link to="/login" className="text-red-300 hover:text-red-200 underline underline-offset-2">
+                            Sign in
+                          </Link>
+                        </p>
+                      </div>
+                    </form>
+                  )}
+                </>
+              )}
+            </GlassCard>
+
+            <p className="text-center text-white/40 text-xs mt-4">
+              Your system, role, and plan are stored during registration for a cleaner first login.
+            </p>
+          </div>
         </div>
-      </div>
       </div>
       <Footer />
     </>
