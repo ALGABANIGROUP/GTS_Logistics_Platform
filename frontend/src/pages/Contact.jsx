@@ -394,10 +394,7 @@ const Contact = () => {
                 <p className="text-gray-300">24/7 Emergency Support for active customers</p>
                 <div className="mt-4 pt-4 border-t border-white/10">
                   <p className="text-gray-400 text-sm">📱 Download our mobile app for instant support:</p>
-                  <div className="flex gap-3 mt-2">
-                    <a href="#" className="text-gray-400 hover:text-white text-sm">App Store</a>
-                    <a href="#" className="text-gray-400 hover:text-white text-sm">Google Play</a>
-                  </div>
+                  <p className="mt-2 text-gray-500 text-sm">Mobile app links will be published here when the app stores go live.</p>
                 </div>
               </div>
             </div>

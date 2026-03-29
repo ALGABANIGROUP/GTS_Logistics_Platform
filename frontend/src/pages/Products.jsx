@@ -25,7 +25,7 @@ const Products = () => {
                 icon: '🚛',
                 features: ['AI load matching', 'Real-time pricing', 'Carrier network', 'Mobile app'],
                 price: 'Free to $99/month',
-                link: '/products/loadboard',
+                link: '/contact?inquiry=loadboard',
                 popular: true
             },
             {
@@ -35,7 +35,7 @@ const Products = () => {
                 icon: '🛣️',
                 features: ['Large network', 'Load posting', 'Rate insights', 'Fuel cards'],
                 price: 'Contact sales',
-                link: '/products/truckstop'
+                link: '/contact?inquiry=truckstop'
             },
             {
                 id: 'dat-loadboard',
@@ -44,7 +44,7 @@ const Products = () => {
                 icon: '📊',
                 features: ['Carrier verification', 'Advanced analytics', 'Insurance checking', 'Credit reports'],
                 price: '$99/month',
-                link: '/products/dat'
+                link: '/contact?inquiry=dat-load-board'
             },
             {
                 id: '123loadboard',
@@ -53,7 +53,7 @@ const Products = () => {
                 icon: '🔢',
                 features: ['Easy interface', 'Dispatch integration', 'GPS tracking', 'Customer support'],
                 price: '$49/month',
-                link: '/products/123loadboard'
+                link: '/contact?inquiry=123loadboard'
             }
         ],
         aiBots: [
@@ -64,7 +64,7 @@ const Products = () => {
                 icon: '🤖',
                 features: ['Smart load matching', 'Rate optimization', 'Carrier sourcing', '24/7 operation'],
                 price: 'Included in Pro',
-                link: '/ai-bots/freight-broker',
+                link: '/ai-bots/freight',
                 popular: true
             },
             {
@@ -119,7 +119,7 @@ const Products = () => {
                 icon: '🔒',
                 features: ['Threat detection', 'Access control', 'Security auditing', 'Incident response'],
                 price: 'Included in Premium',
-                link: '/ai-bots/security'
+                link: '/ai-bots/security_manager'
             },
             {
                 id: 'ai-customer-service',
@@ -139,7 +139,7 @@ const Products = () => {
                 icon: '💳',
                 features: ['Fast funding', 'Competitive rates', 'Flexible terms', 'Online portal'],
                 price: '1-3% fee',
-                link: '/products/factoring'
+                link: '/contact?inquiry=factoring'
             },
             {
                 id: 'insurance-brokerage',
@@ -148,7 +148,7 @@ const Products = () => {
                 icon: '🛡️',
                 features: ['Cargo insurance', 'Liability coverage', 'Claims processing', 'Risk assessment'],
                 price: 'Contact sales',
-                link: '/products/insurance'
+                link: '/contact?inquiry=insurance'
             },
             {
                 id: 'fuel-cards',
@@ -157,7 +157,7 @@ const Products = () => {
                 icon: '⛽',
                 features: ['Discounted fuel', 'Nationwide network', 'Detailed reporting', 'Fleet management'],
                 price: 'Contact sales',
-                link: '/products/fuel-cards'
+                link: '/contact?inquiry=fuel-cards'
             },
             {
                 id: 'credit-reports',
@@ -166,7 +166,7 @@ const Products = () => {
                 icon: '📊',
                 features: ['Carrier credit', 'Shipper credit', 'Payment history', 'Risk scoring'],
                 price: '$25/report',
-                link: '/products/credit-reports'
+                link: '/contact?inquiry=credit-reports'
             }
         ],
         technology: [
@@ -177,7 +177,7 @@ const Products = () => {
                 icon: '📡',
                 features: ['GPS tracking', 'Fuel monitoring', 'Driver behavior', 'Maintenance alerts'],
                 price: '$49/month',
-                link: '/products/telematics'
+                link: '/contact?inquiry=telematics'
             },
             {
                 id: 'eld-systems',
@@ -186,7 +186,7 @@ const Products = () => {
                 icon: '📱',
                 features: ['HOS compliance', 'Automated logging', 'FMCSA reports', 'Driver management'],
                 price: '$39/month',
-                link: '/products/eld'
+                link: '/contact?inquiry=eld'
             },
             {
                 id: 'api-integration',
@@ -195,7 +195,7 @@ const Products = () => {
                 icon: '🔗',
                 features: ['TMS integration', 'Accounting sync', 'Real-time data', 'Custom APIs'],
                 price: 'Contact sales',
-                link: '/products/api'
+                link: '/contact?inquiry=api-integration'
             },
             {
                 id: 'rmis',
@@ -204,7 +204,7 @@ const Products = () => {
                 icon: '📈',
                 features: ['Incident tracking', 'Claims management', 'Safety analytics', 'Compliance reporting'],
                 price: 'Included in Premium',
-                link: '/products/rmis'
+                link: '/contact?inquiry=rmis'
             },
             {
                 id: 'saferwatch',
@@ -213,7 +213,7 @@ const Products = () => {
                 icon: '👁️',
                 features: ['Continuous monitoring', 'Real-time alerts', 'Compliance tracking', 'Safety scores'],
                 price: 'Included in Premium',
-                link: '/products/saferwatch'
+                link: '/contact?inquiry=saferwatch'
             }
         ],
         compliance: [
@@ -224,7 +224,7 @@ const Products = () => {
                 icon: '🏦',
                 features: ['CTR filing', 'SAR reporting', 'Automated compliance', 'Audit trails'],
                 price: 'Contact sales',
-                link: '/products/fincen'
+                link: '/contact?inquiry=fincen-reporting'
             },
             {
                 id: 'fmcsa-compliance',
@@ -233,7 +233,7 @@ const Products = () => {
                 icon: '📋',
                 features: ['HOS tracking', 'ELD integration', 'Safety monitoring', 'Audit preparation'],
                 price: 'Included in Premium',
-                link: '/products/fmcsa'
+                link: '/contact?inquiry=fmcsa-compliance'
             },
             {
                 id: 'insurance-verification',
@@ -242,7 +242,7 @@ const Products = () => {
                 icon: '🛡️',
                 features: ['COI verification', 'Expiration alerts', 'Coverage validation', 'Document storage'],
                 price: 'Included in Pro',
-                link: '/products/insurance'
+                link: '/contact?inquiry=insurance-verification'
             }
         ]
     };

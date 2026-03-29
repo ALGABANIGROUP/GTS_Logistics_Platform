@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
 import SeoHead from '../components/SeoHead';
 
 const Resources = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('all');
+    const [loadSearch, setLoadSearch] = useState({
+        origin: '',
+        destination: '',
+        equipment: ''
+    });
 
     const resources = {
         courses: [
@@ -72,6 +78,18 @@ const Resources = () => {
             { title: "Freight Fraud Prevention Strategies", date: "April 5, 2026", link: "/webinars/fraud-prevention" },
             { title: "2026 Market Outlook", date: "March 28, 2026", link: "/webinars/market-outlook" }
         ]
+    };
+
+    const handleLoadSearchChange = (field, value) => {
+        setLoadSearch((current) => ({ ...current, [field]: value }));
+    };
+
+    const handleFindLoads = () => {
+        const params = new URLSearchParams();
+        if (loadSearch.origin.trim()) params.set('origin', loadSearch.origin.trim());
+        if (loadSearch.destination.trim()) params.set('destination', loadSearch.destination.trim());
+        if (loadSearch.equipment.trim()) params.set('equipment', loadSearch.equipment.trim());
+        navigate(`/find-loads${params.toString() ? `?${params.toString()}` : ''}`);
     };
 
     return (
@@ -319,16 +337,16 @@ const Resources = () => {
                         <div className="grid md:grid-cols-3 gap-4">
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">📍</span>
-                                <input type="text" placeholder="Origin" className="w-full pl-10 pr-3 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400" />
+                                <input type="text" placeholder="Origin" value={loadSearch.origin} onChange={(e) => handleLoadSearchChange('origin', e.target.value)} className="w-full pl-10 pr-3 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400" />
                             </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">📍</span>
-                                <input type="text" placeholder="Destination" className="w-full pl-10 pr-3 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400" />
+                                <input type="text" placeholder="Destination" value={loadSearch.destination} onChange={(e) => handleLoadSearchChange('destination', e.target.value)} className="w-full pl-10 pr-3 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-gray-400" />
                             </div>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🚛</span>
-                                <select className="w-full pl-10 pr-3 py-3 bg-black/50 border border-white/20 rounded-lg text-white">
-                                    <option>Equipment Type</option>
+                                <select value={loadSearch.equipment} onChange={(e) => handleLoadSearchChange('equipment', e.target.value)} className="w-full pl-10 pr-3 py-3 bg-black/50 border border-white/20 rounded-lg text-white">
+                                    <option value="">Equipment Type</option>
                                     <option>Flatbed</option>
                                     <option>Dry Van</option>
                                     <option>Reefer</option>
@@ -336,7 +354,7 @@ const Resources = () => {
                                 </select>
                             </div>
                         </div>
-                        <button className="w-full mt-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        <button onClick={handleFindLoads} className="w-full mt-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                             FIND LOADS
                         </button>
                     </div>

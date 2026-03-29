@@ -192,6 +192,7 @@ const Privacy = React.lazy(() => import("./pages/Privacy"));
 const Terms = React.lazy(() => import("./pages/Terms"));
 const Legal = React.lazy(() => import("./pages/Legal"));
 const Contact = React.lazy(() => import("./pages/Contact"));
+const PublicSupport = React.lazy(() => import("./pages/PublicSupport"));
 const PublicContentPage = React.lazy(() => import("./pages/PublicContentPage"));
 
 /** Simple error boundary so the app doesn't go blank-white on runtime errors */
@@ -378,8 +379,7 @@ const App = () => {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/activate/:token" element={<ActivateAccount />} />
 
-              {/* Redirect /support to Customer Service Bot */}
-              <Route path="/support" element={<Navigate to="/ai-bots/customer-service" replace />} />
+              <Route path="/support" element={<PublicSupport />} />
 
               {/* System Selector - choose system after login */}
               <Route

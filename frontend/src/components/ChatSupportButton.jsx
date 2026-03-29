@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ChatSupportButton = () => {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
+    const supportPhoneLabel = '+1 (778) 651-8297';
+    const supportPhoneHref = 'tel:+17786518297';
+
+    const openSupportRoute = (route) => {
+        setIsOpen(false);
+        navigate(route);
+    };
 
     return (
         <>
@@ -26,18 +35,20 @@ const ChatSupportButton = () => {
                         </div>
                         <p className="text-gray-300 text-sm mb-3">Hi! How can we help you today?</p>
                         <div className="space-y-2">
-                            <button className="w-full text-left p-2 bg-white/10 rounded text-white text-sm hover:bg-white/20 transition">
+                            <button onClick={() => openSupportRoute('/support?topic=account')} className="w-full text-left p-2 bg-white/10 rounded text-white text-sm hover:bg-white/20 transition">
                                 Account Issues
                             </button>
-                            <button className="w-full text-left p-2 bg-white/10 rounded text-white text-sm hover:bg-white/20 transition">
+                            <button onClick={() => openSupportRoute('/find-loads')} className="w-full text-left p-2 bg-white/10 rounded text-white text-sm hover:bg-white/20 transition">
                                 Load Board Help
                             </button>
-                            <button className="w-full text-left p-2 bg-white/10 rounded text-white text-sm hover:bg-white/20 transition">
+                            <button onClick={() => openSupportRoute('/contact?inquiry=billing')} className="w-full text-left p-2 bg-white/10 rounded text-white text-sm hover:bg-white/20 transition">
                                 Billing Questions
                             </button>
                         </div>
                         <div className="mt-3 pt-3 border-t border-white/20">
-                            <p className="text-gray-400 text-xs">Or call us: +1 (555) 123-4567</p>
+                            <p className="text-gray-400 text-xs">
+                                Or call us: <a href={supportPhoneHref} className="hover:text-white">{supportPhoneLabel}</a>
+                            </p>
                         </div>
                     </div>
                 </div>

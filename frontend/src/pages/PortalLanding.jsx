@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import gtsLogo from '../assets/gabani_logo.png';
 import bgLogin from '../assets/bg_login.png';
 import LiveLoadsTicker from '../components/LiveLoadsTicker';
@@ -11,7 +11,13 @@ import ChatSupportButton from '../components/ChatSupportButton';
 import SeoHead from '../components/SeoHead';
 
 const PortalLanding = () => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState('carrier');
+  const [loadSearch, setLoadSearch] = useState({
+    origin: '',
+    destination: '',
+    equipment: ''
+  });
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -83,6 +89,18 @@ const PortalLanding = () => {
     'Myanmar (Burma)', 'Sierra Leone', 'Somalia', 'Togo', 'Turkmenistan',
     'Venezuela', 'Yemen'
   ];
+
+  const handleLoadSearchChange = (field, value) => {
+    setLoadSearch((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleFindLoads = () => {
+    const params = new URLSearchParams();
+    if (loadSearch.origin.trim()) params.set('origin', loadSearch.origin.trim());
+    if (loadSearch.destination.trim()) params.set('destination', loadSearch.destination.trim());
+    if (loadSearch.equipment.trim()) params.set('equipment', loadSearch.equipment.trim());
+    navigate(`/find-loads${params.toString() ? `?${params.toString()}` : ''}`);
+  };
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
@@ -160,17 +178,17 @@ const PortalLanding = () => {
                 <div className="bg-white/10 rounded-lg p-4 mb-6">
                   <h3 className="text-white font-semibold mb-3">Search for your first load</h3>
                   <div className="grid md:grid-cols-3 gap-3">
-                    <input type="text" placeholder="Origin" className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white placeholder-gray-400 text-sm" />
-                    <input type="text" placeholder="Destination" className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white placeholder-gray-400 text-sm" />
-                    <select className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white text-sm">
-                      <option>Equipment Type</option>
+                    <input type="text" placeholder="Origin" value={loadSearch.origin} onChange={(e) => handleLoadSearchChange('origin', e.target.value)} className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white placeholder-gray-400 text-sm" />
+                    <input type="text" placeholder="Destination" value={loadSearch.destination} onChange={(e) => handleLoadSearchChange('destination', e.target.value)} className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white placeholder-gray-400 text-sm" />
+                    <select value={loadSearch.equipment} onChange={(e) => handleLoadSearchChange('equipment', e.target.value)} className="px-3 py-2 bg-black/50 border border-white/20 rounded text-white text-sm">
+                      <option value="">Equipment Type</option>
                       <option>Flatbed</option>
                       <option>Dry Van</option>
                       <option>Reefer</option>
                       <option>Heavy Haul</option>
                     </select>
                   </div>
-                  <button className="w-full mt-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
+                  <button onClick={handleFindLoads} className="w-full mt-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
                     FIND LOADS
                   </button>
                 </div>
