@@ -86,6 +86,20 @@ const SmartRecognition = () => {
         setRecognitionResults(prev => [...results, ...prev]);
     };
 
+    const retrainModel = async (model) => {
+        await trainNewModel(model.name, [{ name: `${model.name}-sample.pdf` }]);
+    };
+
+    const downloadModel = (model) => {
+        const blob = new Blob([JSON.stringify(model, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `${model.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="smart-recognition">
             <div className="recognition-header">
@@ -143,8 +157,8 @@ const SmartRecognition = () => {
                                 </div>
                             </div>
                             <div className="model-actions">
-                                <button className="action-btn retrain"> Retrain</button>
-                                <button className="action-btn download"> Download</button>
+                                <button className="action-btn retrain" onClick={() => retrainModel(model)}> Retrain</button>
+                                <button className="action-btn download" onClick={() => downloadModel(model)}> Download</button>
                             </div>
                         </div>
                     ))}

@@ -328,6 +328,14 @@ const ExpenseManagementTab = ({ panelData, onAction }) => {
 
     const expenses = panelData?.expenses || [];
     const categories = ['Operations', 'Fuel', 'Maintenance', 'Insurance', 'Payroll', 'Office', 'Marketing', 'Other'];
+    const handleEditExpense = (expense) => {
+        setNewExpense({
+            category: expense.category || 'Operations',
+            description: expense.description || '',
+            amount: expense.amount || '',
+            date: expense.date || ''
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -455,7 +463,12 @@ const ExpenseManagementTab = ({ panelData, onAction }) => {
                                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{expense.description}</td>
                                     <td className="px-4 py-3 text-sm font-medium text-red-600">-${expense.amount.toLocaleString()}</td>
                                     <td className="px-4 py-3">
-                                        <button className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                        <button
+                                            className="text-blue-600 hover:text-blue-800 text-sm"
+                                            onClick={() => handleEditExpense(expense)}
+                                        >
+                                            Edit
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -471,6 +484,31 @@ const ExpenseManagementTab = ({ panelData, onAction }) => {
 const FinancialReportsTab = ({ panelData, onAction }) => {
     const [reportType, setReportType] = useState('profit_loss');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const openReportPreview = (report) => {
+        const preview = window.open('', '_blank', 'noopener,noreferrer');
+        if (!preview) return;
+        preview.document.write(`
+          <html>
+            <head><title>${report.name}</title></head>
+            <body style="font-family: Arial, sans-serif; padding: 24px;">
+              <h1>${report.name}</h1>
+              <p><strong>Type:</strong> ${report.type}</p>
+              <p><strong>Date:</strong> ${report.date}</p>
+              <p><strong>Size:</strong> ${report.size}</p>
+            </body>
+          </html>
+        `);
+        preview.document.close();
+    };
+    const downloadReport = (report) => {
+        const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `${report.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="space-y-6">
@@ -578,8 +616,18 @@ const FinancialReportsTab = ({ panelData, onAction }) => {
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded">View</button>
-                                <button className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm rounded">Download</button>
+                                <button
+                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                                    onClick={() => openReportPreview(report)}
+                                >
+                                    View
+                                </button>
+                                <button
+                                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm rounded"
+                                    onClick={() => downloadReport(report)}
+                                >
+                                    Download
+                                </button>
                             </div>
                         </div>
                     ))}

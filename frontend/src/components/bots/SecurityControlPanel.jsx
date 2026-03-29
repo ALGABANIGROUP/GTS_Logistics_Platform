@@ -293,7 +293,12 @@ const AccessControlTab = ({ panelData, onAction }) => {
                         <div key={idx} className={`p-4 border-2 border-${role.color}-200 dark:border-${role.color}-800 rounded-lg`}>
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className={`font-bold text-${role.color}-600`}>{role.role}</h4>
-                                <button className="text-sm text-blue-600 hover:text-blue-800">Edit</button>
+                                <button
+                                    className="text-sm text-blue-600 hover:text-blue-800"
+                                    onClick={() => onAction('edit_role', { role: role.role })}
+                                >
+                                    Edit
+                                </button>
                             </div>
                             <ul className="space-y-2">
                                 {role.permissions.map((perm, i) => (

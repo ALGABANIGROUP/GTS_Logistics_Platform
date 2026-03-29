@@ -186,6 +186,25 @@ const SocialCampaignManager = ({ onNewNotification }) => {
         }
     };
 
+    const editDraftCampaign = (campaign) => {
+        setNewCampaign((prev) => ({
+            ...prev,
+            ...campaign,
+            content: {
+                ...prev.content,
+                ...(campaign.content || {})
+            }
+        }));
+        setSelectedPlatform(campaign.platform || 'facebook');
+        setActiveTab('create');
+        onNewNotification(`Editing ${campaign.name}`, '');
+    };
+
+    const openCampaignAnalytics = (campaign) => {
+        setActiveTab('analytics');
+        onNewNotification(`Viewing analytics for ${campaign.name}`, '');
+    };
+
     const campaignObjectives = [
         { id: 'awareness', name: 'Brand Awareness', icon: '', description: 'Increase brand visibility' },
         { id: 'engagement', name: 'Engagement', icon: '', description: 'Boost likes, comments, shares' },
@@ -567,7 +586,7 @@ Remember: {safety_reminder}
                                                 >
                                                     Publish
                                                 </button>
-                                                <button className="action-btn">Edit</button>
+                                                <button className="action-btn" onClick={() => editDraftCampaign(campaign)}>Edit</button>
                                             </>
                                         )}
                                         {campaign.status === 'published' && (
@@ -579,7 +598,7 @@ Remember: {safety_reminder}
                                                  Boost
                                             </button>
                                         )}
-                                        <button className="action-btn">Analytics</button>
+                                        <button className="action-btn" onClick={() => openCampaignAnalytics(campaign)}>Analytics</button>
                                     </div>
                                 </div>
                             ))}

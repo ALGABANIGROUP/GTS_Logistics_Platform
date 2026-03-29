@@ -4,6 +4,7 @@ import './AdvancedWorkflows.css';
 
 const AdvancedWorkflows = () => {
     const [workflowMode, setWorkflowMode] = useState('designer'); // designer, templates, active
+    const [workflowNotice, setWorkflowNotice] = useState('');
     const [customWorkflows, setCustomWorkflows] = useState([
         { id: 1, name: 'Express Import Clearance', steps: 8, triggers: 2, conditions: 5, actions: 3, created: '2024-01-10' },
         { id: 2, name: 'Export Document Pipeline', steps: 6, triggers: 1, conditions: 3, actions: 2, created: '2024-01-05' }
@@ -54,6 +55,65 @@ const AdvancedWorkflows = () => {
         { id: 'loop', name: 'Loop', icon: '', description: 'Repeat action' },
         { id: 'parallel', name: 'Parallel', icon: '', description: 'Concurrent tasks' }
     ];
+
+    const saveDesigner = () => setWorkflowNotice('Workflow draft saved locally.');
+    const testDesigner = () => setWorkflowNotice('Workflow test started with sample documents.');
+    const activateDesigner = () => setWorkflowNotice('Workflow designer configuration marked ready for activation.');
+    const pauseWorkflow = (workflowId) => {
+        setActiveWorkflows((prev) =>
+            prev.map((workflow) =>
+                workflow.id === workflowId ? { ...workflow, status: 'paused' } : workflow
+            )
+        );
+        setWorkflowNotice(`Workflow ${workflowId} paused.`);
+    };
+    const viewWorkflowDetails = (workflowId) => {
+        const workflow = activeWorkflows.find((item) => item.id === workflowId);
+        if (workflow) {
+            setWorkflowNotice(`${workflow.name}: ${workflow.documentsProcessed} documents processed, ${workflow.progress}% complete.`);
+        }
+    };
+    const viewWorkflowLogs = (workflowId) => {
+        const workflow = activeWorkflows.find((item) => item.id === workflowId);
+        setWorkflowNotice(`Logs opened for ${workflow?.name || `workflow ${workflowId}`}.`);
+    };
+    const editWorkflow = (workflow) => {
+        setWorkflowMode('designer');
+        setWorkflowNotice(`Editing ${workflow.name} in the workflow designer.`);
+    };
+    const activateCustomWorkflow = (workflow) => {
+        setActiveWorkflows((prev) =>
+            prev.some((item) => item.name === workflow.name)
+                ? prev
+                : [
+                    {
+                        id: Date.now(),
+                        name: workflow.name,
+                        status: 'running',
+                        progress: 0,
+                        documentsProcessed: 0,
+                        averageTime: '0.0h',
+                        lastRun: new Date().toISOString().split('T')[0]
+                    },
+                    ...prev,
+                ]
+        );
+        setWorkflowNotice(`${workflow.name} activated.`);
+    };
+    const duplicateWorkflow = (workflow) => {
+        const duplicate = {
+            ...workflow,
+            id: Date.now(),
+            name: `${workflow.name} Copy`,
+            created: new Date().toISOString().split('T')[0]
+        };
+        setCustomWorkflows((prev) => [duplicate, ...prev]);
+        setWorkflowNotice(`${workflow.name} duplicated.`);
+    };
+    const deleteWorkflow = (workflowId) => {
+        setCustomWorkflows((prev) => prev.filter((workflow) => workflow.id !== workflowId));
+        setWorkflowNotice(`Workflow ${workflowId} deleted.`);
+    };
 
     return (
         <div className="advanced-workflows">
@@ -107,9 +167,9 @@ const AdvancedWorkflows = () => {
                             <div className="canvas-header">
                                 <span> Drag components here to build workflow</span>
                                 <div className="canvas-controls">
-                                    <button className="canvas-btn"> Save</button>
-                                    <button className="canvas-btn"> Test</button>
-                                    <button className="canvas-btn"> Activate</button>
+                                    <button className="canvas-btn" onClick={saveDesigner}> Save</button>
+                                    <button className="canvas-btn" onClick={testDesigner}> Test</button>
+                                    <button className="canvas-btn" onClick={activateDesigner}> Activate</button>
                                 </div>
                             </div>
                             <div className="drop-zone">
@@ -237,9 +297,9 @@ const AdvancedWorkflows = () => {
                                 </div>
 
                                 <div className="workflow-actions">
-                                    <button className="action-btn pause"> Pause</button>
-                                    <button className="action-btn view"> View Details</button>
-                                    <button className="action-btn logs"> Logs</button>
+                                    <button className="action-btn pause" onClick={() => pauseWorkflow(workflow.id)}> Pause</button>
+                                    <button className="action-btn view" onClick={() => viewWorkflowDetails(workflow.id)}> View Details</button>
+                                    <button className="action-btn logs" onClick={() => viewWorkflowLogs(workflow.id)}> Logs</button>
                                 </div>
                             </div>
                         ))}
@@ -279,15 +339,17 @@ const AdvancedWorkflows = () => {
                             </div>
 
                             <div className="card-actions">
-                                <button className="action-btn edit"> Edit</button>
-                                <button className="action-btn activate"> Activate</button>
-                                <button className="action-btn duplicate"> Duplicate</button>
-                                <button className="action-btn delete"> Delete</button>
+                                <button className="action-btn edit" onClick={() => editWorkflow(wf)}> Edit</button>
+                                <button className="action-btn activate" onClick={() => activateCustomWorkflow(wf)}> Activate</button>
+                                <button className="action-btn duplicate" onClick={() => duplicateWorkflow(wf)}> Duplicate</button>
+                                <button className="action-btn delete" onClick={() => deleteWorkflow(wf.id)}> Delete</button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {workflowNotice ? <div className="workflow-notice">{workflowNotice}</div> : null}
 
             {/* Workflow Statistics */}
             <div className="workflow-statistics">

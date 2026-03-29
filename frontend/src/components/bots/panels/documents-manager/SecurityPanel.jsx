@@ -4,6 +4,7 @@ import './SecurityPanel.css';
 
 const SecurityPanel = () => {
     const [activeSection, setActiveSection] = useState('encryption');
+    const [notice, setNotice] = useState('');
     const [accessRules, setAccessRules] = useState([
         { id: 1, role: 'Admin', permissions: 'Full Access', status: 'active' },
         { id: 2, role: 'Manager', permissions: 'Read/Write', status: 'active' },
@@ -33,6 +34,37 @@ const SecurityPanel = () => {
         { severity: 'medium', description: 'Unusual document access pattern', count: 1, timestamp: '2024-01-15 14:45' },
         { severity: 'low', description: 'API rate limit approached', count: 1, timestamp: '2024-01-15 14:30' }
     ];
+
+    const openEncryptionAction = (setting, action) => {
+        setNotice(`${action} requested for ${setting.type}.`);
+    };
+
+    const saveConfiguration = () => {
+        setNotice('Security configuration saved locally.');
+    };
+
+    const editAccessRule = (rule) => {
+        setNotice(`Editing access rule for ${rule.role}.`);
+    };
+
+    const viewAccessDetails = (rule) => {
+        setNotice(`${rule.role} permissions: ${rule.permissions}.`);
+    };
+
+    const viewComplianceTemplate = (template) => {
+        setNotice(`${template.name} coverage is ${template.coverage}%.`);
+    };
+
+    const exportComplianceTemplate = (template) => {
+        const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        setNotice(`${template.name} exported.`);
+    };
 
     return (
         <div className="security-panel">
@@ -85,8 +117,8 @@ const SecurityPanel = () => {
                                 </div>
                                 <div className="encryption-algorithm">Algorithm: {setting.algorithm}</div>
                                 <div className="encryption-actions">
-                                    <button className="action-btn"> Configure</button>
-                                    <button className="action-btn"> Rotate Keys</button>
+                                    <button className="action-btn" onClick={() => openEncryptionAction(setting, 'Configuration')}> Configure</button>
+                                    <button className="action-btn" onClick={() => openEncryptionAction(setting, 'Key rotation')}> Rotate Keys</button>
                                 </div>
                             </div>
                         ))}
@@ -121,7 +153,7 @@ const SecurityPanel = () => {
                                 </select>
                             </div>
                         </div>
-                        <button className="save-btn"> Save Configuration</button>
+                        <button className="save-btn" onClick={saveConfiguration}> Save Configuration</button>
                     </div>
                 </div>
             )}
@@ -148,8 +180,8 @@ const SecurityPanel = () => {
                                         <td>{rule.permissions}</td>
                                         <td><span className="status-badge active"> {rule.status}</span></td>
                                         <td>
-                                            <button className="action-btn small">Edit</button>
-                                            <button className="action-btn small">Details</button>
+                                            <button className="action-btn small" onClick={() => editAccessRule(rule)}>Edit</button>
+                                            <button className="action-btn small" onClick={() => viewAccessDetails(rule)}>Details</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -216,8 +248,8 @@ const SecurityPanel = () => {
                                         {template.status === 'compliant' ? '' : ''} {template.status}
                                     </div>
                                     <div className="template-actions">
-                                        <button className="action-btn"> View</button>
-                                        <button className="action-btn"> Export</button>
+                                        <button className="action-btn" onClick={() => viewComplianceTemplate(template)}> View</button>
+                                        <button className="action-btn" onClick={() => exportComplianceTemplate(template)}> Export</button>
                                     </div>
                                 </div>
                             ))}
@@ -347,6 +379,8 @@ const SecurityPanel = () => {
                     </div>
                 </div>
             </div>
+
+            {notice ? <div className="security-notice">{notice}</div> : null}
         </div>
     );
 };
