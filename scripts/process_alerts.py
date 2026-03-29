@@ -153,10 +153,10 @@ async def process_alerts():
     print("📢 Alert processor started...")
     print(f"📧 Email alerts: {'✅' if alert_email else '❌'}")
     print(f"💬 Slack alerts: {'✅' if slack_webhook else '❌'}")
-    print(f"📱 Telegram alerts: {'✅' if telegram_service.is_configured() else '❌'}")
+    print(f"📱 Telegram alerts: {'✅' if telegram_service.can_send_alerts() else '❌'}")
     print(f"💬 Dashboard alerts: ✅ (always enabled)")
 
-    if not alert_email and not slack_webhook and not telegram_service.is_configured():
+    if not alert_email and not slack_webhook and not telegram_service.can_send_alerts():
         print("⚠️  No external alert destinations configured (but dashboard alerts are active)")
 
     try:
@@ -177,7 +177,7 @@ async def process_alerts():
                         await send_slack_alert(incident, slack_webhook)
 
                     # Send Telegram alert
-                    if telegram_service.is_configured():
+                    if telegram_service.can_send_alerts():
                         await send_telegram_alert(incident)
 
                     # Send Dashboard alert (always active)

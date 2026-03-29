@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: no-mock-code
+        name: Check for mock/demo code
+        entry: python scripts/no_mock_check.py
+        language: system
+        files: \.(py|jsx|js|yml|yaml|env)$
+        pass_filenames: false

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -23,6 +24,7 @@ const formatTimestamp = (value) => {
 };
 
 export default function AIDispatcherDashboard() {
+  const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,6 +82,14 @@ export default function AIDispatcherDashboard() {
     const interval = setInterval(fetchMetrics, 15000);
     return () => clearInterval(interval);
   }, [fetchMetrics]);
+
+  const openDispatcherControl = useCallback(() => {
+    navigate("/ai-bots/control?bot=ai_dispatcher");
+  }, [navigate]);
+
+  const openAlertsView = useCallback(() => {
+    navigate("/dispatch");
+  }, [navigate]);
 
   return (
     <div className="aid-dashboard">
@@ -151,19 +161,19 @@ export default function AIDispatcherDashboard() {
       </section>
 
       <section className="aid-actions">
-        <button className="aid-action primary">
+        <button className="aid-action primary" onClick={openDispatcherControl}>
           <PlayCircle size={18} /> Start AI Optimization
         </button>
         <button className="aid-action ghost" onClick={fetchMetrics}>
           <RefreshCcw size={18} /> Refresh Data
         </button>
-        <button className="aid-action success">
+        <button className="aid-action success" onClick={openDispatcherControl}>
           <Bot size={18} /> Run AI Models
         </button>
-        <button className="aid-action ghost">
+        <button className="aid-action ghost" onClick={openDispatcherControl}>
           <MapPinned size={18} /> View Heatmap
         </button>
-        <button className="aid-action warning">
+        <button className="aid-action warning" onClick={openAlertsView}>
           <AlertTriangle size={18} /> Alerts
         </button>
       </section>

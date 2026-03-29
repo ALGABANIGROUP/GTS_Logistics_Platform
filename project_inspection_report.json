@@ -1,0 +1,1141 @@
+{
+  "metadata": {
+    "project_name": "GTS Logistics Platform",
+    "version": "1.0.0-rc.1",
+    "inspection_date": "2026-03-25T14:25:30.770285",
+    "inspector": "GTS Development Team"
+  },
+  "statistics": {
+    "total_files": 5689,
+    "total_lines_of_code": 4209662,
+    "file_breakdown": {
+      "python": 2362,
+      "javascript": 483,
+      "jsx": 981,
+      "css": 214,
+      "html": 80,
+      "json": 74,
+      "sql": 53,
+      "yaml": 16,
+      "md": 777,
+      "other": 649
+    },
+    "python_files": 2362,
+    "frontend_files": 1758,
+    "configuration_files": 90
+  },
+  "architecture": {
+    "backend_framework": "FastAPI (Python 3.11+)",
+    "frontend_framework": "React 18+ with Vite",
+    "database": "PostgreSQL with SQLAlchemy ORM",
+    "authentication": "JWT (JSON Web Tokens) with OAuth2",
+    "payment_gateways": [
+      "Stripe",
+      "Wise",
+      "SUDAPAY"
+    ],
+    "ai_integration": "OpenAI GPT, Custom AI Bots",
+    "real_time": "WebSocket, Server-Sent Events",
+    "containerization": "Docker-ready",
+    "deployment": "Render.com / Cloud"
+  },
+  "modules": [
+    {
+      "name": "backend..venv",
+      "type": "backend",
+      "path": "backend\\.venv"
+    },
+    {
+      "name": "backend.admin_control",
+      "type": "backend",
+      "path": "backend\\admin_control"
+    },
+    {
+      "name": "backend.ai",
+      "type": "backend",
+      "path": "backend\\ai"
+    },
+    {
+      "name": "backend.alembic",
+      "type": "backend",
+      "path": "backend\\alembic"
+    },
+    {
+      "name": "backend.alembic_migrations",
+      "type": "backend",
+      "path": "backend\\alembic_migrations"
+    },
+    {
+      "name": "backend.alembic_old",
+      "type": "backend",
+      "path": "backend\\alembic_old"
+    },
+    {
+      "name": "backend.api",
+      "type": "backend",
+      "path": "backend\\api"
+    },
+    {
+      "name": "backend.app",
+      "type": "backend",
+      "path": "backend\\app"
+    },
+    {
+      "name": "backend.auth",
+      "type": "backend",
+      "path": "backend\\auth"
+    },
+    {
+      "name": "backend.backend",
+      "type": "backend",
+      "path": "backend\\backend"
+    },
+    {
+      "name": "backend.backend_legacy",
+      "type": "backend",
+      "path": "backend\\backend_legacy"
+    },
+    {
+      "name": "backend.billing",
+      "type": "backend",
+      "path": "backend\\billing"
+    },
+    {
+      "name": "backend.bots",
+      "type": "backend",
+      "path": "backend\\bots"
+    },
+    {
+      "name": "backend.config",
+      "type": "backend",
+      "path": "backend\\config"
+    },
+    {
+      "name": "backend.core",
+      "type": "backend",
+      "path": "backend\\core"
+    },
+    {
+      "name": "backend.crud",
+      "type": "backend",
+      "path": "backend\\crud"
+    },
+    {
+      "name": "backend.data",
+      "type": "backend",
+      "path": "backend\\data"
+    },
+    {
+      "name": "backend.database",
+      "type": "backend",
+      "path": "backend\\database"
+    },
+    {
+      "name": "backend.db",
+      "type": "backend",
+      "path": "backend\\db"
+    },
+    {
+      "name": "backend.documents",
+      "type": "backend",
+      "path": "backend\\documents"
+    },
+    {
+      "name": "backend.email_bot",
+      "type": "backend",
+      "path": "backend\\email_bot"
+    },
+    {
+      "name": "backend.email_service",
+      "type": "backend",
+      "path": "backend\\email_service"
+    },
+    {
+      "name": "backend.examples",
+      "type": "backend",
+      "path": "backend\\examples"
+    },
+    {
+      "name": "backend.integrations",
+      "type": "backend",
+      "path": "backend\\integrations"
+    },
+    {
+      "name": "backend.legal",
+      "type": "backend",
+      "path": "backend\\legal"
+    },
+    {
+      "name": "backend.logs",
+      "type": "backend",
+      "path": "backend\\logs"
+    },
+    {
+      "name": "backend.maintenance",
+      "type": "backend",
+      "path": "backend\\maintenance"
+    },
+    {
+      "name": "backend.middleware",
+      "type": "backend",
+      "path": "backend\\middleware"
+    },
+    {
+      "name": "backend.migrations",
+      "type": "backend",
+      "path": "backend\\migrations"
+    },
+    {
+      "name": "backend.models",
+      "type": "backend",
+      "path": "backend\\models"
+    },
+    {
+      "name": "backend.modules",
+      "type": "backend",
+      "path": "backend\\modules"
+    },
+    {
+      "name": "backend.monitoring",
+      "type": "backend",
+      "path": "backend\\monitoring"
+    },
+    {
+      "name": "backend.notifications",
+      "type": "backend",
+      "path": "backend\\notifications"
+    },
+    {
+      "name": "backend.repositories",
+      "type": "backend",
+      "path": "backend\\repositories"
+    },
+    {
+      "name": "backend.routes",
+      "type": "backend",
+      "path": "backend\\routes"
+    },
+    {
+      "name": "backend.safety",
+      "type": "backend",
+      "path": "backend\\safety"
+    },
+    {
+      "name": "backend.schedulers",
+      "type": "backend",
+      "path": "backend\\schedulers"
+    },
+    {
+      "name": "backend.schemas",
+      "type": "backend",
+      "path": "backend\\schemas"
+    },
+    {
+      "name": "backend.scripts",
+      "type": "backend",
+      "path": "backend\\scripts"
+    },
+    {
+      "name": "backend.security",
+      "type": "backend",
+      "path": "backend\\security"
+    },
+    {
+      "name": "backend.services",
+      "type": "backend",
+      "path": "backend\\services"
+    },
+    {
+      "name": "backend.social_media",
+      "type": "backend",
+      "path": "backend\\social_media"
+    },
+    {
+      "name": "backend.src",
+      "type": "backend",
+      "path": "backend\\src"
+    },
+    {
+      "name": "backend.telegram",
+      "type": "backend",
+      "path": "backend\\telegram"
+    },
+    {
+      "name": "backend.tests",
+      "type": "backend",
+      "path": "backend\\tests"
+    },
+    {
+      "name": "backend.tms",
+      "type": "backend",
+      "path": "backend\\tms"
+    },
+    {
+      "name": "backend.tools",
+      "type": "backend",
+      "path": "backend\\tools"
+    },
+    {
+      "name": "backend.training_center",
+      "type": "backend",
+      "path": "backend\\training_center"
+    },
+    {
+      "name": "backend.uploads",
+      "type": "backend",
+      "path": "backend\\uploads"
+    },
+    {
+      "name": "backend.util",
+      "type": "backend",
+      "path": "backend\\util"
+    },
+    {
+      "name": "backend.utils",
+      "type": "backend",
+      "path": "backend\\utils"
+    },
+    {
+      "name": "backend.webhooks",
+      "type": "backend",
+      "path": "backend\\webhooks"
+    },
+    {
+      "name": "frontend.api",
+      "type": "frontend",
+      "path": "frontend\\src\\api"
+    },
+    {
+      "name": "frontend.assets",
+      "type": "frontend",
+      "path": "frontend\\src\\assets"
+    },
+    {
+      "name": "frontend.branding",
+      "type": "frontend",
+      "path": "frontend\\src\\branding"
+    },
+    {
+      "name": "frontend.components",
+      "type": "frontend",
+      "path": "frontend\\src\\components"
+    },
+    {
+      "name": "frontend.config",
+      "type": "frontend",
+      "path": "frontend\\src\\config"
+    },
+    {
+      "name": "frontend.constants",
+      "type": "frontend",
+      "path": "frontend\\src\\constants"
+    },
+    {
+      "name": "frontend.context",
+      "type": "frontend",
+      "path": "frontend\\src\\context"
+    },
+    {
+      "name": "frontend.contexts",
+      "type": "frontend",
+      "path": "frontend\\src\\contexts"
+    },
+    {
+      "name": "frontend.data",
+      "type": "frontend",
+      "path": "frontend\\src\\data"
+    },
+    {
+      "name": "frontend.hooks",
+      "type": "frontend",
+      "path": "frontend\\src\\hooks"
+    },
+    {
+      "name": "frontend.layouts",
+      "type": "frontend",
+      "path": "frontend\\src\\layouts"
+    },
+    {
+      "name": "frontend.lib",
+      "type": "frontend",
+      "path": "frontend\\src\\lib"
+    },
+    {
+      "name": "frontend.models",
+      "type": "frontend",
+      "path": "frontend\\src\\models"
+    },
+    {
+      "name": "frontend.pages",
+      "type": "frontend",
+      "path": "frontend\\src\\pages"
+    },
+    {
+      "name": "frontend.router",
+      "type": "frontend",
+      "path": "frontend\\src\\router"
+    },
+    {
+      "name": "frontend.routes",
+      "type": "frontend",
+      "path": "frontend\\src\\routes"
+    },
+    {
+      "name": "frontend.services",
+      "type": "frontend",
+      "path": "frontend\\src\\services"
+    },
+    {
+      "name": "frontend.stores",
+      "type": "frontend",
+      "path": "frontend\\src\\stores"
+    },
+    {
+      "name": "frontend.styles",
+      "type": "frontend",
+      "path": "frontend\\src\\styles"
+    },
+    {
+      "name": "frontend.test",
+      "type": "frontend",
+      "path": "frontend\\src\\test"
+    },
+    {
+      "name": "frontend.types",
+      "type": "frontend",
+      "path": "frontend\\src\\types"
+    },
+    {
+      "name": "frontend.utils",
+      "type": "frontend",
+      "path": "frontend\\src\\utils"
+    },
+    {
+      "name": "frontend.views",
+      "type": "frontend",
+      "path": "frontend\\src\\views"
+    }
+  ],
+  "apis": {
+    "total_endpoints": 82,
+    "api_files": [
+      {
+        "file": "backend\\admin_control\\routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\ai\\roles\\system_report\\router.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\ai\\system_report\\router.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\api\\routes\\chat_routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\api\\routes\\incident_routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\billing\\routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\bots\\routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\integrations\\loadboards\\loadboards_routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\integrations\\truckerpath\\routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\maintenance\\router.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\accounting_routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\admin_api_connections.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\admin_api_connections_fixed.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_bots_routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_calls_api.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_dev_bot_analysis_api.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_email_router.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_general_routes.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_operations_api.py",
+        "type": "FastAPI Router"
+      },
+      {
+        "file": "backend\\routes\\ai_routes.py",
+        "type": "FastAPI Router"
+      }
+    ],
+    "api_documentation": "/docs (Swagger UI) and /redoc (ReDoc)"
+  },
+  "bots": {
+    "total_bots": 43,
+    "bots_list": [
+      {
+        "name": "Ai Dispatcher",
+        "file": "backend\\bots\\ai_dispatcher.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Commands",
+        "file": "backend\\bots\\commands.py",
+        "type": "AI Bot",
+        "capabilities": [
+          "execute_technical"
+        ]
+      },
+      {
+        "name": "Command Parser",
+        "file": "backend\\bots\\command_parser.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Customer Service",
+        "file": "backend\\bots\\customer_service.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Documents Manager",
+        "file": "backend\\bots\\documents_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Executive Intelligence",
+        "file": "backend\\bots\\executive_intelligence.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Finance Intelligence",
+        "file": "backend\\bots\\finance_intelligence.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Freight Bookings",
+        "file": "backend\\bots\\freight_bookings.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Freight Bot",
+        "file": "backend\\bots\\freight_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Freight Broker",
+        "file": "backend\\bots\\freight_broker.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "General Manager",
+        "file": "backend\\bots\\general_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Information Coordinator",
+        "file": "backend\\bots\\information_coordinator.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Intelligence Bot",
+        "file": "backend\\bots\\intelligence_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Invoice Ai Extract",
+        "file": "backend\\bots\\invoice_ai_extract.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Invoice Ocr",
+        "file": "backend\\bots\\invoice_ocr.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Legal Bot",
+        "file": "backend\\bots\\legal_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Legal Counsel",
+        "file": "backend\\bots\\legal_counsel.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Maintenance Dev",
+        "file": "backend\\bots\\maintenance_dev.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Mapleload Bot",
+        "file": "backend\\bots\\mapleload_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Mapleload Canada",
+        "file": "backend\\bots\\mapleload_canada.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Marketing Manager",
+        "file": "backend\\bots\\marketing_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Models",
+        "file": "backend\\bots\\models.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Operations Bot",
+        "file": "backend\\bots\\operations_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Operations Management",
+        "file": "backend\\bots\\operations_management.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Operations Manager",
+        "file": "backend\\bots\\operations_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Os",
+        "file": "backend\\bots\\os.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Partner Bot",
+        "file": "backend\\bots\\partner_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Partner Management",
+        "file": "backend\\bots\\partner_management.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Rate Limit",
+        "file": "backend\\bots\\rate_limit.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Routes",
+        "file": "backend\\bots\\routes.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Safety Bot",
+        "file": "backend\\bots\\safety_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Safe Manager",
+        "file": "backend\\bots\\safe_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Sales Bot",
+        "file": "backend\\bots\\sales_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Sales Intelligence",
+        "file": "backend\\bots\\sales_intelligence.py",
+        "type": "AI Bot",
+        "capabilities": [
+          "_dispatch"
+        ]
+      },
+      {
+        "name": "Security Bot",
+        "file": "backend\\bots\\security_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Security Manager",
+        "file": "backend\\bots\\security_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "System Admin",
+        "file": "backend\\bots\\system_admin.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "System Architect",
+        "file": "backend\\bots\\system_architect.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "System Bot",
+        "file": "backend\\bots\\system_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "System Intelligence",
+        "file": "backend\\bots\\system_intelligence.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "System Manager",
+        "file": "backend\\bots\\system_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Trainer Bot",
+        "file": "backend\\bots\\trainer_bot.py",
+        "type": "AI Bot",
+        "capabilities": []
+      },
+      {
+        "name": "Ws Manager",
+        "file": "backend\\bots\\ws_manager.py",
+        "type": "AI Bot",
+        "capabilities": []
+      }
+    ],
+    "bot_framework": "Custom AI Bot Registry with Self-Learning Engine"
+  },
+  "database": {
+    "total_tables": 55,
+    "tables": [
+      {
+        "name": "accounting_models",
+        "file": "backend\\models\\accounting_models.py"
+      },
+      {
+        "name": "ai_bot_issues",
+        "file": "backend\\models\\ai_bot_issues.py"
+      },
+      {
+        "name": "ai_reports",
+        "file": "backend\\models\\ai_reports.py"
+      },
+      {
+        "name": "api_connections",
+        "file": "backend\\models\\api_connections.py"
+      },
+      {
+        "name": "audit_log",
+        "file": "backend\\models\\audit_log.py"
+      },
+      {
+        "name": "base",
+        "file": "backend\\models\\base.py"
+      },
+      {
+        "name": "bot_os",
+        "file": "backend\\models\\bot_os.py"
+      },
+      {
+        "name": "broker_commission",
+        "file": "backend\\models\\broker_commission.py"
+      },
+      {
+        "name": "carrier",
+        "file": "backend\\models\\carrier.py"
+      },
+      {
+        "name": "carrier_models",
+        "file": "backend\\models\\carrier_models.py"
+      },
+      {
+        "name": "customer",
+        "file": "backend\\models\\customer.py"
+      },
+      {
+        "name": "dispatch_models",
+        "file": "backend\\models\\dispatch_models.py"
+      },
+      {
+        "name": "document",
+        "file": "backend\\models\\document.py"
+      },
+      {
+        "name": "email_center",
+        "file": "backend\\models\\email_center.py"
+      },
+      {
+        "name": "email_feedback",
+        "file": "backend\\models\\email_feedback.py"
+      },
+      {
+        "name": "external_data",
+        "file": "backend\\models\\external_data.py"
+      },
+      {
+        "name": "financial",
+        "file": "backend\\models\\financial.py"
+      },
+      {
+        "name": "governance",
+        "file": "backend\\models\\governance.py"
+      },
+      {
+        "name": "init",
+        "file": "backend\\models\\init.py"
+      },
+      {
+        "name": "invoices",
+        "file": "backend\\models\\invoices.py"
+      },
+      {
+        "name": "marketing",
+        "file": "backend\\models\\marketing.py"
+      },
+      {
+        "name": "message_log",
+        "file": "backend\\models\\message_log.py"
+      },
+      {
+        "name": "mixins",
+        "file": "backend\\models\\mixins.py"
+      },
+      {
+        "name": "models",
+        "file": "backend\\models\\models.py"
+      },
+      {
+        "name": "monthly_report",
+        "file": "backend\\models\\monthly_report.py"
+      },
+      {
+        "name": "news",
+        "file": "backend\\models\\news.py"
+      },
+      {
+        "name": "newsletter",
+        "file": "backend\\models\\newsletter.py"
+      },
+      {
+        "name": "notification",
+        "file": "backend\\models\\notification.py"
+      },
+      {
+        "name": "partner",
+        "file": "backend\\models\\partner.py"
+      },
+      {
+        "name": "partner_manager",
+        "file": "backend\\models\\partner_manager.py"
+      },
+      {
+        "name": "password_reset_token",
+        "file": "backend\\models\\password_reset_token.py"
+      },
+      {
+        "name": "payment",
+        "file": "backend\\models\\payment.py"
+      },
+      {
+        "name": "platform_expense",
+        "file": "backend\\models\\platform_expense.py"
+      },
+      {
+        "name": "platform_infrastructure_expense",
+        "file": "backend\\models\\platform_infrastructure_expense.py"
+      },
+      {
+        "name": "portal_access_request",
+        "file": "backend\\models\\portal_access_request.py"
+      },
+      {
+        "name": "refresh_token",
+        "file": "backend\\models\\refresh_token.py"
+      },
+      {
+        "name": "safety",
+        "file": "backend\\models\\safety.py"
+      },
+      {
+        "name": "safety_enhanced",
+        "file": "backend\\models\\safety_enhanced.py"
+      },
+      {
+        "name": "safety_report",
+        "file": "backend\\models\\safety_report.py"
+      },
+      {
+        "name": "shipment",
+        "file": "backend\\models\\shipment.py"
+      },
+      {
+        "name": "shipment_events",
+        "file": "backend\\models\\shipment_events.py"
+      },
+      {
+        "name": "shipper",
+        "file": "backend\\models\\shipper.py"
+      },
+      {
+        "name": "shipper_models",
+        "file": "backend\\models\\shipper_models.py"
+      },
+      {
+        "name": "social_media",
+        "file": "backend\\models\\social_media.py"
+      },
+      {
+        "name": "subscription",
+        "file": "backend\\models\\subscription.py"
+      },
+      {
+        "name": "support_models",
+        "file": "backend\\models\\support_models.py"
+      },
+      {
+        "name": "support_ticket",
+        "file": "backend\\models\\support_ticket.py"
+      },
+      {
+        "name": "tenant",
+        "file": "backend\\models\\tenant.py"
+      },
+      {
+        "name": "tenant_social_links",
+        "file": "backend\\models\\tenant_social_links.py"
+      },
+      {
+        "name": "tracking_webhook",
+        "file": "backend\\models\\tracking_webhook.py"
+      },
+      {
+        "name": "transport_laws",
+        "file": "backend\\models\\transport_laws.py"
+      },
+      {
+        "name": "truck_location",
+        "file": "backend\\models\\truck_location.py"
+      },
+      {
+        "name": "unified_models",
+        "file": "backend\\models\\unified_models.py"
+      },
+      {
+        "name": "user",
+        "file": "backend\\models\\user.py"
+      },
+      {
+        "name": "ws_notifications",
+        "file": "backend\\models\\ws_notifications.py"
+      }
+    ],
+    "orm": "SQLAlchemy 2.0+ (Async)",
+    "migrations": "Alembic"
+  },
+  "security": {
+    "features": [
+      "Security Headers Middleware (OWASP)",
+      "Rate Limiting",
+      "HTTPS Redirect",
+      "CORS Configuration",
+      "JWT Authentication",
+      "OAuth2 Password Flow",
+      "Refresh Token Rotation"
+    ],
+    "encryption": "bcrypt for passwords, JWT for tokens",
+    "compliance": "GDPR-ready, SOC2-ready"
+  },
+  "unique_features": [
+    {
+      "name": "AI-Powered Multi-Bot Orchestration System",
+      "description": "A system where multiple specialized AI bots (Freight Broker, Operations Manager, Finance Bot, etc.) collaborate to automate logistics workflows",
+      "novelty": "Self-learning bots that communicate and coordinate tasks without human intervention"
+    },
+    {
+      "name": "Intelligent Freight Matching Algorithm",
+      "description": "AI-driven load matching that considers carrier preferences, historical performance, route optimization, and real-time market rates",
+      "novelty": "Multi-factor matching with predictive rate analysis"
+    },
+    {
+      "name": "Cross-Border Freight Management System",
+      "description": "Integrated platform for managing international freight with customs documentation, multi-currency payments (CAD, USD, SDG), and regulatory compliance",
+      "novelty": "Unified interface for North America - Middle East trade corridors"
+    },
+    {
+      "name": "Autonomous Incident Response Engine",
+      "description": "Real-time monitoring and automated response to logistics incidents (delays, weather, accidents) with intelligent rerouting",
+      "novelty": "Predictive incident prevention with automated carrier notifications"
+    },
+    {
+      "name": "Multi-Payment Gateway Integration Architecture",
+      "description": "Unified payment processing system supporting Stripe, Wise, and SUDAPAY with automatic currency conversion",
+      "novelty": "Single API for multiple payment gateways with fallback mechanisms"
+    },
+    {
+      "name": "AI-Powered Document Processing Pipeline",
+      "description": "OCR-based document extraction with automated validation, expiry tracking, and regulatory compliance checking",
+      "novelty": "Self-learning document classification and data extraction"
+    },
+    {
+      "name": "Real-Time Fleet Telematics and Analytics",
+      "description": "Live tracking system with predictive maintenance alerts, fuel optimization, and driver behavior analysis",
+      "novelty": "AI-powered predictive maintenance and route optimization"
+    },
+    {
+      "name": "Intelligent Carrier Onboarding and Verification",
+      "description": "Automated carrier vetting system integrating FMCSA data, insurance verification, and risk scoring",
+      "novelty": "Continuous carrier monitoring with real-time alerts"
+    }
+  ],
+  "patentable_claims": [
+    {
+      "claim_number": 1,
+      "title": "AI-Powered Multi-Bot Orchestration System for Logistics Automation",
+      "description": "A system comprising a plurality of specialized AI agents (bots) configured to execute distinct logistics functions, wherein said bots communicate via a shared memory system and coordinate to complete complex logistics workflows without human intervention.",
+      "elements": [
+        "Bot Registry for managing bot lifecycle",
+        "Shared memory system for inter-bot communication",
+        "Task orchestration engine",
+        "Self-learning capability for each bot",
+        "Performance monitoring and optimization"
+      ]
+    },
+    {
+      "claim_number": 2,
+      "title": "Intelligent Freight Matching System with Predictive Analytics",
+      "description": "A method for matching freight loads with carriers using machine learning algorithms that consider historical performance, real-time market rates, route optimization, and carrier preferences.",
+      "elements": [
+        "Real-time load board with filtering",
+        "Predictive rate analysis engine",
+        "Carrier performance scoring system",
+        "Route optimization algorithm",
+        "Automated negotiation system"
+      ]
+    },
+    {
+      "claim_number": 3,
+      "title": "Unified Cross-Border Payment Processing System",
+      "description": "A payment processing architecture that integrates multiple payment gateways (Stripe, Wise, SUDAPAY) with automatic currency conversion and unified transaction tracking.",
+      "elements": [
+        "Payment gateway abstraction layer",
+        "Multi-currency support (USD, CAD, SDG)",
+        "Automatic currency conversion",
+        "Unified transaction history",
+        "Webhook-based payment confirmation"
+      ]
+    },
+    {
+      "claim_number": 4,
+      "title": "Autonomous Incident Detection and Response System for Logistics Operations",
+      "description": "A real-time monitoring system that detects logistics incidents (delays, weather events, accidents) and automatically triggers corrective actions including carrier notification and route recalculation.",
+      "elements": [
+        "Real-time data ingestion pipeline",
+        "Incident classification engine",
+        "Automated response workflows",
+        "Carrier notification system",
+        "Route optimization engine"
+      ]
+    },
+    {
+      "claim_number": 5,
+      "title": "AI-Powered Document Processing and Compliance System",
+      "description": "An automated document processing system that extracts data from transportation documents using OCR and machine learning, validates against regulatory requirements, and tracks expiration dates.",
+      "elements": [
+        "OCR-based text extraction",
+        "Document classification engine",
+        "Data validation system",
+        "Expiration tracking and alerts",
+        "Regulatory compliance checking"
+      ]
+    },
+    {
+      "claim_number": 6,
+      "title": "Predictive Fleet Maintenance and Analytics Platform",
+      "description": "A telematics-based system that predicts maintenance needs, optimizes fuel consumption, and analyzes driver behavior using machine learning algorithms.",
+      "elements": [
+        "Real-time telemetry ingestion",
+        "Predictive maintenance algorithms",
+        "Fuel consumption optimization",
+        "Driver behavior analysis",
+        "Alerts and notifications"
+      ]
+    },
+    {
+      "claim_number": 7,
+      "title": "Carrier Onboarding and Continuous Verification System",
+      "description": "An automated carrier verification system that integrates with government databases (FMCSA) to validate carrier credentials, insurance, and safety records with continuous monitoring.",
+      "elements": [
+        "Automated carrier data verification",
+        "Insurance certificate validation",
+        "Continuous monitoring system",
+        "Risk scoring algorithm",
+        "Document expiration alerts"
+      ]
+    }
+  ]
+}

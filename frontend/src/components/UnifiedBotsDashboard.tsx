@@ -1,9 +1,11 @@
 // src/components/UnifiedBotsDashboard.tsx
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { unifiedBots, getBotStats, Bot, BotStatus, BotCategory, getBotHierarchy } from '../../data/botsData';
 import './UnifiedBotsDashboard.css';
 
 const UnifiedBotsDashboard: React.FC = () => {
+    const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState<BotCategory | 'all'>('all');
     const [selectedStatus, setSelectedStatus] = useState<BotStatus | 'all'>('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +96,10 @@ GTS Bot Ops
 
     const closeBotDetails = () => {
         setSelectedBot(null);
+    };
+
+    const runBot = (bot: Bot) => {
+        navigate(`/ai-bots/control?bot=${encodeURIComponent(bot.key)}`);
     };
 
     const getCategoryIcon = (category: BotCategory) => {
@@ -218,7 +224,7 @@ GTS Bot Ops
                                 <button title="Control Panel" className="action-btn control-panel" onClick={() => viewBotDetails(bot)}>
                                     <span role="img" aria-label="Control Panel">CP</span> Control Panel
                                 </button>
-                                <button title="Quick Run" className="action-btn quick-run">
+                                <button title="Quick Run" className="action-btn quick-run" onClick={() => runBot(bot)}>
                                     <span role="img" aria-label="Quick Run">RUN</span> Quick Run
                                 </button>
                                 <button title="Details" className="action-btn details" onClick={() => viewBotDetails(bot)}>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTS Logistics Certification Report</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; background: #f4f7fb; color: #1f2937; margin: 0; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .hero { background: linear-gradient(135deg, #0f172a, #1d4ed8); color: white; padding: 28px; border-radius: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+    .card, .feature-card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08); }
+    .section { margin-top: 24px; }
+    h1, h2, h3 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 14px; overflow: hidden; }
+    th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #eff6ff; }
+    code { background: #eff6ff; padding: 2px 6px; border-radius: 6px; }
+    .score { font-size: 36px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>GTS Logistics Certification Report</h1>
+      <p>Inspection date: 2026-03-25T10:42:46.459029+00:00</p>
+      <p>Status: <strong>Ready for review</strong></p>
+      <div class="score">98.2/100</div>
+    </div>
+    <div class="section grid">
+      <div class="card"><h3>Files scanned</h3><div class="score">2387</div></div>
+      <div class="card"><h3>Lines scanned</h3><div class="score">503819</div></div>
+      <div class="card"><h3>API endpoints</h3><div class="score">1199</div></div>
+      <div class="card"><h3>Bot-related files</h3><div class="score">181</div></div>
+      <div class="card"><h3>Data models</h3><div class="score">195</div></div>
+      <div class="card"><h3>Security files</h3><div class="score">253</div></div>
+    </div>
+    <div class="section">
+      <h2>Readiness Criteria</h2>
+      <table>
+        <thead><tr><th>Criterion</th><th>Score</th><th>Weight</th><th>Basis</th></tr></thead>
+        <tbody><tr><td>Repository scale</td><td>100</td><td>15%</td><td>2387 scanned text files</td></tr>
+<tr><td>API surface</td><td>100</td><td>20%</td><td>1199 detected API endpoints</td></tr>
+<tr><td>Data model maturity</td><td>100</td><td>15%</td><td>195 model or migration artifacts</td></tr>
+<tr><td>AI and automation depth</td><td>100</td><td>20%</td><td>181 bot-related files</td></tr>
+<tr><td>Security footprint</td><td>100</td><td>15%</td><td>253 security-related files</td></tr>
+<tr><td>Differentiated capabilities</td><td>88</td><td>15%</td><td>6 evidence-based feature candidates</td></tr></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2>Differentiated Feature Candidates</h2>
+      
+            <div class="feature-card">
+              <h3>AI bot operations layer</h3>
+              <p>The repository contains multiple AI-oriented bot and control surfaces across backend and frontend.</p>
+              <p><strong>Confidence:</strong> High</p>
+              <ul><li><code>backend/ai/bots/__init__.py</code></li><li><code>backend/ai/bots/mapleload.py</code></li><li><code>backend/bots/ai_dispatcher.py</code></li><li><code>backend/bots/command_parser.py</code></li><li><code>backend/bots/commands.py</code></li><li><code>backend/bots/customer_service.py</code></li></ul>
+            </div>
+            
+
+            <div class="feature-card">
+              <h3>Payment workflow platform</h3>
+              <p>The repository includes payment pages, gateway integrations, and webhook handlers.</p>
+              <p><strong>Confidence:</strong> High</p>
+              <ul><li><code>PAYMENT_GATEWAY_ARCHITECTURE.md</code></li><li><code>PAYMENT_GATEWAY_BEFORE_AFTER.md</code></li><li><code>PAYMENT_GATEWAY_BOILERPLATE_CODE.md</code></li><li><code>PAYMENT_GATEWAY_INDEX.md</code></li><li><code>PAYMENT_GATEWAY_ONE_PAGER.md</code></li><li><code>PAYMENT_GATEWAY_QUICK_START.md</code></li></ul>
+            </div>
+            
+
+            <div class="feature-card">
+              <h3>Partner portal capability</h3>
+              <p>Partner-facing portal pages and partner API routes are present.</p>
+              <p><strong>Confidence:</strong> High</p>
+              <ul><li><code>backend/ai/partner_manager.py</code></li><li><code>backend/ai/roles/partner.py</code></li><li><code>backend/ai/roles/partner_manager.py</code></li><li><code>backend/alembic_migrations/versions/9f0c2c9e7b1a_create_partner_manager_tables.py</code></li><li><code>backend/api/routes/v1/partners.py</code></li><li><code>backend/bots/partner_bot.py</code></li></ul>
+            </div>
+            
+
+            <div class="feature-card">
+              <h3>Training center subsystem</h3>
+              <p>A dedicated training-center and trainer-bot subsystem exists for structured training workflows.</p>
+              <p><strong>Confidence:</strong> Medium</p>
+              <ul><li><code>INCIDENT_RESPONSE_TRAINING_GUIDE.md</code></li><li><code>backend/bots/trainer_bot.py</code></li><li><code>backend/routes/training_center.py</code></li><li><code>backend/safety/core/training_manager.py</code></li><li><code>backend/tests/test_trainer_runtime_bot.py</code></li><li><code>backend/tests/test_training_center.py</code></li></ul>
+            </div>
+            
+
+            <div class="feature-card">
+              <h3>Real-time transport monitoring</h3>
+              <p>WebSocket and transport tracking modules indicate real-time monitoring features.</p>
+              <p><strong>Confidence:</strong> Medium</p>
+              <ul><li><code>MONITORING_ALERTS_GUIDE.md</code></li><li><code>PLAYWRIGHT_WINDOWS_NOTE.md</code></li><li><code>backend/alembic_migrations/versions/f1c2e3d4a5b6_add_tracking_webhooks.py</code></li><li><code>backend/bots/ws_manager.py</code></li><li><code>backend/email_bot/monitoring.py</code></li><li><code>backend/email_bot/templates/auto_tracking_response.html</code></li></ul>
+            </div>
+            
+
+            <div class="feature-card">
+              <h3>Document intelligence workflow</h3>
+              <p>Document upload, OCR, and document dashboard code paths are present.</p>
+              <p><strong>Confidence:</strong> High</p>
+              <ul><li><code>API_CONNECTIONS_DOCUMENTATION_INDEX.md</code></li><li><code>API_CONNECTIONS_MANAGER_DOCUMENTATION.md</code></li><li><code>DOCUMENTATION_INDEX_AR.md</code></li><li><code>DOCUMENTS_MANAGER_API_SPECIFICATIONS.md</code></li><li><code>DOCUMENTS_MANAGER_BOT_COMPLETION.md</code></li><li><code>DOCUMENTS_MANAGER_DEPLOYMENT_GUIDE.md</code></li></ul>
+            </div>
+            
+    </div>
+  </div>
+</body>
+</html>

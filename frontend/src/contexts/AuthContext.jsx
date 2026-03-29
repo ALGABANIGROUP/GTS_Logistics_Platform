@@ -184,10 +184,14 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 console.error("Auth init error:", error);
                 const status = error?.response?.status;
+                const message = getApiErrorMessage(error, "");
+                const isDisabled = String(message).toLowerCase().includes("disabled") ||
+                    String(message).toLowerCase().includes("not active");
+
                 if (!cancelled) {
-                    // Do not clear auth state on transient 401 here.
-                    // axiosClient interceptor handles refresh and emits auth:expired for hard failures.
-                    if (status !== 401 && status !== 403) {
+                    // Clear everything if the user is disabled (terminal error)
+                    // or if it's a non-auth error (404, 500, etc.)
+                    if (isDisabled || (status !== 401 && status !== 403)) {
                         clearAuthCache();
                         setToken("");
                         setUser(null);
@@ -279,13 +283,13 @@ export const AuthProvider = ({ children }) => {
             const status = error?.response?.status || 0;
             let message = getApiErrorMessage(error, "Invalid email or password");
 
-            if (status === 401) {
+            const isDisabledMsg = String(message).toLowerCase().includes("disabled") ||
+                String(message).toLowerCase().includes("not active");
+
+            if (status === 401 && !isDisabledMsg) {
                 message = "Invalid email or password";
-            } else if (
-                (status === 400 || status === 403) &&
-                String(message).toLowerCase() === "account is not active"
-            ) {
-                message = "Account is disabled";
+            } else if (isDisabledMsg || status === 403) {
+                message = "This account has been disabled. Please contact support.";
             } else if (status === 422 && !message) {
                 message = "Email and password are required";
             }

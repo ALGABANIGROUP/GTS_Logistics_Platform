@@ -15,6 +15,7 @@ export function AgentDashboard() {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('assigned');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchDashboardData();
@@ -135,7 +136,10 @@ export function AgentDashboard() {
                                         {new Date(ticket.updated_at).toLocaleString()}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <button className="text-blue-600 hover:text-blue-800 font-medium">
+                                        <button
+                                            onClick={() => navigate(`/agent/tickets/${ticket.id}`)}
+                                            className="text-blue-600 hover:text-blue-800 font-medium"
+                                        >
                                             View {'>'}
                                         </button>
                                     </td>
@@ -254,6 +258,44 @@ export function AgentTicketDetail({ ticketId }) {
     const [internalNote, setInternalNote] = useState('');
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+
+    const addTicketComment = async (content, isInternal = false) => {
+        await axiosClient.post(`/api/v1/support/tickets/${ticketId}/comments`, {
+            content,
+            is_internal: isInternal
+        });
+    };
+
+    const handleSendEmailToCustomer = async () => {
+        try {
+            setUpdating(true);
+            await addTicketComment(
+                'Customer follow-up initiated by support agent. Please check your inbox for the latest update.',
+                false
+            );
+            await handleStatusChange('waiting_customer');
+            alert('Customer follow-up has been logged and ticket moved to waiting_customer.');
+        } catch (error) {
+            console.error('Error sending customer follow-up:', error);
+            alert('Failed to trigger customer follow-up');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleEscalateToManager = async () => {
+        try {
+            setUpdating(true);
+            await addTicketComment('Escalated to manager for urgent review.', true);
+            await handleStatusChange('in_progress');
+            alert('Ticket escalation note added for manager review.');
+        } catch (error) {
+            console.error('Error escalating ticket:', error);
+            alert('Failed to escalate ticket');
+        } finally {
+            setUpdating(false);
+        }
+    };
 
     useEffect(() => {
         fetchTicket();
@@ -390,10 +432,18 @@ export function AgentTicketDetail({ ticketId }) {
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
                     <div className="space-y-2">
-                        <button className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        <button
+                            onClick={handleSendEmailToCustomer}
+                            disabled={updating}
+                            className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             Send Email to Customer
                         </button>
-                        <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                        <button
+                            onClick={handleEscalateToManager}
+                            disabled={updating}
+                            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             Escalate to Manager
                         </button>
                     </div>

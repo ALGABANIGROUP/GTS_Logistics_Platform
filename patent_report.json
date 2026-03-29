@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "project_name": "GTS Logistics Platform",
+    "version": "1.0.0-rc.1",
+    "generated_at": "2026-03-25T14:53:21.896252",
+    "purpose": "Patent Submission - Conservative Claims"
+  },
+  "patentable_claims": [
+    {
+      "claim_number": 1,
+      "title": "AI-Powered Multi-Bot Orchestration System for Logistics Automation",
+      "description": "A system comprising a plurality of specialized AI agents (bots) configured to execute distinct logistics functions, wherein said bots communicate via a shared memory system and coordinate to complete complex logistics workflows without human intervention.",
+      "elements": [
+        "Bot Registry for managing bot lifecycle",
+        "Shared memory system for inter-bot communication",
+        "Task orchestration engine",
+        "Self-learning capability for each bot"
+      ],
+      "confidence": "High"
+    },
+    {
+      "claim_number": 2,
+      "title": "Intelligent Freight Matching System with Predictive Analytics",
+      "description": "A method for matching freight loads with carriers using machine learning algorithms that consider historical performance, real-time market rates, route optimization, and carrier preferences.",
+      "elements": [
+        "Real-time load board with filtering",
+        "Predictive rate analysis engine",
+        "Carrier performance scoring system",
+        "Route optimization algorithm"
+      ],
+      "confidence": "High"
+    },
+    {
+      "claim_number": 3,
+      "title": "Unified Cross-Border Payment Processing System",
+      "description": "A payment processing architecture that integrates multiple payment gateways (Stripe, Wise, SUDAPAY) with automatic currency conversion and unified transaction tracking.",
+      "elements": [
+        "Payment gateway abstraction layer",
+        "Multi-currency support (USD, CAD, SDG)",
+        "Automatic currency conversion",
+        "Unified transaction history"
+      ],
+      "confidence": "High"
+    },
+    {
+      "claim_number": 4,
+      "title": "Autonomous Incident Detection and Response System for Logistics Operations",
+      "description": "A real-time monitoring system that detects logistics incidents (delays, weather events, accidents) and automatically triggers corrective actions including carrier notification and route recalculation.",
+      "elements": [
+        "Real-time data ingestion pipeline",
+        "Incident classification engine",
+        "Automated response workflows",
+        "Carrier notification system"
+      ],
+      "confidence": "High"
+    },
+    {
+      "claim_number": 5,
+      "title": "AI-Powered Document Processing and Compliance System",
+      "description": "An automated document processing system that extracts data from transportation documents using OCR and machine learning, validates against regulatory requirements, and tracks expiration dates.",
+      "elements": [
+        "OCR-based text extraction",
+        "Document classification engine",
+        "Data validation system",
+        "Expiration tracking and alerts"
+      ],
+      "confidence": "High"
+    },
+    {
+      "claim_number": 6,
+      "title": "Predictive Fleet Maintenance and Analytics Platform",
+      "description": "A telematics-based system that predicts maintenance needs, optimizes fuel consumption, and analyzes driver behavior using machine learning algorithms.",
+      "elements": [
+        "Real-time telemetry ingestion",
+        "Predictive maintenance algorithms",
+        "Fuel consumption optimization",
+        "Driver behavior analysis"
+      ],
+      "confidence": "High"
+    },
+    {
+      "claim_number": 7,
+      "title": "Carrier Onboarding and Continuous Verification System",
+      "description": "An automated carrier verification system that integrates with government databases (FMCSA) to validate carrier credentials, insurance, and safety records with continuous monitoring.",
+      "elements": [
+        "Automated carrier data verification",
+        "Insurance certificate validation",
+        "Continuous monitoring system",
+        "Risk scoring algorithm"
+      ],
+      "confidence": "High"
+    }
+  ],
+  "supporting_evidence": {
+    "code_files": {
+      "python": 2364,
+      "javascript": 465,
+      "jsx": 981,
+      "other": 1867
+    },
+    "api_endpoints": 82,
+    "bots": 43,
+    "test_coverage": "Comprehensive"
+  }
+}

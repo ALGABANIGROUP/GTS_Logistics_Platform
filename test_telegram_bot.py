@@ -19,7 +19,9 @@ def test_telegram_configuration():
 
     # Check if configured
     is_configured = telegram_service.is_configured()
-    print(f"Configured: {'✅' if is_configured else '❌'}")
+    can_send_alerts = telegram_service.can_send_alerts()
+    print(f"Bot configured: {'✅' if is_configured else '❌'}")
+    print(f"Alert destination configured: {'✅' if can_send_alerts else '❌'}")
 
     if not is_configured:
         print("\n❌ Telegram bot is not configured!")
@@ -50,7 +52,7 @@ def test_incident_alert():
     print("\n🚨 Testing Incident Alert")
     print("-" * 30)
 
-    if not telegram_service.is_configured():
+    if not telegram_service.can_send_alerts():
         print("❌ Telegram not configured, skipping alert test")
         return
 
@@ -76,7 +78,7 @@ def test_system_status():
     print("\n📊 Testing System Status Message")
     print("-" * 35)
 
-    if not telegram_service.is_configured():
+    if not telegram_service.can_send_alerts():
         print("❌ Telegram not configured, skipping status test")
         return
 

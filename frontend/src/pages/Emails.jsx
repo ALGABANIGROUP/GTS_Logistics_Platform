@@ -185,7 +185,12 @@ const Emails = () => {
   };
 
   useEffect(() => {
-    if (!authReady || !isAuthenticated) {
+    if (!authReady) {
+      return undefined;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
       return undefined;
     }
 
@@ -589,32 +594,29 @@ const Emails = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveTab("inbox")}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-              activeTab === "inbox"
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${activeTab === "inbox"
                 ? "border-sky-400/40 bg-sky-500/10 text-white"
                 : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-            }`}
+              }`}
           >
             Inbox
           </button>
           <button
             onClick={() => setActiveTab("rules")}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-              activeTab === "rules"
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${activeTab === "rules"
                 ? "border-sky-400/40 bg-sky-500/10 text-white"
                 : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-            }`}
+              }`}
           >
             Routing Rules
           </button>
           {isAdmin ? (
             <button
               onClick={() => setActiveTab("ai-dashboard")}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-                activeTab === "ai-dashboard"
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${activeTab === "ai-dashboard"
                   ? "border-sky-400/40 bg-sky-500/10 text-white"
                   : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-              }`}
+                }`}
             >
               AI Dashboard
             </button>
@@ -622,11 +624,10 @@ const Emails = () => {
           {isAdmin ? (
             <button
               onClick={() => setActiveTab("requests")}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-                activeTab === "requests"
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${activeTab === "requests"
                   ? "border-sky-400/40 bg-sky-500/10 text-white"
                   : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-              }`}
+                }`}
             >
               Requests
             </button>
@@ -648,11 +649,10 @@ const Emails = () => {
                   <button
                     key={mailbox.id}
                     onClick={() => handleSelectMailbox(mailbox)}
-                    className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition ${
-                      selectedMailbox?.id === mailbox.id
+                    className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition ${selectedMailbox?.id === mailbox.id
                         ? "border-sky-400/40 bg-sky-500/10 text-white"
                         : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     <div className="font-semibold">{mailbox.display_name || mailbox.email_address}</div>
                     <div className="text-[11px] text-slate-400">{mailbox.email_address}</div>
@@ -672,7 +672,46 @@ const Emails = () => {
           </div>
         ) : activeTab === "ai-dashboard" && isAdmin ? (
           <EmailAIDashboard embedded />
-        ) : activeTab === "requests" && isAdmin ? null : (
+        ) : activeTab === "requests" && isAdmin ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="text-sm font-semibold text-white">Pending mailbox requests</div>
+            <div className="mt-3 space-y-2">
+              {mailboxRequests.length === 0 ? (
+                <div className="text-xs text-slate-400">No pending requests.</div>
+              ) : (
+                mailboxRequests
+                  .filter((req) => req.status === "pending")
+                  .map((req) => (
+                    <div
+                      key={req.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+                    >
+                      <div>
+                        <div className="font-semibold">{req.requested_email}</div>
+                        <div className="text-[11px] text-slate-400">
+                          Requested by #{req.requester_user_id} · {req.desired_mode}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveRequest(req.id)}
+                          className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/20"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(req.id)}
+                          className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-500/20"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_minmax(0,1.1fr)]">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -1135,46 +1174,6 @@ const Emails = () => {
                   Cancel
                 </button>
               </div>
-            </div>
-          </div>
-        ) : null}
-        {isAdmin && activeTab === "requests" ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-sm font-semibold text-white">Pending mailbox requests</div>
-            <div className="mt-3 space-y-2">
-              {mailboxRequests.length === 0 ? (
-                <div className="text-xs text-slate-400">No pending requests.</div>
-              ) : (
-                mailboxRequests
-                  .filter((req) => req.status === "pending")
-                  .map((req) => (
-                    <div
-                      key={req.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
-                    >
-                      <div>
-                        <div className="font-semibold">{req.requested_email}</div>
-                        <div className="text-[11px] text-slate-400">
-                          Requested by #{req.requester_user_id} · {req.desired_mode}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleApproveRequest(req.id)}
-                          className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-100 hover:bg-emerald-500/20"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleRejectRequest(req.id)}
-                          className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-500/20"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))
-              )}
             </div>
           </div>
         ) : null}

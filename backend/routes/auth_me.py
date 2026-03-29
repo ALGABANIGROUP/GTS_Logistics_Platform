@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database.config import get_db_async
 from backend.auth import get_password_hash, verify_password
@@ -50,8 +50,20 @@ async def auth_token_compat(
     """
     try:
         login = str(form_data.username or "").strip().lower()
-        result = await db.execute(select(User).where(User.email == login))
-        user = result.scalar_one_or_none()
+        row = await db.execute(
+            text(
+                """
+                SELECT id, email, full_name, role, is_active,
+                       COALESCE(token_version, 0) AS token_version,
+                      hashed_password AS password_hash
+                FROM users
+                WHERE lower(email) = :login
+                LIMIT 1
+                """
+            ),
+            {"login": login},
+        )
+        user = row.mappings().first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -59,7 +71,7 @@ async def auth_token_compat(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        password_hash = getattr(user, "hashed_password", None) or getattr(user, "password_hash", None)
+        password_hash = user.get("password_hash")
         if not password_hash or not verify_password(form_data.password, password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -67,20 +79,20 @@ async def auth_token_compat(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        if getattr(user, "is_active", True) is False:
+        if user.get("is_active") is False:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Account is not active",
             )
 
         access_token = create_access_token(
-            subject=getattr(user, "id"),
-            email=getattr(user, "email"),
-            role=getattr(user, "role", "user"),
-            token_version=int(getattr(user, "token_version", 0) or 0),
+            subject=user.get("id"),
+            email=user.get("email"),
+            role=user.get("role") or "user",
+            token_version=int(user.get("token_version", 0) or 0),
         )
 
-        refresh_token = await _issue_refresh_token(db, int(getattr(user, "id")))
+        refresh_token = await _issue_refresh_token(db, int(user.get("id")))
 
         return {
             "access_token": access_token,
@@ -88,10 +100,10 @@ async def auth_token_compat(
             "token_type": "bearer",
             "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             "user": {
-                "id": getattr(user, "id", None),
-                "email": getattr(user, "email", None),
-                "full_name": getattr(user, "full_name", None),
-                "role": getattr(user, "role", None),
+                "id": user.get("id"),
+                "email": user.get("email"),
+                "full_name": user.get("full_name"),
+                "role": user.get("role"),
             },
         }
     except HTTPException:

@@ -34,6 +34,11 @@ const UserSettings = () => {
     });
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState('');
+    const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+    const [twoFactorSetup, setTwoFactorSetup] = useState(null);
+    const [twoFactorCode, setTwoFactorCode] = useState('');
+    const [twoFactorMessage, setTwoFactorMessage] = useState('');
+    const [twoFactorError, setTwoFactorError] = useState('');
 
     useEffect(() => {
         fetchUserDetails();
@@ -223,6 +228,44 @@ const UserSettings = () => {
             setPasswordError(error?.response?.data?.detail || 'Failed to change password');
         } finally {
             setChangingPassword(false);
+        }
+    };
+
+    const startTwoFactorSetup = async () => {
+        try {
+            setTwoFactorLoading(true);
+            setTwoFactorError('');
+            setTwoFactorMessage('');
+            const response = await axiosClient.post('/auth/2fa/setup');
+            setTwoFactorSetup(response.data || null);
+            setTwoFactorMessage('2FA setup created. Scan the QR code or use the manual key, then verify.');
+        } catch (err) {
+            console.error('Failed to start 2FA setup:', err);
+            setTwoFactorError(err?.response?.data?.detail || 'Unable to start 2FA setup.');
+        } finally {
+            setTwoFactorLoading(false);
+        }
+    };
+
+    const verifyTwoFactorSetup = async () => {
+        if (!twoFactorCode.trim()) {
+            setTwoFactorError('Enter the verification code from your authenticator app.');
+            return;
+        }
+
+        try {
+            setTwoFactorLoading(true);
+            setTwoFactorError('');
+            setTwoFactorMessage('');
+            await axiosClient.post('/auth/2fa/verify', { token: twoFactorCode.trim() });
+            setTwoFactorMessage('Two-factor authentication has been verified successfully.');
+            setTwoFactorCode('');
+            fetchUserDetails();
+        } catch (err) {
+            console.error('Failed to verify 2FA:', err);
+            setTwoFactorError(err?.response?.data?.detail || 'Invalid 2FA code. Please try again.');
+        } finally {
+            setTwoFactorLoading(false);
         }
     };
 
@@ -622,8 +665,62 @@ const UserSettings = () => {
                             <p className="text-white font-medium">Two-Factor Authentication</p>
                             <p className="text-slate-400 text-sm">Add an extra layer of security to your account</p>
                         </div>
-                        <button className="glass-button">Enable 2FA</button>
+                        <button
+                            onClick={startTwoFactorSetup}
+                            disabled={twoFactorLoading}
+                            className="glass-button disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {twoFactorLoading ? 'Processing...' : 'Enable 2FA'}
+                        </button>
                     </div>
+
+                    {twoFactorMessage ? (
+                        <p className="text-sm text-emerald-300">{twoFactorMessage}</p>
+                    ) : null}
+
+                    {twoFactorError ? (
+                        <p className="text-sm text-red-300">{twoFactorError}</p>
+                    ) : null}
+
+                    {twoFactorSetup ? (
+                        <div className="space-y-3 border border-slate-700/50 rounded-lg p-4 bg-slate-900/30">
+                            {twoFactorSetup.qr_code ? (
+                                <div>
+                                    <p className="text-slate-300 text-sm mb-2">Scan this QR code in your authenticator app:</p>
+                                    <img
+                                        src={twoFactorSetup.qr_code}
+                                        alt="2FA QR code"
+                                        className="w-40 h-40 bg-white rounded p-2"
+                                    />
+                                </div>
+                            ) : null}
+
+                            <div>
+                                <p className="text-slate-300 text-sm mb-1">Manual setup key:</p>
+                                <p className="text-white font-mono break-all text-sm">
+                                    {twoFactorSetup.manual_entry_key || twoFactorSetup.secret || 'N/A'}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col md:flex-row gap-2">
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="Enter 6-digit code"
+                                    value={twoFactorCode}
+                                    onChange={(e) => setTwoFactorCode(e.target.value)}
+                                    className="flex-1 px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                                />
+                                <button
+                                    onClick={verifyTwoFactorSetup}
+                                    disabled={twoFactorLoading}
+                                    className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-400/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Verify Code
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
