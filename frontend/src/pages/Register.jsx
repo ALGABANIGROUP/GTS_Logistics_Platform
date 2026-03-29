@@ -431,7 +431,7 @@ export default function Register() {
         system: selectedSystem,
         plan: selectedPlan?.planCode || form.subscription,
       };
-      const res = await axiosClient.post("/auth/register", payload);
+      const res = await axiosClient.post("/api/v1/auth/register", payload);
       if (res.data && res.data.ok) {
         setSuccessMessage("Registration successful! Please sign in.");
         navigate("/login", { replace: true });
