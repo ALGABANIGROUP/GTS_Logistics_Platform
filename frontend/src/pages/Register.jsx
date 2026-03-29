@@ -8,19 +8,61 @@ import { COUNTRIES } from "../constants/countries";
 import FormError from "../components/ui/FormError.jsx";
 import { isStrongPassword, isValidEmail, isValidPhone, normalizePhone } from "../utils/validators";
 import { registrationStatus } from "../config/registration";
-import { getPlans, getPolicyContext } from "../services/billingApi";
-import { formatTierLabel, normalizeTier } from "../utils/tierUtils";
 
 const ALLOWED_COUNTRY_CODES = ["CA", "US"];
-const CAD_PER_USD = 1.37;
-
-const DEFAULT_PLAN_OPTIONS = [
-  { value: "free", label: "Free - $0 CAD / month (≈ $0 USD)" },
-  { value: "starter", label: "Starter - $12 CAD / month (≈ $9 USD)" },
-  { value: "growth", label: "Growth - $26 CAD / month (≈ $19 USD)" },
-  { value: "professional", label: "Professional - $53 CAD / month (≈ $39 USD)" },
-  { value: "enterprise", label: "Enterprise - $108 CAD / month (≈ $79 USD)" },
-];
+const PLANS_BY_ROLE = {
+  carrier: {
+    name: "Pro",
+    planCode: "pro",
+    priceCAD: 49,
+    priceUSD: 36,
+    period: "month",
+    system: "loadboard",
+    systemDescription:
+      "Load board marketplace for posting loads, matching carriers, and managing spot opportunities.",
+    subtitle: "Find loads and get paid faster",
+    features: [
+      "Load Search (unlimited)",
+      "Truck Post (unlimited)",
+      "Advanced Rate Insights",
+      "Book It Now",
+      "Real-Time Live Loads",
+    ],
+  },
+  broker: {
+    name: "Pro",
+    planCode: "pro",
+    priceCAD: 49,
+    priceUSD: 36,
+    period: "month",
+    system: "tms",
+    systemDescription:
+      "Transportation Management System for shipment planning, tracking, and fleet operations.",
+    subtitle: "Fill capacity and reduce risk",
+    features: [
+      "Everything in Basic",
+      "Advanced Rate Insights",
+      "Book It Now",
+      "Real-Time Live Loads",
+    ],
+  },
+  shipper: {
+    name: "Basic",
+    planCode: "basic",
+    priceCAD: 19,
+    priceUSD: 14,
+    period: "month",
+    system: "tms",
+    systemDescription:
+      "Transportation Management System for shipment planning, tracking, and fleet operations.",
+    subtitle: "Streamline operations",
+    features: [
+      "Load Search (unlimited)",
+      "Truck Post (unlimited)",
+      "Basic Rate Insights",
+    ],
+  },
+};
 
 /**
  * Registration requirements:
@@ -31,6 +73,8 @@ const DEFAULT_PLAN_OPTIONS = [
  * - Save chosen system+role+plan so Login can redirect directly
  */
 export default function Register() {
+  const defaultRole = "carrier";
+  const defaultRolePlan = PLANS_BY_ROLE[defaultRole];
   const navigate = useNavigate();
   const { disabled: registrationClosed, notice, reopenLabel, contactEmail } =
     registrationStatus;
@@ -50,19 +94,21 @@ export default function Register() {
     email: "",
     phone: "",
     password: "",
-    system: "",
-    role: "",
-    subscription: "free",
+    system: defaultRolePlan.system,
+    role: defaultRole,
+    subscription: defaultRolePlan.planCode,
     country: defaultCountry,
     comment: "",
   });
+  const [role, setRole] = useState(defaultRole);
+  const [selectedPlan, setSelectedPlan] = useState(defaultRolePlan);
+  const [selectedSystem, setSelectedSystem] = useState(defaultRolePlan.system);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [planOptions, setPlanOptions] = useState(DEFAULT_PLAN_OPTIONS);
   const [emailExistsError, setEmailExistsError] = useState("");
   const [companyExistsError, setCompanyExistsError] = useState("");
   const [checkingEmail, setCheckingEmail] = useState(false);
@@ -162,6 +208,30 @@ export default function Register() {
     }
   };
 
+  const handleRoleChange = (newRole) => {
+    const rolePlan = PLANS_BY_ROLE[newRole];
+    if (!rolePlan) {
+      return;
+    }
+
+    setRole(newRole);
+    setSelectedPlan(rolePlan);
+    setSelectedSystem(rolePlan.system);
+    setForm((prev) => ({
+      ...prev,
+      role: newRole,
+      subscription: rolePlan.planCode,
+      system: rolePlan.system,
+    }));
+    setTouched((prev) => ({ ...prev, role: true, subscription: true, system: true }));
+    setErrors((prev) => ({ ...prev, role: "", system: "" }));
+  };
+
+  useEffect(() => {
+    handleRoleChange(defaultRole);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     companyRef.current?.focus();
   }, []);
@@ -243,48 +313,6 @@ export default function Register() {
     return () => clearTimeout(timer);
   }, [form.companyName]);
 
-  useEffect(() => {
-    let active = true;
-
-    const loadPlans = async () => {
-      try {
-        const context = await getPolicyContext();
-        const region = context?.country || context?.region || "GLOBAL";
-        const plansResponse = await getPlans(region);
-        const options = (plansResponse?.plans || []).map((plan) => ({
-          value: normalizeTier(plan?.code),
-          label: (() => {
-            const planName = plan?.name || formatTierLabel(plan?.code);
-            const amount = Number(plan?.price_amount ?? 0);
-            const currency = String(plan?.currency || "CAD").toUpperCase();
-
-            const cadAmount = currency === "USD" ? Math.round(amount * CAD_PER_USD) : amount;
-            const usdAmount = currency === "USD" ? amount : Math.round(amount / CAD_PER_USD);
-
-            return `${planName} - $${cadAmount} CAD / month (≈ $${usdAmount} USD)`;
-          })(),
-        }));
-
-        if (!active || options.length === 0) return;
-        setPlanOptions(options);
-        setForm((prev) => {
-          if (options.some((opt) => opt.value === prev.subscription)) {
-            return prev;
-          }
-          return { ...prev, subscription: options[0].value };
-        });
-      } catch {
-        if (!active) return;
-        setPlanOptions(DEFAULT_PLAN_OPTIONS);
-      }
-    };
-
-    loadPlans();
-    return () => {
-      active = false;
-    };
-  }, []);
-
   const submit = async (e) => {
     e.preventDefault();
     setFormError("");
@@ -325,9 +353,11 @@ export default function Register() {
         company_name: form.companyName.trim(),
         country: form.country?.iso2 || "",
         phone_number: `${form.country?.callingCode || ""}${normalizedPhone}`,
-        system_type: form.system,
-        subscription_tier: form.subscription,
-        role: form.role || "user",
+        system_type: selectedSystem,
+        subscription_tier: selectedPlan?.planCode || form.subscription,
+        role: role,
+        system: selectedSystem,
+        plan: selectedPlan?.planCode || form.subscription,
       };
       const res = await axiosClient.post("/auth/register", payload);
       if (res.data && res.data.ok) {
@@ -592,87 +622,109 @@ export default function Register() {
                         Account setup (required)
                       </summary>
                       <div className="px-4 pb-4 pt-2 space-y-3">
-                        <div>
-                          <label className="block text-white/80 text-sm font-medium mb-2">
-                            Subscription Plan
-                          </label>
-                          <select
-                            name="subscription"
-                            value={form.subscription}
-                            onChange={onChange}
-                            disabled={isSubmitting}
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          >
-                            {planOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
+                        <div className="mb-2">
+                          <h3 className="text-lg font-semibold text-white mb-3">What type of trucking business are you?</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {Object.entries(PLANS_BY_ROLE).map(([roleKey, rolePlan]) => (
+                              <button
+                                key={roleKey}
+                                type="button"
+                                onClick={() => handleRoleChange(roleKey)}
+                                disabled={isSubmitting}
+                                className={`rounded-xl border-2 p-4 text-left transition ${
+                                  role === roleKey
+                                    ? "border-red-500 bg-red-500/10"
+                                    : "border-white/20 bg-white/5 hover:bg-white/10"
+                                }`}
+                              >
+                                <h4 className="text-white font-semibold capitalize">I am a {roleKey}</h4>
+                                <p className="text-xs text-white/70 mt-1">{rolePlan.subtitle}</p>
+                                <p className="text-sm text-red-400 mt-2 font-semibold">
+                                  Starting at ${rolePlan.priceCAD} CAD / month
+                                </p>
+                              </button>
                             ))}
-                          </select>
-                          <p className="text-white/60 text-xs mt-1">
-                            This list is synced with the same pricing model shown on the pricing page.
-                          </p>
+                          </div>
+                          <FormError message={touched.role ? errors.role : ""} className="mt-1" />
                         </div>
 
+                        {selectedPlan ? (
+                          <div className="rounded-xl border border-white/20 bg-white/5 p-4">
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                              <div>
+                                <h4 className="text-xl font-bold text-white">{selectedPlan.name}</h4>
+                                <p className="text-sm text-white/80">
+                                  ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
+                                  <span className="text-xs text-white/60 ml-2">≈ ${selectedPlan.priceUSD} USD</span>
+                                </p>
+                              </div>
+                              <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/80">
+                                {selectedPlan.planCode.toUpperCase()}
+                              </span>
+                            </div>
+                            <ul className="space-y-1.5">
+                              {selectedPlan.features.map((feature, idx) => (
+                                <li key={idx} className="text-sm text-white/80 flex items-center gap-2">
+                                  <span className="text-green-400">✓</span>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+
                         <div>
-                          <label className="block text-white/80 text-sm font-medium mb-2">
-                            System
-                          </label>
-                          <select
-                            name="system"
-                            value={form.system}
-                            onChange={onChange}
-                            onBlur={onBlur}
-                            aria-invalid={Boolean(touched.system && errors.system)}
-                            disabled={isSubmitting}
-                            required
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          >
-                            <option value="" disabled>
-                              Select system
-                            </option>
-                            <option value="tms">TMS</option>
-                            <option value="loadboard">LoadBoard</option>
-                          </select>
-                          <FormError message={touched.system ? errors.system : ""} className="mt-1" />
-                          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="rounded-lg border border-white/15 bg-white/5 p-3">
+                          <h3 className="text-base font-semibold text-white mb-2">Select System</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              disabled={isSubmitting}
+                              onClick={() => {
+                                setSelectedSystem("tms");
+                                setForm((prev) => ({ ...prev, system: "tms" }));
+                                setTouched((prev) => ({ ...prev, system: true }));
+                                setErrors((prev) => ({ ...prev, system: "" }));
+                              }}
+                              className={`rounded-lg border p-3 text-left transition ${
+                                selectedSystem === "tms"
+                                  ? "border-red-500 bg-red-500/10"
+                                  : "border-white/15 bg-white/5 hover:bg-white/10"
+                              }`}
+                            >
                               <p className="text-sm font-semibold text-white">TMS</p>
                               <p className="mt-1 text-xs text-white/70">
                                 Transportation Management System for shipment planning, tracking, and fleet operations.
                               </p>
-                            </div>
-                            <div className="rounded-lg border border-white/15 bg-white/5 p-3">
+                              {selectedSystem === "tms" ? (
+                                <span className="inline-block mt-2 text-xs text-red-400">Recommended for you</span>
+                              ) : null}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isSubmitting}
+                              onClick={() => {
+                                setSelectedSystem("loadboard");
+                                setForm((prev) => ({ ...prev, system: "loadboard" }));
+                                setTouched((prev) => ({ ...prev, system: true }));
+                                setErrors((prev) => ({ ...prev, system: "" }));
+                              }}
+                              className={`rounded-lg border p-3 text-left transition ${
+                                selectedSystem === "loadboard"
+                                  ? "border-red-500 bg-red-500/10"
+                                  : "border-white/15 bg-white/5 hover:bg-white/10"
+                              }`}
+                            >
                               <p className="text-sm font-semibold text-white">LoadBoard</p>
                               <p className="mt-1 text-xs text-white/70">
                                 Load board marketplace for posting loads, matching carriers, and managing spot opportunities.
                               </p>
-                            </div>
+                              {selectedSystem === "loadboard" ? (
+                                <span className="inline-block mt-2 text-xs text-red-400">Recommended for you</span>
+                              ) : null}
+                            </button>
                           </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-white/80 text-sm font-medium mb-2">
-                            Role
-                          </label>
-                          <select
-                            name="role"
-                            value={form.role}
-                            onChange={onChange}
-                            onBlur={onBlur}
-                            aria-invalid={Boolean(touched.role && errors.role)}
-                            disabled={isSubmitting}
-                            required
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          >
-                            <option value="" disabled>
-                              Select role
-                            </option>
-                            <option value="shipper">Shipper</option>
-                            <option value="carrier">Carrier</option>
-                            <option value="broker">Broker</option>
-                          </select>
-                          <FormError message={touched.role ? errors.role : ""} className="mt-1" />
+                          <p className="mt-2 text-xs text-white/60">Recommended system for this role: {selectedPlan?.system?.toUpperCase()}</p>
+                          <FormError message={touched.system ? errors.system : ""} className="mt-1" />
                         </div>
                       </div>
                     </details>

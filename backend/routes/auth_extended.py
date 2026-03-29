@@ -91,6 +91,11 @@ PASSWORD_POLICY_HINT = (
 )
 UNSAFE_TEXT_PATTERNS = ("%00", "\\x00", "../", "..\\")
 ALLOWED_COUNTRY_CODES = {"CA", "US"}
+ROLE_PLAN_SYSTEM_MAP = {
+    "carrier": {"plan": "pro", "system": "loadboard"},
+    "broker": {"plan": "pro", "system": "tms"},
+    "shipper": {"plan": "basic", "system": "tms"},
+}
 
 
 # ---------------------------------------------------------------------------
@@ -103,6 +108,8 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     full_name: Optional[str] = Field(None, max_length=200)
     role: Optional[str] = None
+    plan: Optional[str] = Field(default=None, max_length=50)
+    system: Optional[str] = Field(default=None, max_length=50)
     company_name: Optional[str] = Field(default=None, max_length=255)
     country: Optional[str] = Field(default=None, max_length=100)
     phone_number: Optional[str] = Field(default=None, max_length=50)
@@ -436,6 +443,9 @@ def _registration_input_error(payload: RegisterRequest) -> Optional[HTTPExceptio
         "email": payload.email,
         "username": payload.username,
         "full_name": payload.full_name,
+        "role": payload.role,
+        "plan": payload.plan,
+        "system": payload.system,
         "company_name": payload.company_name,
         "country": payload.country,
         "phone_number": payload.phone_number,
@@ -456,6 +466,20 @@ async def _create_registered_user(
 ) -> Any:
     email = payload.email.strip().lower()
     username = (payload.username or email.split("@")[0]).strip().lower()
+    normalized_role = (payload.role or "carrier").strip().lower()
+    role_defaults = ROLE_PLAN_SYSTEM_MAP.get(normalized_role)
+    selected_plan = (payload.plan or payload.subscription_tier or "").strip().lower()
+    selected_system = (payload.system or payload.system_type or "").strip().lower()
+
+    if role_defaults:
+        selected_plan = role_defaults["plan"]
+        selected_system = role_defaults["system"]
+
+    if not selected_plan:
+        selected_plan = "basic"
+    if not selected_system:
+        selected_system = "tms"
+
     company_name = (payload.company_name or "").strip()
     country_code = (payload.country or "").strip().upper()
 
@@ -486,7 +510,7 @@ async def _create_registered_user(
         username=username,
         hashed_password=hashed,
         full_name=(payload.full_name or "").strip() or None,
-        role=(payload.role or "user").strip() or "user",
+        role=normalized_role or "carrier",
         is_active=True,
     )
 
@@ -497,9 +521,9 @@ async def _create_registered_user(
     if hasattr(user, "phone_number"):
         setattr(user, "phone_number", (payload.phone_number or "").strip() or None)
     if hasattr(user, "system_type"):
-        setattr(user, "system_type", (payload.system_type or "").strip() or None)
+        setattr(user, "system_type", selected_system)
     if hasattr(user, "subscription_tier"):
-        setattr(user, "subscription_tier", (payload.subscription_tier or "").strip() or None)
+        setattr(user, "subscription_tier", selected_plan)
 
     db.add(user)
     await db.commit()
