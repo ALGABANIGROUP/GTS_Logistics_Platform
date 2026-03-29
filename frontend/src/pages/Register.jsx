@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import truckBg from "../assets/bg_login.png";
+import Header from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
 import GlassCard from "../components/ui/GlassCard.jsx";
 import CountrySelect from "../components/ui/CountrySelect.jsx";
 import { COUNTRIES } from "../constants/countries";
@@ -465,19 +467,21 @@ export default function Register() {
   };
 
   return (
-    <div
-      className="relative min-h-screen h-screen overflow-hidden"
-      style={{
-        backgroundImage: `url(${truckBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="absolute inset-0 bg-black/10" />
+    <>
+      <Header />
+      <div
+        className="relative min-h-screen overflow-hidden"
+        style={{
+          backgroundImage: `url(${truckBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 w-full h-full flex items-center justify-center px-4">
-        <div className="w-full max-w-3xl">
+        <div className="relative z-10 w-full min-h-screen flex items-center justify-center px-4 py-8">
+          <div className="w-full max-w-3xl">
           <div className="text-center mb-6">
             <h1 className="text-white text-xl font-semibold">
               {step === "select" ? "Choose Your Plan" : "Complete Registration"}
@@ -544,11 +548,10 @@ export default function Register() {
                             key={roleKey}
                             type="button"
                             onClick={() => handleRoleChange(roleKey)}
-                            className={`rounded-xl border-2 p-4 text-left transition ${
-                              role === roleKey
+                            className={`rounded-xl border-2 p-4 text-left transition ${role === roleKey
                                 ? "border-red-500 bg-red-500/10"
                                 : "border-white/20 bg-white/5 hover:bg-white/10"
-                            }`}
+                              }`}
                           >
                             <h4 className="text-white font-semibold">{roleMeta.title}</h4>
                             <p className="text-xs text-white/70 mt-1">{roleMeta.description}</p>
@@ -600,245 +603,254 @@ export default function Register() {
                     </div>
                   </div>
                 ) : (
-                <form onSubmit={submit} className="flex flex-col gap-4">
-                  <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-260px)] pr-2">
-                    {selectedPlan ? (
-                      <div className="rounded-xl border border-white/20 bg-white/5 p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="text-white/70 text-xs uppercase tracking-wide">Selected plan</p>
-                            <h3 className="text-lg font-semibold text-white capitalize">{role} - {selectedPlan.name}</h3>
-                            <p className="text-sm text-white/80 mt-1">
-                              ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
-                              <span className="text-xs text-white/60 ml-2">Approx. ${selectedPlan.priceUSD} USD</span>
-                            </p>
-                            <p className="text-xs text-white/60 mt-1">System: {selectedSystem.toUpperCase()}</p>
+                  <form onSubmit={submit} className="flex flex-col gap-4">
+                    <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-260px)] pr-2">
+                      {selectedPlan ? (
+                        <div className="rounded-xl border border-white/20 bg-white/5 p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="text-white/70 text-xs uppercase tracking-wide">Selected plan</p>
+                              <h3 className="text-lg font-semibold text-white capitalize">{role} - {selectedPlan.name}</h3>
+                              <p className="text-sm text-white/80 mt-1">
+                                ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
+                                <span className="text-xs text-white/60 ml-2">Approx. ${selectedPlan.priceUSD} USD</span>
+                              </p>
+                              <p className="text-xs text-white/60 mt-1">System: {selectedSystem.toUpperCase()}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setStep("select")}
+                              className="text-sm text-red-300 hover:text-red-200 transition"
+                            >
+                              Change Plan
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setStep("select")}
-                            className="text-sm text-red-300 hover:text-red-200 transition"
-                          >
-                            Change Plan
-                          </button>
                         </div>
-                      </div>
-                    ) : null}
+                      ) : null}
 
-                    {/* Basic info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <input
-                          className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          placeholder="Company Name"
-                          name="companyName"
-                          autoComplete="organization"
-                          value={form.companyName}
-                          onChange={onChange}
-                          onBlur={onBlur}
-                          aria-invalid={Boolean(touched.companyName && errors.companyName)}
-                          disabled={isSubmitting}
-                          ref={companyRef}
-                          required
-                        />
-                        <FormError
-                          message={companyExistsError || (touched.companyName ? errors.companyName : "")}
-                          className="mt-1"
-                        />
-                        {checkingCompany ? (
-                          <p className="mt-1 text-xs text-white/60">Checking company availability...</p>
-                        ) : null}
-                      </div>
-                      <div>
-                        <input
-                          className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          placeholder="Username"
-                          name="username"
-                          autoComplete="username"
-                          value={form.username}
-                          onChange={onChange}
-                          onBlur={onBlur}
-                          aria-invalid={Boolean(touched.username && errors.username)}
-                          disabled={isSubmitting}
-                          required
-                        />
-                        <FormError message={touched.username ? errors.username : ""} className="mt-1" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <input
-                          className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          placeholder="Full Name"
-                          name="fullName"
-                          autoComplete="name"
-                          value={form.fullName}
-                          onChange={onChange}
-                          onBlur={onBlur}
-                          aria-invalid={Boolean(touched.fullName && errors.fullName)}
-                          disabled={isSubmitting}
-                          required
-                        />
-                        <FormError message={touched.fullName ? errors.fullName : ""} className="mt-1" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <input
-                          className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                          placeholder="Email"
-                          type="email"
-                          name="email"
-                          autoComplete="email"
-                          value={form.email}
-                          onChange={onChange}
-                          onBlur={onBlur}
-                          aria-invalid={Boolean(touched.email && errors.email)}
-                          disabled={isSubmitting}
-                          required
-                        />
-                        <FormError
-                          message={emailExistsError || (touched.email ? errors.email : "")}
-                          className="mt-1"
-                        />
-                        {checkingEmail ? (
-                          <p className="mt-1 text-xs text-white/60">Checking email availability...</p>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="flex">
-                          <span className="inline-flex items-center rounded-l-xl border border-white/20 bg-white/5 backdrop-blur-md px-3 text-white/80">
-                            {form.country?.callingCode || "+--"}
-                          </span>
+                      {/* Basic info */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
                           <input
-                            className="w-full rounded-r-xl border border-white/20 bg-white/5 backdrop-blur-md border-l-0 px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
-                            placeholder="Phone"
-                            name="phone"
-                            autoComplete="tel"
-                            value={form.phone}
+                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                            placeholder="Company Name"
+                            name="companyName"
+                            autoComplete="organization"
+                            value={form.companyName}
                             onChange={onChange}
                             onBlur={onBlur}
-                            aria-invalid={Boolean(touched.phone && errors.phone)}
+                            aria-invalid={Boolean(touched.companyName && errors.companyName)}
+                            disabled={isSubmitting}
+                            ref={companyRef}
+                            required
+                          />
+                          <FormError
+                            message={companyExistsError || (touched.companyName ? errors.companyName : "")}
+                            className="mt-1"
+                          />
+                          {checkingCompany ? (
+                            <p className="mt-1 text-xs text-white/60">Checking company availability...</p>
+                          ) : null}
+                        </div>
+                        <div>
+                          <input
+                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                            placeholder="Username"
+                            name="username"
+                            autoComplete="username"
+                            value={form.username}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            aria-invalid={Boolean(touched.username && errors.username)}
                             disabled={isSubmitting}
                             required
                           />
+                          <FormError message={touched.username ? errors.username : ""} className="mt-1" />
                         </div>
-                        <FormError message={touched.phone ? errors.phone : ""} className="mt-1" />
                       </div>
-                      <div>
-                        <div className="relative">
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
                           <input
-                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 pr-12"
-                            placeholder="Password"
-                            type={showPassword ? "text" : "password"}
-                            name="password"
-                            autoComplete="new-password"
-                            value={form.password}
+                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                            placeholder="Full Name"
+                            name="fullName"
+                            autoComplete="name"
+                            value={form.fullName}
                             onChange={onChange}
                             onBlur={onBlur}
-                            aria-invalid={Boolean(touched.password && errors.password)}
+                            aria-invalid={Boolean(touched.fullName && errors.fullName)}
                             disabled={isSubmitting}
                             required
                           />
-                          <button
-                            type="button"
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 text-xs"
-                            tabIndex={-1}
-                            onClick={() => setShowPassword((v) => !v)}
-                            disabled={isSubmitting}
-                          >
-                            {showPassword ? "Hide" : "Show"}
-                          </button>
+                          <FormError message={touched.fullName ? errors.fullName : ""} className="mt-1" />
                         </div>
-                        <FormError message={touched.password ? errors.password : ""} className="mt-1" />
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <input
+                            className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                            placeholder="Email"
+                            type="email"
+                            name="email"
+                            autoComplete="email"
+                            value={form.email}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            aria-invalid={Boolean(touched.email && errors.email)}
+                            disabled={isSubmitting}
+                            required
+                          />
+                          <FormError
+                            message={emailExistsError || (touched.email ? errors.email : "")}
+                            className="mt-1"
+                          />
+                          {checkingEmail ? (
+                            <p className="mt-1 text-xs text-white/60">Checking email availability...</p>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex">
+                            <span className="inline-flex items-center rounded-l-xl border border-white/20 bg-white/5 backdrop-blur-md px-3 text-white/80">
+                              {form.country?.callingCode || "+--"}
+                            </span>
+                            <input
+                              className="w-full rounded-r-xl border border-white/20 bg-white/5 backdrop-blur-md border-l-0 px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40"
+                              placeholder="Phone"
+                              name="phone"
+                              autoComplete="tel"
+                              value={form.phone}
+                              onChange={onChange}
+                              onBlur={onBlur}
+                              aria-invalid={Boolean(touched.phone && errors.phone)}
+                              disabled={isSubmitting}
+                              required
+                            />
+                          </div>
+                          <FormError message={touched.phone ? errors.phone : ""} className="mt-1" />
+                        </div>
+                        <div>
+                          <div className="relative">
+                            <input
+                              className="w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 pr-12"
+                              placeholder="Password"
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              autoComplete="new-password"
+                              value={form.password}
+                              onChange={onChange}
+                              onBlur={onBlur}
+                              aria-invalid={Boolean(touched.password && errors.password)}
+                              disabled={isSubmitting}
+                              required
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 text-xs"
+                              tabIndex={-1}
+                              onClick={() => setShowPassword((v) => !v)}
+                              disabled={isSubmitting}
+                            >
+                              {showPassword ? "Hide" : "Show"}
+                            </button>
+                          </div>
+                          <FormError message={touched.password ? errors.password : ""} className="mt-1" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <CountrySelect
+                          value={form.country}
+                          countries={allowedCountries}
+                          invalid={Boolean(touched.country && errors.country)}
+                          disabled={isSubmitting}
+                          onChange={(next) => {
+                            setForm((prev) => ({ ...prev, country: next }));
+                            setTouched((prev) => ({ ...prev, country: true }));
+                            setErrors((curr) => ({
+                              ...curr,
+                              country: validateField("country", next?.iso2 || "", { ...form, country: next }),
+                            }));
+                          }}
+                        />
+                        <FormError message={touched.country ? errors.country : ""} className="mt-1" />
+                        <p className="mt-1 text-xs text-white/60">
+                          Registration is available only for Canada and the United States.
+                        </p>
+                      </div>
+
+                      <details className="rounded-xl border border-white/20">
+                        <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
+                          Plan and system summary
+                        </summary>
+                        <div className="px-4 pb-4 pt-2 space-y-3">
+                          <p className="text-sm text-white/80">
+                            Role: <span className="font-semibold capitalize">{role}</span>
+                          </p>
+                          <p className="text-sm text-white/80">
+                            Plan: <span className="font-semibold">{selectedPlan?.name}</span>
+                          </p>
+                          <p className="text-sm text-white/80">
+                            System: <span className="font-semibold uppercase">{selectedSystem}</span>
+                          </p>
+                        </div>
+                      </details>
+
+                      <details className="rounded-xl border border-white/20">
+                        <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
+                          More details (optional)
+                        </summary>
+                        <div className="px-4 pb-4 pt-2">
+                          <textarea
+                            className="w-full min-h-[80px] rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 resize-none"
+                            placeholder="Tell us anything else (optional)"
+                            name="comment"
+                            value={form.comment}
+                            onChange={onChange}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </details>
                     </div>
 
-                    <div>
-                      <CountrySelect
-                        value={form.country}
-                        countries={allowedCountries}
-                        invalid={Boolean(touched.country && errors.country)}
-                        disabled={isSubmitting}
-                        onChange={(next) => {
-                          setForm((prev) => ({ ...prev, country: next }));
-                          setTouched((prev) => ({ ...prev, country: true }));
-                          setErrors((curr) => ({
-                            ...curr,
-                            country: validateField("country", next?.iso2 || "", { ...form, country: next }),
-                          }));
-                        }}
-                      />
-                      <FormError message={touched.country ? errors.country : ""} className="mt-1" />
-                      <p className="mt-1 text-xs text-white/60">
-                        Registration is available only for Canada and the United States.
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || requiredMissing || hasValidationErrors || hasAvailabilityErrors}
+                      className="w-full rounded-xl bg-black/30 hover:bg-black/40 text-white font-semibold py-3 border border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? "Processing..." : "Create Account"}
+                    </button>
+
+                    <div className="pt-3 border-t border-white/10 flex justify-between text-sm">
+                      <button
+                        type="button"
+                        className="text-white/70 hover:text-white transition"
+                        onClick={() => navigate("/login")}
+                      >
+                        Already have an account? Sign In
+                      </button>
+                      <button
+                        type="button"
+                        className="text-white/70 hover:text-white transition"
+                        onClick={() => navigate("/")}
+                      >
+                        Back to Portal
+                      </button>
+                    </div>
+
+                    <div className="text-center mt-2">
+                      <p className="text-white/70 text-sm">
+                        Already have an account?{" "}
+                        <Link to="/login" className="text-red-300 hover:text-red-200 underline underline-offset-2">
+                          Sign in
+                        </Link>
                       </p>
                     </div>
-
-                    <details className="rounded-xl border border-white/20">
-                      <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
-                        Plan and system summary
-                      </summary>
-                      <div className="px-4 pb-4 pt-2 space-y-3">
-                        <p className="text-sm text-white/80">
-                          Role: <span className="font-semibold capitalize">{role}</span>
-                        </p>
-                        <p className="text-sm text-white/80">
-                          Plan: <span className="font-semibold">{selectedPlan?.name}</span>
-                        </p>
-                        <p className="text-sm text-white/80">
-                          System: <span className="font-semibold uppercase">{selectedSystem}</span>
-                        </p>
-                      </div>
-                    </details>
-
-                    <details className="rounded-xl border border-white/20">
-                      <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
-                        More details (optional)
-                      </summary>
-                      <div className="px-4 pb-4 pt-2">
-                        <textarea
-                          className="w-full min-h-[80px] rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-4 py-3 text-white placeholder:text-white/50 outline-none focus:border-white/40 resize-none"
-                          placeholder="Tell us anything else (optional)"
-                          name="comment"
-                          value={form.comment}
-                          onChange={onChange}
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </details>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || requiredMissing || hasValidationErrors || hasAvailabilityErrors}
-                    className="w-full rounded-xl bg-black/30 hover:bg-black/40 text-white font-semibold py-3 border border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? "Processing..." : "Create Account"}
-                  </button>
-
-                  <div className="pt-3 border-t border-white/10 flex justify-between text-sm">
-                    <button
-                      type="button"
-                      className="text-white/70 hover:text-white transition"
-                      onClick={() => navigate("/login")}
-                    >
-                      Already have an account? Sign In
-                    </button>
-                    <button
-                      type="button"
-                      className="text-white/70 hover:text-white transition"
-                      onClick={() => navigate("/")}
-                    >
-                      Back to Portal
-                    </button>
-                  </div>
-                </form>
+                  </form>
                 )}
               </>
             )}
@@ -849,6 +861,8 @@ export default function Register() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+      <Footer />
+    </>
   );
 }
