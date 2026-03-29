@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /_debug/
+Disallow: /api/v1/
+Disallow: /internal/
+
+Sitemap: https://www.gtsdispatcher.com/sitemap.xml
