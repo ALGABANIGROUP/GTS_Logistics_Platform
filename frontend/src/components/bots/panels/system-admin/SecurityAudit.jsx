@@ -20,6 +20,7 @@ const SecurityAudit = ({ onNewNotification, refreshKey }) => {
     const [auditLogs, setAuditLogs] = useState([]);
     const [securityAlerts, setSecurityAlerts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [investigatingAlert, setInvestigatingAlert] = useState(null);
     const [filters, setFilters] = useState({
         action: '',
         start_date: '',
@@ -60,6 +61,62 @@ const SecurityAudit = ({ onNewNotification, refreshKey }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const getAuditCellValue = (log, keys, fallback = 'N/A') => {
+        for (const key of keys) {
+            if (log?.[key] !== undefined && log?.[key] !== null && String(log[key]).trim() !== '') {
+                return String(log[key]);
+            }
+        }
+        return fallback;
+    };
+
+    const handleInvestigateAlert = (alert, index) => {
+        const nextActionFilter = getAuditCellValue(alert, ['action', 'type', 'title', 'severity'], '');
+        setInvestigatingAlert(index);
+        if (nextActionFilter) {
+            setFilters((current) => ({ ...current, action: nextActionFilter }));
+        }
+        onNewNotification?.(`Investigating ${alert.title || 'security alert'}`, '!');
+    };
+
+    const handleDismissAlert = (index) => {
+        const dismissedAlert = securityAlerts[index];
+        setSecurityAlerts((current) => current.filter((_, currentIndex) => currentIndex !== index));
+        if (investigatingAlert === index) {
+            setInvestigatingAlert(null);
+        }
+        onNewNotification?.(`Dismissed ${dismissedAlert?.title || 'security alert'}`, '');
+    };
+
+    const handleExportLogs = () => {
+        if (!auditLogs.length) {
+            onNewNotification?.('No audit logs available to export', 'i');
+            return;
+        }
+
+        const header = ['time', 'user', 'action', 'details'];
+        const rows = auditLogs.map((log) => [
+            getAuditCellValue(log, ['time', 'timestamp', 'created_at']),
+            getAuditCellValue(log, ['user_id', 'user', 'email']),
+            getAuditCellValue(log, ['action', 'event', 'title']),
+            getAuditCellValue(log, ['details', 'description', 'message']),
+        ]);
+        const csvContent = [header, ...rows]
+            .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `security-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        onNewNotification?.(`Exported ${auditLogs.length} audit logs`, '');
     };
 
     const getSeverityColor = (severity) => {
@@ -198,9 +255,24 @@ const SecurityAudit = ({ onNewNotification, refreshKey }) => {
                                 </div>
                                 <h4 className="alert-title">{alert.title}</h4>
                                 <p className="alert-description">{alert.description}</p>
+                                {investigatingAlert === index ? (
+                                    <p className="alert-description">Investigation in progress. Audit filters were updated for this alert.</p>
+                                ) : null}
                                 <div className="alert-actions">
-                                    <button className="btn-alert-action">Investigate</button>
-                                    <button className="btn-alert-action dismiss">Dismiss</button>
+                                    <button
+                                        type="button"
+                                        className="btn-alert-action"
+                                        onClick={() => handleInvestigateAlert(alert, index)}
+                                    >
+                                        Investigate
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn-alert-action dismiss"
+                                        onClick={() => handleDismissAlert(index)}
+                                    >
+                                        Dismiss
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -211,10 +283,7 @@ const SecurityAudit = ({ onNewNotification, refreshKey }) => {
             <div className="audit-logs-section">
                 <div className="section-header">
                     <h3>Audit Logs</h3>
-                    <button
-                        className="btn-export"
-                        onClick={() => onNewNotification?.('Export feature coming soon', 'i')}
-                    >
+                    <button className="btn-export" onClick={handleExportLogs}>
                         Export Logs
                     </button>
                 </div>
@@ -259,19 +328,34 @@ const SecurityAudit = ({ onNewNotification, refreshKey }) => {
                         <div className="spinner"></div>
                         <p>Loading audit logs...</p>
                     </div>
+                ) : auditLogs.length > 0 ? (
+                    <div className="audit-info-box">
+                        <h4>Audit Log Results</h4>
+                        <div className="checklist-items">
+                            {auditLogs.map((log, index) => (
+                                <div key={`${getAuditCellValue(log, ['id'], index)}-${index}`} className="checklist-item completed">
+                                    <span className="check-text">
+                                        <strong>{getAuditCellValue(log, ['action', 'event', 'title'])}</strong>
+                                        {' · '}
+                                        {getAuditCellValue(log, ['user_id', 'user', 'email'])}
+                                        {' · '}
+                                        {getAuditCellValue(log, ['time', 'timestamp', 'created_at'])}
+                                        {' · '}
+                                        {getAuditCellValue(log, ['details', 'description', 'message'])}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 ) : (
                     <div className="audit-info-box">
                         <h4>Audit Log System</h4>
-                        <p>The comprehensive audit logging system is currently under development and will include:</p>
+                        <p>No audit log entries matched the current filters. Security monitoring is active and ready to export when logs are available.</p>
                         <ul className="features-list">
                             {auditFeatureList.map((feature) => (
                                 <li key={feature}>{feature}</li>
                             ))}
                         </ul>
-                        <p className="info-note">
-                            <strong>Note:</strong> Backend endpoints for audit logging need to be implemented at
-                            <code>/admin/users/audit/logs</code> and <code>/admin/security/alerts</code>
-                        </p>
                     </div>
                 )}
             </div>

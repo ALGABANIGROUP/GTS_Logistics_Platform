@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './AIBotsPanel.css';
 
 const botList = [
@@ -135,7 +135,26 @@ const ROUTE_BY_ID = {
     trainer_bot: '/ai-bots/control?bot=trainer_bot',
 };
 
+const CONTROL_ROUTE_BY_ID = {
+    general_manager: '/ai-bots/general-manager',
+    operations_manager_bot: '/ai-bots/operations-manager',
+    ai_dispatcher: '/ai-bots/aid-dispatcher',
+    information_coordinator: '/ai-bots/information',
+    intelligence_bot: '/ai-bots/control?bot=intelligence_bot',
+    documents_manager: '/ai-bots/documents',
+    customer_service: '/ai-bots/customer-service',
+    legal_bot: '/ai-bots/legal',
+    maintenance_dev: '/ai-bots/maintenance-dashboard',
+    mapleload_bot: '/ai-bots/mapleload-canada',
+    safety_manager_bot: '/ai-bots/safety_manager',
+    sales_bot: '/ai-bots/sales',
+    security_manager_bot: '/ai-bots/security_manager',
+    system_manager_bot: '/ai-bots/system-admin',
+    trainer_bot: '/ai-bots/control?bot=trainer_bot',
+};
+
 const AIBotsPanel = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const bots = useMemo(() => botList, []);
 
@@ -147,6 +166,17 @@ const AIBotsPanel = () => {
             ),
         [searchTerm, bots]
     );
+
+    const buildQuickRunRoute = (botId) => {
+        const baseRoute = ROUTE_BY_ID[botId] || `/ai-bots/${botId}`;
+        return `${baseRoute}${baseRoute.includes('?') ? '&' : '?'}quick=1`;
+    };
+
+    const handleCardAction = (event, path) => {
+        event.preventDefault();
+        event.stopPropagation();
+        navigate(path);
+    };
 
     return (
         <div className="ai-bots-panel">
@@ -201,10 +231,25 @@ const AIBotsPanel = () => {
                                 <p className="bot-description">{bot.description}</p>
 
                                 <div className="bot-card-footer">
-                                    <button className="control-btn" onClick={(e) => e.preventDefault()}>
+                                    <button
+                                        type="button"
+                                        className="control-btn"
+                                        onClick={(event) =>
+                                            handleCardAction(
+                                                event,
+                                                CONTROL_ROUTE_BY_ID[bot.id] || ROUTE_BY_ID[bot.id] || `/ai-bots/${bot.id}`
+                                            )
+                                        }
+                                    >
                                         Control Panel
                                     </button>
-                                    <span className="quick-run">Quick Run</span>
+                                    <button
+                                        type="button"
+                                        className="quick-run"
+                                        onClick={(event) => handleCardAction(event, buildQuickRunRoute(bot.id))}
+                                    >
+                                        Quick Run
+                                    </button>
                                 </div>
                             </div>
                         </Link>

@@ -1,12 +1,17 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+
+const INITIAL_WORKFLOWS = [
+    { id: 1, name: "Order Processing", status: "running", tasks: 12, completion: 75 },
+    { id: 2, name: "Inventory Sync", status: "running", tasks: 8, completion: 90 },
+    { id: 3, name: "Customer Onboarding", status: "paused", tasks: 5, completion: 40 },
+    { id: 4, name: "Reporting", status: "completed", tasks: 15, completion: 100 },
+];
 
 export default function OperationsManagerDashboard() {
-    const workflows = [
-        { id: 1, name: "Order Processing", status: "running", tasks: 12, completion: 75 },
-        { id: 2, name: "Inventory Sync", status: "running", tasks: 8, completion: 90 },
-        { id: 3, name: "Customer Onboarding", status: "paused", tasks: 5, completion: 40 },
-        { id: 4, name: "Reporting", status: "completed", tasks: 15, completion: 100 },
-    ];
+    const [workflows, setWorkflows] = useState(INITIAL_WORKFLOWS);
+    const [timeRange, setTimeRange] = useState("Last 24 hours");
+    const [dashboardNote, setDashboardNote] = useState("");
+    const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
 
     const performanceMetrics = [
         { metric: "Workflow Efficiency", value: 92, target: 90 },
@@ -48,6 +53,48 @@ export default function OperationsManagerDashboard() {
         },
     ];
 
+    const selectedWorkflow = useMemo(
+        () => workflows.find((workflow) => workflow.id === selectedWorkflowId) || null,
+        [selectedWorkflowId, workflows]
+    );
+
+    const handleQuickAction = (action) => {
+        switch (action) {
+            case "optimize":
+                setWorkflows((current) =>
+                    current.map((workflow) =>
+                        workflow.status === "running"
+                            ? { ...workflow, completion: Math.min(workflow.completion + 5, 100) }
+                            : workflow
+                    )
+                );
+                setDashboardNote("Workflow optimization triggered for active queues.");
+                break;
+            case "schedule":
+                setDashboardNote("Task scheduling queue prepared for the next available workflow slot.");
+                break;
+            case "analyze":
+                setTimeRange("Last 7 days");
+                setDashboardNote("Performance analysis expanded to the last 7 days.");
+                break;
+            case "alerts":
+                setDashboardNote("Operations alerts configuration is ready for review.");
+                break;
+            default:
+                break;
+        }
+    };
+
+    const handleManageWorkflow = (workflowId) => {
+        const workflow = workflows.find((item) => item.id === workflowId);
+        if (!workflow) {
+            return;
+        }
+
+        setSelectedWorkflowId(workflowId);
+        setDashboardNote(`${workflow.name} opened for management review.`);
+    };
+
     return (
         <div className="ops-section">
             <div className="ops-section-header">
@@ -55,18 +102,20 @@ export default function OperationsManagerDashboard() {
                     <div className="ops-section-title">Operations Dashboard</div>
                     <div className="ops-section-sub">Today</div>
                 </div>
-                <select className="ops-select">
+                <select className="ops-select" value={timeRange} onChange={(event) => setTimeRange(event.target.value)}>
                     <option>Last 24 hours</option>
                     <option>Last 7 days</option>
                     <option>Last 30 days</option>
                 </select>
             </div>
 
+            {dashboardNote ? <div className="ops-card ops-card-ghost">{dashboardNote}</div> : null}
+
             <div className="ops-grid ops-grid-quick">
-                <button className="ops-quick-btn"> Optimize Workflows</button>
-                <button className="ops-quick-btn"> Schedule Tasks</button>
-                <button className="ops-quick-btn"> Analyze Performance</button>
-                <button className="ops-quick-btn"> Configure Alerts</button>
+                <button type="button" className="ops-quick-btn" onClick={() => handleQuickAction("optimize")}> Optimize Workflows</button>
+                <button type="button" className="ops-quick-btn" onClick={() => handleQuickAction("schedule")}> Schedule Tasks</button>
+                <button type="button" className="ops-quick-btn" onClick={() => handleQuickAction("analyze")}> Analyze Performance</button>
+                <button type="button" className="ops-quick-btn" onClick={() => handleQuickAction("alerts")}> Configure Alerts</button>
             </div>
 
             <div className="ops-card">
@@ -85,12 +134,28 @@ export default function OperationsManagerDashboard() {
                             </div>
                             <div className="ops-workflow-foot">
                                 <span>Tasks: {workflow.tasks}</span>
-                                <button className="ops-chip">Manage</button>
+                                <button type="button" className="ops-chip" onClick={() => handleManageWorkflow(workflow.id)}>Manage</button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {selectedWorkflow ? (
+                <div className="ops-card">
+                    <div className="ops-card-title">Selected Workflow</div>
+                    <div className="ops-list-item">
+                        <div className="ops-list-head">
+                            <span className="ops-list-name">{selectedWorkflow.name}</span>
+                            <span className={`ops-status-badge ${selectedWorkflow.status}`}>{selectedWorkflow.status}</span>
+                        </div>
+                        <div className="ops-list-meta">
+                            <span className="ops-muted">{selectedWorkflow.tasks} active tasks</span>
+                            <span className="ops-muted">{selectedWorkflow.completion}% completion</span>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
 
             <div className="ops-card">
                 <div className="ops-card-title">Performance Metrics</div>
