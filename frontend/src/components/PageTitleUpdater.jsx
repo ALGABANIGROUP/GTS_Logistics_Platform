@@ -6,7 +6,7 @@ const PageTitleUpdater = () => {
 
     // Mapping of paths to page titles
     const pathToTitle = {
-        '/': 'GTS | Gabani Transport Solutions',
+        '/': 'GTS Logistics - Freight Broker & Load Board Platform',
         '/login': 'Login | GTS',
         '/logout': 'Logout | GTS',
         '/dashboard': 'Dashboard | GTS',

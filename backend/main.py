@@ -402,6 +402,7 @@ admin_portal_requests_router = _try_import_router("routes.admin_portal_requests"
 tms_requests_admin_router = _try_import_router("routes.tms_requests_admin", "routes.tms_requests_admin")
 payment_gateway_router = _try_import_router("routes.payment_gateway", "routes.payment_gateway")
 payment_routes_router = _try_import_router("routes.payment_routes", "routes.payment_routes")
+seo_public_router = _try_import_router("routes.seo_public", "routes.seo_public")
 channels_webhooks_router = _try_import_router("routes.channels_webhooks", "routes.channels_webhooks")
 call_ai_router = _try_import_router("routes.call_ai_routes", "routes.call_ai_routes")
 communications_router = _try_import_router("routes.communications", "routes.communications")
@@ -2634,6 +2635,10 @@ if payment_gateway_router:
 if payment_routes_router:
     app.include_router(payment_routes_router)
     log.info("[main] payment routes mounted at /api/payments/*")
+
+if seo_public_router:
+    app.include_router(seo_public_router)
+    log.info("[main] SEO public routes mounted at /robots.txt and /sitemap.xml")
 
 if unified_finance_router:
     app.include_router(

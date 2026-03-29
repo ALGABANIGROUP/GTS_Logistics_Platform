@@ -9,9 +9,19 @@ import TrustBadges from '../components/TrustBadges';
 import FuelPriceMap from '../components/FuelPriceMap';
 import NewsletterSignup from '../components/NewsletterSignup';
 import ChatSupportButton from '../components/ChatSupportButton';
+import SeoHead from '../components/SeoHead';
 
 const PortalLanding = () => {
   const [selectedTab, setSelectedTab] = useState('carrier');
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "GTS Logistics",
+    url: "https://www.gtsdispatcher.com/",
+    logo: "https://www.gtsdispatcher.com/favicon.png",
+    description: "Freight broker and load board platform for carriers, brokers, and shippers across Canada.",
+    sameAs: ["https://www.linkedin.com/company/gts-logistics"],
+  };
 
   // Real data for GTS Platform
   const liveLoadsData = {
@@ -77,6 +87,18 @@ const PortalLanding = () => {
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgLogin})` }}>
+      <SeoHead
+        title="GTS Logistics - Freight Broker & Load Board Platform"
+        description="GTS Logistics provides freight broker services, load board integration, and cross-border trucking solutions across Canada. Get real-time rates and track shipments."
+        keywords="freight broker, load board, trucking logistics, cross-border shipping, canada freight"
+        canonical="https://www.gtsdispatcher.com/"
+        ogTitle="GTS Logistics - Freight Broker & Load Board Platform"
+        ogDescription="Professional freight broker and load board services across Canada. Real-time rates, tracking, and dispatch."
+        ogUrl="https://www.gtsdispatcher.com/"
+        twitterTitle="GTS Logistics - Freight Broker & Load Board Platform"
+        twitterDescription="Professional freight broker and load board services across Canada."
+        schema={organizationSchema}
+      />
       <div className="min-h-screen bg-black/70">
         {/* Header */}
         <div className="container mx-auto px-4 py-4">
