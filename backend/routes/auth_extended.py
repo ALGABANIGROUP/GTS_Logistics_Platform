@@ -90,6 +90,7 @@ PASSWORD_POLICY_HINT = (
     "Password must be at least 8 characters and include an uppercase letter, a number, and a symbol."
 )
 UNSAFE_TEXT_PATTERNS = ("%00", "\\x00", "../", "..\\")
+ALLOWED_COUNTRY_CODES = {"CA", "US"}
 
 
 # ---------------------------------------------------------------------------
@@ -456,6 +457,13 @@ async def _create_registered_user(
     email = payload.email.strip().lower()
     username = (payload.username or email.split("@")[0]).strip().lower()
     company_name = (payload.company_name or "").strip()
+    country_code = (payload.country or "").strip().upper()
+
+    if country_code not in ALLOWED_COUNTRY_CODES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Registration is currently available only for Canada and the United States.",
+        )
 
     existing_email = await db.execute(select(UserModel).where(func.lower(UserModel.email) == email))
     if existing_email.scalar_one_or_none():
@@ -470,7 +478,7 @@ async def _create_registered_user(
             select(UserModel).where(func.lower(func.trim(UserModel.company)) == company_name.lower())
         )
         if existing_company.scalar_one_or_none():
-            raise _registration_error("company_name", "Company name is already in use")
+            raise _registration_error("company_name", "This company name is already registered")
 
     hashed = get_password_hash(payload.password)
     user = UserModel(
@@ -485,7 +493,7 @@ async def _create_registered_user(
     if hasattr(user, "company"):
         setattr(user, "company", company_name or None)
     if hasattr(user, "country"):
-        setattr(user, "country", (payload.country or "").strip() or None)
+        setattr(user, "country", country_code or None)
     if hasattr(user, "phone_number"):
         setattr(user, "phone_number", (payload.phone_number or "").strip() or None)
     if hasattr(user, "system_type"):
@@ -547,6 +555,25 @@ async def register(
             "company_name": getattr(user, "company", None),
         },
     }
+
+
+@router.get("/check-email")
+async def check_email(email: EmailStr, db: AsyncSession = Depends(get_db_async)) -> Dict[str, bool]:
+    normalized = str(email).strip().lower()
+    result = await db.execute(select(UserModel.id).where(func.lower(UserModel.email) == normalized))
+    return {"exists": result.scalar_one_or_none() is not None}
+
+
+@router.get("/check-company")
+async def check_company(company_name: str, db: AsyncSession = Depends(get_db_async)) -> Dict[str, bool]:
+    normalized = (company_name or "").strip().lower()
+    if not normalized or not hasattr(UserModel, "company"):
+        return {"exists": False}
+
+    result = await db.execute(
+        select(UserModel.id).where(func.lower(func.trim(UserModel.company)) == normalized)
+    )
+    return {"exists": result.scalar_one_or_none() is not None}
 
 
 @router.post(

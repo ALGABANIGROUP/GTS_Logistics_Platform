@@ -7,6 +7,7 @@ import SeoHead from '../components/SeoHead';
 const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [userType, setUserType] = useState('carrier');
+  const CAD_PER_USD = 1.37;
 
   // Competitive pricing for market entry
   const pricingPlans = {
@@ -193,9 +194,22 @@ const Pricing = () => {
   ];
 
   const currentPlan = pricingPlans[userType];
+  const planMeta = {
+    basic: { title: 'Basic', subtitle: 'Everything you need to start' },
+    pro: { title: 'Pro', subtitle: 'Level up your profits' },
+    premium: { title: 'Premium', subtitle: 'Maximum efficiency' }
+  };
 
   const formatPrice = (price) => {
     return price.toLocaleString();
+  };
+
+  const toCad = (usdPrice) => {
+    return Math.round(Number(usdPrice || 0) * CAD_PER_USD);
+  };
+
+  const formatPricePair = (usdPrice) => {
+    return `$${formatPrice(toCad(usdPrice))} CAD (≈ $${formatPrice(Number(usdPrice || 0))} USD)`;
   };
 
   return (
@@ -238,7 +252,7 @@ const Pricing = () => {
         <div className="container mx-auto px-4 py-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Simple, Transparent Pricing</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-            Affordable plans designed to help you grow. Get started today with our competitive rates.
+            CAD-first pricing for Canada and U.S. teams, with USD reference shown for clarity.
           </p>
 
           {/* User Type Tabs */}
@@ -276,71 +290,56 @@ const Pricing = () => {
               Yearly <span className="text-green-400 text-xs ml-1">Save 15%</span>
             </span>
           </div>
+          <p className="text-xs text-gray-400 mb-8">All plans are billed in CAD by default. USD values are approximate references.</p>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Basic Plan */}
-            <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:border-red-500/50 transition">
-              <h3 className="text-2xl font-bold text-white mb-2">Basic</h3>
-              <p className="text-gray-400 text-sm mb-4">Everything you need to start</p>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">${formatPrice(currentPlan.basic[billingCycle])}</span>
-                <span className="text-gray-400">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-left">
-                {currentPlan.basic.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-300 text-sm">
-                    <span className="text-green-400">✓</span> {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/register?plan=basic" className="block text-center py-3 border border-white/30 text-white rounded-lg hover:bg-white/10 transition">
-                Get Started
-              </Link>
-            </div>
-
-            {/* Pro Plan - Popular */}
-            <div className="bg-gradient-to-b from-red-600/20 to-black/60 backdrop-blur-sm rounded-xl p-6 border-2 border-red-500 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-3 py-1 rounded-full">
-                Most Popular
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
-              <p className="text-gray-400 text-sm mb-4">Level up your profits</p>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">${formatPrice(currentPlan.pro[billingCycle])}</span>
-                <span className="text-gray-400">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-left">
-                {currentPlan.pro.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-300 text-sm">
-                    <span className="text-green-400">✓</span> {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/register?plan=pro" className="block text-center py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                Get Started
-              </Link>
-            </div>
-
-            {/* Premium Plan */}
-            <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:border-red-500/50 transition">
-              <h3 className="text-2xl font-bold text-white mb-2">Premium</h3>
-              <p className="text-gray-400 text-sm mb-4">Maximum efficiency</p>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-white">${formatPrice(currentPlan.premium[billingCycle])}</span>
-                <span className="text-gray-400">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-left">
-                {currentPlan.premium.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-300 text-sm">
-                    <span className="text-green-400">✓</span> {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/register?plan=premium" className="block text-center py-3 border border-white/30 text-white rounded-lg hover:bg-white/10 transition">
-                Get Started
-              </Link>
-            </div>
+          <div className="max-w-4xl mx-auto space-y-5">
+            {['basic', 'pro', 'premium'].map((planKey) => {
+              const isPopular = Boolean(currentPlan[planKey]?.popular);
+              const plan = currentPlan[planKey];
+              const meta = planMeta[planKey];
+              return (
+                <div
+                  key={planKey}
+                  className={`relative rounded-xl p-6 border transition ${isPopular
+                      ? 'bg-gradient-to-r from-red-700/25 to-black/60 border-red-500'
+                      : 'bg-black/40 border-white/20 hover:border-red-500/50'
+                    }`}
+                >
+                  {isPopular ? (
+                    <div className="absolute -top-3 left-6 bg-red-600 text-white text-xs px-3 py-1 rounded-full">
+                      Most Popular
+                    </div>
+                  ) : null}
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                    <div className="text-left">
+                      <h3 className="text-2xl font-bold text-white mb-1">{meta.title}</h3>
+                      <p className="text-gray-400 text-sm mb-4">{meta.subtitle}</p>
+                      <div className="mb-2">
+                        <span className="text-3xl font-bold text-white">{formatPricePair(plan[billingCycle])}</span>
+                      </div>
+                      <p className="text-xs text-gray-400">per {billingCycle === 'monthly' ? 'month' : 'year'}</p>
+                    </div>
+                    <Link
+                      to={`/register?plan=${planKey}`}
+                      className={`inline-flex items-center justify-center px-6 py-3 rounded-lg text-sm font-semibold transition ${isPopular
+                          ? 'bg-red-600 text-white hover:bg-red-700'
+                          : 'border border-white/30 text-white hover:bg-white/10'
+                        }`}
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                  <ul className="space-y-2 mt-5 text-left">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-gray-300 text-sm">
+                        <span className="text-green-400">✓</span> {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
 
           {/* Enterprise Section */}
@@ -372,7 +371,7 @@ const Pricing = () => {
               <div key={idx} className={`bg-black/40 backdrop-blur-sm rounded-xl p-4 border ${plan.popular ? 'border-red-500' : 'border-white/20'}`}>
                 <h3 className="text-lg font-bold text-white text-center">{plan.name}</h3>
                 <div className="text-center my-3">
-                  <span className="text-2xl font-bold text-white">${plan.price}</span>
+                  <span className="text-2xl font-bold text-white">{formatPricePair(plan.price)}</span>
                   <span className="text-gray-400 text-xs">/month</span>
                 </div>
                 <p className="text-gray-400 text-xs text-center mb-2">{plan.users} users • {plan.vehicles} vehicles</p>
@@ -401,7 +400,7 @@ const Pricing = () => {
                 {botAddons.map((bot, idx) => (
                   <div key={idx} className="flex justify-between items-center border-b border-white/10 py-2">
                     <span className="text-gray-300 text-sm">{bot.name}</span>
-                    <span className="text-white text-sm font-semibold">${bot.price}/mo</span>
+                    <span className="text-white text-sm font-semibold">{formatPricePair(bot.price)}/mo</span>
                   </div>
                 ))}
               </div>
@@ -415,7 +414,7 @@ const Pricing = () => {
                 {vehiclePricing.map((vp, idx) => (
                   <div key={idx} className="flex justify-between items-center border-b border-white/10 py-1">
                     <span className="text-gray-300 text-xs">{vp.range}</span>
-                    <span className="text-white text-xs">${vp.price}/vehicle/month</span>
+                    <span className="text-white text-xs">{formatPricePair(vp.price)}/vehicle/month</span>
                   </div>
                 ))}
               </div>
@@ -424,7 +423,7 @@ const Pricing = () => {
                 {userAddons.map((ua, idx) => (
                   <div key={idx} className="flex justify-between items-center border-b border-white/10 py-1">
                     <span className="text-gray-300 text-xs">{ua.name}</span>
-                    <span className="text-white text-xs">${ua.price}/user/month</span>
+                    <span className="text-white text-xs">{formatPricePair(ua.price)}/user/month</span>
                   </div>
                 ))}
               </div>
@@ -438,7 +437,7 @@ const Pricing = () => {
               {additionalServices.map((service, idx) => (
                 <div key={idx} className="flex justify-between items-center border-b border-white/10 py-2">
                   <span className="text-gray-300 text-sm">{service.name}</span>
-                  <span className="text-white text-sm font-semibold">${service.price}/mo</span>
+                  <span className="text-white text-sm font-semibold">{formatPricePair(service.price)}/mo</span>
                 </div>
               ))}
             </div>

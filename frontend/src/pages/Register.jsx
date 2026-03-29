@@ -11,12 +11,15 @@ import { registrationStatus } from "../config/registration";
 import { getPlans, getPolicyContext } from "../services/billingApi";
 import { formatTierLabel, normalizeTier } from "../utils/tierUtils";
 
+const ALLOWED_COUNTRY_CODES = ["CA", "US"];
+const CAD_PER_USD = 1.37;
+
 const DEFAULT_PLAN_OPTIONS = [
-  { value: "free", label: "Free - 0 / month" },
-  { value: "starter", label: "Starter - 9 / month" },
-  { value: "growth", label: "Growth - 19 / month" },
-  { value: "professional", label: "Professional - 39 / month" },
-  { value: "enterprise", label: "Enterprise - 79 / month" },
+  { value: "free", label: "Free - $0 CAD / month (≈ $0 USD)" },
+  { value: "starter", label: "Starter - $12 CAD / month (≈ $9 USD)" },
+  { value: "growth", label: "Growth - $26 CAD / month (≈ $19 USD)" },
+  { value: "professional", label: "Professional - $53 CAD / month (≈ $39 USD)" },
+  { value: "enterprise", label: "Enterprise - $108 CAD / month (≈ $79 USD)" },
 ];
 
 /**
@@ -32,7 +35,13 @@ export default function Register() {
   const { disabled: registrationClosed, notice, reopenLabel, contactEmail } =
     registrationStatus;
   const companyRef = useRef(null);
-  const defaultCountry = COUNTRIES.find((c) => c.iso2 === "US") || COUNTRIES[0];
+  const defaultCountry = COUNTRIES.find((c) => c.iso2 === "CA") || COUNTRIES[0];
+  const allowedCountries = useMemo(
+    () => COUNTRIES.filter((country) => ALLOWED_COUNTRY_CODES.includes(country.iso2)),
+    []
+  );
+  const defaultAllowedCountry =
+    allowedCountries.find((c) => c.iso2 === "CA") || allowedCountries[0] || defaultCountry;
 
   const [form, setForm] = useState({
     companyName: "",
@@ -54,10 +63,15 @@ export default function Register() {
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [planOptions, setPlanOptions] = useState(DEFAULT_PLAN_OPTIONS);
+  const [emailExistsError, setEmailExistsError] = useState("");
+  const [companyExistsError, setCompanyExistsError] = useState("");
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [checkingCompany, setCheckingCompany] = useState(false);
   const hasValidationErrors = useMemo(
     () => Object.values(errors).some(Boolean),
     [errors]
   );
+  const hasAvailabilityErrors = Boolean(emailExistsError || companyExistsError);
 
   const requiredMissing = useMemo(() => {
     return (
@@ -123,6 +137,12 @@ export default function Register() {
     const { name, value } = e.target;
     setForm((prev) => {
       const next = { ...prev, [name]: value };
+      if (name === "email") {
+        setEmailExistsError("");
+      }
+      if (name === "companyName") {
+        setCompanyExistsError("");
+      }
       if (touched[name]) {
         setErrors((curr) => ({ ...curr, [name]: validateField(name, value, next) }));
       }
@@ -134,11 +154,94 @@ export default function Register() {
     const { name, value } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
     setErrors((curr) => ({ ...curr, [name]: validateField(name, value, form) }));
+    if (name === "email") {
+      checkEmailAvailability(value);
+    }
+    if (name === "companyName") {
+      checkCompanyAvailability(value);
+    }
   };
 
   useEffect(() => {
     companyRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    setForm((prev) => {
+      if (prev.country?.iso2 && ALLOWED_COUNTRY_CODES.includes(prev.country.iso2)) {
+        return prev;
+      }
+      return { ...prev, country: defaultAllowedCountry };
+    });
+  }, [defaultAllowedCountry]);
+
+  const checkEmailAvailability = async (emailValue) => {
+    const normalized = String(emailValue || "").trim().toLowerCase();
+    if (!normalized || !isValidEmail(normalized)) {
+      setEmailExistsError("");
+      return;
+    }
+
+    try {
+      setCheckingEmail(true);
+      const response = await axiosClient.get("/api/v1/auth/check-email", {
+        params: { email: normalized },
+      });
+      if (response?.data?.exists) {
+        setEmailExistsError("This email is already registered");
+        return;
+      }
+      setEmailExistsError("");
+    } catch {
+      setEmailExistsError("");
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  const checkCompanyAvailability = async (companyValue) => {
+    const normalized = String(companyValue || "").trim();
+    if (!normalized) {
+      setCompanyExistsError("");
+      return;
+    }
+
+    try {
+      setCheckingCompany(true);
+      const response = await axiosClient.get("/api/v1/auth/check-company", {
+        params: { company_name: normalized },
+      });
+      if (response?.data?.exists) {
+        setCompanyExistsError("This company name is already registered");
+        return;
+      }
+      setCompanyExistsError("");
+    } catch {
+      setCompanyExistsError("");
+    } finally {
+      setCheckingCompany(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (form.email) {
+        checkEmailAvailability(form.email);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [form.email]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (form.companyName) {
+        checkCompanyAvailability(form.companyName);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [form.companyName]);
 
   useEffect(() => {
     let active = true;
@@ -150,7 +253,16 @@ export default function Register() {
         const plansResponse = await getPlans(region);
         const options = (plansResponse?.plans || []).map((plan) => ({
           value: normalizeTier(plan?.code),
-          label: `${plan?.name || formatTierLabel(plan?.code)} - ${plan?.price_amount ?? "0"} ${plan?.currency || "USD"} / month`,
+          label: (() => {
+            const planName = plan?.name || formatTierLabel(plan?.code);
+            const amount = Number(plan?.price_amount ?? 0);
+            const currency = String(plan?.currency || "CAD").toUpperCase();
+
+            const cadAmount = currency === "USD" ? Math.round(amount * CAD_PER_USD) : amount;
+            const usdAmount = currency === "USD" ? amount : Math.round(amount / CAD_PER_USD);
+
+            return `${planName} - $${cadAmount} CAD / month (≈ $${usdAmount} USD)`;
+          })(),
         }));
 
         if (!active || options.length === 0) return;
@@ -196,6 +308,11 @@ export default function Register() {
       return;
     }
 
+    if (emailExistsError || companyExistsError) {
+      setFormError("Please resolve duplicate email/company errors before continuing.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -227,6 +344,7 @@ export default function Register() {
           company_name: "companyName",
           full_name: "fullName",
           phone_number: "phone",
+          country: "country",
         };
         const fieldKey = fieldMap[detail.field] || detail.field;
         setErrors((curr) => ({ ...curr, [fieldKey]: detail.message || "Invalid value." }));
@@ -330,7 +448,13 @@ export default function Register() {
                           ref={companyRef}
                           required
                         />
-                        <FormError message={touched.companyName ? errors.companyName : ""} className="mt-1" />
+                        <FormError
+                          message={companyExistsError || (touched.companyName ? errors.companyName : "")}
+                          className="mt-1"
+                        />
+                        {checkingCompany ? (
+                          <p className="mt-1 text-xs text-white/60">Checking company availability...</p>
+                        ) : null}
                       </div>
                       <div>
                         <input
@@ -382,7 +506,13 @@ export default function Register() {
                           disabled={isSubmitting}
                           required
                         />
-                        <FormError message={touched.email ? errors.email : ""} className="mt-1" />
+                        <FormError
+                          message={emailExistsError || (touched.email ? errors.email : "")}
+                          className="mt-1"
+                        />
+                        {checkingEmail ? (
+                          <p className="mt-1 text-xs text-white/60">Checking email availability...</p>
+                        ) : null}
                       </div>
                     </div>
 
@@ -439,6 +569,7 @@ export default function Register() {
                     <div>
                       <CountrySelect
                         value={form.country}
+                        countries={allowedCountries}
                         invalid={Boolean(touched.country && errors.country)}
                         disabled={isSubmitting}
                         onChange={(next) => {
@@ -451,6 +582,9 @@ export default function Register() {
                         }}
                       />
                       <FormError message={touched.country ? errors.country : ""} className="mt-1" />
+                      <p className="mt-1 text-xs text-white/60">
+                        Registration is available only for Canada and the United States.
+                      </p>
                     </div>
 
                     <details className="rounded-xl border border-white/20">
@@ -501,6 +635,20 @@ export default function Register() {
                             <option value="loadboard">LoadBoard</option>
                           </select>
                           <FormError message={touched.system ? errors.system : ""} className="mt-1" />
+                          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="rounded-lg border border-white/15 bg-white/5 p-3">
+                              <p className="text-sm font-semibold text-white">TMS</p>
+                              <p className="mt-1 text-xs text-white/70">
+                                Transportation Management System for shipment planning, tracking, and fleet operations.
+                              </p>
+                            </div>
+                            <div className="rounded-lg border border-white/15 bg-white/5 p-3">
+                              <p className="text-sm font-semibold text-white">LoadBoard</p>
+                              <p className="mt-1 text-xs text-white/70">
+                                Load board marketplace for posting loads, matching carriers, and managing spot opportunities.
+                              </p>
+                            </div>
+                          </div>
                         </div>
 
                         <div>
@@ -548,7 +696,7 @@ export default function Register() {
 
                   <button
                     type="submit"
-                    disabled={isSubmitting || requiredMissing || hasValidationErrors}
+                    disabled={isSubmitting || requiredMissing || hasValidationErrors || hasAvailabilityErrors}
                     className="w-full rounded-xl bg-black/30 hover:bg-black/40 text-white font-semibold py-3 border border-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? "Processing..." : "Create Account"}

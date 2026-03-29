@@ -1,22 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { COUNTRIES } from "../../constants/countries";
 
-export default function CountrySelect({ value, onChange, invalid = false }) {
+export default function CountrySelect({
+  value,
+  onChange,
+  invalid = false,
+  countries,
+  disabled = false,
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef(null);
+  const sourceCountries = Array.isArray(countries) && countries.length > 0 ? countries : COUNTRIES;
 
   const options = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return COUNTRIES;
-    return COUNTRIES.filter((c) => {
+    if (!q) return sourceCountries;
+    return sourceCountries.filter((c) => {
       return (
         c.name.toLowerCase().includes(q) ||
         c.iso2.toLowerCase().includes(q) ||
         c.callingCode.toLowerCase().includes(q)
       );
     });
-  }, [query]);
+  }, [query, sourceCountries]);
 
   useEffect(() => {
     const handleClick = (event) => {
@@ -37,8 +44,9 @@ export default function CountrySelect({ value, onChange, invalid = false }) {
     <div ref={containerRef} className="relative">
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className="w-full rounded-xl border border-white/20 px-4 py-3 text-left text-white outline-none"
+        className="w-full rounded-xl border border-white/20 px-4 py-3 text-left text-white outline-none disabled:opacity-60 disabled:cursor-not-allowed"
         aria-invalid={invalid}
       >
         <span className="block truncate">{label}</span>
