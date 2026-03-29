@@ -2,7 +2,7 @@
 Authentication Routes - Login, Register, Token
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -149,12 +149,21 @@ async def login(
 
     # Create access token
     access_token = create_access_token(
-        data={"sub": str(user["id"]), "email": user["email"], "role": user.get("role") or "user"}
+        data={
+            "sub": str(user["id"]),
+            "email": user["email"],
+            "role": user.get("role") or "user",
+            "tv": int(user.get("token_version") or 0),
+        }
     )
 
     # Create refresh token
     refresh_token = create_access_token(
-        data={"sub": str(user["id"]), "type": "refresh"},
+        data={
+            "sub": str(user["id"]),
+            "type": "refresh",
+            "tv": int(user.get("token_version") or 0),
+        },
         expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
@@ -180,10 +189,18 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/refresh")
-async def refresh_token(refresh_token: str, session: AsyncSession = Depends(get_async_session)):
+async def refresh_token(
+    refresh_token: Optional[str] = Body(default=None, embed=True),
+    session: AsyncSession = Depends(get_async_session),
+):
     """Refresh access token"""
     try:
+        if not refresh_token:
+            raise HTTPException(status_code=400, detail="refresh_token is required")
+
         payload = jwt.decode(refresh_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid refresh token type")
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -193,7 +210,12 @@ async def refresh_token(refresh_token: str, session: AsyncSession = Depends(get_
             raise HTTPException(status_code=401, detail="User not found")
 
         new_access_token = create_access_token(
-            data={"sub": str(user["id"]), "email": user["email"], "role": user.get("role") or "user"}
+            data={
+                "sub": str(user["id"]),
+                "email": user["email"],
+                "role": user.get("role") or "user",
+                "tv": int(user.get("token_version") or 0),
+            }
         )
 
         return {

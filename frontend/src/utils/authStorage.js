@@ -1,4 +1,4 @@
-const ACCESS_TOKEN_KEYS = ["access_token", "token", "gts_token"];
+const ACCESS_TOKEN_KEYS = ["access_token", "token", "gts_token", "authToken", "jwt"];
 const REFRESH_TOKEN_KEYS = ["refresh_token", "refreshToken"];
 const SESSION_KEYS = ["user", "auth_context"];
 

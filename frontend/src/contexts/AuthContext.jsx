@@ -6,6 +6,7 @@ import React, {
     useState,
 } from "react";
 import axios from "axios";
+import axiosClient from "../api/axiosClient";
 import {
     clearAuthCache,
     readAuthToken,
@@ -172,7 +173,7 @@ export const AuthProvider = ({ children }) => {
                         setUser(null);
                     }
                 } else {
-                    const response = await axios.get(`${API_URL}/api/v1/auth/me`, {
+                    const response = await axiosClient.get(`/api/v1/auth/me`, {
                         headers: { Authorization: `Bearer ${currentToken}` },
                     });
                     if (!cancelled) {
@@ -182,7 +183,10 @@ export const AuthProvider = ({ children }) => {
                 }
             } catch (error) {
                 console.error("Auth init error:", error);
-                clearAuthCache();
+                const status = error?.response?.status;
+                if (status === 401 || status === 403) {
+                    clearAuthCache();
+                }
                 if (!cancelled) {
                     setToken("");
                     setUser(null);
@@ -226,7 +230,7 @@ export const AuthProvider = ({ children }) => {
             formData.append("username", email);
             formData.append("password", password);
 
-            const response = await axios.post(`${API_URL}/api/v1/auth/token`, formData, {
+            const response = await axiosClient.post(`/api/v1/auth/token`, formData, {
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
             });
 
@@ -251,7 +255,7 @@ export const AuthProvider = ({ children }) => {
 
             let userPayload = normalizeAuthPayload(response.data);
             try {
-                const userResponse = await axios.get(`${API_URL}/api/v1/auth/me`, {
+                const userResponse = await axiosClient.get(`/api/v1/auth/me`, {
                     headers: { Authorization: `Bearer ${access_token}` },
                 });
                 userPayload = normalizeAuthPayload(userResponse.data) || userPayload;
