@@ -31,6 +31,7 @@ export function PaymentFailedPage() {
     const reason = searchParams.get('reason') || 'Payment incomplete';
 
     const [retrying, setRetrying] = useState(false);
+    const [openFaq, setOpenFaq] = useState(0);
 
     /**
      * Handle Retry Payment
@@ -97,6 +98,24 @@ export function PaymentFailedPage() {
     };
 
     const errorDetails = getErrorDetails();
+    const faqItems = [
+        {
+            question: 'Why was my payment declined?',
+            answer: 'Payment may be declined due to several reasons: insufficient funds, incorrect card details, or bank security measures.',
+        },
+        {
+            question: 'Will the amount be deducted from my account?',
+            answer: 'No, if payment fails, no amount is deducted. All failed attempts leave no impact on your account.',
+        },
+        {
+            question: 'How do I know if payment was successful?',
+            answer: 'A success confirmation page will appear upon completion. You will also receive an email confirmation.',
+        },
+        {
+            question: 'Can I pay in another currency?',
+            answer: 'Yes, we support multiple currencies including Sudanese Pound (SDG) and US Dollar (USD).',
+        },
+    ];
 
     return (
         <div className="payment-failed-page">
@@ -205,45 +224,23 @@ export function PaymentFailedPage() {
                     <h3>❓ Frequently Asked Questions</h3>
 
                     <div className="faq-items">
-                        <div className="faq-item">
-                            <button className="faq-toggle">
-                                Why was my payment declined?
-                            </button>
-                            <div className="faq-content">
-                                Payment may be declined due to several reasons: insufficient funds,
-                                incorrect card details, or bank security measures.
+                        {faqItems.map((item, index) => (
+                            <div key={item.question} className="faq-item">
+                                <button
+                                    type="button"
+                                    className="faq-toggle"
+                                    onClick={() => setOpenFaq((current) => (current === index ? -1 : index))}
+                                    aria-expanded={openFaq === index}
+                                >
+                                    {item.question}
+                                </button>
+                                {openFaq === index ? (
+                                    <div className="faq-content">
+                                        {item.answer}
+                                    </div>
+                                ) : null}
                             </div>
-                        </div>
-
-                        <div className="faq-item">
-                            <button className="faq-toggle">
-                                Will the amount be deducted from my account?
-                            </button>
-                            <div className="faq-content">
-                                No, if payment fails, no amount is deducted. All failed attempts
-                                leave no impact on your account.
-                            </div>
-                        </div>
-
-                        <div className="faq-item">
-                            <button className="faq-toggle">
-                                How do I know if payment was successful?
-                            </button>
-                            <div className="faq-content">
-                                A success confirmation page will appear upon completion. You will also
-                                receive an email confirmation.
-                            </div>
-                        </div>
-
-                        <div className="faq-item">
-                            <button className="faq-toggle">
-                                Can I pay in another currency?
-                            </button>
-                            <div className="faq-content">
-                                Yes, we support multiple currencies including Sudanese Pound (SDG)
-                                and US Dollar (USD).
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

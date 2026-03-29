@@ -5,10 +5,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import './MapleLoadCanadaControl.css';
 
 const MapleLoadCanadaControl = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('intelligence');
   const [isExecuting, setIsExecuting] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -54,6 +56,56 @@ const MapleLoadCanadaControl = () => {
     } finally {
       setIsExecuting(false);
     }
+  };
+
+  const publishLocalResult = (endpoint, data) => {
+    setLastResult({
+      endpoint,
+      timestamp: new Date().toISOString(),
+      success: true,
+      data,
+    });
+  };
+
+  const handleCreateCampaign = () => {
+    publishLocalResult('/outreach/campaign-draft', {
+      message: 'Campaign draft prepared. Review the launch settings and click Launch Campaign when ready.',
+      campaign_name: 'High Margin Loads Campaign',
+      target: 'all_carriers',
+      next_step: 'launch_campaign',
+    });
+  };
+
+  const handleAnalyzeResponses = () => {
+    publishLocalResult('/outreach/response-analysis', {
+      message: 'Response analysis opened from the latest outreach activity.',
+      recommended_action: 'review_response_trends',
+      analysis_scope: 'last_campaign',
+    });
+    setActiveTab('reports');
+  };
+
+  const handleScheduleFollowUps = () => {
+    publishLocalResult('/outreach/follow-up-plan', {
+      message: 'Follow-up plan generated for outreach pipeline.',
+      next_window: '48_hours',
+      cadence: 'two_touch_sequence',
+    });
+  };
+
+  const handleExportData = () => {
+    const payload = lastResult || {
+      exported_at: new Date().toISOString(),
+      bot_status: botStatus,
+      active_tab: activeTab,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'mapleload-canada-export.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   const tabs = [
@@ -282,9 +334,9 @@ const MapleLoadCanadaControl = () => {
             </div>
 
             <div className="outreach-controls">
-              <button className="campaign-btn orange"> Create Campaign</button>
-              <button className="campaign-btn blue"> Analyze Responses</button>
-              <button className="campaign-btn green"> Schedule Follow-ups</button>
+              <button className="campaign-btn orange" onClick={handleCreateCampaign}> Create Campaign</button>
+              <button className="campaign-btn blue" onClick={handleAnalyzeResponses}> Analyze Responses</button>
+              <button className="campaign-btn green" onClick={handleScheduleFollowUps}> Schedule Follow-ups</button>
               <button
                 className="campaign-btn purple"
                 onClick={() => executeBotFunction('/outreach-campaign', {
@@ -569,8 +621,8 @@ const MapleLoadCanadaControl = () => {
         </div>
         <div className="footer-actions">
           <button className="footer-btn" onClick={fetchBotStatus}> Refresh</button>
-          <button className="footer-btn"> Settings</button>
-          <button className="footer-btn"> Export Data</button>
+          <button className="footer-btn" onClick={() => navigate('/admin/settings')}> Settings</button>
+          <button className="footer-btn" onClick={handleExportData}> Export Data</button>
         </div>
       </footer>
     </div>

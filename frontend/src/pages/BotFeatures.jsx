@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { REGISTRATION_DISABLED_FLAG, REGISTRATION_CONTACT } from '../config/registration';
@@ -29,6 +30,7 @@ const TIER_ORDER = {
 
 const BotFeatures = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [allBots, setAllBots] = useState({});
     const [userBots, setUserBots] = useState([]);
     const [userServices, setUserServices] = useState([]);
@@ -371,7 +373,7 @@ const BotFeatures = () => {
                         Upgrade to {userSubscription.tier === 'free' ? 'Starter' : 'the next'} plan to unlock
                         powerful AI features
                     </p>
-                    <button className="upgrade-btn">View Plans</button>
+                    <button className="upgrade-btn" onClick={() => navigate('/pricing')}>View Plans</button>
                 </section>
             )}
 

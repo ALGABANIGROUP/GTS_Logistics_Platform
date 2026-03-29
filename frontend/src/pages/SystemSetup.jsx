@@ -219,7 +219,16 @@ export default function SystemSetup() {
                                             <li key={idx}>✓ {feature}</li>
                                         ))}
                                     </ul>
-                                    <button className="select-btn">Select {system.name}</button>
+                                    <button
+                                        type="button"
+                                        className="select-btn"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            handleSystemSelect(system);
+                                        }}
+                                    >
+                                        Select {system.name}
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -261,7 +270,16 @@ export default function SystemSetup() {
                                             <li key={idx}>✓ {feature}</li>
                                         ))}
                                     </ul>
-                                    <button className="select-btn">Select Plan</button>
+                                    <button
+                                        type="button"
+                                        className="select-btn"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            handlePlanSelect(plan);
+                                        }}
+                                    >
+                                        Select Plan
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -286,7 +304,16 @@ export default function SystemSetup() {
                                     <div className="card-icon">{role.icon}</div>
                                     <h3>{role.name}</h3>
                                     <p className="card-description">{role.description}</p>
-                                    <button className="select-btn">Select Role</button>
+                                    <button
+                                        type="button"
+                                        className="select-btn"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            handleRoleSelect(role);
+                                        }}
+                                    >
+                                        Select Role
+                                    </button>
                                 </div>
                             ))}
                         </div>

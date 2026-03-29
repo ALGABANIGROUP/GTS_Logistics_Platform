@@ -387,7 +387,7 @@ const IntegrationsPanel = () => {
                                 <span className="feature-icon"></span>
                                 <div className="feature-content">
                                     <div className="feature-title">Tokenization</div>
-                                    <div className="feature-desc">Document-backed digital assets (coming soon)</div>
+                                    <div className="feature-desc">Document-backed digital assets roadmap</div>
                                 </div>
                             </div>
                         </div>

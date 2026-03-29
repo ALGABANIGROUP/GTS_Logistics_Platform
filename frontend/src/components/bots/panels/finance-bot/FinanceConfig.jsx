@@ -1,14 +1,34 @@
 import React, { useState } from "react";
 
+const STORAGE_KEY = "finance_bot_config";
+
 export default function FinanceConfig() {
-    const [settings, setSettings] = useState({
+    const defaultSettings = {
         autoInvoicing: true,
         autoReconcile: true,
         alertsEnabled: true,
         currency: "USD",
+    };
+    const [settings, setSettings] = useState(() => {
+        try {
+            const saved = window.localStorage.getItem(STORAGE_KEY);
+            return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+        } catch {
+            return defaultSettings;
+        }
     });
+    const [feedback, setFeedback] = useState("");
 
     const onToggle = (key) => setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+    const handleReset = () => {
+        setSettings(defaultSettings);
+        window.localStorage.removeItem(STORAGE_KEY);
+        setFeedback("Configuration reset to defaults.");
+    };
+    const handleSave = () => {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        setFeedback("Configuration saved locally.");
+    };
 
     return (
         <div className="fin-section">
@@ -40,9 +60,10 @@ export default function FinanceConfig() {
                         </select>
                     </label>
                     <div className="fin-row fin-gap-sm fin-justify-end">
-                        <button className="fin-btn">Reset</button>
-                        <button className="fin-btn primary">Save</button>
+                        <button className="fin-btn" onClick={handleReset}>Reset</button>
+                        <button className="fin-btn primary" onClick={handleSave}>Save</button>
                     </div>
+                    {feedback ? <div className="fin-muted">{feedback}</div> : null}
                 </div>
             </div>
         </div>

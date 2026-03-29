@@ -3,12 +3,14 @@
 // frontend/src/pages/FreightBrokerPanel.jsx
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TransportMap from '../components/Map/TransportMap';
 import TransportDashboard from '../components/Map/TransportDashboard';
 import SafetyDashboard from '../components/Safety/SafetyDashboard';
 import './FreightBrokerPanel.css';
 
 const FreightBrokerPanel = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('transport');
     const [botsStatus, setBotsStatus] = useState({
         freightBroker: 'active',
@@ -251,7 +253,7 @@ const FreightBrokerPanel = () => {
                         </div>
                         <div className="hero-meta">
                             <span className="hero-pill">Daily Free Views: 1/4</span>
-                            <button className="hero-btn">Bot Settings</button>
+                            <button className="hero-btn" onClick={() => navigate('/ai-bots/freight_broker/control')}>Bot Settings</button>
                         </div>
                     </div>
 

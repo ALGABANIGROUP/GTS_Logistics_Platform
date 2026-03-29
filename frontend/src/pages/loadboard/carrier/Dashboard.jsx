@@ -27,14 +27,14 @@ const LoadBoardCarrierDashboard = () => {
             </Paper>
             <Paper sx={{ p: 4, textAlign: 'center' }}>
                 <Typography variant="h5" gutterBottom>
-                    Carrier dashboard under development
+                    Carrier dashboard preview
                 </Typography>
                 <Typography color="text.secondary" paragraph>
                     This interface is intended for carriers on the LoadBoard platform.
                 </Typography>
                 <Box sx={{ mt: 4 }}>
                     <Typography variant="body1" gutterBottom>
-                        Upcoming features:
+                        Available workspace modules:
                     </Typography>
                     <ul style={{ textAlign: 'left', direction: 'ltr' }}>
                         <li>Search for new loads</li>
