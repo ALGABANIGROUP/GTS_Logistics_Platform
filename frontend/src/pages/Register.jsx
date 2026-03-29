@@ -468,7 +468,7 @@ export default function Register() {
 
   return (
     <>
-      <Header />
+      <Header hidePricing={true} />
       <div
         className="relative min-h-screen overflow-hidden"
         style={{

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import gtsLogo from "../assets/gabani_logo.png";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
-const Header = () => {
+const Header = ({ hidePricing = false }) => {
     const { user, isAuthenticated } = useAuth();
 
     return (
@@ -15,9 +15,11 @@ const Header = () => {
                 </Link>
 
                 <nav className="flex items-center gap-4">
-                    <Link to="/pricing" className="text-white/75 hover:text-white text-sm transition">
-                        Pricing
-                    </Link>
+                    {!hidePricing ? (
+                        <Link to="/pricing" className="text-white/75 hover:text-white text-sm transition">
+                            Pricing
+                        </Link>
+                    ) : null}
                     <Link to="/contact" className="text-white/75 hover:text-white text-sm transition">
                         Support
                     </Link>
