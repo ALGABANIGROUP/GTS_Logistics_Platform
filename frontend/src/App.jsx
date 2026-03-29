@@ -347,7 +347,7 @@ const App = () => {
               <Route path="/" element={<PortalLanding />} />
               <Route path="/about" element={<About />} />
               <Route path="/resources" element={<Resources />} />
-              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/pricing" element={<Navigate to="/register" replace />} />
               <Route path="/products" element={<Products />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />

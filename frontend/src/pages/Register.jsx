@@ -10,57 +10,111 @@ import { isStrongPassword, isValidEmail, isValidPhone, normalizePhone } from "..
 import { registrationStatus } from "../config/registration";
 
 const ALLOWED_COUNTRY_CODES = ["CA", "US"];
-const PLANS_BY_ROLE = {
+const ROLE_PLANS = {
+  carrier: [
+    {
+      name: "Basic",
+      planCode: "basic",
+      priceCAD: 19,
+      priceUSD: 14,
+      period: "month",
+      system: "loadboard",
+      features: ["Load Search", "Truck Post", "Basic Rate Insights"],
+    },
+    {
+      name: "Pro",
+      planCode: "pro",
+      priceCAD: 49,
+      priceUSD: 36,
+      period: "month",
+      system: "loadboard",
+      popular: true,
+      features: ["Everything in Basic", "Advanced Rate Insights", "Book It Now", "Real-Time Live Loads"],
+    },
+    {
+      name: "Premium",
+      planCode: "premium",
+      priceCAD: 99,
+      priceUSD: 73,
+      period: "month",
+      system: "loadboard",
+      features: ["Everything in Pro", "Carrier Monitoring", "Predictive Sourcing", "Multi-Trip Search"],
+    },
+  ],
+  broker: [
+    {
+      name: "Basic",
+      planCode: "basic",
+      priceCAD: 29,
+      priceUSD: 21,
+      period: "month",
+      system: "tms",
+      features: ["Load Search", "Broker Tools", "Basic Analytics"],
+    },
+    {
+      name: "Pro",
+      planCode: "pro",
+      priceCAD: 79,
+      priceUSD: 58,
+      period: "month",
+      system: "tms",
+      popular: true,
+      features: ["Everything in Basic", "Advanced Analytics", "API Access", "Priority Support"],
+    },
+    {
+      name: "Enterprise",
+      planCode: "enterprise",
+      priceCAD: 199,
+      priceUSD: 147,
+      period: "month",
+      system: "tms",
+      features: ["Everything in Pro", "Dedicated Account Manager", "Custom Integration"],
+    },
+  ],
+  shipper: [
+    {
+      name: "Basic",
+      planCode: "basic",
+      priceCAD: 29,
+      priceUSD: 21,
+      period: "month",
+      system: "tms",
+      features: ["Shipment Tracking", "Basic Reporting", "Email Support"],
+    },
+    {
+      name: "Pro",
+      planCode: "pro",
+      priceCAD: 99,
+      priceUSD: 73,
+      period: "month",
+      system: "tms",
+      popular: true,
+      features: ["Everything in Basic", "Real-Time Tracking", "Advanced Analytics", "Phone Support"],
+    },
+    {
+      name: "Enterprise",
+      planCode: "enterprise",
+      priceCAD: 299,
+      priceUSD: 221,
+      period: "month",
+      system: "tms",
+      features: ["Everything in Pro", "Dedicated Account Manager", "Custom Integration"],
+    },
+  ],
+};
+
+const ROLE_LABELS = {
   carrier: {
-    name: "Pro",
-    planCode: "pro",
-    priceCAD: 49,
-    priceUSD: 36,
-    period: "month",
-    system: "loadboard",
-    systemDescription:
-      "Load board marketplace for posting loads, matching carriers, and managing spot opportunities.",
-    subtitle: "Find loads and get paid faster",
-    features: [
-      "Load Search (unlimited)",
-      "Truck Post (unlimited)",
-      "Advanced Rate Insights",
-      "Book It Now",
-      "Real-Time Live Loads",
-    ],
+    title: "I am a Carrier",
+    description: "Find loads and get paid faster",
   },
   broker: {
-    name: "Pro",
-    planCode: "pro",
-    priceCAD: 49,
-    priceUSD: 36,
-    period: "month",
-    system: "tms",
-    systemDescription:
-      "Transportation Management System for shipment planning, tracking, and fleet operations.",
-    subtitle: "Fill capacity and reduce risk",
-    features: [
-      "Everything in Basic",
-      "Advanced Rate Insights",
-      "Book It Now",
-      "Real-Time Live Loads",
-    ],
+    title: "I am a Broker",
+    description: "Fill capacity and reduce risk",
   },
   shipper: {
-    name: "Basic",
-    planCode: "basic",
-    priceCAD: 19,
-    priceUSD: 14,
-    period: "month",
-    system: "tms",
-    systemDescription:
-      "Transportation Management System for shipment planning, tracking, and fleet operations.",
-    subtitle: "Streamline operations",
-    features: [
-      "Load Search (unlimited)",
-      "Truck Post (unlimited)",
-      "Basic Rate Insights",
-    ],
+    title: "I am a Shipper",
+    description: "Streamline operations",
   },
 };
 
@@ -74,7 +128,7 @@ const PLANS_BY_ROLE = {
  */
 export default function Register() {
   const defaultRole = "carrier";
-  const defaultRolePlan = PLANS_BY_ROLE[defaultRole];
+  const defaultSelectedPlan = ROLE_PLANS[defaultRole].find((plan) => plan.popular) || ROLE_PLANS[defaultRole][0];
   const navigate = useNavigate();
   const { disabled: registrationClosed, notice, reopenLabel, contactEmail } =
     registrationStatus;
@@ -94,15 +148,16 @@ export default function Register() {
     email: "",
     phone: "",
     password: "",
-    system: defaultRolePlan.system,
+    system: defaultSelectedPlan.system,
     role: defaultRole,
-    subscription: defaultRolePlan.planCode,
+    subscription: defaultSelectedPlan.planCode,
     country: defaultCountry,
     comment: "",
   });
+  const [step, setStep] = useState("select");
   const [role, setRole] = useState(defaultRole);
-  const [selectedPlan, setSelectedPlan] = useState(defaultRolePlan);
-  const [selectedSystem, setSelectedSystem] = useState(defaultRolePlan.system);
+  const [selectedPlan, setSelectedPlan] = useState(defaultSelectedPlan);
+  const [selectedSystem, setSelectedSystem] = useState(defaultSelectedPlan.system);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -209,22 +264,35 @@ export default function Register() {
   };
 
   const handleRoleChange = (newRole) => {
-    const rolePlan = PLANS_BY_ROLE[newRole];
-    if (!rolePlan) {
+    const availablePlans = ROLE_PLANS[newRole] || [];
+    if (availablePlans.length === 0) {
       return;
     }
 
+    const roleDefaultPlan = availablePlans.find((plan) => plan.popular) || availablePlans[0];
     setRole(newRole);
-    setSelectedPlan(rolePlan);
-    setSelectedSystem(rolePlan.system);
+    setSelectedPlan(roleDefaultPlan);
+    setSelectedSystem(roleDefaultPlan.system);
     setForm((prev) => ({
       ...prev,
       role: newRole,
-      subscription: rolePlan.planCode,
-      system: rolePlan.system,
+      subscription: roleDefaultPlan.planCode,
+      system: roleDefaultPlan.system,
     }));
-    setTouched((prev) => ({ ...prev, role: true, subscription: true, system: true }));
+    setTouched((prev) => ({ ...prev, role: true }));
     setErrors((prev) => ({ ...prev, role: "", system: "" }));
+  };
+
+  const handleSelectPlan = (plan) => {
+    setSelectedPlan(plan);
+    setSelectedSystem(plan.system);
+    setForm((prev) => ({
+      ...prev,
+      role,
+      subscription: plan.planCode,
+      system: plan.system,
+    }));
+    setStep("form");
   };
 
   useEffect(() => {
@@ -233,8 +301,10 @@ export default function Register() {
   }, []);
 
   useEffect(() => {
-    companyRef.current?.focus();
-  }, []);
+    if (step === "form") {
+      companyRef.current?.focus();
+    }
+  }, [step]);
 
   useEffect(() => {
     setForm((prev) => {
@@ -409,9 +479,13 @@ export default function Register() {
       <div className="relative z-10 w-full h-full flex items-center justify-center px-4">
         <div className="w-full max-w-3xl">
           <div className="text-center mb-6">
-            <h1 className="text-white text-xl font-semibold">Create Account</h1>
+            <h1 className="text-white text-xl font-semibold">
+              {step === "select" ? "Choose Your Plan" : "Complete Registration"}
+            </h1>
             <p className="text-white/70 mt-2">
-              Create your GTS account, choose your system and plan, then sign in immediately after registration.
+              {step === "select"
+                ? "Pick your role and plan, then continue to account setup."
+                : "Finish your details to create your account."}
             </p>
           </div>
 
@@ -460,8 +534,97 @@ export default function Register() {
                   </div>
                 )}
                 <FormError message={formError} className="mb-3 text-center" />
+                {step === "select" ? (
+                  <div className="space-y-5 overflow-y-auto max-h-[calc(100vh-220px)] pr-2">
+                    <div>
+                      <h3 className="text-white text-base font-semibold mb-3">What type of trucking business are you?</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {Object.entries(ROLE_LABELS).map(([roleKey, roleMeta]) => (
+                          <button
+                            key={roleKey}
+                            type="button"
+                            onClick={() => handleRoleChange(roleKey)}
+                            className={`rounded-xl border-2 p-4 text-left transition ${
+                              role === roleKey
+                                ? "border-red-500 bg-red-500/10"
+                                : "border-white/20 bg-white/5 hover:bg-white/10"
+                            }`}
+                          >
+                            <h4 className="text-white font-semibold">{roleMeta.title}</h4>
+                            <p className="text-xs text-white/70 mt-1">{roleMeta.description}</p>
+                            <p className="text-sm text-red-400 mt-2 font-semibold">
+                              Starting at ${ROLE_PLANS[roleKey][0].priceCAD} CAD / month
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-white text-base font-semibold mb-3">Select your plan</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {(ROLE_PLANS[role] || []).map((plan) => (
+                          <div
+                            key={`${role}-${plan.planCode}`}
+                            className={`rounded-xl border p-4 ${plan.popular ? "border-red-500 bg-red-500/10" : "border-white/20 bg-white/5"}`}
+                          >
+                            {plan.popular ? (
+                              <span className="inline-block text-[11px] px-2 py-1 rounded-full bg-red-600 text-white mb-2">
+                                Most Popular
+                              </span>
+                            ) : null}
+                            <h4 className="text-lg font-bold text-white">{plan.name}</h4>
+                            <p className="text-white mt-1">
+                              <span className="text-2xl font-bold">${plan.priceCAD}</span>
+                              <span className="text-sm text-white/70"> CAD / {plan.period}</span>
+                            </p>
+                            <p className="text-xs text-white/60 mt-1">Approx. ${plan.priceUSD} USD</p>
+                            <ul className="mt-3 space-y-1.5 min-h-[84px]">
+                              {plan.features.map((feature, idx) => (
+                                <li key={idx} className="text-xs text-white/80 flex items-center gap-2">
+                                  <span className="text-green-400">✓</span>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectPlan(plan)}
+                              className="mt-3 w-full rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 transition"
+                            >
+                              Complete Registration
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <form onSubmit={submit} className="flex flex-col gap-4">
                   <div className="space-y-4 overflow-y-auto max-h-[calc(100vh-260px)] pr-2">
+                    {selectedPlan ? (
+                      <div className="rounded-xl border border-white/20 bg-white/5 p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-white/70 text-xs uppercase tracking-wide">Selected plan</p>
+                            <h3 className="text-lg font-semibold text-white capitalize">{role} - {selectedPlan.name}</h3>
+                            <p className="text-sm text-white/80 mt-1">
+                              ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
+                              <span className="text-xs text-white/60 ml-2">Approx. ${selectedPlan.priceUSD} USD</span>
+                            </p>
+                            <p className="text-xs text-white/60 mt-1">System: {selectedSystem.toUpperCase()}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setStep("select")}
+                            className="text-sm text-red-300 hover:text-red-200 transition"
+                          >
+                            Change Plan
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+
                     {/* Basic info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -619,113 +782,18 @@ export default function Register() {
 
                     <details className="rounded-xl border border-white/20">
                       <summary className="cursor-pointer px-4 py-3 text-white/80 font-medium">
-                        Account setup (required)
+                        Plan and system summary
                       </summary>
                       <div className="px-4 pb-4 pt-2 space-y-3">
-                        <div className="mb-2">
-                          <h3 className="text-lg font-semibold text-white mb-3">What type of trucking business are you?</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {Object.entries(PLANS_BY_ROLE).map(([roleKey, rolePlan]) => (
-                              <button
-                                key={roleKey}
-                                type="button"
-                                onClick={() => handleRoleChange(roleKey)}
-                                disabled={isSubmitting}
-                                className={`rounded-xl border-2 p-4 text-left transition ${
-                                  role === roleKey
-                                    ? "border-red-500 bg-red-500/10"
-                                    : "border-white/20 bg-white/5 hover:bg-white/10"
-                                }`}
-                              >
-                                <h4 className="text-white font-semibold capitalize">I am a {roleKey}</h4>
-                                <p className="text-xs text-white/70 mt-1">{rolePlan.subtitle}</p>
-                                <p className="text-sm text-red-400 mt-2 font-semibold">
-                                  Starting at ${rolePlan.priceCAD} CAD / month
-                                </p>
-                              </button>
-                            ))}
-                          </div>
-                          <FormError message={touched.role ? errors.role : ""} className="mt-1" />
-                        </div>
-
-                        {selectedPlan ? (
-                          <div className="rounded-xl border border-white/20 bg-white/5 p-4">
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                              <div>
-                                <h4 className="text-xl font-bold text-white">{selectedPlan.name}</h4>
-                                <p className="text-sm text-white/80">
-                                  ${selectedPlan.priceCAD} CAD / {selectedPlan.period}
-                                  <span className="text-xs text-white/60 ml-2">≈ ${selectedPlan.priceUSD} USD</span>
-                                </p>
-                              </div>
-                              <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/80">
-                                {selectedPlan.planCode.toUpperCase()}
-                              </span>
-                            </div>
-                            <ul className="space-y-1.5">
-                              {selectedPlan.features.map((feature, idx) => (
-                                <li key={idx} className="text-sm text-white/80 flex items-center gap-2">
-                                  <span className="text-green-400">✓</span>
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : null}
-
-                        <div>
-                          <h3 className="text-base font-semibold text-white mb-2">Select System</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button
-                              type="button"
-                              disabled={isSubmitting}
-                              onClick={() => {
-                                setSelectedSystem("tms");
-                                setForm((prev) => ({ ...prev, system: "tms" }));
-                                setTouched((prev) => ({ ...prev, system: true }));
-                                setErrors((prev) => ({ ...prev, system: "" }));
-                              }}
-                              className={`rounded-lg border p-3 text-left transition ${
-                                selectedSystem === "tms"
-                                  ? "border-red-500 bg-red-500/10"
-                                  : "border-white/15 bg-white/5 hover:bg-white/10"
-                              }`}
-                            >
-                              <p className="text-sm font-semibold text-white">TMS</p>
-                              <p className="mt-1 text-xs text-white/70">
-                                Transportation Management System for shipment planning, tracking, and fleet operations.
-                              </p>
-                              {selectedSystem === "tms" ? (
-                                <span className="inline-block mt-2 text-xs text-red-400">Recommended for you</span>
-                              ) : null}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isSubmitting}
-                              onClick={() => {
-                                setSelectedSystem("loadboard");
-                                setForm((prev) => ({ ...prev, system: "loadboard" }));
-                                setTouched((prev) => ({ ...prev, system: true }));
-                                setErrors((prev) => ({ ...prev, system: "" }));
-                              }}
-                              className={`rounded-lg border p-3 text-left transition ${
-                                selectedSystem === "loadboard"
-                                  ? "border-red-500 bg-red-500/10"
-                                  : "border-white/15 bg-white/5 hover:bg-white/10"
-                              }`}
-                            >
-                              <p className="text-sm font-semibold text-white">LoadBoard</p>
-                              <p className="mt-1 text-xs text-white/70">
-                                Load board marketplace for posting loads, matching carriers, and managing spot opportunities.
-                              </p>
-                              {selectedSystem === "loadboard" ? (
-                                <span className="inline-block mt-2 text-xs text-red-400">Recommended for you</span>
-                              ) : null}
-                            </button>
-                          </div>
-                          <p className="mt-2 text-xs text-white/60">Recommended system for this role: {selectedPlan?.system?.toUpperCase()}</p>
-                          <FormError message={touched.system ? errors.system : ""} className="mt-1" />
-                        </div>
+                        <p className="text-sm text-white/80">
+                          Role: <span className="font-semibold capitalize">{role}</span>
+                        </p>
+                        <p className="text-sm text-white/80">
+                          Plan: <span className="font-semibold">{selectedPlan?.name}</span>
+                        </p>
+                        <p className="text-sm text-white/80">
+                          System: <span className="font-semibold uppercase">{selectedSystem}</span>
+                        </p>
                       </div>
                     </details>
 
@@ -771,6 +839,7 @@ export default function Register() {
                     </button>
                   </div>
                 </form>
+                )}
               </>
             )}
           </GlassCard>

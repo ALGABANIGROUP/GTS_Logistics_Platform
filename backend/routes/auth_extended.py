@@ -472,8 +472,10 @@ async def _create_registered_user(
     selected_system = (payload.system or payload.system_type or "").strip().lower()
 
     if role_defaults:
-        selected_plan = role_defaults["plan"]
-        selected_system = role_defaults["system"]
+        if not selected_plan:
+            selected_plan = role_defaults["plan"]
+        if not selected_system:
+            selected_system = role_defaults["system"]
 
     if not selected_plan:
         selected_plan = "basic"
