@@ -1,3 +1,4 @@
+// frontend/src/config/env.ts
 const DEFAULT_API_BASE_URL =
   typeof window !== "undefined" && window.location.origin
     ? window.location.origin
