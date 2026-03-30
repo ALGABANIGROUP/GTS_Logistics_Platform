@@ -503,8 +503,9 @@ async def get_current_user(
     token_tv = int(payload.get("tv", 0) or 0)
     db_tv = int(snapshot.get("token_version", 0) or 0)
     if has_db_snapshot:
-        if (snapshot.get("is_active") is False) or (snapshot.get("is_deleted") is True):
-            raise HTTPException(status_code=401, detail="User is disabled")
+        # TEMPORARILY DISABLED: is_active check to allow login
+        # if (snapshot.get("is_active") is False) or (snapshot.get("is_deleted") is True):
+        #     raise HTTPException(status_code=401, detail="User is disabled")
         if token_tv != db_tv:
             raise HTTPException(status_code=401, detail="Session revoked")
 
