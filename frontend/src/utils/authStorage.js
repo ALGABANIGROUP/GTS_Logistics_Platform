@@ -1,167 +1,106 @@
-const ACCESS_TOKEN_KEYS = ["access_token", "token", "gts_token", "authToken", "jwt"];
-const REFRESH_TOKEN_KEYS = ["refresh_token", "refreshToken"];
-const SESSION_KEYS = ["user", "auth_context"];
+// frontend/src/utils/authStorage.js
+// Simplified version - stores tokens in localStorage for persistence across tabs and reloads
+
+const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
+const SAVED_EMAIL_KEY = 'gts_saved_email';
 
 const getLocalStorage = () =>
-  typeof window !== "undefined" ? window.localStorage : null;
+    typeof window !== "undefined" ? window.localStorage : null;
 
-const getSessionStorage = () =>
-  typeof window !== "undefined" ? window.sessionStorage : null;
-
-const clearLocalTokenCopies = () => {
-  const ls = getLocalStorage();
-  if (!ls) return;
-  for (const key of ACCESS_TOKEN_KEYS) {
-    ls.removeItem(key);
-  }
-  for (const key of REFRESH_TOKEN_KEYS) {
-    ls.removeItem(key);
-  }
+/**
+ * Write authentication token to localStorage.
+ */
+export const writeAuthToken = (token) => {
+    const storage = getLocalStorage();
+    if (!storage || !token) return;
+    try {
+        storage.setItem(ACCESS_TOKEN_KEY, token);
+    } catch (e) {
+        console.warn("Failed to write auth token:", e);
+    }
 };
 
-const promoteTokenToSession = (token, targetKey) => {
-  const ss = getSessionStorage();
-  if (!ss || !token) {
-    return token;
-  }
-
-  ss.setItem(targetKey, token);
-  return token;
+/**
+ * Read authentication token from localStorage.
+ */
+export const readAuthToken = () => {
+    const storage = getLocalStorage();
+    if (!storage) return null;
+    try {
+        return storage.getItem(ACCESS_TOKEN_KEY);
+    } catch (e) {
+        console.warn("Failed to read auth token:", e);
+        return null;
+    }
 };
 
-export function readAuthToken() {
-  const ss = getSessionStorage();
-  const ls = getLocalStorage();
-  if (!ss && !ls) {
-    return "";
-  }
-
-  try {
-    const sessionPrimary = ss?.getItem("access_token");
-    if (sessionPrimary) return sessionPrimary;
-
-    for (const key of ACCESS_TOKEN_KEYS) {
-      const sessionValue = ss?.getItem(key);
-      if (sessionValue) {
-        if (key !== "access_token") {
-          ss?.setItem("access_token", sessionValue);
-          ss?.removeItem(key);
-        }
-        return sessionValue;
-      }
+/**
+ * Write refresh token to localStorage.
+ */
+export const writeRefreshToken = (token) => {
+    const storage = getLocalStorage();
+    if (!storage || !token) return;
+    try {
+        storage.setItem(REFRESH_TOKEN_KEY, token);
+    } catch (e) {
+        console.warn("Failed to write refresh token:", e);
     }
+};
 
-    for (const key of ACCESS_TOKEN_KEYS) {
-      const localValue = ls?.getItem(key);
-      if (localValue) {
-        promoteTokenToSession(localValue, "access_token");
-        clearLocalTokenCopies();
-        return localValue;
-      }
+/**
+ * Read refresh token from localStorage.
+ */
+export const readRefreshToken = () => {
+    const storage = getLocalStorage();
+    if (!storage) return null;
+    try {
+        return storage.getItem(REFRESH_TOKEN_KEY);
+    } catch (e) {
+        console.warn("Failed to read refresh token:", e);
+        return null;
     }
-  } catch {
-    // ignore
-  }
+};
 
-  return "";
-}
-
-export function writeAuthToken(token) {
-  const ss = getSessionStorage();
-  if (!ss || !token) {
-    return;
-  }
-  try {
-    ss.setItem("access_token", token);
-    clearLocalTokenCopies();
-  } catch {
-    // ignore
-  }
-}
-
-export function readRefreshToken() {
-  const ss = getSessionStorage();
-  const ls = getLocalStorage();
-  if (!ss && !ls) {
-    return "";
-  }
-
-  try {
-    for (const key of REFRESH_TOKEN_KEYS) {
-      const sessionValue = ss?.getItem(key);
-      if (sessionValue) {
-        if (key !== "refresh_token") {
-          ss?.setItem("refresh_token", sessionValue);
-          ss?.removeItem(key);
-        }
-        return sessionValue;
-      }
+/**
+ * Clear all authentication data from localStorage.
+ */
+export const clearAuthCache = () => {
+    const storage = getLocalStorage();
+    if (!storage) return;
+    try {
+        storage.removeItem(ACCESS_TOKEN_KEY);
+        storage.removeItem(REFRESH_TOKEN_KEY);
+        // Optional: clear saved email as well
+        // storage.removeItem(SAVED_EMAIL_KEY);
+    } catch (e) {
+        console.warn("Failed to clear auth cache:", e);
     }
+};
 
-    for (const key of REFRESH_TOKEN_KEYS) {
-      const localValue = ls?.getItem(key);
-      if (localValue) {
-        promoteTokenToSession(localValue, "refresh_token");
-        clearLocalTokenCopies();
-        return localValue;
-      }
+/**
+ * Save email for "Remember me" functionality.
+ */
+export const saveSavedEmail = (email) => {
+    const storage = getLocalStorage();
+    if (!storage) return;
+    try {
+        storage.setItem(SAVED_EMAIL_KEY, email);
+    } catch (e) {
+        console.warn("Failed to save email:", e);
     }
-  } catch {
-    // ignore
-  }
+};
 
-  return "";
-}
-
-export function writeRefreshToken(token) {
-  const ss = getSessionStorage();
-  if (!ss || !token) {
-    return;
-  }
-  try {
-    ss.setItem("refresh_token", token);
-    const ls = getLocalStorage();
-    for (const key of REFRESH_TOKEN_KEYS) {
-      ls?.removeItem(key);
+/**
+ * Read saved email from localStorage.
+ */
+export const readSavedEmail = () => {
+    const storage = getLocalStorage();
+    if (!storage) return null;
+    try {
+        return storage.getItem(SAVED_EMAIL_KEY);
+    } catch (e) {
+        console.warn("Failed to read saved email:", e);
+        return null;
     }
-  } catch {
-    // ignore
-  }
-}
-
-export function clearAuthCache() {
-  const ls = getLocalStorage();
-  const ss = getSessionStorage();
-  if (!ls && !ss) {
-    return;
-  }
-
-  try {
-    for (const key of ACCESS_TOKEN_KEYS) {
-      ls?.removeItem(key);
-      ss?.removeItem(key);
-    }
-    for (const key of REFRESH_TOKEN_KEYS) {
-      ls?.removeItem(key);
-      ss?.removeItem(key);
-    }
-    for (const key of SESSION_KEYS) {
-      ls?.removeItem(key);
-      ss?.removeItem(key);
-    }
-    ls?.removeItem("gts_user");
-    ls?.removeItem("gts_user_profile");
-  } catch {
-    // ignore
-  }
-
-  if (typeof indexedDB !== "undefined" && indexedDB) {
-    for (const dbName of ["gts-cache", "gts-auth-cache"]) {
-      try {
-        indexedDB.deleteDatabase(dbName);
-      } catch {
-        // ignore
-      }
-    }
-  }
-}
+};
