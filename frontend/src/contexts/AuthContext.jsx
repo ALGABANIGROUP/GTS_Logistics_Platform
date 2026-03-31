@@ -1,3 +1,4 @@
+// frontend/src/contexts/AuthContext.jsx
 import React, {
     createContext,
     useContext,
@@ -233,7 +234,8 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password, remember = false) => {
         try {
             const formData = new URLSearchParams();
-            formData.append("username", email);
+            // CHANGED: backend expects 'email' field for token endpoint
+            formData.append("email", email);
             formData.append("password", password);
 
             const response = await axiosClient.post(`/api/v1/auth/token`, formData, {
@@ -350,7 +352,15 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (userData) => {
         try {
-            const response = await axios.post(`${API_URL}/api/v1/auth/register`, userData);
+            // CHANGED: backend expects full_name (not name)
+            const payload = {
+                email: userData.email,
+                password: userData.password,
+                full_name: userData.full_name || userData.name || "",
+                company: userData.company,
+            };
+
+            const response = await axios.post(`${API_URL}/api/v1/auth/register`, payload);
             return response.data;
         } catch (error) {
             const wrapped = new Error(getApiErrorMessage(error, "Registration failed"));
