@@ -140,6 +140,7 @@ except Exception as _e:
 # ========= App & deps =========
 
 from fastapi import FastAPI, Request, APIRouter, HTTPException, Depends
+from backend.utils.auth import get_current_user
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
