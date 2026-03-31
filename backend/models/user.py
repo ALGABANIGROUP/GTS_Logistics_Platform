@@ -1,7 +1,6 @@
 # backend/routes/auth_secure.py
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr, Field, validator
-from backend.security.jwt_security import JWTSecurity
 from backend.security.encryption import encryption_service
 from backend.security.audit_logger import AuditLogger, AuditEventType
 from datetime import datetime
