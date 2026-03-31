@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -19,8 +19,8 @@ from backend.security.auth import (
     _hash_refresh_token,
     _issue_refresh_token,
     _rotate_refresh_token,
-    create_access_token,
     get_current_user,
+    create_access_token,
 )
 from backend.models.refresh_token import RefreshToken
 from backend.models.user import User
@@ -38,7 +38,6 @@ class ChangePasswordPayload(BaseModel):
 @router.post("/token")
 async def auth_token_compat(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db_async),
 ) -> Dict[str, Any]:
     """
@@ -48,8 +47,43 @@ async def auth_token_compat(
     historically been sensitive to optional imports during startup. This wrapper keeps
     `/api/v1/auth/token` available from the always-mounted auth router.
     """
+    content_type = request.headers.get("content-type", "").lower()
+    email = None
+    password = None
+
+    if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
+        form = await request.form()
+        email = form.get("username") or form.get("email")
+        password = form.get("password")
+    else:
+        payload = {}
+        try:
+            payload = await request.json()
+        except Exception:
+            try:
+                form = await request.form()
+                email = form.get("username") or form.get("email")
+                password = form.get("password")
+            except Exception:
+                payload = {}
+        if not email:
+            email = payload.get("email") or payload.get("username")
+        if not password:
+            password = payload.get("password")
+
+    if not email or not password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email and password are required")
+
+    # Ensure email and password are strings before cleaning
+    if hasattr(email, "filename") or hasattr(password, "filename"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email or password type")
+    if not isinstance(password, str):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password type")
+    email_clean = str(email).strip().lower()
+    log.info("[auth_me] login attempt for email=%s", email_clean)
+
     try:
-        login = str(form_data.username or "").strip().lower()
+        login = email_clean
         row = await db.execute(
             text(
                 """
@@ -72,7 +106,7 @@ async def auth_token_compat(
             )
 
         password_hash = user.get("password_hash")
-        if not password_hash or not verify_password(form_data.password, password_hash):
+        if not password_hash or not verify_password(password, password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials",
@@ -86,10 +120,12 @@ async def auth_token_compat(
             )
 
         access_token = create_access_token(
-            subject=user.get("id"),
-            email=user.get("email"),
-            role=user.get("role") or "user",
-            token_version=int(user.get("token_version", 0) or 0),
+            data={
+                "sub": str(user.get("id")),
+                "email": user.get("email"),
+                "role": user.get("role") or "user",
+                "tv": int(user.get("token_version", 0) or 0),
+            }
         )
 
         refresh_token = await _issue_refresh_token(db, int(user.get("id")))

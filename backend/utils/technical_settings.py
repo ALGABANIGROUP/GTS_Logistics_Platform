@@ -30,6 +30,22 @@ async def get_technical_settings(db: AsyncSession) -> Dict[str, Any]:
     if _settings_cache and (current_time - _cache_timestamp) < CACHE_TTL:
         return _settings_cache
     
+    # For development, skip database loading and return defaults
+    import os
+    if os.getenv("APP_ENV", "development") == "development":
+        logger.info("Development mode: using default technical settings")
+        _settings_cache = {
+            "sessionTimeout": 30,
+            "maxUploadSize": 10,
+            "cachingEnabled": True,
+            "maintenanceMode": False,
+            "apiRateLimit": "100/hour",
+            "backupFrequency": "daily"
+        }
+        _db_settings_cache = _DB_DEFAULTS.copy()
+        _cache_timestamp = current_time
+        return _settings_cache
+    
     try:
         from backend.services.platform_settings_store import get_platform_settings
         settings = await get_platform_settings(db)

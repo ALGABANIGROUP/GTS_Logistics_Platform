@@ -56,7 +56,7 @@ class AdvancedTestSuite:
         print_header("1️⃣  BACKEND CONNECTIVITY CHECK")
         
         try:
-            response = requests.get(f"{self.backend_url}/health", timeout=5)
+            response = requests.get(f"{self.backend_url}/api/v1/system/readiness", timeout=5)
             print_test("Backend Health Check", response.status_code < 400, f"Status: {response.status_code}")
             return response.status_code < 400
         except Exception as e:
@@ -68,7 +68,7 @@ class AdvancedTestSuite:
         print_header("2️⃣  AUTHENTICATION TESTS")
         
         # Test login
-        login_url = f"{self.backend_url}/auth/token"
+        login_url = f"{self.backend_url}/api/v1/auth/token"
         login_data = {
             "email": "enjoy983@hotmail.com",
             "password": "password123"
@@ -355,10 +355,10 @@ class AdvancedTestSuite:
   Token:      {Colors.GREEN}✓ Valid{Colors.RESET if self.token else Colors.RED}✗ Invalid{Colors.RESET}
   
 {Colors.BOLD}Key Endpoints:{Colors.RESET}
-  🔐 Login:           /auth/token
+  🔐 Login:           /api/v1/auth/token
   🔀 System Switch:   /api/v1/systems/switch
   🎛️  Admin Panel:    /api/v1/admin/overview
-  📊 Health:          /api/v1/admin/system-health
+  📊 Health:          /api/v1/system/readiness
   
 {Colors.BOLD}Next Steps:{Colors.RESET}
   1. Open http://127.0.0.1:5173 in browser

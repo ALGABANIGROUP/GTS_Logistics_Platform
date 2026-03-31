@@ -459,14 +459,11 @@ except Exception as e:
     chat_routes_router = None
 
 # System readiness + /api/v1/auth/me (optional)
-try:
-    from routes.system_readiness import router as system_readiness_router
-except Exception:
-    system_readiness_router = APIRouter()
+system_readiness_router = APIRouter()
 
-    @system_readiness_router.get("/api/v1/system/readiness", include_in_schema=False)
-    async def system_readiness():
-        return {"ok": True, "status": "ok"}
+@system_readiness_router.get("/api/v1/system/readiness", include_in_schema=False)
+async def system_readiness():
+    return {"ok": True, "status": "ok"}
 
 try:
     from routes.auth_me import router as auth_me_router
@@ -605,11 +602,15 @@ try:
     from security.auth import (  # type: ignore
         require_roles as _require_roles_native,
         create_access_token,
-        get_current_user,
     )
 except Exception:
     _require_roles_native = None
     create_access_token = None  # type: ignore
+
+# Import get_current_user from utils.auth as fallback/primary
+try:
+    from backend.utils.auth import get_current_user
+except Exception:
     get_current_user = None  # type: ignore
 
 

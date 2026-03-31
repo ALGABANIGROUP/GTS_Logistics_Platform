@@ -6,7 +6,7 @@ import sys
 import os
 
 # Add backend to path
-sys.path.insert(0, r'c:\Users\enjoy\dev\GTS')
+sys.path.insert(0, r'c:\Users\enjoy\dev\GTS-new')
 
 # Test imports
 print("🧪 Testing backend imports...")
