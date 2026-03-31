@@ -2,6 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import portalBg from "../../assets/bg_login.png";
 
+/**
+ * Multi-step Register component
+ * - Validation is performed at final submit (as requested)
+ * - Subdomain input was added because backend signup API requires it
+ * - On submit: POST /api/v1/signup/register
+ */
+
 export default function Register() {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
@@ -12,62 +19,160 @@ export default function Register() {
         phone: "",
         password: "",
         company: "",
+        subdomain: "",
         // Step 2: System Selection
         system: "", // "tms" or "loadboard"
         // Step 3: Role Selection
         role: "", // "shipper", "carrier", "broker"
     });
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
 
+    // Move between steps without blocking. Final validation on submit.
     const handleNext = () => {
-        if (step === 1 && validateStep1()) {
-            setStep(2);
-        } else if (step === 2 && formData.system) {
-            setStep(3);
-        }
+        if (step < 3) setStep(step + 1);
     };
 
     const handleBack = () => {
-        if (step > 1) {
-            setStep(step - 1);
-        }
+        if (step > 1) setStep(step - 1);
     };
 
-    const validateStep1 = () => {
-        return formData.name && formData.email && formData.phone && formData.password;
+    // Helper validators
+    const _isEmail = (value) => {
+        if (!value) return false;
+        // simple regex
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    };
+
+    const _isPhone = (value) => {
+        if (!value) return false;
+        // allow + and digits and common separators (basic)
+        return /^[+\d][\d\s\-()]{6,}$/.test(value);
+    };
+
+    const _validateSubdomain = (value) => {
+        if (!value) return false;
+        const s = value.trim();
+        if (s.length < 3 || s.length > 20) return false;
+        if (!/^[a-zA-Z0-9-]+$/.test(s)) return false;
+        if (s.startsWith("-") || s.endsWith("-")) return false;
+        const reserved = new Set(["www", "app", "api", "admin", "mail", "ftp", "localhost", "example"]);
+        if (reserved.has(s.toLowerCase())) return false;
+        return true;
+    };
+
+    const validateAll = () => {
+        const e = {};
+        if (!formData.name || formData.name.trim().length < 2) {
+            e.name = "Please enter your full name (min 2 chars).";
+        }
+        if (!formData.company || formData.company.trim().length < 2) {
+            e.company = "Please enter company name (min 2 chars).";
+        }
+        if (!formData.subdomain || !_validateSubdomain(formData.subdomain)) {
+            e.subdomain = "Subdomain must be 3–20 chars, alphanumeric and hyphens only. No leading/trailing hyphens.";
+        }
+        if (!formData.email || !_isEmail(formData.email)) {
+            e.email = "Please enter a valid email address.";
+        }
+        if (!formData.phone || !_isPhone(formData.phone)) {
+            e.phone = "Please enter a valid phone number.";
+        }
+        if (!formData.password || formData.password.length < 8) {
+            e.password = "Password must be at least 8 characters.";
+        }
+        if (!formData.system) {
+            e.system = "Please choose a primary system.";
+        }
+        if (!formData.role) {
+            e.role = "Please choose a role.";
+        }
+
+        setErrors(e);
+        return Object.keys(e).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // final validation
+        if (!validateAll()) {
+            // jump to the first problematic step
+            if (errors.subdomain || errors.name || errors.company || errors.email || errors.phone || errors.password) {
+                setStep(1);
+            } else if (errors.system) {
+                setStep(2);
+            } else if (errors.role) {
+                setStep(3);
+            }
+            return;
+        }
+
         setLoading(true);
         try {
-            // Simulate registration API
-            const userData = {
-                ...formData,
-                id: Date.now(),
-                createdAt: new Date().toISOString(),
+            // Map to backend signup payload
+            const payload = {
+                company_name: formData.company,
+                subdomain: formData.subdomain,
+                owner_email: formData.email,
+                owner_name: formData.name,
+                owner_password: formData.password,
             };
-            // Save to localStorage (temporary)
-            const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-            existingUsers.push(userData);
-            localStorage.setItem("users", JSON.stringify(existingUsers));
-            // Save current user data
-            localStorage.setItem("currentUser", JSON.stringify({
-                id: userData.id,
-                email: userData.email,
-                name: userData.name,
-                system: userData.system,
-                role: userData.role,
-            }));
-            alert("Registration successful! Please wait up to 72 hours for security checks. You can now sign in.");
+
+            const resp = await fetch("/api/v1/signup/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const body = await resp.json().catch(() => ({}));
+
+            if (!resp.ok) {
+                // backend returns a detail message for validation errors
+                const serverErr = body.detail || body.message || "Registration failed";
+                alert(`Registration failed: ${serverErr}`);
+                // If subdomain taken or email taken, surface it
+                if (serverErr.toLowerCase().includes("subdomain")) {
+                    setErrors((prev) => ({ ...prev, subdomain: serverErr }));
+                    setStep(1);
+                } else if (serverErr.toLowerCase().includes("email")) {
+                    setErrors((prev) => ({ ...prev, email: serverErr }));
+                    setStep(1);
+                }
+                return;
+            }
+
+            // success path
+            // backend returns message and tenant_id on success
+            alert(body.message || "Registration successful! Please check your email to verify.");
+            // redirect to login (or a "check your email" page)
             navigate("/login?registered=true");
-        } catch (error) {
-            console.error("Registration error:", error);
-            alert("Registration failed. Please try again.");
+        } catch (err) {
+            console.error("Registration error:", err);
+            alert("Registration failed (network error). Please try again.");
         } finally {
             setLoading(false);
         }
     };
+
+    // small helper to render input with error
+    const InputWithError = ({ label, type = "text", value, onChange, placeholder = "", name }) => (
+        <div>
+            <label className="block text-white/80 text-sm font-medium mb-2">{label}</label>
+            <input
+                type={type}
+                name={name}
+                className={`w-full rounded-xl bg-white/10 border px-4 py-3.5 text-white placeholder:text-white/40 outline-none focus:border-white/40 transition
+                    ${errors[name] ? "border-red-400/80" : "border-white/20"}`}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+            />
+            {errors[name] && <p className="text-red-400 text-xs mt-2">{errors[name]}</p>}
+        </div>
+    );
 
     return (
         <div
@@ -86,6 +191,7 @@ export default function Register() {
                             {step === 3 && "Select your role"}
                         </p>
                     </div>
+
                     {/* Step indicator */}
                     <div className="flex justify-between mb-10 max-w-md mx-auto">
                         {[1, 2, 3].map((s) => (
@@ -108,89 +214,76 @@ export default function Register() {
                             </div>
                         ))}
                     </div>
+
                     {/* Form */}
-                    <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-8">
+                    <form onSubmit={handleSubmit} className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-8">
                         {step === 1 && (
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-white/80 text-sm font-medium mb-2">
-                                            Full Name *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="w-full rounded-xl bg-white/10 border border-white/20 px-4 py-3.5 text-white placeholder:text-white/40 outline-none focus:border-white/40 transition"
-                                            placeholder="John Doe"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-white/80 text-sm font-medium mb-2">
-                                            Company *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="w-full rounded-xl bg-white/10 border border-white/20 px-4 py-3.5 text-white placeholder:text-white/40 outline-none focus:border-white/40 transition"
-                                            placeholder="Company Name"
-                                            value={formData.company}
-                                            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-white/80 text-sm font-medium mb-2">
-                                        Email Address *
-                                    </label>
-                                    <input
-                                        type="email"
-                                        className="w-full rounded-xl bg-white/10 border border-white/20 px-4 py-3.5 text-white placeholder:text-white/40 outline-none focus:border-white/40 transition"
-                                        placeholder="you@company.com"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        required
+                                    <InputWithError
+                                        label="Full Name *"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="John Doe"
+                                        name="name"
+                                    />
+                                    <InputWithError
+                                        label="Company *"
+                                        value={formData.company}
+                                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                                        placeholder="Company Name"
+                                        name="company"
                                     />
                                 </div>
+
+                                <InputWithError
+                                    label="Subdomain *"
+                                    value={formData.subdomain}
+                                    onChange={(e) => setFormData({ ...formData, subdomain: e.target.value })}
+                                    placeholder="your-company-subdomain"
+                                    name="subdomain"
+                                />
+
+                                <InputWithError
+                                    label="Email Address *"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    placeholder="you@company.com"
+                                    name="email"
+                                />
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-white/80 text-sm font-medium mb-2">
-                                            Phone Number *
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            className="w-full rounded-xl bg-white/10 border border-white/20 px-4 py-3.5 text-white placeholder:text-white/40 outline-none focus:border-white/40 transition"
-                                            placeholder="+1234567890"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-white/80 text-sm font-medium mb-2">
-                                            Password *
-                                        </label>
-                                        <input
-                                            type="password"
-                                            className="w-full rounded-xl bg-white/10 border border-white/20 px-4 py-3.5 text-white placeholder:text-white/40 outline-none focus:border-white/40 transition"
-                                            placeholder="••••••••"
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            required
-                                        />
-                                    </div>
+                                    <InputWithError
+                                        label="Phone Number *"
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        placeholder="+1234567890"
+                                        name="phone"
+                                    />
+                                    <InputWithError
+                                        label="Password *"
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        placeholder="••••••••"
+                                        name="password"
+                                    />
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleNext}
-                                    disabled={!validateStep1()}
-                                    className="w-full py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Next: Choose System
-                                </button>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={handleNext}
+                                        className="flex-1 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-semibold transition"
+                                    >
+                                        Next: Choose System
+                                    </button>
+                                </div>
                             </div>
                         )}
+
                         {step === 2 && (
                             <div className="space-y-6">
                                 <h3 className="text-white text-xl font-semibold text-center mb-6">
@@ -217,15 +310,8 @@ export default function Register() {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="mt-4">
-                                            <ul className="text-white/70 text-sm space-y-1">
-                                                <li>• Manage shipments & tracking</li>
-                                                <li>• Handle documents & invoices</li>
-                                                <li>• Dispatch & fleet management</li>
-                                            </ul>
-                                        </div>
                                     </div>
-                                    {/* LoadBoard option */}
+                                    {/* LoadBoard */}
                                     <div
                                         className={`p-6 rounded-xl border cursor-pointer transition ${formData.system === "loadboard"
                                             ? "border-amber-400/50 bg-amber-500/10"
@@ -245,15 +331,9 @@ export default function Register() {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="mt-4">
-                                            <ul className="text-white/70 text-sm space-y-1">
-                                                <li>• Post & find loads</li>
-                                                <li>• Bidding & negotiation</li>
-                                                <li>• Market rates & matching</li>
-                                            </ul>
-                                        </div>
                                     </div>
                                 </div>
+
                                 <div className="flex gap-4">
                                     <button
                                         type="button"
@@ -265,14 +345,14 @@ export default function Register() {
                                     <button
                                         type="button"
                                         onClick={handleNext}
-                                        disabled={!formData.system}
-                                        className="flex-1 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-semibold transition"
                                     >
                                         Next: Select Role
                                     </button>
                                 </div>
                             </div>
                         )}
+
                         {step === 3 && (
                             <div className="space-y-6">
                                 <h3 className="text-white text-xl font-semibold text-center mb-6">
@@ -300,7 +380,7 @@ export default function Register() {
                                         </div>
                                     ))}
                                 </div>
-                                {/* Selected system note */}
+
                                 {formData.system && (
                                     <div className="rounded-xl bg-white/5 border border-white/10 p-4">
                                         <div className="flex items-center justify-between">
@@ -319,6 +399,7 @@ export default function Register() {
                                         </div>
                                     </div>
                                 )}
+
                                 <div className="flex gap-4">
                                     <button
                                         type="button"
@@ -327,28 +408,20 @@ export default function Register() {
                                     >
                                         Back
                                     </button>
+
                                     <button
-                                        type="button"
-                                        onClick={handleSubmit}
-                                        disabled={!formData.role || loading}
-                                        className="flex-1 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        type="submit"
+                                        disabled={loading}
+                                        className="flex-1 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 border border-amber-400 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {loading ? "Submitting..." : "Submit Request"}
+                                        {loading ? "Submitting..." : "Submit Registration"}
                                     </button>
                                 </div>
+
+                                <p className="text-white/60 text-xs mt-3">After completing registration, please check your email to verify — registration may take up to 72 hours for security checks.</p>
                             </div>
                         )}
-                        {/* Back link */}
-                        <div className="mt-6 text-center">
-                            <button
-                                onClick={() => navigate("/")}
-                                className="text-white/70 hover:text-white text-sm transition"
-                                type="button"
-                            >
-                                ← Back to Portal
-                            </button>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
