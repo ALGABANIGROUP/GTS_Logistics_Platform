@@ -1,10 +1,11 @@
+# backend/routes/public_signup.py
 """
 Public signup endpoint with email verification
 Multi-tenant registration system
 """
-
 import logging
 import secrets
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from pydantic import BaseModel, EmailStr
@@ -20,8 +21,14 @@ from backend.services.email_service import send_email_verification
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/signup", tags=["public-signup"])
-SIGNUP_DISABLED = True
+
+# Toggle signup
+SIGNUP_DISABLED = False
 SIGNUP_DISABLED_DETAIL = "Public signup is temporarily closed. Please contact the administrator."
+
+# hCaptcha config (optional)
+HCAPTCHA_SECRET = os.getenv("HCAPTCHA_SECRET", "").strip()
+HCAPTCHA_ENABLED = bool(HCAPTCHA_SECRET)
 
 # In-memory IP rate limiter (replace with Redis in production)
 IP_SIGNUP_ATTEMPTS = {}
@@ -97,18 +104,39 @@ async def register(
 ):
     """
     Register new tenant with email verification
-    
-    Steps:
-    1. Validate input
-    2. Check IP rate limit
-    3. Check subdomain uniqueness
-    4. Create tenant (status: PENDING_VERIFICATION)
-    5. Create owner user (inactive)
-    6. Send verification email
     """
     if SIGNUP_DISABLED:
         raise HTTPException(status_code=403, detail=SIGNUP_DISABLED_DETAIL)
     
+    # hCaptcha server-side verification (optional)
+    if HCAPTCHA_ENABLED:
+        # Accept token in header X-HCAPTCHA-TOKEN or in JSON body 'h-captcha-response'
+        token = request.headers.get("X-HCAPTCHA-TOKEN")
+        if not token:
+            try:
+                body = await request.json()
+                token = body.get("h-captcha-response")
+            except Exception:
+                token = None
+
+        if not token:
+            raise HTTPException(status_code=400, detail="hCaptcha token missing")
+
+        # Verify using hCaptcha API
+        import aiohttp
+        try:
+            async with aiohttp.ClientSession() as session:
+                payload = {"secret": HCAPTCHA_SECRET, "response": token}
+                async with session.post("https://hcaptcha.com/siteverify", data=payload) as resp:
+                    data = await resp.json()
+                    if not data.get("success", False):
+                        raise HTTPException(status_code=400, detail="Captcha verification failed")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("hCaptcha verification error: %s", e)
+            raise HTTPException(status_code=500, detail="Captcha verification failed")
+
     async with wrap_session_factory(get_async_session) as session:
         # Get client IP (handle proxies)
         client_ip = (
@@ -176,8 +204,8 @@ async def register(
             # Create owner user (inactive until email verified)
             owner_user = User(
                 email=req.owner_email.lower(),
-                name=req.owner_name,
-                password_hash=get_password_hash(req.owner_password),
+                full_name=req.owner_name,
+                hashed_password=get_password_hash(req.owner_password),
                 tenant_id=tenant.id,
                 role="tenant_admin",
                 is_active=False,  # Inactive until email verification
@@ -299,4 +327,3 @@ async def check_subdomain_availability(
             "available": is_available,
             "message": "Available" if is_available else "Already taken"
         }
-
