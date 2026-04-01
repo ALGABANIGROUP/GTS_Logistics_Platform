@@ -2,52 +2,13 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-import importlib
 import logging
 import os
 import re
-import sys
 import time
 import tracemalloc
 from datetime import timedelta
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
-
-def _alias_backend_package(alias: str) -> None:
-    if alias in sys.modules:
-        return
-    try:
-        sys.modules[alias] = importlib.import_module(f"backend.{alias}")
-    except Exception:
-        return
-
-
-for _pkg_alias in (
-    "routes",
-    "services",
-    "bots",
-    "ai",
-    "core",
-    "billing",
-    "middleware",
-    "monitoring",
-    "webhooks",
-    "api",
-    "util",
-    "utils",
-    "maintenance",
-    "notifications",
-    "auth",
-    "data",
-    "database",
-    "models",
-    "security",
-    "training_center",
-    "social_media",
-    "schedulers",
-    "tms",
-):
-    _alias_backend_package(_pkg_alias)
 
 try:
     from dotenv import load_dotenv
@@ -138,6 +99,7 @@ except Exception as _e:
 
 
 # ========= App & deps =========
+from pathlib import Path
 
 from fastapi import FastAPI, Request, APIRouter, HTTPException, Depends
 from sqlalchemy import text
@@ -402,7 +364,6 @@ admin_portal_requests_router = _try_import_router("routes.admin_portal_requests"
 tms_requests_admin_router = _try_import_router("routes.tms_requests_admin", "routes.tms_requests_admin")
 payment_gateway_router = _try_import_router("routes.payment_gateway", "routes.payment_gateway")
 payment_routes_router = _try_import_router("routes.payment_routes", "routes.payment_routes")
-seo_public_router = _try_import_router("routes.seo_public", "routes.seo_public")
 channels_webhooks_router = _try_import_router("routes.channels_webhooks", "routes.channels_webhooks")
 call_ai_router = _try_import_router("routes.call_ai_routes", "routes.call_ai_routes")
 communications_router = _try_import_router("routes.communications", "routes.communications")
@@ -662,14 +623,14 @@ def generate_unique_id(route: APIRoute) -> str:
 
 ENABLE_OPENAPI = os.getenv("ENABLE_OPENAPI", "false").lower() in ("1", "true", "yes")
 
+
 @asynccontextmanager
 async def app_lifespan(_app: FastAPI):
-    late_lifespan = globals().get("_resolved_app_lifespan")
-    if late_lifespan is None:
+    await on_startup()
+    try:
         yield
-        return
-    async with late_lifespan(_app):
-        yield
+    finally:
+        await on_shutdown()
 
 
 app = FastAPI(
@@ -858,10 +819,6 @@ DEFAULT_CORS_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3000",
     "https://gabanilogistics.com",
-    "https://www.gabanilogistics.com",
-    "https://gtsdispatcher.com",
-    "https://www.gtsdispatcher.com",
-    "https://gts-logistics-platform.onrender.com",
 ]
 
 _allowed = os.getenv("GTS_CORS_ORIGINS") or os.getenv("ALLOWED_ORIGINS") or ""
@@ -887,7 +844,6 @@ allow_headers = [
     "Content-Type",
     "Content-Language",
     "Authorization",  # ⚠️ CRITICAL: Must be explicit for Bearer tokens
-    "X-Access-Token",
     "X-Requested-With",
     "X-CSRF-Token",
     "Cache-Control",
@@ -1367,7 +1323,7 @@ class OperationsManagerBot:
 
 def register_core_bots() -> None:
     try:
-        from backend.bots.general_manager import GeneralManagerBot as RuntimeGeneralManagerBot
+        from bots.general_manager import GeneralManagerBot as RuntimeGeneralManagerBot
 
         gm_bot = RuntimeGeneralManagerBot()
         gm_bot.name = "general_manager"
@@ -1378,8 +1334,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated General Manager bot, using fallback: {e}")
         ai_registry.register(GeneralManagerBot())
     try:
-        from backend.bots.freight_broker import FreightBrokerBot as RuntimeFreightBrokerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.freight_broker import FreightBrokerBot as RuntimeFreightBrokerBot
+        from ai.registry_fill import AliasBot
 
         freight_bot = RuntimeFreightBrokerBot()
         freight_bot.name = "freight_broker"
@@ -1391,8 +1347,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Freight Broker bot, using fallback: {e}")
         ai_registry.register(FreightBrokerBot())
     try:
-        from backend.bots.operations_manager import OperationsManagerBot as RuntimeOperationsManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.operations_manager import OperationsManagerBot as RuntimeOperationsManagerBot
+        from ai.registry_fill import AliasBot
 
         ops_bot = RuntimeOperationsManagerBot()
         ops_bot.name = "operations_manager"
@@ -1405,7 +1361,7 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated Operations Manager bot, using fallback: {e}")
         ai_registry.register(OperationsManagerBot())
     try:
-        from backend.bots.information_coordinator import InformationCoordinatorBot as RuntimeInformationCoordinatorBot
+        from bots.information_coordinator import InformationCoordinatorBot as RuntimeInformationCoordinatorBot
 
         info_bot = RuntimeInformationCoordinatorBot()
         info_bot.name = "information_coordinator"
@@ -1415,8 +1371,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Information Coordinator bot: {e}")
     try:
-        from backend.bots.legal_bot import LegalBot as RuntimeLegalBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.legal_bot import LegalBot as RuntimeLegalBot
+        from ai.registry_fill import AliasBot
 
         legal_bot = RuntimeLegalBot()
         legal_bot.name = "legal_bot"
@@ -1428,8 +1384,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Legal Consultant bot: {e}")
     try:
-        from backend.bots.security_manager import SecurityManagerBot as RuntimeSecurityManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.security_manager import SecurityManagerBot as RuntimeSecurityManagerBot
+        from ai.registry_fill import AliasBot
 
         security_bot = RuntimeSecurityManagerBot()
         security_bot.name = "security_bot"
@@ -1440,11 +1396,10 @@ def register_core_bots() -> None:
         log.info("[register] Security Manager bot registered with aliases")
     except Exception as e:
         log.warning(f"[register] Failed to register dedicated Security Manager bot, using fallback: {e}")
-        from backend.bots.security_bot import SecurityBot as RuntimeSecurityBot
-        ai_registry.register(RuntimeSecurityBot())
+        ai_registry.register(SecurityBot())
     try:
-        from backend.bots.system_manager import SystemManagerBot as RuntimeSystemManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.system_manager import SystemManagerBot as RuntimeSystemManagerBot
+        from ai.registry_fill import AliasBot
 
         system_bot = RuntimeSystemManagerBot()
         system_bot.name = "system_bot"
@@ -1458,8 +1413,8 @@ def register_core_bots() -> None:
         log.warning(f"[register] Failed to register dedicated System Manager bot, using fallback: {e}")
         ai_registry.register(SystemBot())
     try:
-        from backend.bots.maintenance_dev import MaintenanceDevBot as RuntimeMaintenanceDevBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.maintenance_dev import MaintenanceDevBot as RuntimeMaintenanceDevBot
+        from ai.registry_fill import AliasBot
 
         maintenance_bot = RuntimeMaintenanceDevBot()
         maintenance_bot.name = "maintenance_dev"
@@ -1473,8 +1428,8 @@ def register_core_bots() -> None:
     ai_registry.register(FinanceBot())
     ai_registry.register(DocumentsManagerBot())
     try:
-        from backend.bots.sales_intelligence import SalesIntelligenceBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.sales_intelligence import SalesIntelligenceBot
+        from ai.registry_fill import AliasBot
 
         sales_bot = SalesIntelligenceBot()
         sales_bot.name = "sales_bot"
@@ -1487,8 +1442,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Sales bot: {e}")
     try:
-        from backend.bots.marketing_manager import MarketingManagerBot as RuntimeMarketingManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.marketing_manager import MarketingManagerBot as RuntimeMarketingManagerBot
+        from ai.registry_fill import AliasBot
 
         marketing_bot = RuntimeMarketingManagerBot()
         marketing_bot.name = "marketing_manager"
@@ -1500,8 +1455,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Marketing Manager bot: {e}")
     try:
-        from backend.bots.intelligence_bot import IntelligenceBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.intelligence_bot import IntelligenceBot
+        from ai.registry_fill import AliasBot
 
         intelligence_bot = IntelligenceBot()
         intelligence_bot.name = "intelligence_bot"
@@ -1513,8 +1468,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Intelligence bot: {e}")
     try:
-        from backend.bots.trainer_bot import TrainerBotRuntime
-        from backend.ai.registry_fill import AliasBot
+        from bots.trainer_bot import TrainerBotRuntime
+        from ai.registry_fill import AliasBot
 
         trainer_bot = TrainerBotRuntime()
         trainer_bot.name = "trainer_bot"
@@ -1526,8 +1481,8 @@ def register_core_bots() -> None:
     except Exception as e:
         log.warning(f"[register] Failed to register Trainer bot: {e}")
     try:
-        from backend.safety.main import AISafetyManagerBot
-        from backend.ai.registry_fill import AliasBot
+        from safety.main import AISafetyManagerBot
+        from ai.registry_fill import AliasBot
 
         safety_bot = AISafetyManagerBot()
         safety_bot.name = "safety_bot"
@@ -1537,22 +1492,9 @@ def register_core_bots() -> None:
         ai_registry.register(AliasBot(name="safety", target_key="safety_bot"))
         log.info("[register] Safety bot registered with aliases")
     except Exception as e:
-        log.warning(f"[register] Failed to register Safety bot from safety manager runtime, using fallback: {e}")
-        try:
-            from backend.bots.safety_bot import SafetyBot
-            from backend.ai.registry_fill import AliasBot
-
-            safety_bot = SafetyBot()
-            safety_bot.name = "safety_bot"
-            safety_bot.display_name = "Safety Bot"
-            ai_registry.register(safety_bot)
-            ai_registry.register(AliasBot(name="safety_manager", target_key="safety_bot"))
-            ai_registry.register(AliasBot(name="safety", target_key="safety_bot"))
-            log.info("[register] Fallback Safety bot registered with aliases")
-        except Exception as fallback_exc:
-            log.warning(f"[register] Failed to register Safety bot fallback: {fallback_exc}")
+        log.warning(f"[register] Failed to register Safety bot: {e}")
     try:
-        from backend.bots.ai_dispatcher import AIDispatcherBot
+        from bots.ai_dispatcher import AIDispatcherBot
         ai_registry.register(AIDispatcherBot())
         log.info("[register] AI Dispatcher bot registered")
     except Exception as e:
@@ -1560,8 +1502,8 @@ def register_core_bots() -> None:
     
     # Register MapleLoad Canada bot
     try:
-        from backend.bots.mapleload_canada import MapleLoadCanadaBot
-        from backend.ai.registry_fill import AliasBot
+        from bots.mapleload_canada import MapleLoadCanadaBot
+        from ai.registry_fill import AliasBot
 
         mapleload_bot = MapleLoadCanadaBot()
         mapleload_bot.name = "mapleload_bot"
@@ -1636,7 +1578,6 @@ _docs_task: Optional[asyncio.Task] = None
 _legal_updates_task: Optional[asyncio.Task] = None
 _learning_scheduler_task: Optional[asyncio.Task] = None
 _maintenance_auto_repair_task: Optional[asyncio.Task] = None
-_telegram_task: Optional[asyncio.Task] = None
 
 
 async def _ops_monitor_loop():
@@ -1675,12 +1616,12 @@ async def _docs_scheduler_loop():
 
 # ---------------- Startup/Shutdown ----------------
 async def on_startup():
-    global _vdb, _ops_task, _docs_task, _legal_updates_task, _learning_scheduler_task, _maintenance_auto_repair_task, _telegram_task
+    global _vdb, _ops_task, _docs_task, _legal_updates_task, _learning_scheduler_task, _maintenance_auto_repair_task
     
     # -------- Priority 1: Initialize Sentry --------
     if init_sentry is not None:
         try:
-            from backend.config import Settings
+            from config import Settings
             settings = Settings()
             init_sentry(
                 dsn=getattr(settings, 'SENTRY_DSN', None),
@@ -1914,17 +1855,12 @@ async def on_startup():
     except Exception as e:
         log.warning("[startup] user column check failed: %s", e)
     try:
-        from backend.ai.registry_fill import ensure_all_bots_registered
+        from ai.registry_fill import ensure_all_bots_registered
 
         ensure_all_bots_registered(ai_registry)
     except Exception as e:
         log.warning("[startup] ensure_all_bots_registered failed: %s", e)
     log.info("[startup] AI core bots registered: %s", ai_registry.list())
-
-    try:
-        await _start_bot_os()
-    except Exception as e:
-        log.warning("[startup] BotOS initialization failed: %s", e)
 
     try:
         from services.learning_bootstrap import register_default_learning_bots, learning_scheduler_loop
@@ -2001,8 +1937,8 @@ async def on_startup():
 
     # Initialize Market Data Service and MapleLoad Canada Bot
     try:
-        from backend.services.market_data_service import initialize_market_data_service
-        from backend.bots.mapleload_canada import initialize_mapleload_bot
+        from services.market_data_service import initialize_market_data_service
+        from bots.mapleload_canada import initialize_mapleload_bot
         
         await initialize_market_data_service()
         await initialize_mapleload_bot()
@@ -2015,7 +1951,7 @@ async def on_startup():
         telegram_enabled = os.getenv("TELEGRAM_ENABLED", "false").lower() in ("1", "true", "yes")
         if telegram_enabled:
             from telegram_bot import start_telegram_bot
-            _telegram_task = asyncio.create_task(start_telegram_bot())
+            asyncio.create_task(start_telegram_bot())
             log.info("[startup] Telegram bot started")
         else:
             log.info("[startup] Telegram bot disabled")
@@ -2054,34 +1990,10 @@ async def on_shutdown():
         await stop_email_polling_task()
     except Exception:
         pass
-    try:
-        bot_os = getattr(app.state, "bot_os", None)
-        if bot_os is not None:
-            await bot_os.shutdown()
-            log.info("[shutdown] BotOS stopped")
-    except Exception as exc:
-        log.warning("[shutdown] BotOS shutdown failed: %s", exc)
-
-
-async def _start_bot_os() -> None:
-    session_factory = _get_session
-    if session_factory is None:
-        raise RuntimeError("async session factory is unavailable")
-
-    from backend.bots import init_bot_os
-
-    bot_os = init_bot_os(
-        bot_names_provider=lambda: list(ai_registry.list().keys()),
-        bot_getter=ai_registry.get,
-        session_factory=session_factory,
-    )
-    await bot_os.start()
-    app.state.bot_os = bot_os
-    log.info("[startup] BotOS initialized successfully")
 
 
 @asynccontextmanager
-async def _resolved_app_lifespan(_app: FastAPI):
+async def app_lifespan(_app: FastAPI):
     await on_startup()
     try:
         yield
@@ -2090,8 +2002,8 @@ async def _resolved_app_lifespan(_app: FastAPI):
     
     # Shutdown Market Data Service and MapleLoad Canada Bot
     try:
-        from backend.services.market_data_service import shutdown_market_data_service
-        from backend.bots.mapleload_canada import shutdown_mapleload_bot
+        from services.market_data_service import shutdown_market_data_service
+        from bots.mapleload_canada import shutdown_mapleload_bot
         
         await shutdown_market_data_service()
         await shutdown_mapleload_bot()
@@ -2110,15 +2022,13 @@ except Exception as e:
 if system_readiness_router:
     app.include_router(system_readiness_router)
 try:
-    if auth_router and not auth_me_router:
-        # Mount legacy auth routes only when the modern /api/v1/auth router is unavailable.
+    if auth_router:
+        # auth_router defines "/auth/*" paths, so mount at /api/v1
         app.include_router(auth_router, prefix="/api/v1")
-    elif auth_router and auth_me_router:
-        log.info("[main] legacy auth_router skipped to avoid /api/v1/auth route shadowing")
 except Exception as e:
     log.warning("[router] auth mount failed: %s", e)
 
-if auth_me_router:
+if False and auth_me_router:  # Disabled to use simplified auth
     app.include_router(auth_me_router)
     log.info("[main] auth_me_router mounted at /api/v1/auth")
 else:
@@ -2608,7 +2518,7 @@ if enhanced_call_router:
 
 if payment_webhooks_router:
     app.include_router(payment_webhooks_router)
-    log.info("[main] legacy sudapay webhook endpoint disabled at /api/v1/webhooks/sudapay/*")
+    log.info("[main] payment webhooks routes mounted at /api/v1/webhooks/sudapay/*")
 
 if wise_webhooks_router:
     app.include_router(wise_webhooks_router)
@@ -2637,10 +2547,6 @@ if payment_gateway_router:
 if payment_routes_router:
     app.include_router(payment_routes_router)
     log.info("[main] payment routes mounted at /api/payments/*")
-
-if seo_public_router:
-    app.include_router(seo_public_router)
-    log.info("[main] SEO public routes mounted at /robots.txt and /sitemap.xml")
 
 if unified_finance_router:
     app.include_router(
