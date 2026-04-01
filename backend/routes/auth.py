@@ -8,7 +8,7 @@ import jwt
 import os
 import bcrypt
 
-router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
 
 # ==================== Models ====================
