@@ -109,6 +109,8 @@ jobs:
           pip install uvicorn
 
       - name: Start backend
+        env:
+          ENABLE_OPENAPI: "true"
         run: |
           nohup python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 > backend.log 2>&1 &
           for i in {1..30}; do
