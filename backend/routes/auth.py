@@ -1,170 +1,232 @@
-# backend/routes/auth.py
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr
-from typing import Optional, Dict, Any
+"""
+Authentication Routes - Login, Register, Token
+"""
+
+from fastapi import APIRouter, HTTPException, Depends, status, Body
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from datetime import datetime, timedelta
+from typing import Optional
+import importlib
 import jwt
-import os
 import bcrypt
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
-security = HTTPBearer()
 
-# ==================== Models ====================
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+def _import_attr(module_names: tuple[str, ...], attr_name: str):
+    for module_name in module_names:
+        try:
+            module = importlib.import_module(module_name)
+            return getattr(module, attr_name)
+        except Exception:
+            continue
+    return None
 
-class LoginResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    expires_in: int
-    user: Dict[str, Any]
 
-class UserResponse(BaseModel):
-    id: int
-    email: str
-    full_name: str
-    role: str
+if __name__.startswith("routes."):
+    _db_modules = ("database.session", "backend.database.session")
+    _config_modules = ("config", "backend.config")
+else:
+    _db_modules = ("backend.database.session", "database.session")
+    _config_modules = ("backend.config", "config")
 
-# ==================== Mock Database ====================
-# Users for production
-USERS_DB = {
-    "enjoy983@hotmail.com": {
-        "id": 1,
-        "email": "enjoy983@hotmail.com",
-        "full_name": "Admin User",
-        "role": "admin",
-        "is_active": True
-    },
-    "admin@gts.com": {
-        "id": 2,
-        "email": "admin@gts.com",
-        "full_name": "System Administrator",
-        "role": "admin",
-        "is_active": True
-    },
-    "manager@gts.com": {
-        "id": 3,
-        "email": "manager@gts.com",
-        "full_name": "Operations Manager",
-        "role": "manager",
-        "is_active": True
-    }
-}
+get_async_session = _import_attr(_db_modules, "get_async_session")
+Settings = _import_attr(_config_modules, "Settings")
 
-# Passwords (in production, these should be hashed)
-PASSWORDS = {
-    "enjoy983@hotmail.com": "Gabani@2026",
-    "admin@gts.com": "admin123",
-    "manager@gts.com": "manager123"
-}
+settings = Settings()
 
-# ==================== Helper Functions ====================
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create JWT token"""
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=30)
-    
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    
-    secret_key = os.getenv("JWT_SECRET_KEY", "development-secret-key")
-    algorithm = os.getenv("JWT_ALGORITHM", "HS256")
-    
-    encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=algorithm)
+    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
-def verify_password(plain_password: str, email: str) -> bool:
-    """Verify password"""
-    stored_password = PASSWORDS.get(email)
-    if not stored_password:
-        return False
-    return plain_password == stored_password
 
-# ==================== Endpoints ====================
-@router.post("/login", response_model=LoginResponse)
-async def login(request: LoginRequest):
-    """
-    Login to the system
-    
-    - **email**: User email address
-    - **password**: User password
-    """
-    
-    # Find user
-    user = USERS_DB.get(request.email)
-    
+async def _fetch_user_by_login(session: AsyncSession, login: str) -> Optional[dict]:
+    result = await session.execute(
+        text(
+            """
+            SELECT
+                id,
+                email,
+                username,
+                role,
+                is_active,
+                created_at,
+                hashed_password,
+                token_version
+            FROM users
+            WHERE lower(email) = :login OR lower(username) = :login
+            LIMIT 1
+            """
+        ),
+        {"login": login.strip().lower()},
+    )
+    row = result.mappings().first()
+    return dict(row) if row else None
+
+
+async def _fetch_user_by_id(session: AsyncSession, user_id: int) -> Optional[dict]:
+    result = await session.execute(
+        text(
+            """
+            SELECT
+                id,
+                email,
+                username,
+                role,
+                is_active,
+                created_at,
+                hashed_password,
+                token_version
+            FROM users
+            WHERE id = :user_id
+            LIMIT 1
+            """
+        ),
+        {"user_id": user_id},
+    )
+    row = result.mappings().first()
+    return dict(row) if row else None
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSession = Depends(get_async_session)):
+    if get_async_session is None:
+        raise HTTPException(status_code=500, detail="Database not available")
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id: int = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+
+    user = await _fetch_user_by_id(session, int(user_id))
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+@router.post("/token")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """Login endpoint - returns access token"""
+    if get_async_session is None:
+        raise HTTPException(status_code=500, detail="Database not available")
+    user = await _fetch_user_by_login(session, form_data.username)
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Verify password
-    if not verify_password(request.password, request.email):
+    hashed_password = str(user.get("hashed_password") or "")
+    if not hashed_password or not bcrypt.checkpw(form_data.password.encode('utf-8'), hashed_password.encode('utf-8')):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    # Check if account is active
-    if not user.get("is_active", True):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is disabled"
-        )
-    
-    # Create token
+
+    # Create access token
     access_token = create_access_token(
         data={
             "sub": str(user["id"]),
             "email": user["email"],
-            "role": user["role"]
-        }
-    )
-    
-    return LoginResponse(
-        access_token=access_token,
-        expires_in=1800,
-        user={
-            "id": user["id"],
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "role": user["role"]
+            "role": user.get("role") or "user",
+            "tv": int(user.get("token_version") or 0),
         }
     )
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current user information"""
-    token = credentials.credentials
-    
-    try:
-        secret_key = os.getenv("JWT_SECRET_KEY", "development-secret-key")
-        algorithm = os.getenv("JWT_ALGORITHM", "HS256")
-        
-        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
-        email = payload.get("email")
-    except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    user = USERS_DB.get(email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return UserResponse(
-        id=user["id"],
-        email=user["email"],
-        full_name=user["full_name"],
-        role=user["role"]
+    # Create refresh token
+    refresh_token = create_access_token(
+        data={
+            "sub": str(user["id"]),
+            "type": "refresh",
+            "tv": int(user.get("token_version") or 0),
+        },
+        expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    }
+
+
+@router.get("/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user info"""
+    return {
+        "id": current_user.get("id"),
+        "email": current_user.get("email"),
+        "username": current_user.get("username"),
+        "role": current_user.get("role"),
+        "is_active": current_user.get("is_active"),
+        "created_at": current_user["created_at"].isoformat() if current_user.get("created_at") else None
+    }
+
+
+@router.post("/refresh")
+async def refresh_token(
+    refresh_token: Optional[str] = Body(default=None, embed=True),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Refresh access token"""
+    try:
+        if not refresh_token:
+            raise HTTPException(status_code=400, detail="refresh_token is required")
+
+        payload = jwt.decode(refresh_token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid refresh token type")
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = await _fetch_user_by_id(session, int(user_id))
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        new_access_token = create_access_token(
+            data={
+                "sub": str(user["id"]),
+                "email": user["email"],
+                "role": user.get("role") or "user",
+                "tv": int(user.get("token_version") or 0),
+            }
+        )
+
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer"
+        }
+
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def get_password_hash(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
