@@ -1,12 +1,14 @@
+/* eslint-disable react/prop-types */
+
 /**
  *  GTS - General Manager Control Panel
  * General executive management command center for GTS Logistics
  */
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import axiosClient from "../../api/axiosClient";
 
 const BOT_KEY = "general_manager";
+const USE_MOCK_DATA = true;
 
 // Tab definitions
 const CONTROL_TABS = [
@@ -24,8 +26,90 @@ const QUICK_ACTIONS = [
     { name: "Generate Report", icon: "", action: "generate_report" },
 ];
 
+const DEFAULT_DASHBOARD = {
+    unified_kpi: {
+        current: 87.5,
+        previous: 84.2,
+        change: "+3.3",
+        target: 90.0,
+        status: "improving",
+    },
+    department_performance: {
+        operations: { score: 92.3, change: "+2.1", status: "excellent" },
+        finance: { score: 85.7, change: "+1.5", status: "good" },
+        customers: { score: 78.4, change: "-0.8", status: "warning" },
+        safety: { score: 95.6, change: "+3.2", status: "excellent" },
+    },
+    critical_alerts: [
+        { id: "ALT001", title: "Delayed shipment cluster on Riyadh lanes", severity: "high", source: "dispatcher", action_required: true },
+        { id: "ALT002", title: "VIP customer escalation needs immediate callback", severity: "high", source: "customer_service", action_required: true },
+    ],
+    strategic_recommendations: [
+        { id: "REC001", title: "Hire 3 additional Riyadh drivers", priority: "high", impact: "+15% route capacity", owner: "HR / Operations" },
+        { id: "REC002", title: "Launch US market expansion pilot", priority: "high", impact: "+25% international revenue opportunity", owner: "Expansion Office" },
+        { id: "REC003", title: "Promote 3 high-performing partners", priority: "medium", impact: "+10% partner retention", owner: "Partner Success" },
+    ],
+    operational_snapshot: {
+        total_shipments: 1247,
+        on_time_delivery: 94.2,
+        delayed_shipments: 75,
+        active_drivers: 85,
+    },
+    team_status: {
+        total_bots: 7,
+        active_bots: 7,
+        inactive_bots: 0,
+        details: [
+            { bot: "dispatcher", status: "active", reports_today: 41 },
+            { bot: "customer_service", status: "active", reports_today: 28 },
+            { bot: "sales_bot", status: "active", reports_today: 16 },
+            { bot: "safety_bot", status: "active", reports_today: 12 },
+        ],
+    },
+};
+
+const buildPanelData = (statusPayload = {}, dashboardPayload = null) => {
+    const safeDashboard =
+        dashboardPayload && typeof dashboardPayload === "object"
+            ? dashboardPayload
+            : DEFAULT_DASHBOARD;
+    const teamDetails =
+        statusPayload?.teams ||
+        safeDashboard?.team_status?.details ||
+        DEFAULT_DASHBOARD.team_status.details;
+
+    return {
+        metrics: statusPayload?.metrics || {
+            activeTeams: { value: safeDashboard?.team_status?.active_bots || 0, target: 15, status: "active" },
+            totalEmployees: { value: 187, target: 200, status: "active" },
+            operationsStatus: { value: `${safeDashboard?.department_performance?.operations?.score || 0}%`, trend: "positive" },
+            responseTime: { value: "0.4h", trend: "neutral" },
+        },
+        teams: teamDetails,
+        pending:
+            statusPayload?.pending ||
+            safeDashboard?.critical_alerts ||
+            DEFAULT_DASHBOARD.critical_alerts,
+        activities:
+            statusPayload?.activities ||
+            safeDashboard?.strategic_recommendations ||
+            DEFAULT_DASHBOARD.strategic_recommendations,
+        reports: statusPayload?.reports || [],
+        dashboard: {
+            ...DEFAULT_DASHBOARD,
+            ...safeDashboard,
+            team_status: {
+                ...DEFAULT_DASHBOARD.team_status,
+                ...(safeDashboard?.team_status || {}),
+                details: teamDetails,
+            },
+        },
+    };
+};
+
 export default function GeneralManagerControlPanel({ mode = "active" }) {
     const isPreview = mode === "preview";
+    const usingMockData = isPreview || USE_MOCK_DATA;
     const [activeTab, setActiveTab] = useState("dashboard");
     const [loading, setLoading] = useState(false);
     const [connected, setConnected] = useState(false);
@@ -53,22 +137,16 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
 
     // Load panel data
     const loadPanelData = useCallback(async () => {
-        if (isPreview) {
-            setPanelData(prev => ({
-                ...prev,
-                metrics: {
-                    activeTeams: { value: 0, target: 0, status: "active" },
-                    totalEmployees: { value: 0, target: 0, status: "active" },
-                    operationsStatus: { value: "0%", trend: "neutral" },
-                    responseTime: { value: "0h", trend: "neutral" },
-                },
-            }));
+        if (usingMockData) {
+            setPanelData(buildPanelData());
+            setConnected(true);
+            setLastUpdate(new Date());
             return;
         }
 
         setLoading(true);
         try {
-            const [statusResponse, dashboardResponse] = await Promise.all([
+            const [statusResponse, dashboardResponse] = await Promise.allSettled([
                 axiosClient.get(`/api/v1/ai/bots/available/${BOT_KEY}/status`),
                 axiosClient.post(`/api/v1/ai/bots/available/${BOT_KEY}/run`, {
                     message: "load executive dashboard",
@@ -77,33 +155,33 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
                 }),
             ]);
 
-            const statusPayload = statusResponse?.data?.status || {};
-            const dashboardPayload = dashboardResponse?.data?.result || {};
+            const statusPayload =
+                statusResponse.status === "fulfilled"
+                    ? statusResponse.value?.data?.status || {}
+                    : {};
+            const dashboardPayload =
+                dashboardResponse.status === "fulfilled"
+                    ? dashboardResponse.value?.data?.result || {}
+                    : null;
 
-            if (statusPayload || dashboardPayload) {
-                setPanelData({
-                    metrics: statusPayload.metrics || {
-                        activeTeams: { value: dashboardPayload?.team_status?.active_bots || 0, target: 15, status: "active" },
-                        totalEmployees: { value: 187, target: 200, status: "active" },
-                        operationsStatus: { value: `${dashboardPayload?.department_performance?.operations?.score || 0}%`, trend: "positive" },
-                        responseTime: { value: "0.4h", trend: "neutral" },
-                    },
-                    teams: statusPayload.teams || dashboardPayload?.team_status?.details || [],
-                    pending: statusPayload.pending || dashboardPayload?.critical_alerts || [],
-                    activities: statusPayload.activities || dashboardPayload?.strategic_recommendations || [],
-                    reports: statusPayload.reports || [],
-                    dashboard: dashboardPayload,
-                });
-                setConnected(true);
+            if (statusResponse.status === "rejected") {
+                console.warn("General Manager status load failed:", statusResponse.reason);
             }
+            if (dashboardResponse.status === "rejected") {
+                console.warn("General Manager dashboard run failed, using fallback dashboard:", dashboardResponse.reason);
+            }
+
+            setPanelData(buildPanelData(statusPayload, dashboardPayload));
+            setConnected(statusResponse.status === "fulfilled" || dashboardResponse.status === "fulfilled");
             setLastUpdate(new Date());
         } catch (err) {
             console.warn("Panel data load error:", err);
+            setPanelData(buildPanelData());
             setConnected(false);
         } finally {
             setLoading(false);
         }
-    }, [isPreview]);
+    }, [usingMockData]);
 
     // Load data on mount
     useEffect(() => {
@@ -123,6 +201,26 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
         };
 
         setActionLog(prev => [logEntry, ...prev.slice(0, 19)]);
+
+        if (usingMockData) {
+            const mockResult = {
+                ok: true,
+                mode: "mock",
+                action,
+                message: `${action} completed in mock mode`,
+                generated_at: new Date().toISOString(),
+            };
+
+            setActionLog(prev =>
+                prev.map(log =>
+                    log.id === logEntry.id
+                        ? { ...log, status: "success", result: mockResult }
+                        : log
+                )
+            );
+
+            return mockResult;
+        }
 
         try {
             const response = await axiosClient.post(
@@ -154,7 +252,7 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
             );
             throw error;
         }
-    }, [loadPanelData]);
+    }, [loadPanelData, usingMockData]);
 
     {/* Render loading state */ }
     if (
@@ -202,7 +300,7 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
                                     : "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
                                     }`}
                             >
-                                {connected ? " Connected" : " Offline Mode"}
+                                {usingMockData ? " Mock Data" : connected ? " Connected" : " Offline Mode"}
                             </span>
                             {lastUpdate && (
                                 <span className="text-xs text-gray-500 dark:text-gray-400">

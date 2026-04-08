@@ -1,80 +1,82 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, Body
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel, Field
 
-# Provider registry (dynamic import to support multiple layouts)
-try:
-    from backend.integrations.loadboards.registry import get_provider  # type: ignore
-except Exception:
-    try:
-        from integrations.loadboards.registry import get_provider  # type: ignore
-    except Exception:
-        get_provider = None  # type: ignore
+from backend.services.truckerpath_service import TruckerPathService
 
-# Optional: WebSocket broadcast (best-effort)
+
 async def _noop_broadcast(*args, **kwargs) -> None:
     return None
+
 
 broadcast_event = _noop_broadcast
 try:
     from backend.routes.ws_routes import broadcast_event as _broadcast_event  # type: ignore
+
     broadcast_event = _broadcast_event
 except Exception:
     try:
         from backend.routes.ws_routes import broadcast_event as _broadcast_event  # type: ignore
+
         broadcast_event = _broadcast_event
     except Exception:
         pass
 
-router = APIRouter(prefix="/truckerpath", tags=["TruckerPath"])
 
-# ------------------------- Models -------------------------
-class LoadFilters(BaseModel):
-    origin: Optional[str] = None
-    destination: Optional[str] = None
-    equipment: Optional[str] = None
+router = APIRouter(prefix="/truckerpath", tags=["TruckerPath"])
+compat_router = APIRouter(prefix="/integrations/truckerpath", tags=["TruckerPath"])
+
 
 class PostLoadRequest(BaseModel):
-    # Minimal viable payload for posting a load
     company_id: Optional[str] = None
     contact_info: Dict[str, Any] = Field(default_factory=dict)
     shipment_info: Dict[str, Any] = Field(default_factory=dict)
 
-# ------------------------- Helpers -------------------------
-def _get_provider_or_503():
-    if get_provider is None:
-        raise HTTPException(status_code=503, detail="Provider registry not available")
-    try:
-        ProviderClass = get_provider("truckerpath")
-        return ProviderClass()
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"TruckerPath provider unavailable: {e}")
 
-async def _maybe_await(obj):
-    try:
-        import inspect
-        if inspect.isawaitable(obj):
-            return await obj
-    except Exception:
-        pass
-    return obj
+def _provider_error_status(result: dict[str, Any]) -> int:
+    if result.get("error") == "truckerpath_not_configured":
+        return 503
+    return int(result.get("status") or 502)
 
-# ------------------------- Routes -------------------------
+
+def _unwrap_provider_result(result: Any, default_error: str) -> dict[str, Any]:
+    if isinstance(result, dict):
+        if result.get("ok", True):
+            return result
+        raise HTTPException(
+            status_code=_provider_error_status(result),
+            detail=result.get("message") or result.get("error") or default_error,
+        )
+    return {"ok": True, "result": result}
+
+
+async def _status_payload() -> dict[str, Any]:
+    health = await TruckerPathService.ping()
+    ok = bool(health.get("ok", False))
+    return {
+        "ok": ok,
+        "provider": "truckerpath",
+        "health": health,
+    }
+
+
 @router.get("/status")
 async def status():
-    provider = _get_provider_or_503()
-    try:
-        health = await _maybe_await(getattr(provider, "health")()) if hasattr(provider, "health") else {"ok": True}
-        ok = bool(health.get("ok", True)) if isinstance(health, dict) else True
-        if isinstance(health, dict) and not ok and health.get("error") == "truckerpath_not_configured":
-            raise HTTPException(status_code=503, detail=health.get("message") or "TruckerPath API credentials not configured")
-        return {"ok": ok, "provider": "truckerpath", "health": health}
-    except HTTPException:
-        raise
-    except Exception as e:
-        return {"ok": False, "provider": "truckerpath", "error": str(e)}
+    return await _status_payload()
+
+
+@compat_router.get("/status")
+async def compat_status():
+    return await _status_payload()
+
+
+@compat_router.get("/ping")
+async def compat_ping():
+    return await _status_payload()
+
 
 @router.get("/loads")
 async def list_loads(
@@ -83,45 +85,109 @@ async def list_loads(
     destination: Optional[str] = None,
     equipment: Optional[str] = None,
 ):
-    provider = _get_provider_or_503()
     filters = {"origin": origin, "destination": destination, "equipment": equipment}
-    try:
-        res = await _maybe_await(provider.list_loads(limit=limit, **{k: v for k, v in filters.items() if v}))
-        if isinstance(res, dict) and not res.get("ok", True):
-            status_code = 503 if res.get("error") == "truckerpath_not_configured" else int(res.get("status") or 502)
-            detail = res.get("message") or res.get("error") or "Failed to fetch loads"
-            raise HTTPException(status_code=status_code, detail=detail)
-        # Expected provider response: {"ok": True, "loads": [...]} OR a plain list
-        if isinstance(res, dict) and "loads" in res:
-            loads = list(res.get("loads") or [])
-        elif isinstance(res, list):
-            loads = res
-        else:
-            loads = []
-        return {"ok": True, "count": len(loads), "loads": loads, "filters": {k: v for k, v in filters.items() if v}}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to fetch loads: {e}")
+    result = await TruckerPathService.list_loads(limit=limit, **{k: v for k, v in filters.items() if v})
+    data = _unwrap_provider_result(result, "Failed to fetch loads")
+    loads = list(data.get("loads") or [])
+    return {
+        "ok": True,
+        "count": len(loads),
+        "loads": loads,
+        "filters": {k: v for k, v in filters.items() if v},
+        "source": data.get("source"),
+    }
+
+
+@compat_router.get("/loads")
+async def compat_list_loads(
+    limit: int = Query(10, ge=1, le=100),
+    company_id: Optional[str] = None,
+    equipment: Optional[str] = None,
+    origin: Optional[str] = None,
+    destination: Optional[str] = None,
+):
+    del company_id
+    return await list_loads(limit=limit, origin=origin, destination=destination, equipment=equipment)
+
 
 @router.post("/post-load")
 async def post_load(payload: PostLoadRequest = Body(...)):
-    provider = _get_provider_or_503()
+    result = _unwrap_provider_result(
+        await TruckerPathService.post_load(payload.model_dump()),
+        "TruckerPath post failed",
+    )
     try:
-        result = await _maybe_await(provider.post_load(payload.dict()))
-        if isinstance(result, dict) and not result.get("ok", True):
-            status_code = 503 if result.get("error") == "truckerpath_not_configured" else int(result.get("status") or 502)
-            detail = result.get("message") or result.get("error") or "TruckerPath post failed"
-            raise HTTPException(status_code=status_code, detail=detail)
-        ok = bool(result.get("ok", False)) if isinstance(result, dict) else False
-        if ok:
-            try:
-                await broadcast_event(channel="events.truckerpath.posted", payload={"result": result})
-            except Exception:
-                pass
-            return {"ok": True, "result": result}
-        raise HTTPException(status_code=502, detail=f"TruckerPath returned failure: {result}")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to post load: {e}")
+        await broadcast_event(channel="events.truckerpath.posted", payload={"result": result})
+    except Exception:
+        pass
+    return {"ok": True, "result": result}
+
+
+@compat_router.post("/load")
+async def compat_post_load(payload: PostLoadRequest = Body(...)):
+    return await post_load(payload)
+
+
+@router.post("/company")
+async def create_company(payload: dict[str, Any] = Body(...)):
+    return _unwrap_provider_result(
+        await TruckerPathService.create_company(payload),
+        "Create company failed",
+    )
+
+
+@compat_router.post("/company")
+async def compat_create_company(payload: dict[str, Any] = Body(...)):
+    return await create_company(payload)
+
+
+@router.post("/webhook/register")
+async def register_webhook(payload: dict[str, Any] = Body(...)):
+    return _unwrap_provider_result(
+        await TruckerPathService.register_webhook(payload),
+        "Register webhook failed",
+    )
+
+
+@compat_router.post("/webhook/register")
+async def compat_register_webhook(payload: dict[str, Any] = Body(...)):
+    return await register_webhook(payload)
+
+
+@router.post("/webhook/add")
+async def register_webhook_add(payload: dict[str, Any] = Body(...)):
+    return _unwrap_provider_result(
+        await TruckerPathService.register_webhook_add(payload),
+        "Register webhook(add) failed",
+    )
+
+
+@compat_router.post("/webhook/add")
+async def compat_register_webhook_add(payload: dict[str, Any] = Body(...)):
+    return await register_webhook_add(payload)
+
+
+@router.post("/tracking/create")
+async def tracking_create(payload: dict[str, Any] = Body(...)):
+    return _unwrap_provider_result(
+        await TruckerPathService.tracking_create(payload),
+        "Tracking create failed",
+    )
+
+
+@compat_router.post("/tracking/create")
+async def compat_tracking_create(payload: dict[str, Any] = Body(...)):
+    return await tracking_create(payload)
+
+
+@router.post("/tracking/points")
+async def push_tracking_points(payload: dict[str, Any] = Body(...)):
+    return _unwrap_provider_result(
+        await TruckerPathService.push_tracking_points(payload),
+        "Push tracking points failed",
+    )
+
+
+@compat_router.post("/tracking/points")
+async def compat_push_tracking_points(payload: dict[str, Any] = Body(...)):
+    return await push_tracking_points(payload)

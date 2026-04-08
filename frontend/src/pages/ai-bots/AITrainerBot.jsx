@@ -1,459 +1,403 @@
-import { useEffect, useMemo, useState } from "react";
-import axiosClient from "../../api/axiosClient";
+// frontend/src/pages/ai-bots/AITrainerBot.jsx
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  Typography,
+  Button,
+  Chip,
+  LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Alert,
+  IconButton,
+  Tooltip,
+  Avatar,
+  Rating,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
+} from '@mui/material';
+import {
+  Refresh as RefreshIcon,
+  School as SchoolIcon,
+  Assignment as AssignmentIcon,
+  EmojiEvents as TrophyIcon,
+  Timeline as TimelineIcon,
+  ExpandMore as ExpandMoreIcon,
+  PlayCircle as PlayIcon,
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
+  TrendingUp as TrendingUpIcon,
+  People as PeopleIcon
+} from '@mui/icons-material';
+import { useNotification } from '../../contexts/NotificationContext';
+import axiosClient from '../../api/axiosClient';
 
-const TRAINER_KEY = "trainer_bot";
-
-const prettyJson = (value) => JSON.stringify(value ?? {}, null, 2);
-
-const statusTone = {
-  completed: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-  running: "border-blue-500/20 bg-blue-500/10 text-blue-200",
-  active: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-  training: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-  draft: "border-violet-500/20 bg-violet-500/10 text-violet-200",
-  pending: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-  error: "border-rose-500/20 bg-rose-500/10 text-rose-200",
-};
-
-const glassCard =
-  "rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/30 backdrop-blur-xl";
-
-export default function AITrainerBot() {
+const AITrainerBot = () => {
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [trainerStatus, setTrainerStatus] = useState({});
-  const [trainerConfig, setTrainerConfig] = useState({});
-  const [stats, setStats] = useState({});
-  const [trainableBots, setTrainableBots] = useState([]);
-  const [reports, setReports] = useState([]);
-  const [selectedBot, setSelectedBot] = useState("");
-  const [form, setForm] = useState({
-    level: "intermediate",
-    version: "2.0",
-    goal: "Increase readiness for production-grade multi-step workflows.",
-  });
-  const [latestPlan, setLatestPlan] = useState(null);
-  const [lastAssessment, setLastAssessment] = useState(null);
-  const [lastSession, setLastSession] = useState(null);
-  const [actionLog, setActionLog] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [userProgress, setUserProgress] = useState([]);
+  const [simulations, setSimulations] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
+  const [expandedCourse, setExpandedCourse] = useState(null);
 
-  const logAction = (label, payload, status = "info") => {
-    setActionLog((prev) => [
-      {
-        id: Date.now() + Math.random(),
-        label,
-        payload,
-        status,
-        timestamp: new Date().toISOString(),
-      },
-      ...prev.slice(0, 7),
-    ]);
-  };
+  const { showSuccess, showError } = useNotification();
 
-  const fetchAll = async () => {
+  // جلب جميع البيانات
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [statusRes, configRes, statsRes, botsRes, reportsRes, dashboardRes] = await Promise.all([
-        axiosClient.get(`/api/v1/ai/bots/available/${TRAINER_KEY}/status`),
-        axiosClient.post(`/api/v1/ai/bots/available/${TRAINER_KEY}/run`, {
-          context: { action: "config" },
-        }),
-        axiosClient.get("/api/v1/training-center/stats"),
-        axiosClient.get("/api/v1/training-center/bots"),
-        axiosClient.get("/api/v1/training-center/reports"),
-        axiosClient.post(`/api/v1/ai/bots/available/${TRAINER_KEY}/run`, {
-          context: { action: "dashboard" },
-        }),
+      console.log('Fetching trainer dashboard...');
+
+      // جلب البيانات من API
+      const [dashboardRes, coursesRes, progressRes, simulationsRes, certsRes, statsRes] = await Promise.all([
+        axiosClient.get('/api/v1/trainer/dashboard').catch(e => ({ data: null })),
+        axiosClient.get('/api/v1/trainer/courses').catch(e => ({ data: { courses: [] } })),
+        axiosClient.get('/api/v1/trainer/progress').catch(e => ({ data: { progress: [] } })),
+        axiosClient.get('/api/v1/trainer/simulations').catch(e => ({ data: { simulations: [] } })),
+        axiosClient.get('/api/v1/trainer/certifications').catch(e => ({ data: { certifications: [] } })),
+        axiosClient.get('/api/v1/trainer/stats').catch(e => ({ data: null }))
       ]);
 
-      setTrainerStatus(statusRes.data?.data || statusRes.data?.status || {});
-      setTrainerConfig(configRes.data?.data || configRes.data?.result || {});
-      setStats(statsRes.data?.stats || {});
-      setTrainableBots(botsRes.data?.bots || []);
-      setReports(reportsRes.data?.reports || []);
+      setDashboardData(dashboardRes.data);
+      setCourses(coursesRes.data.courses || []);
+      setUserProgress(progressRes.data.progress || []);
+      setSimulations(simulationsRes.data.simulations || []);
+      setCertifications(certsRes.data.certifications || []);
+      setStats(statsRes.data);
 
-      const dashboard = dashboardRes.data?.data || dashboardRes.data?.result || {};
-      const plans = dashboard?.plans || [];
-      setLatestPlan(plans.length ? plans[plans.length - 1] : null);
-      if (!selectedBot) {
-        const firstBot = (botsRes.data?.bots || []).find((bot) => bot.id !== TRAINER_KEY);
-        if (firstBot) {
-          setSelectedBot(firstBot.id);
-        }
-      }
+    } catch (error) {
+      console.error('Error fetching trainer data:', error);
+      showError('Failed to load training data. Using mock data.');
+
+      // بيانات احتياطية (Mock Data)
+      setCourses([
+        { id: "course_001", title: "Commercial Vehicle Safety Inspection", category: "safety", duration_hours: 4, difficulty: "beginner", status: "published", enrolled_users: 156, completion_rate: 87.5 },
+        { id: "course_002", title: "HOS Compliance for Drivers", category: "compliance", duration_hours: 3, difficulty: "beginner", status: "published", enrolled_users: 234, completion_rate: 92.3 },
+        { id: "course_003", title: "Dangerous Goods Transportation", category: "safety", duration_hours: 8, difficulty: "advanced", status: "published", enrolled_users: 89, completion_rate: 76.4 },
+        { id: "course_004", title: "Customer Service Excellence", category: "soft_skills", duration_hours: 2, difficulty: "beginner", status: "published", enrolled_users: 312, completion_rate: 94.2 }
+      ]);
+
+      setUserProgress([
+        { course_id: "course_001", progress_percent: 100, status: "completed", score: 95.5 },
+        { course_id: "course_002", progress_percent: 65, status: "in_progress" }
+      ]);
+
+      setSimulations([
+        { id: "sim_001", name: "Emergency Braking Scenario", type: "driving", completions: 234, avg_score: 87.5 },
+        { id: "sim_002", name: "Hazardous Spill Response", type: "safety", completions: 89, avg_score: 76.2 }
+      ]);
+
+      setStats({
+        total_courses: 5,
+        published_courses: 4,
+        total_enrollments: 791,
+        average_completion_rate: 87.6,
+        active_learners: 45,
+        certifications_issued: 128
+      });
+
+      setDashboardData({
+        stats: stats || { total_courses: 5, published_courses: 4, total_enrollments: 791 }
+      });
+
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    fetchAllData();
+  }, [fetchAllData]);
 
-  const selectedBotMeta = useMemo(
-    () => trainableBots.find((bot) => bot.id === selectedBot) || null,
-    [selectedBot, trainableBots]
-  );
-
-  const runAction = async (label, runner) => {
-    setBusy(true);
+  // بدء دورة تدريبية
+  const startCourse = async (courseId) => {
     try {
-      const result = await runner();
-      logAction(label, result, "success");
-      await fetchAll();
-      return result;
+      await axiosClient.post(`/api/v1/trainer/progress/${courseId}/start`);
+      showSuccess('Course started successfully');
+      fetchAllData();
     } catch (error) {
-      const detail = error?.response?.data?.detail || error.message;
-      logAction(label, { error: detail }, "error");
-      throw error;
-    } finally {
-      setBusy(false);
+      showError('Failed to start course');
     }
   };
 
-  const handleRegister = async () => {
-    if (!selectedBot) return;
-    await runAction("Register Bot", async () => {
-      const res = await axiosClient.post("/api/v1/training-center/bots/register", {
-        bot_key: selectedBot,
-        level: form.level,
-        version: form.version,
-      });
-      return res.data?.profile || res.data;
-    });
+  // الحصول على لون صعوبة الدورة
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'beginner': return '#4caf50';
+      case 'intermediate': return '#ff9800';
+      case 'advanced': return '#f44336';
+      default: return '#757575';
+    }
   };
 
-  const handleAssess = async () => {
-    if (!selectedBot) return;
-    const result = await runAction("Assess Bot", async () => {
-      const res = await axiosClient.post("/api/v1/training-center/assess", {
-        bot_key: selectedBot,
-      });
-      return res.data?.assessment || res.data;
-    });
-    setLastAssessment(result);
-  };
-
-  const handleCreatePlan = async () => {
-    if (!selectedBot) return;
-    const result = await runAction("Create Training Plan", async () => {
-      const res = await axiosClient.post("/api/v1/training-center/plans", {
-        bot_key: selectedBot,
-        goal: form.goal,
-      });
-      return res.data?.plan || res.data;
-    });
-    setLatestPlan(result);
-  };
-
-  const handleStartTraining = async () => {
-    if (!latestPlan?.plan_id) return;
-    const result = await runAction("Start Training Session", async () => {
-      const res = await axiosClient.post("/api/v1/training-center/sessions/start", {
-        plan_id: latestPlan.plan_id,
-      });
-      return res.data;
-    });
-    setLastSession(result);
+  // الحصول على أيقونة الفئة
+  const getCategoryIcon = (category) => {
+    const icons = {
+      safety: '🛡️',
+      compliance: '📋',
+      operations: '⚙️',
+      soft_skills: '💬',
+      technical: '💻'
+    };
+    return icons[category] || '📚';
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-b-2 border-teal-400" />
-          <p className="text-slate-300">Loading Trainer Bot dashboard...</p>
-        </div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <div className="border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 text-lg font-bold text-white shadow-lg shadow-cyan-900/40">
-              TRN
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">AI Trainer Bot</h1>
-              <p className="text-sm text-slate-300">
-                Training center, readiness planning, simulations, and certification workflows.
-              </p>
-            </div>
-          </div>
+    <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto', bgcolor: '#0e1c2d', minHeight: '100vh' }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: '#ffffff' }}>
+            AI Trainer Bot
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#b0b0b0', mt: 0.5 }}>
+            Training courses, simulations, and certification management
+          </Typography>
+        </Box>
+        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchAllData} sx={{ color: '#00d4ff', borderColor: '#00d4ff' }}>
+          Refresh
+        </Button>
+      </Box>
 
-          <div className="flex items-center gap-3">
-            <div className={`${glassCard} px-4 py-2`}>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Mode</p>
-              <p className="text-sm font-semibold text-white">{trainerStatus.mode || "training_center"}</p>
-            </div>
-            <div className={`${glassCard} px-4 py-2`}>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Reports</p>
-              <p className="text-sm font-semibold text-white">{stats.reports_generated || 0}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <SchoolIcon sx={{ fontSize: 40, color: '#00d4ff' }} />
+                <Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: '#ffffff' }}>{stats?.published_courses || 0}</Typography>
+                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Active Courses</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <PeopleIcon sx={{ fontSize: 40, color: '#00ff88' }} />
+                <Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: '#ffffff' }}>{stats?.total_enrollments || 0}</Typography>
+                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Enrollments</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TrophyIcon sx={{ fontSize: 40, color: '#ff6b6b' }} />
+                <Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: '#ffffff' }}>{stats?.certifications_issued || 0}</Typography>
+                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Certifications</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TrendingUpIcon sx={{ fontSize: 40, color: '#ffd93d' }} />
+                <Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: '#ffffff' }}>{stats?.average_completion_rate || 0}%</Typography>
+                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Completion Rate</Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          {[
-            { label: "Registered Bots", value: stats.registered_bots || 0, tone: "from-teal-500 to-cyan-600" },
-            { label: "Sessions Run", value: stats.sessions_run || 0, tone: "from-blue-500 to-indigo-600" },
-            { label: "Reports Generated", value: stats.reports_generated || 0, tone: "from-violet-500 to-fuchsia-600" },
-            { label: "Average Score", value: `${stats.average_score || 0}`, tone: "from-emerald-500 to-green-600" },
-          ].map((item) => (
-            <div key={item.label} className={`rounded-2xl bg-gradient-to-br ${item.tone} p-5 text-white shadow-lg`}>
-              <p className="text-3xl font-bold">{item.value}</p>
-              <p className="mt-1 text-sm text-white/80">{item.label}</p>
-            </div>
+      {/* Tabs */}
+      <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
+        <Tab label="My Courses" />
+        <Tab label="All Courses" />
+        <Tab label="Simulations" />
+        <Tab label="Certifications" />
+      </Tabs>
+
+      {/* My Courses Tab */}
+      {tabValue === 0 && (
+        <Grid container spacing={3}>
+          {userProgress.length === 0 ? (
+            <Grid size={{ xs: 12 }}>
+              <Card sx={{ p: 6, textAlign: 'center', borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <SchoolIcon sx={{ fontSize: 64, color: '#b0b0b0' }} />
+                <Typography variant="h6" sx={{ mt: 2, color: '#ffffff' }}>No courses started yet</Typography>
+                <Button variant="contained" onClick={() => setTabValue(1)} sx={{ mt: 2, bgcolor: '#00d4ff', color: '#0e1c2d' }}>
+                  Browse Courses
+                </Button>
+              </Card>
+            </Grid>
+          ) : (
+            userProgress.map((progress) => {
+              const course = courses.find(c => c.id === progress.course_id);
+              if (!course) return null;
+              return (
+                <Grid key={course.id} size={{ xs: 12, md: 6 }}>
+                  <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Box>
+                          <Typography variant="h6" fontWeight="bold" sx={{ color: '#ffffff' }}>{course.title}</Typography>
+                          <Chip size="small" label={course.category} sx={{ mt: 1, bgcolor: '#16213e', color: '#00d4ff' }} />
+                        </Box>
+                        <Chip
+                          label={progress.status === 'completed' ? 'Completed' : 'In Progress'}
+                          color={progress.status === 'completed' ? 'success' : 'warning'}
+                        />
+                      </Box>
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Progress</Typography>
+                        <LinearProgress variant="determinate" value={progress.progress_percent} sx={{ height: 8, borderRadius: 4, mt: 1, bgcolor: '#16213e', '& .MuiLinearProgress-bar': { bgcolor: '#00d4ff' } }} />
+                        <Typography variant="caption" sx={{ color: '#b0b0b0' }}>{progress.progress_percent}% complete</Typography>
+                      </Box>
+                      {progress.score && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Score: {progress.score}%</Typography>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })
+          )}
+        </Grid>
+      )}
+
+      {/* All Courses Tab */}
+      {tabValue === 1 && (
+        <Grid container spacing={3}>
+          {courses.map((course) => (
+            <Grid key={course.id} size={{ xs: 12, md: 6, lg: 4 }}>
+              <Card sx={{ borderRadius: 2, height: '100%', bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Typography variant="h6">{getCategoryIcon(course.category)}</Typography>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#ffffff' }}>{course.title}</Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ color: '#b0b0b0', mb: 2 }}>
+                    {course.description || `${course.duration_hours} hours • ${course.difficulty}`}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <Chip size="small" label={course.category} sx={{ bgcolor: '#16213e', color: '#00d4ff' }} />
+                    <Chip size="small" label={course.difficulty} sx={{ bgcolor: getDifficultyColor(course.difficulty), color: 'white' }} />
+                    <Chip size="small" label={`${course.duration_hours}h`} variant="outlined" sx={{ color: '#b0b0b0', borderColor: '#b0b0b0' }} />
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                    <Typography variant="caption" sx={{ color: '#b0b0b0' }}>
+                      {course.enrolled_users} enrolled • {course.completion_rate}% completed
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<PlayIcon />}
+                      onClick={() => startCourse(course.id)}
+                      sx={{ bgcolor: '#00d4ff', color: '#0e1c2d' }}
+                    >
+                      Start
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-        </div>
+        </Grid>
+      )}
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <div className={`${glassCard} p-6`}>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Training Control</h2>
-                  <p className="text-sm text-slate-400">Register, assess, plan, and run sessions for any trainable bot.</p>
-                </div>
-                <span className={`rounded-full border px-3 py-1 text-xs ${statusTone[trainerStatus.is_active ? "active" : "pending"]}`}>
-                  {trainerStatus.is_active ? "Online" : "Offline"}
-                </span>
-              </div>
+      {/* Simulations Tab */}
+      {tabValue === 2 && (
+        <Grid container spacing={3}>
+          {simulations.map((sim) => (
+            <Grid key={sim.id} size={{ xs: 12, md: 6 }}>
+              <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <AssignmentIcon sx={{ fontSize: 40, color: '#00d4ff' }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="h6" sx={{ color: '#ffffff' }}>{sim.name}</Typography>
+                      <Typography variant="body2" sx={{ color: '#b0b0b0' }}>{sim.type} • {sim.duration_minutes || 15} min</Typography>
+                    </Box>
+                    <Button variant="outlined" size="small" sx={{ color: '#00d4ff', borderColor: '#00d4ff' }}>Launch</Button>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                    <Typography variant="caption" sx={{ color: '#b0b0b0' }}>Completions: {sim.completions}</Typography>
+                    <Typography variant="caption" sx={{ color: '#b0b0b0' }}>Avg Score: {sim.avg_score}%</Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 block text-sm text-slate-300">Trainable Bot</span>
-                  <select
-                    value={selectedBot}
-                    onChange={(e) => setSelectedBot(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none"
-                  >
-                    {trainableBots
-                      .filter((bot) => bot.id !== TRAINER_KEY)
-                      .map((bot) => (
-                        <option key={bot.id} value={bot.id}>
-                          {bot.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm text-slate-300">Training Level</span>
-                  <select
-                    value={form.level}
-                    onChange={(e) => setForm((prev) => ({ ...prev, level: e.target.value }))}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none"
-                  >
-                    {["beginner", "intermediate", "advanced", "expert", "master"].map((level) => (
-                      <option key={level} value={level}>
-                        {level}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm text-slate-300">Version</span>
-                  <input
-                    value={form.version}
-                    onChange={(e) => setForm((prev) => ({ ...prev, version: e.target.value }))}
-                    className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none"
-                  />
-                </label>
-
-                <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Selected Specialization</p>
-                  <p className="mt-2 text-sm font-semibold capitalize text-white">
-                    {selectedBotMeta?.specialization?.replace(/_/g, " ") || "Not selected"}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">{selectedBotMeta?.description || "Choose a bot to view training context."}</p>
-                </div>
-              </div>
-
-              <label className="mt-4 block">
-                <span className="mb-2 block text-sm text-slate-300">Training Goal</span>
-                <textarea
-                  value={form.goal}
-                  onChange={(e) => setForm((prev) => ({ ...prev, goal: e.target.value }))}
-                  className="min-h-[110px] w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none"
-                />
-              </label>
-
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  disabled={busy || !selectedBot}
-                  onClick={handleRegister}
-                  className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500 disabled:opacity-50"
-                >
-                  Register
-                </button>
-                <button
-                  disabled={busy || !selectedBot}
-                  onClick={handleAssess}
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-50"
-                >
-                  Assess
-                </button>
-                <button
-                  disabled={busy || !selectedBot}
-                  onClick={handleCreatePlan}
-                  className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:opacity-50"
-                >
-                  Create Plan
-                </button>
-                <button
-                  disabled={busy || !latestPlan?.plan_id}
-                  onClick={handleStartTraining}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
-                >
-                  Start Training
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={fetchAll}
-                  className="rounded-xl border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/5 disabled:opacity-50"
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
-
-            <div className="grid gap-6 xl:grid-cols-2">
-              <div className={`${glassCard} p-6`}>
-                <h2 className="mb-4 text-lg font-bold text-white">Trainer Config</h2>
-                <pre className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/70 p-4 text-xs text-slate-200">
-                  {prettyJson(trainerConfig)}
-                </pre>
-              </div>
-
-              <div className={`${glassCard} p-6`}>
-                <h2 className="mb-4 text-lg font-bold text-white">Latest Results</h2>
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Assessment</p>
-                    <pre className="mt-3 overflow-x-auto text-xs text-slate-200">
-                      {prettyJson(lastAssessment || { message: "No assessment run in this session." })}
-                    </pre>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Session</p>
-                    <pre className="mt-3 overflow-x-auto text-xs text-slate-200">
-                      {prettyJson(lastSession || { message: "No training session started in this session." })}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className={`${glassCard} p-6`}>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Recent Training Reports</h2>
-                  <p className="text-sm text-slate-400">Latest generated reports from the training center.</p>
-                </div>
-                <span className="text-sm text-slate-400">{reports.length} reports</span>
-              </div>
-
-              <div className="space-y-3">
-                {reports.length ? (
-                  reports.slice(0, 8).map((report) => (
-                    <div key={report.session_id} className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-white">{report.bot_name}</p>
-                          <p className="text-xs text-slate-400">{report.specialization} · {report.session_id}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-emerald-300">{report.final_score}</p>
-                          <p className="text-xs text-slate-400">{report.grade}</p>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-sm text-slate-300">{(report.recommendations || []).join(" • ") || "No recommendations."}</p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-xl border border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
-                    No reports yet.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className={`${glassCard} p-6`}>
-              <h2 className="mb-4 text-lg font-bold text-white">Trainer Runtime Status</h2>
-              <div className="space-y-3">
-                {[
-                  ["Display Name", trainerStatus.display_name || "AI Trainer Bot"],
-                  ["Version", trainerStatus.version || "2.0.0"],
-                  ["Active Sessions", trainerStatus.active_sessions || 0],
-                  ["Average Score", trainerStatus.average_score || 0],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3">
-                    <span className="text-sm text-slate-400">{label}</span>
-                    <span className="text-sm font-semibold text-white">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={`${glassCard} p-6`}>
-              <h2 className="mb-4 text-lg font-bold text-white">Trainable Bots</h2>
-              <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
-                {trainableBots.map((bot) => (
-                  <button
-                    key={bot.id}
-                    onClick={() => setSelectedBot(bot.id)}
-                    className={`w-full rounded-xl border p-4 text-left transition ${
-                      selectedBot === bot.id
-                        ? "border-teal-400/40 bg-teal-500/10"
-                        : "border-white/10 bg-slate-900/50 hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-white">{bot.name}</p>
-                        <p className="mt-1 text-xs text-slate-400">{bot.specialization}</p>
-                      </div>
-                      <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-                        {bot.icon || "BOT"}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={`${glassCard} p-6`}>
-              <h2 className="mb-4 text-lg font-bold text-white">Action Log</h2>
-              <div className="space-y-3">
-                {actionLog.length ? (
-                  actionLog.map((entry) => (
-                    <div key={entry.id} className="rounded-xl border border-white/10 bg-slate-900/50 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-white">{entry.label}</p>
-                        <span className={`rounded px-2 py-1 text-[10px] uppercase ${statusTone[entry.status] || "border-white/10 bg-white/5 text-slate-200"}`}>
-                          {entry.status}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-xs text-slate-400">{new Date(entry.timestamp).toLocaleString()}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-slate-400">No actions yet.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* Certifications Tab */}
+      {tabValue === 3 && (
+        <Grid container spacing={3}>
+          {certifications.length === 0 ? (
+            <Grid size={{ xs: 12 }}>
+              <Card sx={{ p: 6, textAlign: 'center', borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <TrophyIcon sx={{ fontSize: 64, color: '#b0b0b0' }} />
+                <Typography variant="h6" sx={{ mt: 2, color: '#ffffff' }}>No certifications yet</Typography>
+                <Typography variant="body2" sx={{ color: '#b0b0b0' }}>Complete courses to earn certifications</Typography>
+              </Card>
+            </Grid>
+          ) : (
+            certifications.map((cert, idx) => (
+              <Grid key={idx} size={{ xs: 12, md: 6 }}>
+                <Card sx={{ borderRadius: 2, bgcolor: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <TrophyIcon sx={{ fontSize: 40, color: '#ffd93d' }} />
+                      <Box>
+                        <Typography variant="h6" sx={{ color: '#ffffff' }}>{cert.course_title}</Typography>
+                        <Typography variant="caption" sx={{ color: '#b0b0b0' }}>Issued: {new Date(cert.issued_date).toLocaleDateString()}</Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                      <Chip label={`Score: ${cert.score}%`} color="success" size="small" />
+                      <Button size="small" variant="outlined" sx={{ color: '#00d4ff', borderColor: '#00d4ff' }}>Download Certificate</Button>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      )}
+    </Box>
   );
-}
+};
+
+export default AITrainerBot;

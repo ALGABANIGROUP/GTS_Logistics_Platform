@@ -1,10 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRefreshSubscription } from "../contexts/UiActionsContext.jsx";
 import { useSystemReadiness } from "../contexts/SystemReadinessContext.jsx";
 
 const formatDetails = (checks) => {
   if (!checks || typeof checks !== "object") return [];
   return Object.entries(checks).map(([key, value]) => {
+    if (typeof value === "string") {
+      const normalized = value.toLowerCase();
+      return {
+        key,
+        ok: ["ok", "ready", "connected", "up"].includes(normalized),
+        detail: value,
+      };
+    }
     if (!value || typeof value !== "object") {
       return { key, ok: false, detail: "Unavailable" };
     }

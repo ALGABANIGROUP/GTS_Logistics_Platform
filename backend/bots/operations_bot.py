@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/operations_bot.py
 """
 Operations Bot
@@ -206,3 +207,4 @@ class OperationsBot:
             return await self.manage_incidents()
         else:
             return await self.status()
+

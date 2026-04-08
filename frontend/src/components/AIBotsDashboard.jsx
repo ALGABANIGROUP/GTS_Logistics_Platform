@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
 import SystemReadinessGate from "./SystemReadinessGate.jsx";
@@ -251,9 +251,9 @@ const BotCard = ({ bot, actionLabel }) => {
 
           {reasonCodes.length ? (
             <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wide text-rose-200/80">
-              {reasonCodes.map((code) => (
+              {reasonCodes.map((code, rIdx) => (
                 <span
-                  key={`${bot.botKey}-${code}`}
+                  key={`${bot.botKey}-${code}-${rIdx}`}
                   className="rounded-full border border-rose-400/30 bg-rose-500/10 px-2 py-0.5"
                 >
                   {renderReason(code)}
@@ -297,7 +297,7 @@ export default function AIBotsDashboard() {
     const loadBots = async () => {
       try {
         setLoading(true);
-        const res = await axiosClient.get("/api/v1/bots/available");
+        const res = await axiosClient.get("/api/v1/ai/bots/available");
         const payload = res?.data || {};
         const list = Array.isArray(payload?.bots) ? payload.bots : [];
         const aliasList = Array.isArray(payload?.aliases) ? payload.aliases : [];
@@ -419,8 +419,12 @@ export default function AIBotsDashboard() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {bots.map((bot) => (
-                <BotCard key={bot.botKey || bot.path} bot={bot} actionLabel={actionLabel} />
+              {bots.map((bot, index) => (
+                <BotCard
+                  key={bot.botKey ? `bot-key-${bot.botKey}` : `bot-idx-${index}`}
+                  bot={bot}
+                  actionLabel={actionLabel}
+                />
               ))}
             </div>
             {aliases.length ? (
@@ -429,9 +433,9 @@ export default function AIBotsDashboard() {
                   Aliases
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {aliases.map((alias) => (
+                  {aliases.map((alias, idx) => (
                     <BotCard
-                      key={alias.botKey || alias.path}
+                      key={alias.botKey ? `alias-key-${alias.botKey}` : `alias-idx-${idx}`}
                       bot={alias}
                       actionLabel={actionLabel}
                     />

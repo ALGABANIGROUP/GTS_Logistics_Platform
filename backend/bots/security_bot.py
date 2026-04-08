@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/security_bot.py
 """
 SEC - Security Bot
@@ -343,3 +344,4 @@ class SecurityBot:
             return await self.manage_incident(context or {})
         else:
             return await self.status()
+

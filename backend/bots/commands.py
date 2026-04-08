@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 from datetime import datetime
 import time, asyncio
 from backend.database.connection import SessionLocal
@@ -58,4 +59,5 @@ async def execute_technical_command_bg(command_id: int, technical_command: dict)
         })
     finally:
         db.close()
+
 

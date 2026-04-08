@@ -32,7 +32,8 @@ Backend (FastAPI)
 ✓ backend/logging_config.py - Logging
 ✓ backend/dependencies.py - Dependencies
 Frontend (React + Vite)
-✓ frontend/src/App.tsx - React application
+✓ frontend/src/main.jsx - React entry point
+✓ frontend/src/App.jsx - React application root
 ✓ frontend/src/components/ - Components
 ✓ frontend/src/pages/ - Pages
 ✓ frontend/src/services/ - API services

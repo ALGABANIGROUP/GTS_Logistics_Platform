@@ -25,11 +25,14 @@ BOT_EMAIL_MAP = {
     "freight_broker": f"freight@{PRIMARY_DOMAIN}",
     "documents_manager": f"doccontrol@{PRIMARY_DOMAIN}",
     "customer_service": f"customers@{PRIMARY_DOMAIN}",
-    "strategy_advisor": f"marketing@{PRIMARY_DOMAIN}",
+    "strategy_advisor": f"strategy@{PRIMARY_DOMAIN}",
+    "marketing_manager": f"marketing@{PRIMARY_DOMAIN}",
+    "sales_bot": f"sales@{PRIMARY_DOMAIN}",
     "partner_manager": f"investments@{PRIMARY_DOMAIN}",
     "operations_manager": f"operations@{PRIMARY_DOMAIN}",
     "safety_manager": f"safety@{PRIMARY_DOMAIN}",
     "security_manager": f"security@{SECURITY_DOMAIN}",
+    "ai_dispatcher": f"aidispatcher@{SECURITY_DOMAIN}",
 }
 
 SYSTEM_ADMIN_EMAIL = f"admin@{PRIMARY_DOMAIN}"

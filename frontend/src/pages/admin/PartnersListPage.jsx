@@ -1,264 +1,197 @@
-// frontend/src/pages/admin/PartnerDetailsPage.jsx
-
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import {
-    getPartnerById,
-    getPartnerRevenueSummaryAdmin,
-    getPartnerPayoutsAdmin,
-} from "../../services/partnerApi";
-import { format } from "date-fns";
+import { Link } from "react-router-dom";
+import { listPartners, updatePartnerStatus } from "../../services/partnerApi";
 
-const PartnerDetailsPage = () => {
-    const { id } = useParams();
-    const [partner, setPartner] = useState(null);
-    const [revenueSummary, setRevenueSummary] = useState(null);
-    const [payouts, setPayouts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const STATUS_OPTIONS = ["all", "pending", "active", "suspended", "closed"];
 
-    useEffect(() => {
-        let isMounted = true;
+function formatMoney(value) {
+  return Number(value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
-        const load = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const [p, rev, po] = await Promise.all([
-                    getPartnerById(id),
-                    getPartnerRevenueSummaryAdmin(id),
-                    getPartnerPayoutsAdmin(id),
-                ]);
+export default function PartnersListPage() {
+  const [partners, setPartners] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [updatingId, setUpdatingId] = useState("");
 
-                if (!isMounted) return;
-                setPartner(p);
-                setRevenueSummary(rev);
-                setPayouts(po || []);
-            } catch (err) {
-                if (!isMounted) return;
-                const msg =
-                    err?.response?.data?.detail ||
-                    err?.message ||
-                    "Failed to load partner details.";
-                setError(msg);
-            } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
-            }
-        };
+  useEffect(() => {
+    let active = true;
 
-        if (id) {
-            load();
-        }
-
-        return () => {
-            isMounted = false;
-        };
-    }, [id]);
-
-    if (loading) {
-        return (
-            <div className="p-4 text-sm text-gray-600">
-                Loading partner details...
-            </div>
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const response = await listPartners({
+          page: 1,
+          pageSize: 100,
+          status: status === "all" ? undefined : status,
+          search: search.trim() || undefined,
+        });
+        if (!active) return;
+        setPartners(Array.isArray(response.items) ? response.items : []);
+      } catch (err) {
+        if (!active) return;
+        setPartners([]);
+        setError(
+          err?.response?.data?.detail ||
+            err?.message ||
+            "Failed to load partners."
         );
-    }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
-    if (error) {
-        return (
-            <div className="space-y-3">
-                <div className="bg-red-50 border border-red-100 rounded-md px-3 py-2 text-sm text-red-700">
-                    {error}
-                </div>
-                <Link
-                    to="/admin/partners"
-                    className="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                    Back to partners
-                </Link>
-            </div>
-        );
-    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, [search, status]);
 
-    if (!partner) {
-        return (
-            <div className="space-y-3">
-                <div className="p-4 text-sm text-gray-600">
-                    Partner record is unavailable.
-                </div>
-                <Link
-                    to="/admin/partners"
-                    className="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                    Back to partners
-                </Link>
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">
-                        {partner.name}
-                    </h1>
-                    <p className="text-sm text-gray-500">
-                        Code: {partner.code} · Type: {partner.partnerType} · Status:{" "}
-                        <span className="font-medium">{partner.status}</span>
-                    </p>
-                </div>
-                <Link
-                    to="/admin/partners"
-                    className="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                    Back to partners
-                </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border rounded-lg shadow-sm p-4 text-sm">
-                    <h2 className="font-semibold text-gray-900 mb-2">
-                        Contact
-                    </h2>
-                    <p className="text-gray-700">{partner.email}</p>
-                    {partner.phone && (
-                        <p className="text-gray-700 mt-1">{partner.phone}</p>
-                    )}
-                    {partner.addressText && (
-                        <p className="text-gray-500 text-xs mt-2 whitespace-pre-line">
-                            {partner.addressText}
-                        </p>
-                    )}
-                </div>
-
-                <div className="bg-white border rounded-lg shadow-sm p-4 text-sm">
-                    <h2 className="font-semibold text-gray-900 mb-2">
-                        Revenue summary
-                    </h2>
-                    {revenueSummary ? (
-                        <div className="space-y-1">
-                            <p>
-                                Total:{" "}
-                                <span className="font-mono">
-                                    {Number(
-                                        revenueSummary.totalRevenue || 0
-                                    ).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}
-                                </span>
-                            </p>
-                            <p>
-                                Pending:{" "}
-                                <span className="font-mono text-amber-700">
-                                    {Number(
-                                        revenueSummary.pendingRevenue || 0
-                                    ).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}
-                                </span>
-                            </p>
-                            <p>
-                                Paid:{" "}
-                                <span className="font-mono text-emerald-700">
-                                    {Number(
-                                        revenueSummary.paidRevenue || 0
-                                    ).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}
-                                </span>
-                            </p>
-                        </div>
-                    ) : (
-                        <p className="text-gray-500">No revenue summary.</p>
-                    )}
-                </div>
-
-                <div className="bg-white border rounded-lg shadow-sm p-4 text-sm">
-                    <h2 className="font-semibold text-gray-900 mb-2">
-                        Meta
-                    </h2>
-                    <p>
-                        Joined:{" "}
-                        {partner.joinedAt
-                            ? format(new Date(partner.joinedAt), "yyyy-MM-dd")
-                            : "-"}
-                    </p>
-                    <p>
-                        Last login:{" "}
-                        {partner.lastLoginAt
-                            ? format(new Date(partner.lastLoginAt), "yyyy-MM-dd HH:mm")
-                            : "-"}
-                    </p>
-                </div>
-            </div>
-
-            <div className="bg-white border rounded-lg shadow-sm p-4 text-sm">
-                <h2 className="font-semibold text-gray-900 mb-2">
-                    Payouts
-                </h2>
-                {payouts.length === 0 ? (
-                    <p className="text-gray-500">No payouts recorded yet.</p>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-xs">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-2 py-1 text-left font-medium text-gray-500">
-                                        Period
-                                    </th>
-                                    <th className="px-2 py-1 text-right font-medium text-gray-500">
-                                        Net amount
-                                    </th>
-                                    <th className="px-2 py-1 text-left font-medium text-gray-500">
-                                        Status
-                                    </th>
-                                    <th className="px-2 py-1 text-left font-medium text-gray-500">
-                                        Requested
-                                    </th>
-                                    <th className="px-2 py-1 text-left font-medium text-gray-500">
-                                        Paid
-                                    </th>
-                                    <th className="px-2 py-1 text-left font-medium text-gray-500">
-                                        Reference
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {payouts.map((p) => (
-                                    <tr key={p.id} className="border-t">
-                                        <td className="px-2 py-1">
-                                            {p.periodStartDate} – {p.periodEndDate}
-                                        </td>
-                                        <td className="px-2 py-1 text-right font-mono">
-                                            {Number(p.netAmount || 0).toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}
-                                        </td>
-                                        <td className="px-2 py-1 capitalize">{p.status}</td>
-                                        <td className="px-2 py-1">
-                                            {p.requestedAt || "-"}
-                                        </td>
-                                        <td className="px-2 py-1">
-                                            {p.paidAt || "-"}
-                                        </td>
-                                        <td className="px-2 py-1">
-                                            {p.paymentReference || "-"}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </div>
+  const handleStatusChange = async (partnerId, nextStatus) => {
+    const previous = partners;
+    setUpdatingId(partnerId);
+    setPartners((current) =>
+      current.map((partner) =>
+        partner.id === partnerId ? { ...partner, status: nextStatus } : partner
+      )
     );
-};
 
-export default PartnerDetailsPage;
+    try {
+      const updated = await updatePartnerStatus(partnerId, nextStatus);
+      setPartners((current) =>
+        current.map((partner) =>
+          partner.id === partnerId ? updated : partner
+        )
+      );
+    } catch (err) {
+      setPartners(previous);
+      setError(
+        err?.response?.data?.detail ||
+          err?.message ||
+          "Failed to update partner status."
+      );
+    } finally {
+      setUpdatingId("");
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Partners
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Review partner accounts, revenue, and payout readiness.
+            </p>
+          </div>
+          <div className="text-sm text-slate-500">
+            {loading ? "Loading..." : `${partners.length} partner records`}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 md:flex-row">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by name, code, or email"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-0 focus:border-sky-500"
+          />
+          <select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option === "all" ? "All statuses" : option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {error ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {loading ? (
+          <div className="p-6 text-sm text-slate-500">Loading partner records...</div>
+        ) : partners.length === 0 ? (
+          <div className="p-6 text-sm text-slate-500">No partners matched the current filters.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium">Partner</th>
+                  <th className="px-4 py-3 text-left font-medium">Type</th>
+                  <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-right font-medium">Revenue</th>
+                  <th className="px-4 py-3 text-left font-medium">Joined</th>
+                  <th className="px-4 py-3 text-left font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {partners.map((partner) => (
+                  <tr key={partner.id} className="border-t border-slate-100">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-slate-900">{partner.name}</div>
+                      <div className="text-xs text-slate-500">{partner.code}</div>
+                      <div className="text-xs text-slate-500">{partner.email}</div>
+                    </td>
+                    <td className="px-4 py-3 capitalize text-slate-700">
+                      {partner.partnerType || "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={partner.status}
+                        onChange={(event) =>
+                          handleStatusChange(partner.id, event.target.value)
+                        }
+                        disabled={updatingId === partner.id}
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs capitalize outline-none focus:border-sky-500"
+                      >
+                        {STATUS_OPTIONS.filter((option) => option !== "all").map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-slate-700">
+                      {formatMoney(partner.revenueTotal)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {partner.joinedAt ? String(partner.joinedAt).slice(0, 10) : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/admin/partners/${partner.id}`}
+                        className="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        View details
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -351,12 +351,12 @@ const RouteCard = ({ shipment }) => {
             <div className="route-info">
                 <div className="route-point">
                     <span className="point-label">From:</span>
-                    <span className="point-value">New York</span>
+                    <span className="point-value">{shipment.fromLabel || 'Origin'}</span>
                 </div>
                 <div className="route-arrow">→</div>
                 <div className="route-point">
                     <span className="point-label">To:</span>
-                    <span className="point-value">Los Angeles</span>
+                    <span className="point-value">{shipment.toLabel || 'Destination'}</span>
                 </div>
             </div>
             <div className="route-driver">{shipment.driver}</div>

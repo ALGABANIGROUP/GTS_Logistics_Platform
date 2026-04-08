@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-import hmac
-import hashlib
+import os
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.database.config import get_db
+from backend.security.webhook_signatures import verify_hmac_sha256_signature
+from backend.services.truckerpath_service import TruckerPathService
 
 # Optional: WebSocket broadcast (best-effort)
 async def _noop_broadcast(*args, **kwargs) -> None:
@@ -24,27 +28,26 @@ except Exception:
 router = APIRouter(prefix="/truckerpath/webhook", tags=["TruckerPath Webhook"])
 
 def _verify_signature(secret: Optional[str], raw_body: bytes, signature: Optional[str]) -> bool:
-    """
-    Basic HMAC-SHA256 verification if env secret + header are provided.
-    If missing, we accept the event (MVP).
-    """
-    if not secret or not signature:
-        return True
-    try:
-        computed = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
-        # Common header formats: "sha256=..." or just hexstring
-        sig = signature.split("=", 1)[-1] if "=" in signature else signature
-        return hmac.compare_digest(computed, sig)
-    except Exception:
-        return False
+    return verify_hmac_sha256_signature(
+        secret=secret,
+        payload=raw_body,
+        signature_header=signature,
+        app_env=os.getenv("ENVIRONMENT"),
+        allow_missing_secret=True,
+    )
 
 @router.post("/events")
 async def receive_event(
     request: Request,
     x_truckerpath_signature: Optional[str] = Header(default=None, convert_underscores=False),
+    db: AsyncSession = Depends(get_db),
 ):
     raw = await request.body()
-    secret = request.app.state.__dict__.get("TRUCKERPATH_WEBHOOK_SECRET") or None
+    secret = (
+        request.app.state.__dict__.get("TRUCKERPATH_WEBHOOK_SECRET")
+        or os.getenv("TRUCKERPATH_WEBHOOK_SECRET")
+        or None
+    )
     if not _verify_signature(secret, raw, x_truckerpath_signature):
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
@@ -59,5 +62,6 @@ async def receive_event(
     except Exception:
         pass
 
-    return {"ok": True, "received": True}
+    handled = await TruckerPathService.handle_webhook(db, payload)
 
+    return {"ok": True, "received": True, "handled": handled}

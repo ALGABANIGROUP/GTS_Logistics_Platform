@@ -7,6 +7,7 @@ from backend.services.live_support_service import LiveSupportService
 from backend.security.auth import get_current_user, _decode_token
 
 router = APIRouter(prefix="/api/v1/support", tags=["Live Support"])
+logger = logging.getLogger(__name__)
 support_service = LiveSupportService()
 
 class MessageRequest(BaseModel):

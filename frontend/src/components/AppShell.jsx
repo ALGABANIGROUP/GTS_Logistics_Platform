@@ -1,14 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar.jsx";
+import DashboardSidebar from "./DashboardSidebar.jsx";
 import TopUserBar from "./TopUserBar.jsx";
 import SystemSwitcher from "./SystemSwitcher.jsx";
 import SocialMediaFooter from "./layout/SocialMediaFooter.jsx";
 import { UiActionsProvider } from "../contexts/UiActionsContext.jsx";
 import RootLayout from "./RootLayout.jsx";
 import { Menu, X } from "lucide-react";
-import NotificationBell from "./notifications/NotificationBell.jsx";
-import SmartSearchBar from "./search/SmartSearchBar.jsx";
+import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/Logout';
+import SmartSearchBar from './search/SmartSearchBar.jsx';
+import NotificationBell from './notifications/NotificationBell.jsx';
 
 export default function AppShell({ children }) {
   const location = useLocation();
@@ -55,8 +59,39 @@ export default function AppShell({ children }) {
     return <>{children}</>;
   }
 
+  const isDashboardRoute = useMemo(() => {
+    return location.pathname.startsWith("/dashboard");
+  }, [location.pathname]);
+
   const showSidebar = true; // Always show sidebar
   const showTopBar = true;
+
+  // Dashboard footer with user actions
+  const dashboardFooter = isDashboardRoute ? (
+    <div className="flex items-center justify-center gap-8 py-4">
+      <button
+        onClick={() => navigate('/profile')}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl glass-panel border border-white/10 hover:bg-white/10 text-white transition"
+      >
+        <PersonIcon className="h-4 w-4" />
+        <span className="text-sm">Profile</span>
+      </button>
+      <button
+        onClick={() => navigate('/settings')}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl glass-panel border border-white/10 hover:bg-white/10 text-white transition"
+      >
+        <SettingsIcon className="h-4 w-4" />
+        <span className="text-sm">Settings</span>
+      </button>
+      <button
+        onClick={() => navigate('/logout')}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl glass-panel border border-white/10 hover:bg-white/10 text-white transition"
+      >
+        <LogoutIcon className="h-4 w-4" />
+        <span className="text-sm">Logout</span>
+      </button>
+    </div>
+  ) : null;
 
   const topbar = (
     <div className="w-full flex flex-wrap items-center justify-between gap-4 px-4 py-3 lg:px-6">
@@ -100,9 +135,9 @@ export default function AppShell({ children }) {
     <UiActionsProvider>
       <RootLayout
         className="glass-page gts-app"
-        sidebar={showSidebar ? <Sidebar /> : null}
+        sidebar={showSidebar ? (isDashboardRoute ? <DashboardSidebar /> : <Sidebar />) : null}
         topbar={topbar}
-        footer={<SocialMediaFooter />}
+        footer={isDashboardRoute ? dashboardFooter : <SocialMediaFooter />}
         contentClassName="px-4 py-6 lg:px-6 lg:py-8"
       >
         {children}

@@ -45,6 +45,39 @@ async def add_missing_columns():
                 END $$;
             """))
             
+            # Add is_superuser column
+            await session.execute(text("""
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                   WHERE table_name='users' AND column_name='is_superuser') THEN
+                        ALTER TABLE users ADD COLUMN is_superuser BOOLEAN DEFAULT FALSE;
+                    END IF;
+                END $$;
+            """))
+            
+            # Add user_metadata column
+            await session.execute(text("""
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                   WHERE table_name='users' AND column_name='user_metadata') THEN
+                        ALTER TABLE users ADD COLUMN user_metadata JSON DEFAULT '{}';
+                    END IF;
+                END $$;
+            """))
+            
+            # Add tenant_id column
+            await session.execute(text("""
+                DO $$ 
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                                   WHERE table_name='users' AND column_name='tenant_id') THEN
+                        ALTER TABLE users ADD COLUMN tenant_id INTEGER;
+                    END IF;
+                END $$;
+            """))
+            
             await session.commit()
             print("✅ Missing columns added successfully")
             

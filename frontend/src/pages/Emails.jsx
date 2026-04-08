@@ -237,9 +237,6 @@ const Emails = () => {
       if (!active || refreshInFlight.current || document.hidden) return;
       refreshInFlight.current = true;
       try {
-        if (canPollMailboxes) {
-          await pollMailboxes();
-        }
         await loadMessages(selectedMailbox.id, { preserveSelection: true });
       } catch (err) {
         const status = err?.response?.status;

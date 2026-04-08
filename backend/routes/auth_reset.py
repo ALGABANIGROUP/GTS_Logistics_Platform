@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database.config import get_db_async
 from backend.config import settings
 from backend.security.auth import get_password_hash
-from backend.routes.auth_extended import (
+from backend.routes.auth_reset_shared import (
     _build_reset_link,
     _create_password_reset_token,
     _get_user_from_reset_token,
@@ -19,7 +19,7 @@ from backend.routes.auth_extended import (
 from backend.models.user import User as UserModel
 from backend.services.email_dispatcher import dispatch_email
 
-router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 class ForgotPasswordPayload(BaseModel):

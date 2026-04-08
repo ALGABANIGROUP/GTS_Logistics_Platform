@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/operations_management.py
 """
 GPG - Operations Management Bot
@@ -332,3 +333,4 @@ class OperationsManagementBot:
             return await self.manage_incidents()
         else:
             return await self.status()
+

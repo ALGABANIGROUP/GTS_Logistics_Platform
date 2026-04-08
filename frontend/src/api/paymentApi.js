@@ -3,6 +3,7 @@ import axiosClient from './axiosClient';
 const API_BASE = '/api/v1/payments';
 const DEFAULT_CURRENCY = 'USD';
 const DEFAULT_GATEWAY = 'stripe';
+const USE_MOCK_DATA = true;
 
 const paymentApi = {
     async create(data) {
@@ -87,6 +88,25 @@ const paymentApi = {
     },
 
     async getUserHistory(options = {}) {
+        if (USE_MOCK_DATA) {
+            return {
+                transactions: [
+                    { id: 1, customer: "Fast Freight Inc.", amount: 12500, status: "completed", date: new Date().toISOString(), method: "credit_card", type: "payment" },
+                    { id: 2, customer: "Maple Load Canada", amount: 8750, status: "pending", date: new Date().toISOString(), method: "bank_transfer", type: "invoice" },
+                    { id: 3, customer: "GTS Logistics", amount: 34200, status: "completed", date: new Date(Date.now() - 86400000).toISOString(), method: "credit_card", type: "payment" },
+                    { id: 4, customer: "ABC Manufacturing", amount: 5600, status: "completed", date: new Date(Date.now() - 172800000).toISOString(), method: "paypal", type: "payment" }
+                ],
+                total: 4,
+                balance: 261100,
+                items: [
+                    { id: 1, amount: 12500, status: "completed", created_at: new Date().toISOString(), payment_gateway: "credit_card" },
+                    { id: 2, amount: 8750, status: "pending", created_at: new Date().toISOString(), payment_gateway: "bank_transfer" },
+                    { id: 3, amount: 34200, status: "completed", created_at: new Date(Date.now() - 86400000).toISOString(), payment_gateway: "credit_card" },
+                    { id: 4, amount: 5600, status: "completed", created_at: new Date(Date.now() - 172800000).toISOString(), payment_gateway: "paypal" }
+                ]
+            };
+        }
+
         try {
             const limit = options.limit || 50;
             const offset = options.offset || 0;
@@ -108,6 +128,32 @@ const paymentApi = {
     },
 
     async getStats(options = {}) {
+        if (USE_MOCK_DATA) {
+            return {
+                total_payments: 156,
+                total_amount: 284500,
+                success_rate: 94.2,
+                pending_invoices: 3,
+                recent_payments: [
+                    { id: 1, date: new Date().toISOString(), amount: 12500, status: "completed", method: "Credit Card", currency: "USD", reference_id: "REF001" },
+                    { id: 2, date: new Date().toISOString(), amount: 8750, status: "pending", method: "Bank Transfer", currency: "USD", reference_id: "REF002" },
+                    { id: 3, date: new Date(Date.now() - 86400000).toISOString(), amount: 34200, status: "completed", method: "Credit Card", currency: "USD", reference_id: "REF003" },
+                    { id: 4, date: new Date(Date.now() - 172800000).toISOString(), amount: 5600, status: "completed", method: "Paypal", currency: "USD", reference_id: "REF004" }
+                ],
+                payment_methods: [
+                    { name: "CREDIT_CARD", usage_count: 89 },
+                    { name: "BANK_TRANSFER", usage_count: 45 },
+                    { name: "PAYPAL", usage_count: 22 }
+                ],
+                items: [
+                    { id: 1, amount: 12500, status: "completed", created_at: new Date().toISOString(), payment_gateway: "credit_card" },
+                    { id: 2, amount: 8750, status: "pending", created_at: new Date().toISOString(), payment_gateway: "bank_transfer" },
+                    { id: 3, amount: 34200, status: "completed", created_at: new Date(Date.now() - 86400000).toISOString(), payment_gateway: "credit_card" },
+                    { id: 4, amount: 5600, status: "completed", created_at: new Date(Date.now() - 172800000).toISOString(), payment_gateway: "paypal" }
+                ]
+            };
+        }
+
         const historyResponse = await this.getUserHistory(options);
         const items = Array.isArray(historyResponse?.items) ? historyResponse.items : [];
 

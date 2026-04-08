@@ -192,6 +192,34 @@ async def list_carriers(
         )
 
 
+@router.get("/recent")
+async def get_recent_carriers(
+    limit: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Get recently added carriers
+    """
+    try:
+        result = await db.execute(
+            select(Carrier)
+            .where(Carrier.is_active == True)
+            .order_by(desc(Carrier.created_at))
+            .limit(limit)
+        )
+        carriers = result.scalars().all()
+
+        return {
+            "items": [CarrierResponse.model_validate(carrier) for carrier in carriers],
+            "total": len(carriers)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get recent carriers: {str(e)}"
+        )
+
+
 @router.get("/{carrier_id}", response_model=CarrierResponse)
 async def get_carrier(
     carrier_id: int,

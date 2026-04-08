@@ -151,10 +151,14 @@ class TruckerPathService:
         for cond in conds:
             if not cond:
                 continue
-            q = await db.execute(select(Shipment).where(cond).limit(1))
-            obj = q.scalars().first()
-            if obj:
-                return obj
+            try:
+                q = await db.execute(select(Shipment).where(cond).limit(1))
+                obj = q.scalars().first()
+                if obj:
+                    return obj
+            except Exception as exc:
+                logger.warning("TruckerPath shipment lookup skipped: %s", exc)
+                return None
         return None
 
     @staticmethod

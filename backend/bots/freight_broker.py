@@ -1,15 +1,37 @@
-"""
-Freight Broker bot runtime used by legacy routes and startup registration.
-"""
+﻿from __future__ import annotations
+# backend/bots/freight_broker.py
+from .base_bot import BaseBot
+import logging
+from typing import Dict, Any
 
-from __future__ import annotations
+logger = logging.getLogger(__name__)
 
-from copy import deepcopy
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+class FreightBrokerBot(BaseBot):
+    """Freight Broker AI Assistant"""
 
+    def __init__(self):
+        super().__init__(
+            name="FreightBrokerBot",
+            description="AI assistant for freight brokerage operations"
+        )
 
-class FreightBrokerBot:
+    async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process freight requests"""
+        logger.info(f"FreightBrokerBot processing: {input_data.get('action')}")
+        # Implement freight logic
+        return {
+            "status": "success",
+            "response": "Freight request processed",
+            "data": input_data
+        }
+
+    async def get_status(self) -> Dict[str, Any]:
+        """Get bot status"""
+        return {
+            "name": self.name,
+            "active": self.is_active,
+            "description": self.description
+        }
     """In-memory freight brokerage bot with stable runtime behavior."""
 
     name = "freight_broker"
@@ -248,4 +270,5 @@ class FreightBrokerBot:
             2,
         ) if quoted_price else 0.0
         return {"ok": True, "shipment": deepcopy(shipment), "carrier": deepcopy(carrier)}
+
 

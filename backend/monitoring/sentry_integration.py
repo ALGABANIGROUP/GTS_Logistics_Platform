@@ -188,7 +188,7 @@ def set_user_context(user_id: str = None, email: str = None, username: str = Non
 def set_custom_context(context_name: str, context_data: dict):
     """
     Add custom context to Sentry events
-    
+
     Args:
         context_name: Name of context section
         context_data: Dictionary of context data
@@ -196,6 +196,46 @@ def set_custom_context(context_name: str, context_data: dict):
     if sentry_sdk is None:
         return
     sentry_sdk.set_context(context_name, context_data)
+
+
+class SentryIntegration:
+    """Sentry.io integration for error tracking"""
+
+    def __init__(self):
+        self.dsn = os.getenv('SENTRY_DSN')
+        self.environment = os.getenv('ENVIRONMENT', 'development')
+        self.release_version = os.getenv('RELEASE_VERSION', '1.0.0')
+        self.initialized = False
+        self.client = sentry_sdk
+
+    def initialize(self):
+        """Initialize Sentry client"""
+        if not self.dsn:
+            logger.info("Sentry integration disabled - no DSN configured")
+            return False
+
+        success = init_sentry(
+            dsn=self.dsn,
+            environment=self.environment,
+            traces_sample_rate=0.1 if self.environment == 'production' else 1.0
+        )
+
+        if success:
+            self.initialized = True
+
+        return success
+
+    def capture_exception(self, error: Exception, context: Optional[dict] = None):
+        """Capture exception to Sentry"""
+        capture_exception(error, context)
+
+    def capture_message(self, message: str, level: str = "info", context: Optional[dict] = None):
+        """Capture message to Sentry"""
+        capture_message(message, level, context)
+
+    def is_enabled(self) -> bool:
+        """Check if Sentry is enabled and initialized"""
+        return self.initialized and self.dsn is not None
 
 
 def set_tag(key: str, value: str):

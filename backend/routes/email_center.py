@@ -85,7 +85,14 @@ def _normalize_addrs(value: Optional[Sequence[str]]) -> List[str]:
 def _get_mailbox_password(mailbox: Mailbox, *, allow_fallback: bool = False) -> Optional[str]:
     creds = mailbox.credentials
     if creds and creds.credentials_ciphertext:
-        return decrypt_credentials(creds.credentials_ciphertext)
+        try:
+            return decrypt_credentials(creds.credentials_ciphertext)
+        except Exception as exc:
+            logger.warning(
+                "Failed to decrypt mailbox credentials for %s: %s",
+                getattr(mailbox, "email_address", "unknown"),
+                exc,
+            )
     if allow_fallback:
         return (
             os.getenv("EMAIL_SHARED_PASSWORD")
@@ -174,6 +181,14 @@ async def _get_rule_or_404(db: AsyncSession, rule_id: int) -> BotMailboxRule:
 
 def _user_id(user: Dict[str, Any]) -> int:
     return int(user.get("id") or 0)
+
+
+def _optional_int(value: Any) -> Optional[int]:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed or None
 
 
 def _assert_mailbox_access(mailbox: Mailbox, user: Dict[str, Any]) -> None:
@@ -375,7 +390,7 @@ async def _audit(
     severity: Optional[str] = None,
 ) -> None:
     record = EmailAuditLog(
-        actor_user_id=actor_user_id,
+        actor_user_id=_optional_int(actor_user_id),
         action=action,
         mailbox_id=mailbox_id,
         message_id=message_id,

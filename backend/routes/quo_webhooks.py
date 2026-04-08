@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hmac
-import hashlib
 import json
 import os
 from datetime import datetime
@@ -11,36 +9,28 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from backend.bots.ws_manager import broadcast_event
+from backend.security.webhook_signatures import build_timestamped_message, verify_hmac_sha256_signature
 from backend.services.ai_calls_store import record_call, record_event
 from backend.services.ai_calls_dispatch import dispatch_to_marketing_bot
 
-router = APIRouter(tags=["Quo Webhooks"])  # mounted with prefix in main.py
+router = APIRouter(tags=["Quo Webhooks"])  # mounted with prefix from backend.routes.registry
 
 
 def _get_secret() -> str:
     return (os.getenv("QUO_WEBHOOK_SECRET") or "").strip()
 
 
-def _is_production() -> bool:
-    return (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}
-
-
 def _verify_signature(*, body: bytes, signature: Optional[str], timestamp: Optional[str]) -> bool:
     secret = _get_secret()
-    if not secret:
-        # Never fail open in production.
-        return not _is_production()
-    if not signature or not timestamp:
+    if not timestamp:
         return False
-    try:
-        message = f"{timestamp}.{body.decode('utf-8', 'ignore')}"
-        expected = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-        # Accept either raw hex or formatted headers like "v1=..." if provider uses that
-        if signature.startswith("v1="):
-            signature = signature.split("=", 1)[1]
-        return hmac.compare_digest(expected, signature)
-    except Exception:
-        return False
+    return verify_hmac_sha256_signature(
+        secret=secret,
+        payload=build_timestamped_message(timestamp, body),
+        signature_header=signature,
+        app_env=os.getenv("ENVIRONMENT"),
+        preferred_signature_keys=("v1",),
+    )
 
 
 async def _broadcast(event_type: str, data: Dict[str, Any]) -> None:

@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
-import { useAuth } from '../contexts/AuthContext';
 import { REGISTRATION_CONTACT, REGISTRATION_DISABLED_FLAG } from '../config/registration';
+import { useAuth } from '../contexts/AuthContext';
 import { formatTierLabel, normalizeTier } from '../utils/tierUtils';
 import './AIBotsPanel.css';
 
@@ -453,10 +453,10 @@ const AIBotsPanelEnhanced = () => {
                     </div>
                 ) : (
                     <div className="bots-grid">
-                        {filteredBots.map((bot) => (
+                        {filteredBots.map((bot, index) => (
                             <Link
                                 to={ROUTE_BY_ID[bot.id] || `/ai-bots/${bot.id}`}
-                                key={bot.id}
+                                key={bot.id || bot.botKey || `bot-${bot.name}-${index}`}
                                 className="bot-card-link"
                             >
                                 <div className="bot-card" style={{ '--bot-color': bot.color }}>
@@ -495,8 +495,8 @@ const AIBotsPanelEnhanced = () => {
                             These services run in the background based on your subscription.
                         </p>
                         <div className="services-grid">
-                            {services.map((service) => (
-                                <div key={service.id} className="service-card">
+                            {services.map((service, idx) => (
+                                <div key={service.id || `service-${service.name}-${idx}`} className="service-card">
                                     <div className="service-icon" style={{ background: service.color }}>
                                         {deriveIcon(service.icon, service.name)}
                                     </div>

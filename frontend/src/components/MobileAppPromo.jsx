@@ -10,10 +10,10 @@ const MobileAppPromo = () => {
                     Access loads, track shipments, and manage your business on the go with our powerful mobile app.
                 </p>
                 <div className="flex justify-center gap-4">
-                    <Link to="/app-store" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2">
+                    <Link to="/contact" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2">
                         <span>📱</span> App Store
                     </Link>
-                    <Link to="/google-play" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2">
+                    <Link to="/contact" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition flex items-center gap-2">
                         <span>🤖</span> Google Play
                     </Link>
                 </div>

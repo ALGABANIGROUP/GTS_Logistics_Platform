@@ -1,7 +1,10 @@
-# backend/__init__.py
-"""
-GTS Logistics Backend Package
-"""
+# backend/routes/__init__.py
+from . import auth
+from . import tenants
+from . import partners
+from . import system_manager_bot
+from . import marketing_bot
+# from . import security_bot
+from .registry import iter_registered_routers
 
-__version__ = "1.0.0"
-__author__ = "GTS Development Team"
+__all__ = ["auth", "tenants", "partners", "system_manager_bot", "marketing_bot", "iter_registered_routers"]

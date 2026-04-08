@@ -28,6 +28,8 @@ const resolveBaseURL = () => {
 };
 
 const BASE_URL = resolveBaseURL();
+const LOCALHOST_FALLBACK =
+  BASE_URL.includes("localhost") ? BASE_URL.replace("localhost", "127.0.0.1") : null;
 const authTrace = (message, data) => {
   if (typeof console === "undefined") return;
   const stamp = new Date().toISOString();
@@ -160,7 +162,10 @@ const isHardAuthFailure = ({ status, url, detail, hadToken }) => {
   if (
     normalizedDetail.includes("session revoked") ||
     normalizedDetail.includes("refresh token revoked") ||
-    normalizedDetail.includes("refresh token expired")
+    normalizedDetail.includes("refresh token expired") ||
+    normalizedDetail.includes("token expired") ||
+    normalizedDetail.includes("invalid token") ||
+    normalizedDetail.includes("not authenticated")
   ) {
     return true;
   }
@@ -185,7 +190,10 @@ const shouldAutoLogoutOnFailure = ({ url, detail }) => {
   if (
     normalizedDetail.includes("session revoked") ||
     normalizedDetail.includes("refresh token revoked") ||
-    normalizedDetail.includes("refresh token expired")
+    normalizedDetail.includes("refresh token expired") ||
+    normalizedDetail.includes("token expired") ||
+    normalizedDetail.includes("invalid token") ||
+    normalizedDetail.includes("not authenticated")
   ) {
     return true;
   }
@@ -228,6 +236,26 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+const retryWithLocalhostFallback = async (error) => {
+  if (!LOCALHOST_FALLBACK) return null;
+
+  const originalRequest = error?.config;
+  if (!originalRequest || originalRequest._localhostFallbackTried) {
+    return null;
+  }
+
+  originalRequest._localhostFallbackTried = true;
+  originalRequest.baseURL = LOCALHOST_FALLBACK;
+
+  if (isVerboseAxiosDebugEnabled()) {
+    console.warn(
+      `[Axios] Retrying request via IPv4 fallback: ${LOCALHOST_FALLBACK}${originalRequest.url || ""}`
+    );
+  }
+
+  return axios(originalRequest);
+};
 
 // ---- Diagnostic logging on initialization ----
 if (isVerboseAxiosDebugEnabled()) {
@@ -297,226 +325,20 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ---- Response interceptor ----
+// ✅ معالجة 401 - إعادة توجيه إلى login
 axiosClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const isCanceled =
-      error?.code === "ERR_CANCELED" ||
-      error?.message === "canceled" ||
-      error?.message?.toLowerCase?.() === "canceled" ||
-      error?.name === "CanceledError";
+  (error) => {
+    if (error.response?.status === 401) {
+      // token غير صالح أو منتهي
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
 
-    const status = error?.response?.status;
-    const data = error?.response?.data;
-    const url = error?.config?.url || "";
-    const originalRequest = error?.config || {};
-    const hadToken = Boolean(readTokenSafe());
-    const isAuthEndpoint =
-      url.includes("/api/v1/auth/token") || url.includes("/api/v1/auth/refresh");
-
-    if (status === 401 || status === 403) {
-      authTrace(`HTTP ${status} on ${url}`, {
-        data,
-        hadToken,
-        isAuthEndpoint,
-      });
-    }
-
-    // Suppress logging for expected development errors (endpoints not yet implemented)
-    const isSalesIntelligenceEndpoint = url?.includes("/sales_intelligence");
-    const isAdminEndpoint = url?.includes("/api/v1/admin") || url?.includes("/data-sources/");
-    const isFinanceEndpoint = url?.includes("/finance/");
-    const isPlatformEndpoint = url?.includes("/platform/expenses");
-    const isMaintenanceEndpoint =
-      url?.includes("/maintenance/") ||
-      url?.includes("/dev_maintenance/");
-    const isExpectedDevError =
-      (status === 404 ||
-        status === 401 ||
-        error?.message === "Network Error") &&
-      (isSalesIntelligenceEndpoint ||
-        isAdminEndpoint ||
-        isFinanceEndpoint ||
-        isPlatformEndpoint ||
-        isMaintenanceEndpoint);
-
-    // Enhanced network error diagnostics
-    if (error.code === "ERR_NETWORK" && !isCanceled && isVerboseAxiosDebugEnabled()) {
-      console.group("NETWORK ERROR DETECTED");
-      console.error("Backend Not Responding");
-      console.table({
-        "Attempted URL": originalRequest.url,
-        "Base URL": originalRequest.baseURL,
-        "Full URL": `${originalRequest.baseURL}${originalRequest.url}`,
-        "Method": originalRequest.method?.toUpperCase() || "GET",
-        "Timeout (ms)": originalRequest.timeout,
-        "Time": new Date().toLocaleTimeString(),
-      });
-
-      // Log full error details
-      console.error("Full Error Object:", {
-        code: error.code,
-        message: error.message,
-        errno: error.errno,
-        syscall: error.syscall,
-        isAxiosError: error.isAxiosError,
-        config: {
-          method: error.config?.method,
-          url: error.config?.url,
-          baseURL: error.config?.baseURL,
-          timeout: error.config?.timeout,
-        },
-      });
-
-      console.error("Troubleshooting Steps:");
-      console.error("   1. Is backend running? Check terminal for 'Uvicorn running'");
-      console.error(`   2. Backend health check: ${BASE_URL}/api/v1/system/health`);
-      console.error(`   3. Verify VITE_API_BASE_URL is set correctly. Current value: ${BASE_URL}`);
-      console.error("   4. Restart Vite in frontend");
-      console.groupEnd();
-    }
-
-    if (
-      process.env.NODE_ENV !== "production" &&
-      !isCanceled &&
-      !isExpectedDevError &&
-      !isAuthEndpoint &&
-      isVerboseAxiosDebugEnabled()
-    ) {
-      if (error.code !== "ERR_NETWORK") {  // Already logged above
-        console.error("[Axios Error]", {
-          status,
-          url,
-          message: error?.message,
-          code: error?.code,
-          data: error?.response?.data,
-        });
+      // إعادة توجيه إلى صفحة login
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
     }
-
-    // ---- Normalize error to always be a string or safe object ----
-    const normalizeErrorData = (errorData) => {
-      if (!errorData) return "Request failed.";
-
-      // If it's already a string
-      if (typeof errorData === "string") {
-        return errorData;
-      }
-
-      // If it's Pydantic validation errors (array of objects)
-      if (Array.isArray(errorData)) {
-        return errorData
-          .map((err) => {
-            if (typeof err === "string") return err;
-            if (err.msg) return err.msg;
-            if (err.message) return err.message;
-            return JSON.stringify(err);
-          })
-          .filter(Boolean)
-          .join("; ");
-      }
-
-      // If it's an object with common error fields
-      if (typeof errorData === "object") {
-        if (errorData.detail) {
-          // If detail is an array, join them
-          if (Array.isArray(errorData.detail)) {
-            return errorData.detail
-              .map((d) => {
-                if (typeof d === "string") return d;
-                if (typeof d === "object") return d.msg || JSON.stringify(d);
-                return String(d);
-              })
-              .filter(Boolean)
-              .join("; ");
-          }
-          // If detail is a string or object
-          return typeof errorData.detail === "string"
-            ? errorData.detail
-            : normalizeErrorData(errorData.detail);
-        }
-
-        if (errorData.message) return errorData.message;
-        if (errorData.msg) return errorData.msg;
-        if (errorData.error) return errorData.error;
-
-        // Try to find any string value
-        for (const [key, value] of Object.entries(errorData)) {
-          if (typeof value === "string" && value.trim()) {
-            return value;
-          }
-        }
-
-        // Last resort: stringify (but only log, don't show to user)
-        return "Request processing error";
-      }
-
-      return "Request failed.";
-    };
-
-    error.normalized = {
-      status,
-      detail: normalizeErrorData(data) || error?.message || "Request failed.",
-    };
-
-    if (status === 401 && !isAuthEndpoint) {
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
-        try {
-          const newToken = await refreshAccessToken();
-          if (newToken) {
-            originalRequest.headers = originalRequest.headers || {};
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            originalRequest.headers["X-Access-Token"] = newToken;
-            return axiosClient(originalRequest);
-          }
-        } catch (refreshError) {
-          const refreshStatus = refreshError?.response?.status;
-          const refreshDetail =
-            refreshError?.response?.data?.detail ||
-            refreshError?.response?.data?.error ||
-            refreshError?.message ||
-            "";
-
-          if (
-            isHardAuthFailure({
-              status: refreshStatus || 401,
-              url: "/api/v1/auth/refresh",
-              detail: refreshDetail,
-              hadToken,
-            })
-          ) {
-            authTrace("Refresh token hard auth failure", {
-              status: refreshStatus,
-              detail: refreshDetail,
-            });
-            if (shouldAutoLogoutOnFailure({ url, detail: refreshDetail })) {
-              emitAuthExpired({
-                status: refreshStatus || 401,
-                url: "/api/v1/auth/refresh",
-              });
-            }
-          }
-        }
-      }
-
-      if (isHardAuthFailure({ status, url, detail: error?.normalized?.detail, hadToken })) {
-        authTrace("Hard auth failure detected", {
-          status,
-          url,
-          detail: error?.normalized?.detail,
-        });
-        if (shouldAutoLogoutOnFailure({ url, detail: error?.normalized?.detail })) {
-          emitAuthExpired({ status, url });
-        }
-      }
-    }
-
-    if (status === 422 && isAuthDebugEnabled()) {
-      console.warn("[GTS][axiosClient] Validation error:", error?.normalized?.detail);
-    }
-
     return Promise.reject(error);
   }
 );

@@ -1,102 +1,71 @@
-from datetime import datetime
-from typing import List, Optional
+from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from backend.database.config import get_db_async  # type: ignore[import]
-from backend.models.notification import Notification  # type: ignore[import]
+from datetime import datetime
+from typing import Any, Optional
+
+from fastapi import APIRouter, HTTPException, Query, status
+
+from backend.routes import notifications_api
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
-class NotificationOut(BaseModel):
-    id: int
-    user_id: int
-    message: str
-    is_read: bool
-    created_at: datetime
+def _to_legacy_payload(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": item.get("id"),
+        "user_id": item.get("recipient_id"),
+        "message": item.get("message"),
+        "is_read": bool(item.get("read")),
+        "created_at": (
+            item.get("sent_at").isoformat()
+            if isinstance(item.get("sent_at"), datetime)
+            else item.get("sent_at")
+        ),
+    }
 
-    class Config:
-        from_attributes = True
+
+def _find_notification(notification_id: str) -> dict[str, Any] | None:
+    for item in notifications_api._notification_store:
+        if str(item.get("id")) == str(notification_id):
+            return item
+    return None
 
 
-@router.get("/", response_model=List[NotificationOut])
+@router.get("/")
 async def list_notifications(
-    user_id: int = Query(..., description="User ID to filter notifications"),
+    user_id: Optional[int] = Query(None, description="User ID to filter notifications"),
     only_unread: bool = Query(False, description="Return only unread notifications"),
-    db: AsyncSession = Depends(get_db_async),
-):
-    """
-    List notifications for a given user.
-
-    - If only_unread is True, returns only unread notifications.
-    """
-
-    stmt = select(Notification).where(Notification.user_id == user_id)
-
+) -> dict[str, list[dict[str, Any]]]:
+    items = [
+        _to_legacy_payload(item)
+        for item in reversed(notifications_api._notification_store)
+        if user_id is None or item.get("recipient_id") == user_id
+    ]
     if only_unread:
-        stmt = stmt.where(Notification.is_read.is_(False))  # type: ignore[attr-defined]
-
-    result = await db.execute(stmt)
-    notifications = result.scalars().all()
-
-    return notifications
+        items = [item for item in items if not item.get("is_read")]
+    return {"notifications": items}
 
 
-@router.post("/{notification_id}/read", response_model=NotificationOut)
-async def mark_notification_as_read(
-    notification_id: int,
-    db: AsyncSession = Depends(get_db_async),
-):
-    """
-    Mark a single notification as read.
-    """
-
-    stmt = select(Notification).where(Notification.id == notification_id)
-    result = await db.execute(stmt)
-    notification: Optional[Notification] = result.scalar_one_or_none()
-
-    if notification is None:
+@router.post("/{notification_id}/read")
+async def mark_notification_as_read(notification_id: str) -> dict[str, Any]:
+    item = _find_notification(notification_id)
+    if item is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found",
         )
 
-    # Use setattr to avoid Pylance complaining about Column[bool] type
-    setattr(notification, "is_read", True)
-    await db.commit()
-    await db.refresh(notification)
-
-    return notification
+    item["read"] = True
+    return _to_legacy_payload(item)
 
 
-@router.post("/read-all", response_model=int)
+@router.post("/read-all")
 async def mark_all_notifications_as_read(
     user_id: int = Query(..., description="User ID to mark notifications as read"),
-    db: AsyncSession = Depends(get_db_async),
-):
-    """
-    Mark all notifications for a given user as read.
-
-    Returns the number of notifications affected.
-    """
-
-    stmt = select(Notification).where(
-        Notification.user_id == user_id,  # type: ignore[attr-defined]
-        Notification.is_read.is_(False),  # type: ignore[attr-defined]
-    )
-    result = await db.execute(stmt)
-    notifications = result.scalars().all()
-
+) -> int:
     count = 0
-    for n in notifications:
-        setattr(n, "is_read", True)
-        count += 1
-
-    if count > 0:
-        await db.commit()
-
+    for item in notifications_api._notification_store:
+        if item.get("recipient_id") == user_id and not item.get("read"):
+            item["read"] = True
+            count += 1
     return count
-

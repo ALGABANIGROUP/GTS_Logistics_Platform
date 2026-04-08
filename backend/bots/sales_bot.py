@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 """
 AI Sales Team Bot - Complete English Implementation
 Handles lead management, deal pipeline, revenue forecasting, and customer intelligence
@@ -739,3 +740,4 @@ bot = SalesBot()
 async def get_bot_instance():
     """Get bot instance for registry"""
     return bot
+

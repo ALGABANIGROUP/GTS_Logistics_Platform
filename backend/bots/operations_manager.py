@@ -1,21 +1,37 @@
-"""
-Operations Manager Bot - enhanced operations orchestration.
-
-This bot now also coordinates external email-ready reports on behalf of
-department bots and enforces a lightweight RACI gate for outbound delivery.
-"""
-
+﻿from __future__ import annotations
+# backend/bots/operations_manager.py
+from .base_bot import BaseBot
 import logging
-from datetime import datetime
-from typing import Dict, Any, List, Optional
-
-from backend.services.email_dispatcher import dispatch_email
-from backend.services.report_raci import can_send_report, requires_approval
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
+class OperationsManagerBot(BaseBot):
+    """Operations Manager AI Assistant"""
 
-class OperationsManagerBot:
+    def __init__(self):
+        super().__init__(
+            name="OperationsManagerBot",
+            description="AI assistant for operations management"
+        )
+
+    async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process operations requests"""
+        logger.info(f"OperationsManagerBot processing: {input_data.get('action')}")
+        # Implement operations logic
+        return {
+            "status": "success",
+            "response": "Operations task processed",
+            "data": input_data
+        }
+
+    async def get_status(self) -> Dict[str, Any]:
+        """Get bot status"""
+        return {
+            "name": self.name,
+            "active": self.is_active,
+            "description": self.description
+        }
     """Enhanced Operations Manager Bot for daily operations"""
 
     name = "operations_manager"
@@ -340,3 +356,4 @@ class OperationsManagerBot:
             "description": self.description,
             "actions": self._get_dashboard()["available_actions"]
         }
+

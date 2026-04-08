@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/safe_manager.py
 """
 SAFE - Safety Manager Bot
@@ -246,3 +247,4 @@ class SafeManagerBot:
             return await self.generate_safety_report()
         else:
             return await self.status()
+

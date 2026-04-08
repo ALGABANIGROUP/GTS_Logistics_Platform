@@ -12,6 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.config import settings
 import logging
 from datetime import datetime
+import re
 
 log = logging.getLogger("gts.security")
 
@@ -209,3 +210,49 @@ def setup_security_middleware(app):
     app.add_middleware(HTTPSRedirectMiddleware)
     
     log.info("✅ Security middleware setup completed")
+
+
+class SecurityMiddleware(BaseHTTPMiddleware):
+    """Priority 1 security middleware"""
+
+    async def dispatch(self, request: Request, call_next):
+        # Add security headers
+        response = await call_next(request)
+
+        # Security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+        # CSP header (adjust for your needs)
+        if not request.url.path.startswith('/admin'):
+            response.headers['Content-Security-Policy'] = "default-src 'self'"
+
+        # SQL Injection detection (basic)
+        if self._has_sql_injection_pattern(request):
+            return Response(
+                content='{"error":"Invalid request pattern"}',
+                status_code=400,
+                media_type='application/json'
+            )
+
+        return response
+
+    def _has_sql_injection_pattern(self, request: Request) -> bool:
+        """Basic SQL injection pattern detection"""
+        sql_patterns = [
+            r"(\%27)|(\')|(\-\-)|(\%23)|(#)",
+            r"((\%3D)|(=))[^\n]*((\%27)|(\')|(\-\-)|(\%3B)|(;))",
+            r"\w*((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))",
+            r"((\%27)|(\'))union",
+            r"exec(\s|\+)+(s|x)p\w+",
+        ]
+
+        # Check query parameters
+        for param in request.query_params.values():
+            for pattern in sql_patterns:
+                if re.search(pattern, str(param), re.IGNORECASE):
+                    return True
+
+        return False

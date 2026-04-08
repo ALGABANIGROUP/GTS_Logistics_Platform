@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/executive_intelligence.py
 """
 GIT - Executive Intelligence Bot
@@ -623,3 +624,4 @@ class ExecutiveIntelligenceBot:
         await asyncio.sleep(1.8)
         
         return recommendations
+

@@ -11,13 +11,26 @@ __pycache__/
 *.pyo
 *.pyd
 
-# --- Local Environment Variables ---
+# --- Environment Variables ---
+# Backend environment files
 .env
-.env.*
-!*.env.template
+.env.production
+.env.staging
+.env.local
+.env.*.local
+
+# Frontend environment files
+frontend/.env
+frontend/.env.production
+frontend/.env.staging
+frontend/.env.local
+frontend/.env.*.local
+
+# Allow template files
 !.env.example
+!frontend/.env.example
+
 .envrc
-*.local
 
 # --- Databases / Logs / Cache ---
 *.db
@@ -47,6 +60,79 @@ build/
 .vscode/
 .idea/
 *.code-workspace
+
+# --- Uploads and Temporary Files ---
+uploads/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# --- API Keys and Secrets ---
+secrets.json
+config/secrets.json
+*.pem
+*.key
+*.crt
+*.cer
+
+# --- Performance Analysis ---
+*.mem
+memsnap_*.pkl
+performance_*.json
+security_*.json
+
+# --- OS Generated Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# --- IDE and Editor Files ---
+*.swp
+*.swo
+*~
+.vscode/settings.json
+.idea/
+
+# --- Build and Distribution ---
+build/
+dist/
+*.spec
+*.egg-info/
+
+# --- Documentation Generated ---
+docs/_build/
+docs/build/
+
+# --- Search and AI Data ---
+search-index/
+*.idx
+ai-bot-data/
+bot-configs/
+
+# --- Carrier and API Keys ---
+carrier-api-keys/
+api-keys/
+
+# --- Test Files ---
+test_*.py
+*_test.py
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Docker ---
+.dockerignore
+
+# --- Backup Files ---
+*.backup
+*~
 
 # --- Reports / Generated files ---
 *.pdf

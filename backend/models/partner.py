@@ -187,3 +187,51 @@ class PartnerAgreement(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     partner = relationship("Partner", back_populates="agreements", lazy="joined")
+
+
+# Logistics Partners Model for carriers, shippers, brokers, suppliers, customers
+class LogisticsPartner(Base):
+    __tablename__ = "logistics_partners"  # type: ignore[assignment]
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False, unique=True)
+    type = Column(String(32), nullable=False)  # 'carrier', 'shipper', 'broker', 'supplier', 'customer'
+    email = Column(String(255), nullable=True)
+    phone = Column(String(64), nullable=True)
+    address = Column(Text, nullable=True)
+    contact_person = Column(String(255), nullable=True)
+    mc_number = Column(String(32), nullable=True)  # Motor Carrier number
+    dot_number = Column(String(32), nullable=True)  # DOT number
+    tax_id = Column(String(32), nullable=True)
+    website = Column(String(255), nullable=True)
+    notes = Column(Text, nullable=True)
+    status = Column(String(32), nullable=False, default="active")  # 'active', 'inactive', 'pending'
+    rating = Column(Integer, nullable=True)  # 1-5 stars
+    tags = Column(JSONB, nullable=True, default=list)  # List of tags
+
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    users = relationship("User", back_populates="partner", lazy="selectin")
+    shipments_as_carrier = relationship(
+        "backend.models.models.Shipment",
+        foreign_keys="backend.models.models.Shipment.carrier_id",
+        back_populates="carrier_partner",
+        lazy="selectin",
+    )
+    shipments_as_shipper = relationship(
+        "backend.models.models.Shipment",
+        foreign_keys="backend.models.models.Shipment.shipper_id",
+        back_populates="shipper_partner",
+        lazy="selectin",
+    )
+    shipments_as_broker = relationship(
+        "backend.models.models.Shipment",
+        foreign_keys="backend.models.models.Shipment.broker_id",
+        back_populates="broker_partner",
+        lazy="selectin",
+    )
+
+    def __repr__(self):
+        return f"<LogisticsPartner(id={self.id}, name='{self.name}', type='{self.type}')>"

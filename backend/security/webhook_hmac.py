@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import hmac
 import json
 import os
@@ -9,6 +8,12 @@ from typing import Dict, Optional
 
 from fastapi import HTTPException, Request
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
+
+from backend.security.webhook_signatures import (
+    build_hmac_sha256,
+    build_timestamped_message,
+    extract_signature_value,
+)
 
 DEFAULT_SKEW_SECONDS = 300  # 5 minutes
 
@@ -79,10 +84,10 @@ class HMACVerifier:
             )
 
         body = await request.body()
-        message = f"{timestamp}.{body.decode()}"
-        expected_signature = hmac.new(secret.encode(), msg=message.encode(), digestmod=hashlib.sha256).hexdigest()
+        expected_signature = build_hmac_sha256(secret, build_timestamped_message(timestamp, body))
+        provided_signature = extract_signature_value(signature)
 
-        if not hmac.compare_digest(signature, expected_signature):
+        if not hmac.compare_digest(provided_signature, expected_signature):
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Invalid signature")
 
         return True

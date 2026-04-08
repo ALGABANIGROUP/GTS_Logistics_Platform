@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/system_bot.py
 """
 System Bot
@@ -340,3 +341,4 @@ class SystemBot:
             return await self.get_active_alerts()
         else:
             return await self.status()
+

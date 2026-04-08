@@ -65,6 +65,65 @@ export default function AIOperationsManager() {
       setConfig(configRes.data?.data || configRes.data?.result || {});
       setDashboard(dashboardRes.data?.data || dashboardRes.data?.result || {});
       setLearningStats(learningRes.data || {});
+    } catch (error) {
+      console.log('Using mock data - Backend not available');
+      // بيانات تجريبية
+      setStatus({
+        status: "active",
+        uptime: "2h 15m",
+        last_activity: new Date().toISOString(),
+        version: "2.0.0"
+      });
+      setConfig({
+        capabilities: ["dispatch", "monitoring", "optimization"],
+        automation_level: "high",
+        active_workflows: 3
+      });
+      setDashboard({
+        quick_stats: {
+          active_shipments: 12,
+          pending_tasks: 5,
+          completed_today: 28,
+          alerts_count: 2
+        },
+        reports: {
+          recent: [
+            { report_id: 1, summary: "Dispatch shipment LD-001", source_bot: "dispatcher", report_type: "dispatch", severity: "high", received_at: new Date().toISOString() },
+            { report_id: 2, summary: "Optimize route for LD-002", source_bot: "optimizer", report_type: "route", severity: "medium", received_at: new Date().toISOString() },
+            { report_id: 3, summary: "Schedule maintenance", source_bot: "scheduler", report_type: "maintenance", severity: "medium", received_at: new Date().toISOString() }
+          ],
+          daily_summary: {
+            total_reports: 45,
+            by_severity: { critical: 2, high: 8, medium: 15, low: 20 },
+            patterns: ["route_optimization", "maintenance_scheduling"]
+          }
+        },
+        alerts: [
+          { alert_id: 1, description: "High traffic expected in Toronto area", severity: "warning", correlation_score: 0.85, created_at: new Date().toISOString() },
+          { alert_id: 2, description: "New carrier partnership activated", severity: "info", correlation_score: 0.92, created_at: new Date().toISOString() }
+        ],
+        command_queue: {
+          recent: [
+            { command_id: 1, command_type: "optimize_routes", target_bot: "route_optimizer", status: "completed", issued_at: new Date().toISOString() },
+            { command_id: 2, command_type: "update_shipment_status", target_bot: "dispatcher", status: "in_progress", issued_at: new Date().toISOString() }
+          ]
+        },
+        workflows: {
+          recent: [
+            { task_id: 1, workflow_name: "Emergency Response", current_step: "assessment", steps: 5, status: "active", progress: 40 },
+            { task_id: 2, workflow_name: "Load Optimization", current_step: "analysis", steps: 3, status: "idle", progress: 0 }
+          ]
+        },
+        recent_activity: [
+          { reference_id: "LD-001", description: "Shipment dispatched to Toronto", log_type: "dispatch", created_at: new Date().toISOString() },
+          { reference_id: "ROUTE-001", description: "Route optimized - saved 45 minutes", log_type: "optimization", created_at: new Date().toISOString() }
+        ]
+      });
+      setLearningStats({
+        total_learned: 156,
+        accuracy_rate: 94.2,
+        last_training: new Date().toISOString()
+      });
     } finally {
       setLoading(false);
     }

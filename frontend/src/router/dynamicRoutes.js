@@ -37,9 +37,6 @@ const menuTemplates = {
                 { id: "system_health", title: "System Health", path: "/admin/system-health", permission: "system.view" },
                 { id: "settings", title: "Platform Settings", path: "/admin/settings", permission: "system.settings" },
                 { id: "subscriptions", title: "Subscriptions", path: "/admin/subscriptions", permission: "system.settings" },
-                { id: "fleet", title: "Fleet Management", path: "/ai-bots/freight_broker/vehicles", permission: "operations.view" },
-                { id: "fleet_live_map", title: "Fleet Live Map", path: "/ai-bots/freight_broker/live-map", permission: "operations.view" },
-                { id: "safety_incidents", title: "Safety Incidents", path: "/ai-bots/safety/incidents", permission: "operations.view" },
                 { id: "api_connections", title: "API Connections", path: "/admin/api-connections", permission: "system.integrations" },
                 { id: "feature_flags", title: "Feature Flags", path: "/admin/feature-flags", permission: "system.flags" },
             ],
@@ -48,6 +45,11 @@ const menuTemplates = {
             id: "platform_expenses",
             title: "Platform Expenses",
             path: "/admin/platform-expenses",
+        },
+        {
+            id: "partners",
+            title: "Partners",
+            path: "/admin/partners",
         },
         {
             id: "audit",
@@ -60,12 +62,6 @@ const menuTemplates = {
             title: "Portal Requests",
             path: "/admin/portal-requests",
             permission: "portal.requests",
-        },
-        {
-            id: "notifications",
-            title: "Notifications",
-            path: "/admin/notifications",
-            permission: "notifications.view",
         },
         {
             id: "support",
@@ -122,33 +118,14 @@ const menuTemplates = {
             permission: "system.settings",
         },
         {
-            id: "fleet",
-            title: "Fleet Management",
-            path: "/ai-bots/freight_broker/vehicles",
-            permission: "operations.view",
-        },
-        {
-            id: "fleet_live_map",
-            title: "Fleet Live Map",
-            path: "/ai-bots/freight_broker/live-map",
-            permission: "operations.view",
-        },
-        {
-            id: "safety_incidents",
-            title: "Safety Incidents",
-            path: "/ai-bots/safety/incidents",
-            permission: "operations.view",
-        },
-        {
             id: "platform_expenses",
             title: "Platform Expenses",
             path: "/admin/platform-expenses",
         },
         {
-            id: "notifications",
-            title: "Notifications",
-            path: "/admin/notifications",
-            permission: "notifications.view",
+            id: "partners",
+            title: "Partners",
+            path: "/admin/partners",
         },
         {
             id: "support",

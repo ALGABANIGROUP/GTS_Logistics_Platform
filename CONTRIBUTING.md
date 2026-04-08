@@ -1,63 +1,43 @@
-# Contributing
+@echo off
+REM GTS Logistics Platform - Development Server Launcher
+REM Simple Development Server Launcher
 
-        Updated: **2026-03-21**
-        Documentation version: **2026.03.21-docs**
+echo 🚀 GTS Logistics Platform - Development Server
+echo.
 
-        ## Current Project Snapshot
 
-- Documentation refresh date: **2026-03-21**
-- Documentation version: **2026.03.21-docs**
-- Frontend bot registry: **21 bots**, **21 active**
-- New payment surfaces: **Payment Gateway Dashboard**, **SUDAPAY Payment Gateway**, **AI Finance Bot**
-- Partner Manager status: **Active** and routed through `/ai-bots/partner-management`
-- Operations additions: **Carriers** and **Shippers** workspaces with integrated frontend services
-- Verified frontend build: **`npm run build` passed**
-- Verified backend doc-related syntax checks: **`python -m py_compile backend/ai/bot_subscription_manager.py` passed**
+REM GTS Logistics Platform - Development Server
 
-## Key Active Routes
+echo. REM Check if virtual environment exists
+if not exist "backend\.venv\Scripts\activate.bat" ( 
+echo ❌ Virtual environment not found in backend\.venv 
+echo Please run setup first: 
+echo cd backend 
+echo python -m venv .venv 
+echo .venv\Scripts\activate 
+echo pip install -r ../requirements-simple.txt 
+pause 
+exit /b 1
+)
 
-- `/ai-bots/hub`
-- `/ai-bots/payment`
-- `/ai-bots/sudapay`
-- `/ai-bots/finance`
-- `/ai-bots/partner-management`
-- `/ai-bots/carriers/*`
-- `/ai-bots/shippers/*`
-- `/payments/:invoiceId`
-- `/payments/history`
+REM Activate virtual environment
+echo 📦 Activating virtual environment...
+call backend\.venv\Scripts\activate.bat
 
-## Latest Confirmed Changes Included In This Refresh
+REM Install/update requirements if needed
+echo 📦 Installation requirements...
+pip install -r requirements-simple.txt
 
-- Added the shared frontend bot registry and cleaned the hub display.
-- Added and activated **Payment Gateway Dashboard** as a distinct bot entry.
-- Kept **SUDAPAY** as its own payment-focused bot view.
-- Activated **AI Partner Manager** across registries, dashboards, and routing.
-- Added payment and finance summary helpers used by the dashboard.
-- Added/update carrier and shipper frontend workspaces and service integrations.
-- Updated bot alias handling so payment and partner routes resolve consistently.
+REM Create uploads directory
+if not exist "uploads" mkdir uploads
 
-        ## General Documentation Scope
+REM Start the server
+echo.
+echo ✅ Starting development server...
+echo 📖 API docs: http://localhost:8000/docs
+echo 🏥 Health check: http://localhost:8000/health
+echo 🛑Press Ctrl+C to stop
+echo.
 
-This file belongs to the refreshed English baseline for the current GTS Logistics platform.
-
-## Editorial Notes
-
-- Old roadmap-only statements were removed where they conflicted with the live implementation
-- This document should be treated as current-state guidance, not as a historical archive
-
-        ## Standard Local Commands
-
-```bash
-# frontend
-cd frontend
-npm install
-npm run dev
-npm run build
-
-# backend
-python -m uvicorn backend.main:app --reload
-```
-
-        ## Maintainer Note
-
-        This document was refreshed in English to match the latest confirmed project changes as of **2026-03-21**.
+cd backend
+python main_simple.py

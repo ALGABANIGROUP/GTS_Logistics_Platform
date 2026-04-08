@@ -38,6 +38,15 @@ class Shipment(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("backend.models.user.User", back_populates="shipments")
 
+    # Partner relationships
+    carrier_id = Column(Integer, ForeignKey("logistics_partners.id"), nullable=True)
+    shipper_id = Column(Integer, ForeignKey("logistics_partners.id"), nullable=True)
+    broker_id = Column(Integer, ForeignKey("logistics_partners.id"), nullable=True)
+
+    carrier_partner = relationship("LogisticsPartner", foreign_keys=[carrier_id], back_populates="shipments_as_carrier")
+    shipper_partner = relationship("LogisticsPartner", foreign_keys=[shipper_id], back_populates="shipments_as_shipper")
+    broker_partner = relationship("LogisticsPartner", foreign_keys=[broker_id], back_populates="shipments_as_broker")
+
 # ✅ MessageLog Model
 class MessageLog(Base):
     __tablename__ = "message_logs"

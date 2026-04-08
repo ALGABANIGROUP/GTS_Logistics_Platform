@@ -130,7 +130,7 @@ async def _build_status(session: AsyncSession) -> Dict[str, Any]:
     }
 
 
-@router.get("/api/v1/ai/operations/status")
+@router.get("/ai/operations/status")
 async def get_ai_operations_status(
     session: AsyncSession = Depends(get_async_session),
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -138,7 +138,7 @@ async def get_ai_operations_status(
     return {"success": True, "status": await _build_status(session)}
 
 
-@router.get("/api/v1/ai/operations/metrics")
+@router.get("/ai/operations/metrics")
 async def get_ai_operations_metrics(
     period: str = "24h",
     session: AsyncSession = Depends(get_async_session),
@@ -211,7 +211,7 @@ async def get_ai_operations_metrics(
     }
 
 
-@router.post("/api/v1/ai/operations/optimize")
+@router.post("/ai/operations/optimize")
 async def trigger_ai_optimization(
     payload: Dict[str, Any] | None = None,
     session: AsyncSession = Depends(get_async_session),

@@ -15,6 +15,140 @@ const toneMap = {
   attention_needed: "border-amber-500/20 bg-amber-500/10 text-amber-200",
 };
 
+const LEGAL_CAPABILITIES_FALLBACK = {
+  capabilities: [
+    "canadian_regulatory_updates",
+    "multi_country_compliance",
+    "search_laws",
+    "get_law",
+    "analyze_contract",
+    "check_company_compliance",
+    "calculate_liability",
+    "required_documents",
+  ],
+};
+
+const normalizeLegalEntry = (item) => ({
+  ...item,
+  id: item?.id,
+  name: item?.name || item?.title || item?.headline || "Legal update",
+  summary: item?.summary || item?.description || "No summary available.",
+  applicable_in: item?.applicable_in || item?.region || "Canada",
+  category: item?.category || "regulation",
+});
+
+const COMPLIANCE_COUNTRY_OPTIONS = [
+  { label: "Saudi Arabia", code: "sa" },
+  { label: "UAE", code: "uae" },
+  { label: "Canada", code: "ca" },
+  { label: "United States", code: "us" },
+  { label: "Mexico", code: "mx" },
+];
+
+const buildLocalFallback = (context) => {
+  const action = context?.action;
+
+  if (action === "analyze_contract") {
+    const text = String(context?.contract_text || "");
+    const issues = [];
+    if (!/liability/i.test(text)) issues.push("Missing core clause: liability");
+    if (!/force majeure/i.test(text)) issues.push("Missing core clause: force majeure");
+    if (!/termination/i.test(text)) issues.push("Missing core clause: termination");
+    const risks = /unlimited liability/i.test(text)
+      ? [{ risk: "Unlimited liability exposure", severity: "high" }]
+      : [];
+
+    return {
+      clauses_summary: {
+        governing_law: /governing law[: ]+([^\n]+)/i.exec(text)?.[1]?.trim() || "Not specified",
+        dispute_resolution: /arbitration/i.test(text) ? "arbitration" : "not specified",
+        duration: { period: /(\d+\s+(?:month|months|year|years))/i.exec(text)?.[1] || "Not specified" },
+        price: Number(/(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(USD|CAD|SAR|EUR|AED)/i.exec(text)?.[1]?.replace(/,/g, "") || 0),
+      },
+      compliance: {
+        is_compliant: issues.length === 0,
+        issues,
+      },
+      risks,
+      suggestions:
+        issues.length || risks.length
+          ? [...issues, ...risks.map((risk) => `Revise immediately: ${risk.risk}`)]
+          : ["Contract structure looks acceptable for a first-pass review."],
+      risk_level: risks.length ? "high" : issues.length ? "medium" : "low",
+    };
+  }
+
+  if (action === "check_company_compliance") {
+    const country = context?.country || "Canada";
+    const companyData = context?.company_data || {};
+    const profile = {
+      licenses: ["Safety fitness certificate", "Operating authority"],
+      documents: ["Bill of lading", "Customs invoice"],
+      insurance: ["Liability insurance", "Cargo insurance"],
+    };
+    const missing = [];
+    Object.entries(profile).forEach(([group, items]) => {
+      const provided = companyData[group] || [];
+      items.forEach((item) => {
+        if (!provided.includes(item)) missing.push(item);
+      });
+    });
+    const total = Object.values(profile).flat().length;
+    const compliancePercentage = total ? Math.round(((total - missing.length) / total) * 100) : 0;
+    return {
+      country,
+      compliance_percentage: compliancePercentage,
+      status: compliancePercentage >= 90 ? "excellent" : compliancePercentage >= 70 ? "good" : "attention_needed",
+      missing_requirements: missing,
+      official_sources: [],
+      compliance_sections: [],
+    };
+  }
+
+  if (action === "calculate_liability") {
+    const limits = {
+      cmr_convention_1956: 8.33,
+      montreal_convention_1999: 19,
+      hamburg_rules_1978: 2.5,
+      hague_rules_1924: 2,
+    };
+    const law = context?.law || "cmr_convention_1956";
+    const weight = Number(context?.weight || 0);
+    const value = Number(context?.value || 0);
+    const compensation = Math.min(weight * (limits[law] || 8.33), value);
+    return {
+      law_applied: law,
+      compensation,
+      max_compensation: compensation,
+      unit: "SDR",
+      notes: "Calculated from a local fallback while the legal runtime is unavailable.",
+    };
+  }
+
+  if (action === "required_documents") {
+    const destination = context?.destination || "Canada";
+    const goodsType = context?.goods_type || "general";
+    const documents = [
+      { name: "Commercial invoice", required: true },
+      { name: "Bill of lading", required: true },
+    ];
+    if (destination === "Canada") {
+      documents.push({ name: "Customs invoice", required: true });
+    }
+    if (goodsType === "electronics") {
+      documents.push({ name: "Conformity certificate", required: "depends_on_destination" });
+    }
+    return {
+      origin: context?.origin,
+      destination,
+      goods_type: goodsType,
+      documents,
+    };
+  }
+
+  return null;
+};
+
 const formatRelative = (value) => {
   if (!value) return "Unknown";
   const date = new Date(value);
@@ -28,6 +162,7 @@ export default function AILegalConsultant() {
   const [status, setStatus] = useState({});
   const [config, setConfig] = useState({});
   const [dashboard, setDashboard] = useState({});
+  const [canadianUpdates, setCanadianUpdates] = useState([]);
   const [learningStats, setLearningStats] = useState({});
   const [lawSearch, setLawSearch] = useState("");
   const [lawRegion, setLawRegion] = useState("all");
@@ -66,21 +201,34 @@ export default function AILegalConsultant() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [statusRes, configRes, dashboardRes, learningRes] = await Promise.all([
+      const [statusRes, canadaDashboardRes, updatesRes, learningRes] = await Promise.allSettled([
         axiosClient.get(`/api/v1/ai/bots/available/${BOT_KEY}/status`),
-        axiosClient.post(`/api/v1/ai/bots/available/${BOT_KEY}/run`, {
-          context: { action: "config" },
-        }),
-        axiosClient.post(`/api/v1/ai/bots/available/${BOT_KEY}/run`, {
-          context: { action: "dashboard" },
-        }),
-        axiosClient.get("/api/v1/legal-consultant/stats").catch(() => ({ data: {} })),
+        axiosClient.get("/api/v1/legal/dashboard"),
+        axiosClient.get("/api/v1/legal/updates", { params: { region: "Canada", limit: 12 } }),
+        axiosClient.get("/api/v1/legal-consultant/stats"),
       ]);
 
-      setStatus(statusRes.data?.data || statusRes.data?.status || {});
-      setConfig(configRes.data?.data || configRes.data?.result || {});
-      setDashboard(dashboardRes.data?.data || dashboardRes.data?.result || {});
-      setLearningStats(learningRes.data || {});
+      setStatus(
+        statusRes.status === "fulfilled"
+          ? statusRes.value.data?.data || statusRes.value.data?.status || {}
+          : {}
+      );
+      setConfig(LEGAL_CAPABILITIES_FALLBACK);
+      setDashboard(
+        canadaDashboardRes.status === "fulfilled"
+          ? canadaDashboardRes.value.data || {}
+          : {}
+      );
+      setCanadianUpdates(
+        updatesRes.status === "fulfilled"
+          ? (updatesRes.value.data?.updates || []).map(normalizeLegalEntry)
+          : []
+      );
+      setLearningStats(
+        learningRes.status === "fulfilled"
+          ? learningRes.value.data || {}
+          : {}
+      );
     } finally {
       setLoading(false);
     }
@@ -98,6 +246,11 @@ export default function AILegalConsultant() {
       appendLog(label, payload, "good");
       return payload;
     } catch (error) {
+      const fallback = buildLocalFallback(context);
+      if (fallback) {
+        appendLog(label, fallback, "attention_needed");
+        return fallback;
+      }
       appendLog(label, { error: error?.response?.data?.detail || error.message }, "critical");
       throw error;
     } finally {
@@ -106,32 +259,35 @@ export default function AILegalConsultant() {
   };
 
   const searchLaws = async () => {
-    const filters = {};
-    if (lawRegion !== "all") filters.region = lawRegion;
-    const payload = await runAction("Search Laws", {
-      action: "search_laws",
-      query: lawSearch,
-      filters,
-    });
-
-    let items = payload.results || [];
-    if (!items.length && lawTopic !== "all") {
-      const topicPayload = await runAction("Search Laws by Topic", {
-        action: "laws_by_topic",
-        topic: lawTopic,
+    setBusy(true);
+    try {
+      const response = await axiosClient.post("/api/v1/legal/search", {
+        query: lawSearch,
+        category: lawTopic !== "all" ? lawTopic : null,
+        region: lawRegion !== "all" ? lawRegion : null,
+        limit: 30,
       });
-      items = topicPayload.laws || [];
+      const items = (response.data?.results || []).map(normalizeLegalEntry);
+      setLawResults(items);
+      appendLog("Search Laws", { results: items.length }, "good");
+    } catch (error) {
+      appendLog("Search Laws", { error: error?.response?.data?.detail || error.message }, "critical");
+    } finally {
+      setBusy(false);
     }
-
-    setLawResults(items);
   };
 
   const loadLaw = async (lawId) => {
-    const payload = await runAction("Load Law Details", {
-      action: "get_law",
-      law_id: lawId,
-    });
-    setSelectedLaw(payload.law || null);
+    setBusy(true);
+    try {
+      const response = await axiosClient.get(`/api/v1/legal/regulation/${lawId}`);
+      setSelectedLaw(normalizeLegalEntry(response.data || {}));
+      appendLog("Load Law Details", { id: lawId }, "good");
+    } catch (error) {
+      appendLog("Load Law Details", { error: error?.response?.data?.detail || error.message }, "critical");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const analyzeContract = async () => {
@@ -148,7 +304,7 @@ export default function AILegalConsultant() {
   };
 
   const runComplianceCheck = async () => {
-    const payload = await runAction("Check Company Compliance", {
+    const localPayload = await runAction("Check Company Compliance", {
       action: "check_company_compliance",
       country: complianceCountry,
       company_data: {
@@ -158,7 +314,26 @@ export default function AILegalConsultant() {
         insurance: ["Vehicle liability insurance"],
       },
     });
-    setComplianceResult(payload);
+    const selectedCountry =
+      COMPLIANCE_COUNTRY_OPTIONS.find((item) => item.label === complianceCountry)?.code || "sa";
+
+    try {
+      const response = await axiosClient.get(`/api/v1/compliance/overview/${selectedCountry}`);
+      const overview = response.data || {};
+      const mergedPayload = {
+        ...localPayload,
+        country: overview.country || localPayload.country,
+        official_sources: overview.sources || [],
+        compliance_sections: overview.sections || [],
+        live_feeds: overview.live_feeds || {},
+        generated_at: overview.generated_at,
+      };
+      setComplianceResult(mergedPayload);
+      appendLog("Compliance References", { country: mergedPayload.country, sources: mergedPayload.official_sources.length }, "good");
+    } catch (error) {
+      appendLog("Compliance References", { error: error?.response?.data?.detail || error.message }, "attention_needed");
+      setComplianceResult(localPayload);
+    }
   };
 
   const calculateLiability = async () => {
@@ -189,8 +364,8 @@ export default function AILegalConsultant() {
 
   const displayedLaws = useMemo(() => {
     if (lawResults.length) return lawResults;
-    return [];
-  }, [lawResults]);
+    return canadianUpdates;
+  }, [lawResults, canadianUpdates]);
 
   if (loading) {
     return (
@@ -323,18 +498,30 @@ export default function AILegalConsultant() {
                         <div>
                           <p className="font-semibold text-white">{law.name}</p>
                           <p className="mt-1 text-xs text-slate-400">
-                            {law.category || law.region || law.topic} · {law.applicable_in || "Legal library"}
-                          </p>
-                        </div>
+                              {law.category || law.region || law.topic} · {law.applicable_in || "Legal library"}
+                              {law.source ? ` · ${law.source}` : ""}
+                            </p>
+                          </div>
                         {law.relevance ? (
                           <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-200">
                             {law.relevance}% relevance
                           </span>
                         ) : null}
-                      </div>
-                      <p className="mt-3 text-sm text-slate-300">{law.summary}</p>
-                    </button>
-                  ))
+                        </div>
+                        <p className="mt-3 text-sm text-slate-300">{law.summary}</p>
+                        {law.url ? (
+                          <a
+                            href={law.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-3 inline-flex text-xs text-amber-300 underline-offset-2 hover:underline"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            Official source
+                          </a>
+                        ) : null}
+                      </button>
+                    ))
                 ) : (
                   <div className="rounded-xl border border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
                     Run a search to load legal materials.
@@ -429,10 +616,9 @@ export default function AILegalConsultant() {
                   onChange={(e) => setComplianceCountry(e.target.value)}
                   className="mb-4 w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none"
                 >
-                  <option>Saudi Arabia</option>
-                  <option>UAE</option>
-                  <option>Canada</option>
-                  <option>Germany</option>
+                  {COMPLIANCE_COUNTRY_OPTIONS.map((country) => (
+                    <option key={country.code}>{country.label}</option>
+                  ))}
                 </select>
                 {complianceResult ? (
                   <div className="space-y-3">
@@ -449,6 +635,43 @@ export default function AILegalConsultant() {
                         )}
                       </div>
                     </div>
+                    {(complianceResult.official_sources || []).length ? (
+                      <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+                        <p className="text-sm font-semibold text-white">Official sources</p>
+                        <div className="mt-3 space-y-2 text-sm text-slate-300">
+                          {complianceResult.official_sources.map((source) => (
+                            <div key={source.url}>
+                              <a
+                                href={source.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-amber-300 underline-offset-2 hover:underline"
+                              >
+                                {source.name}
+                              </a>
+                              {source.notes ? <p className="mt-1 text-xs text-slate-400">{source.notes}</p> : null}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {(complianceResult.compliance_sections || []).length ? (
+                      <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+                        <p className="text-sm font-semibold text-white">Country references</p>
+                        <div className="mt-3 space-y-3 text-sm text-slate-300">
+                          {complianceResult.compliance_sections.map((section) => (
+                            <div key={section.id} className="rounded-lg border border-white/10 bg-slate-950/40 p-3">
+                              <p className="font-medium text-white">{section.title}</p>
+                              {section.summary ? <p className="mt-1">{section.summary}</p> : null}
+                              {section.endpoint ? <p className="mt-1 text-xs text-slate-400">{section.endpoint}</p> : null}
+                              {(section.items || []).length ? (
+                                <p className="mt-2 text-xs text-slate-400">{section.items.length} live items loaded.</p>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -505,13 +728,25 @@ export default function AILegalConsultant() {
           <div className="space-y-6">
             <div className={`${glassCard} p-6`}>
               <h2 className="text-lg font-bold text-white">Selected Law</h2>
-              {selectedLaw ? (
-                <div className="mt-4 space-y-3 text-sm text-slate-300">
-                  <p className="text-base font-semibold text-white">{selectedLaw.name}</p>
-                  <p>{selectedLaw.summary}</p>
-                  <p>Region: <span className="text-white">{selectedLaw.region}</span></p>
-                  <p>Transport mode: <span className="text-white">{selectedLaw.transport_mode}</span></p>
-                  <div className="space-y-2">
+                {selectedLaw ? (
+                  <div className="mt-4 space-y-3 text-sm text-slate-300">
+                    <p className="text-base font-semibold text-white">{selectedLaw.name}</p>
+                    <p>{selectedLaw.summary}</p>
+                    {selectedLaw.source ? <p>Source: <span className="text-white">{selectedLaw.source}</span></p> : null}
+                    {selectedLaw.published_at ? <p>Updated: <span className="text-white">{formatRelative(selectedLaw.published_at)}</span></p> : null}
+                    <p>Region: <span className="text-white">{selectedLaw.region}</span></p>
+                    <p>Transport mode: <span className="text-white">{selectedLaw.transport_mode}</span></p>
+                    {selectedLaw.url ? (
+                      <a
+                        href={selectedLaw.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex text-xs text-amber-300 underline-offset-2 hover:underline"
+                      >
+                        Open official source
+                      </a>
+                    ) : null}
+                    <div className="space-y-2">
                     {(selectedLaw.key_points || []).map((point) => (
                       <div key={point} className="rounded-xl border border-white/10 bg-slate-900/50 p-3">
                         {point}
@@ -649,4 +884,3 @@ export default function AILegalConsultant() {
     </div>
   );
 }
-

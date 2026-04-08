@@ -22,6 +22,8 @@ from enum import Enum
 import httpx
 from pydantic import BaseModel, Field
 
+from backend.security.webhook_signatures import verify_hmac_sha256_signature
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -350,17 +352,13 @@ class SudapayService:
         Returns:
             bool: Whether the signature is valid
         """
-        import hmac
-        import hashlib
-
         try:
-            expected_signature = hmac.new(
-                self.webhook_secret.encode(),
-                payload.encode(),
-                hashlib.sha256,
-            ).hexdigest()
-
-            is_valid = hmac.compare_digest(expected_signature, signature)
+            is_valid = verify_hmac_sha256_signature(
+                secret=self.webhook_secret,
+                payload=payload.encode("utf-8"),
+                signature_header=signature,
+                app_env="production",
+            )
 
             if is_valid:
                 logger.info("✅ Webhook signature verified")

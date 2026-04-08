@@ -46,6 +46,24 @@ def create_test_users():
     
     users_to_create = [
         {
+            "email": "enjoy983@hotmail.com",
+            "password": "Gabani@2026",
+            "full_name": "Admin User",
+            "role": "admin",
+        },
+        {
+            "email": "admin@gts.com",
+            "password": "admin123",
+            "full_name": "System Administrator",
+            "role": "admin",
+        },
+        {
+            "email": "manager@gts.com",
+            "password": "manager123",
+            "full_name": "Operations Manager",
+            "role": "manager",
+        },
+        {
             "email": "admin@gts.local",
             "password": "admin123",
             "full_name": "System Administrator",

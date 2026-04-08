@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/finance_intelligence.py
 """
 IT - Finance Intelligence Bot
@@ -201,3 +202,4 @@ class FinanceIntelligenceBot:
             return await self.track_budget()
         else:
             return await self.status()
+

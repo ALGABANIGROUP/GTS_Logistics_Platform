@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/system_architect.py
 """
 ⚙️ System Architect Bot
@@ -775,3 +776,4 @@ class SystemArchitectBot:
             ]
         }
         return tasks.get(stage, [])
+

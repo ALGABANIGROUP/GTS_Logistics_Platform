@@ -1,20 +1,23 @@
+/* eslint-disable react/prop-types */
+
 // frontend/src/contexts/AuthContext.jsx
-import React, {
+import axios from "axios";
+import {
     createContext,
+    useCallback,
     useContext,
     useEffect,
     useMemo,
     useState,
 } from "react";
-import axios from "axios";
 import axiosClient from "../api/axiosClient";
+import { API_BASE_URL } from "../config/env";
 import {
     clearAuthCache,
     readAuthToken,
     writeAuthToken,
     writeRefreshToken,
 } from "../utils/authStorage";
-import { API_BASE_URL } from "../config/env";
 
 const API_URL = String(API_BASE_URL || "").replace(/\/+$/, "");
 
@@ -83,40 +86,6 @@ const getApiErrorMessage = (error, fallbackMessage) =>
     error?.message ||
     fallbackMessage;
 
-const getApiErrorDetail = (error) => error?.response?.data?.detail;
-
-const getFieldErrors = (detail) => {
-    if (!detail) {
-        return {};
-    }
-
-    if (Array.isArray(detail)) {
-        return detail.reduce((acc, item) => {
-            const field = Array.isArray(item?.loc) ? item.loc[item.loc.length - 1] : null;
-            const message = item?.msg;
-            if (field && message) {
-                acc[field] = message;
-            }
-            return acc;
-        }, {});
-    }
-
-    if (typeof detail === "object") {
-        if (detail.field && detail.message) {
-            return { [detail.field]: detail.message };
-        }
-
-        return Object.entries(detail).reduce((acc, [key, value]) => {
-            if (typeof value === "string") {
-                acc[key] = value;
-            }
-            return acc;
-        }, {});
-    }
-
-    return {};
-};
-
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
@@ -142,172 +111,178 @@ const decodeToken = (token) => {
     }
 };
 
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [authReady, setAuthReady] = useState(false);
-    const [token, setToken] = useState(() => readAuthToken());
+const mergeTokenClaims = (normalizedUser, token) => {
+    if (!normalizedUser) {
+        return null;
+    }
 
-    useEffect(() => {
-        let cancelled = false;
-
-        const initAuth = async () => {
-            setLoading(true);
-
-            const currentToken = readAuthToken();
-            if (!currentToken) {
-                if (!cancelled) {
-                    setToken("");
-                    setUser(null);
-                    setLoading(false);
-                    setAuthReady(true);
-                }
-                return;
-            }
-
-            try {
-                const decoded = decodeToken(currentToken);
-                if (!decoded || decoded.exp * 1000 <= Date.now()) {
-                    clearAuthCache();
-                    if (!cancelled) {
-                        setToken("");
-                        setUser(null);
-                    }
-                } else {
-                    const response = await axiosClient.get(`/api/v1/auth/me`, {
-                        headers: { Authorization: `Bearer ${currentToken}` },
-                    });
-                    if (!cancelled) {
-                        setToken(currentToken);
-                        setUser(normalizeAuthPayload(response.data));
-                    }
-                }
-            } catch (error) {
-                console.error("Auth init error:", error);
-                const status = error?.response?.status;
-                const message = getApiErrorMessage(error, "");
-                const isDisabled = String(message).toLowerCase().includes("disabled") ||
-                    String(message).toLowerCase().includes("not active");
-
-                if (!cancelled) {
-                    // Clear everything if the user is disabled (terminal error)
-                    // or if it's a non-auth error (404, 500, etc.)
-                    if (isDisabled || (status !== 401 && status !== 403)) {
-                        clearAuthCache();
-                        setToken("");
-                        setUser(null);
-                    }
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                    setAuthReady(true);
-                }
-            }
+    const claims = token ? decodeToken(token) : null;
+    if (!claims || typeof claims !== "object") {
+        return {
+            ...normalizedUser,
+            effective_role:
+                normalizedUser.effective_role ||
+                normalizedUser.role ||
+                normalizedUser.db_role ||
+                normalizedUser.token_role ||
+                null,
         };
+    }
 
-        initAuth();
-        return () => {
-            cancelled = true;
-        };
-    }, [token]);
+    return {
+        ...normalizedUser,
+        id: normalizedUser.id ?? claims.user_id ?? claims.id ?? claims.sub ?? null,
+        email: normalizedUser.email || claims.email || null,
+        role: normalizedUser.role || claims.role || null,
+        token_role: normalizedUser.token_role || claims.role || null,
+        effective_role:
+            normalizedUser.effective_role ||
+            normalizedUser.role ||
+            normalizedUser.db_role ||
+            normalizedUser.token_role ||
+            claims.role ||
+            null,
+    };
+};
 
-    useEffect(() => {
-        if (typeof window === "undefined") {
-            return undefined;
-        }
+const readStoredUser = (token) => {
+    if (typeof window === "undefined") {
+        return null;
+    }
 
-        const handleAuthExpired = () => {
-            clearAuthCache();
-            setToken("");
-            setUser(null);
-            setLoading(false);
-            setAuthReady(true);
-        };
-
-        window.addEventListener("auth:expired", handleAuthExpired);
-        return () => {
-            window.removeEventListener("auth:expired", handleAuthExpired);
-        };
-    }, []);
-
-    const login = async (email, password, remember = false) => {
+    for (const storage of [window.sessionStorage, window.localStorage]) {
         try {
-            const formData = new URLSearchParams();
-            // CHANGED: backend expects 'email' field for token endpoint
-            formData.append("email", email);
-            formData.append("password", password);
-
-            const response = await axiosClient.post(`/api/v1/auth/token`, formData, {
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            });
-
-            const { access_token, refresh_token } = response.data || {};
-            if (!access_token) {
-                throw new Error("No access token received");
+            const raw = storage.getItem("user");
+            if (!raw) {
+                continue;
             }
+            const parsed = JSON.parse(raw);
+            const normalized = mergeTokenClaims(normalizeAuthPayload(parsed), token);
+            if (normalized) {
+                return normalized;
+            }
+        } catch (error) {
+            console.warn("Failed to restore stored user:", error);
+        }
+    }
 
-            clearAuthCache();
+    return null;
+};
+
+const persistAuthContext = (payload, token = null) => {
+    if (typeof window === "undefined" || !payload) {
+        return;
+    }
+
+    const normalized = mergeTokenClaims(normalizeAuthPayload(payload), token);
+    if (!normalized) {
+        return;
+    }
+
+    const authContext = {
+        user: normalized,
+        permissions: Array.isArray(normalized.permissions) ? normalized.permissions : [],
+        features: Array.isArray(normalized.features) ? normalized.features : [],
+        modules: normalized.modules && typeof normalized.modules === "object" ? normalized.modules : {},
+        entitlements: {
+            role_key:
+                normalized.effective_role ||
+                normalized.role_key ||
+                normalized.role ||
+                normalized.db_role ||
+                normalized.token_role ||
+                null,
+            permissions: Array.isArray(normalized.permissions) ? normalized.permissions : [],
+            features: Array.isArray(normalized.features) ? normalized.features : [],
+            modules: normalized.modules && typeof normalized.modules === "object" ? normalized.modules : {},
+            plan: normalized.authMeta?.plan || null,
+            subscription: normalized.authMeta?.tenant?.plan_key || null,
+        },
+    };
+
+    try {
+        window.sessionStorage.setItem("user", JSON.stringify(normalized));
+        window.sessionStorage.setItem("auth_context", JSON.stringify(authContext));
+        window.localStorage.setItem("user", JSON.stringify(normalized));
+        window.localStorage.setItem("auth_context", JSON.stringify(authContext));
+    } catch (error) {
+        console.warn("Failed to persist auth context:", error);
+    }
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const checkAuth = useCallback(async () => {
+    const token = readAuthToken();
+
+    if (!token) {
+      clearAuthCache();
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const restoredUser = readStoredUser(token);
+    if (restoredUser) {
+      setUser(restoredUser);
+      setIsAuthenticated(true);
+    }
+
+    try {
+      const response = await axiosClient.get('/api/v1/auth/me');
+      const normalizedUser = mergeTokenClaims(normalizeAuthPayload(response.data), token);
+
+      if (!normalizedUser) {
+        throw new Error("Unable to normalize authenticated user");
+      }
+
+      persistAuthContext(response.data, token);
+      setUser(normalizedUser);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      clearAuthCache();
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+    const login = useCallback(async (email, password) => {
+        try {
+            const response = await axiosClient.post('/api/v1/auth/login', { email, password });
+            const { access_token, refresh_token } = response.data;
+            const normalizedUser = mergeTokenClaims(
+                normalizeAuthPayload(response.data),
+                access_token
+            );
+
             writeAuthToken(access_token);
             if (refresh_token) {
                 writeRefreshToken(refresh_token);
             }
 
-            if (remember) {
-                try {
-                    window.localStorage.setItem("gts_saved_email", email);
-                } catch {
-                    // ignore storage errors
-                }
-            }
-
-            let userPayload = normalizeAuthPayload(response.data);
-            try {
-                const userResponse = await axiosClient.get(`/api/v1/auth/me`, {
-                    headers: { Authorization: `Bearer ${access_token}` },
-                });
-                userPayload = normalizeAuthPayload(userResponse.data) || userPayload;
-            } catch (meError) {
-                console.warn("Auth /me fallback triggered:", meError);
-            }
-
-            if (!userPayload) {
-                throw new Error("Unable to load user profile after login");
-            }
-
-            setToken(access_token);
-            setUser(userPayload);
-
-            return { success: true, user: userPayload };
+            persistAuthContext(response.data, access_token);
+            setUser(normalizedUser);
+            setIsAuthenticated(true);
+            return { success: true, user: normalizedUser };
         } catch (error) {
-            console.error("Login error:", error);
-            const detail = getApiErrorDetail(error);
-            const status = error?.response?.status || 0;
-            let message = getApiErrorMessage(error, "Invalid email or password");
-
-            const isDisabledMsg = String(message).toLowerCase().includes("disabled") ||
-                String(message).toLowerCase().includes("not active");
-
-            if (status === 401 && !isDisabledMsg) {
-                message = "Invalid email or password";
-            } else if (isDisabledMsg || status === 403) {
-                message = "This account has been disabled. Please contact support.";
-            } else if (status === 422 && !message) {
-                message = "Email and password are required";
-            }
-
-            return {
-                success: false,
-                status,
-                detail,
-                fieldErrors: getFieldErrors(detail),
-                message,
-            };
+            console.error('Login failed:', error);
+            return { success: false, error: error.response?.data?.detail || 'Login failed' };
         }
-    };
+    }, []);
 
-    const forgotPassword = async (email) => {
-        setLoading(true);
+    const forgotPassword = useCallback(async (email) => {
+        setIsLoading(true);
         try {
             const response = await axios.post(`${API_URL}/api/v1/auth/forgot-password`, {
                 email,
@@ -325,12 +300,12 @@ export const AuthProvider = ({ children }) => {
                 )
             );
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
-    };
+    }, []);
 
-    const resetPassword = async (resetToken, newPassword) => {
-        setLoading(true);
+    const resetPassword = useCallback(async (resetToken, newPassword) => {
+        setIsLoading(true);
         try {
             const response = await axios.post(`${API_URL}/api/v1/auth/reset-password`, {
                 token: resetToken,
@@ -346,11 +321,11 @@ export const AuthProvider = ({ children }) => {
                 getApiErrorMessage(error, "Failed to reset password")
             );
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
-    };
+    }, []);
 
-    const register = async (userData) => {
+    const register = useCallback(async (userData) => {
         try {
             // CHANGED: backend expects full_name (not name)
             const payload = {
@@ -367,37 +342,110 @@ export const AuthProvider = ({ children }) => {
             wrapped.detail = error?.response?.data?.detail;
             throw wrapped;
         }
-    };
+    }, []);
 
-    const logout = () => {
+    const changePassword = useCallback(async (currentPassword, newPassword) => {
+        const response = await axiosClient.post("/api/v1/auth/change-password", {
+            current_password: currentPassword,
+            new_password: newPassword,
+        });
+        return response.data;
+    }, []);
+
+    const updateUser = useCallback((updater) => {
+        setUser((prev) => {
+            const nextUser =
+                typeof updater === "function"
+                    ? updater(prev)
+                    : { ...(prev || {}), ...(updater || {}) };
+
+            if (nextUser) {
+                persistAuthContext({ user: nextUser }, readAuthToken());
+            }
+
+            return nextUser;
+        });
+    }, []);
+
+    const logout = useCallback(() => {
         clearAuthCache();
-        setToken("");
         setUser(null);
-    };
+        setIsAuthenticated(false);
+    }, []);
 
-    const value = useMemo(
-        () => ({
-            user,
-            setUser,
-            updateUser: setUser,
-            token,
-            loading,
-            authReady,
-            login,
-            forgotPassword,
-            resetPassword,
-            register,
-            logout,
-            isAuthenticated: Boolean(user && token),
-            role: user?.effective_role || user?.role || "",
-            features: Array.isArray(user?.features) ? user.features : [],
-            modules: user?.modules && typeof user.modules === "object" ? user.modules : {},
-            authMeta: user?.authMeta || null,
-            accountStatus: user?.status || user?.account_status || "active",
-            permissions: Array.isArray(user?.permissions) ? user.permissions : [],
-        }),
-        [authReady, loading, token, user]
+    const resolvedRole = useMemo(
+        () =>
+            user?.effective_role ||
+            user?.role ||
+            user?.db_role ||
+            user?.token_role ||
+            null,
+        [user]
     );
+    const permissions = useMemo(
+        () => (Array.isArray(user?.permissions) ? user.permissions : []),
+        [user]
+    );
+    const features = useMemo(
+        () => (Array.isArray(user?.features) ? user.features : []),
+        [user]
+    );
+    const modules = useMemo(
+        () => (user?.modules && typeof user.modules === "object" ? user.modules : {}),
+        [user]
+    );
+    const authMeta = useMemo(() => user?.authMeta || {}, [user]);
+    const token = readAuthToken();
+    const authReady = !isLoading;
+    const accountStatus =
+        user?.account_status ||
+        (user?.is_active === false ? "inactive" : user ? "active" : null);
+
+    const value = useMemo(() => ({
+        user,
+        setUser: updateUser,
+        updateUser,
+        role: resolvedRole,
+        token,
+        loading: isLoading,
+        isLoading,
+        authReady,
+        isAuthenticated,
+        accountStatus,
+        permissions,
+        features,
+        modules,
+        authMeta,
+        plan: authMeta?.plan || null,
+        system: authMeta?.system || user?.system || user?.system_type || null,
+        login,
+        register,
+        forgotPassword,
+        resetPassword,
+        changePassword,
+        logout,
+        checkAuth
+    }), [
+        user,
+        updateUser,
+        resolvedRole,
+        token,
+        isLoading,
+        authReady,
+        isAuthenticated,
+        accountStatus,
+        permissions,
+        features,
+        modules,
+        authMeta,
+        login,
+        register,
+        forgotPassword,
+        resetPassword,
+        changePassword,
+        logout,
+        checkAuth,
+    ]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

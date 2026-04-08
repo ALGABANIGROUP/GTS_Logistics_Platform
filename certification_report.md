@@ -1,16 +1,16 @@
 # GTS Logistics Certification Report
 
-- Inspection date: `2026-03-25T10:42:46.459029+00:00`
-- Project root: `C:\Users\enjoy\dev\GTS`
+- Inspection date: `2026-04-01T11:14:49.667487+00:00`
+- Project root: `C:\Users\enjoy\dev\GTS-new`
 
 ## Statistics
 
-- Total files scanned: 2387
-- Total lines scanned: 503819
-- Python files: 1186
-- JavaScript files: 618
-- TypeScript files: 20
-- HTML files: 28
+- Total files scanned: 2443
+- Total lines scanned: 502370
+- Python files: 1248
+- JavaScript files: 611
+- TypeScript files: 17
+- HTML files: 29
 - CSS files: 88
 
 ## Architecture
@@ -31,20 +31,16 @@
 
 ## API Surface
 
-- Detected endpoints: 1199
+- Detected endpoints: 1223
   - `POST` `/fix` (Express) in `src/healthCheck.js`
   - `GET` `/health` (Express) in `src/healthCheck.js`
   - `POST` `/login` (Express) in `backend/check-backend.js`
-  - `GET` `/` (FastAPI) in `backend/main.py`
   - `GET` `/` (FastAPI) in `backend/routes/admin_api_connections.py`
   - `GET` `/` (FastAPI) in `backend/routes/admin_api_connections_fixed.py`
   - `GET` `/` (FastAPI) in `backend/routes/api.py`
   - `GET` `/` (FastAPI) in `backend/routes/external_services.py`
   - `POST` `/` (FastAPI) in `backend/routes/admin_api_connections.py`
   - `POST` `/` (FastAPI) in `backend/routes/admin_api_connections_fixed.py`
-  - `GET` `/_debug/admin-users` (FastAPI) in `backend/main.py`
-  - `POST` `/_debug/memory-snapshot` (FastAPI) in `backend/main.py`
-  - `GET` `/_debug/routes` (FastAPI) in `backend/main.py`
   - `GET` `/accounts` (FastAPI) in `backend/routes/social_media_routes.py`
   - `GET` `/admin-bootstrap/setup-admin` (FastAPI) in `backend/routes/create_admin.py`
   - `GET` `/admin/generate_project_structure/` (FastAPI) in `backend/routes/system_admin_tools.py`
@@ -62,11 +58,15 @@
   - `PUT` `/admin/users/enable/{user_id}` (FastAPI) in `backend/routes/user.py`
   - `GET` `/admin/users/list` (FastAPI) in `backend/routes/user.py`
   - `GET` `/admin/users/statistics/summary` (FastAPI) in `backend/routes/user.py`
-  - ... and 1169 more
+  - `PUT` `/admin/users/update/{user_id}` (FastAPI) in `backend/routes/user.py`
+  - `DELETE` `/admin/users/{user_id}` (FastAPI) in `backend/routes/user.py`
+  - `GET` `/admin/users/{user_id}` (FastAPI) in `backend/routes/user.py`
+  - `PUT` `/admin/users/{user_id}` (FastAPI) in `backend/routes/user.py`
+  - ... and 1193 more
 
 ## AI and Automation Assets
 
-- Bot-related files: 181
+- Bot-related files: 184
   - `ai_dispatcher_quick_run` in `ai_dispatcher_quick_run.py`
   - `ai_bots` in `backend/ai/ai_bots.py`
   - `bot_finance` in `backend/ai/bot_finance.py`
@@ -97,11 +97,11 @@
   - `bot_safety` in `backend/ai/roles/roles/bot_safety.py`
   - `20260316_add_email_bot_routing_rules` in `backend/alembic_migrations/versions/20260316_add_email_bot_routing_rules.py`
   - `20260322_add_title_to_ai_bot_issues` in `backend/alembic_migrations/versions/20260322_add_title_to_ai_bot_issues.py`
-  - ... and 151 more
+  - ... and 154 more
 
 ## Database Models
 
-- Model or migration artifacts: 195
+- Model or migration artifacts: 152
   - `performance_logs` in `TheVIZION/backend/models.py`
   - `publish_logs` in `TheVIZION/backend/models.py`
   - `vizion_events` in `TheVIZION/backend/models.py`
@@ -132,7 +132,7 @@
   - `remediation_actions` in `backend/maintenance/models.py`
   - `accounts` in `backend/models/accounting_models.py`
   - `account_balances` in `backend/models/accounting_models.py`
-  - ... and 165 more
+  - ... and 122 more
 
 ## Differentiated Feature Candidates
 
@@ -145,6 +145,7 @@ The repository contains multiple AI-oriented bot and control surfaces across bac
   - `backend/ai/bots/__init__.py`
   - `backend/ai/bots/mapleload.py`
   - `backend/bots/ai_dispatcher.py`
+  - `backend/bots/base_bot.py`
   - `backend/bots/command_parser.py`
   - `backend/bots/commands.py`
   - `backend/bots/customer_service.py`
@@ -153,7 +154,6 @@ The repository contains multiple AI-oriented bot and control surfaces across bac
   - `backend/bots/finance_intelligence.py`
   - `backend/bots/freight_bookings.py`
   - `backend/bots/freight_bot.py`
-  - `backend/bots/freight_broker.py`
 
 ### Payment workflow platform
 
@@ -200,6 +200,7 @@ A dedicated training-center and trainer-bot subsystem exists for structured trai
 - Confidence: Medium
 - Evidence:
   - `INCIDENT_RESPONSE_TRAINING_GUIDE.md`
+  - `SUPPORT_TEAM_TRAINING.md`
   - `backend/bots/trainer_bot.py`
   - `backend/routes/training_center.py`
   - `backend/safety/core/training_manager.py`
@@ -210,7 +211,6 @@ A dedicated training-center and trainer-bot subsystem exists for structured trai
   - `backend/training_center/assessment_engine.py`
   - `backend/training_center/main.py`
   - `backend/training_center/simulation_engine.py`
-  - `backend/training_center/trainer_bot.py`
 
 ### Real-time transport monitoring
 
@@ -261,9 +261,9 @@ A system that coordinates specialized software agents across logistics workflows
   - `backend/ai/bots/__init__.py`
   - `backend/ai/bots/mapleload.py`
   - `backend/bots/ai_dispatcher.py`
+  - `backend/bots/base_bot.py`
   - `backend/bots/command_parser.py`
   - `backend/bots/commands.py`
-  - `backend/bots/customer_service.py`
 
 ### Claim 2: Integrated freight-payment workflow platform
 
@@ -298,11 +298,11 @@ A training-center subsystem that plans, tracks, and evaluates structured scenari
 - Confidence: Medium
 - Evidence:
   - `INCIDENT_RESPONSE_TRAINING_GUIDE.md`
+  - `SUPPORT_TEAM_TRAINING.md`
   - `backend/bots/trainer_bot.py`
   - `backend/routes/training_center.py`
   - `backend/safety/core/training_manager.py`
   - `backend/tests/test_trainer_runtime_bot.py`
-  - `backend/tests/test_training_center.py`
 
 ### Claim 5: Real-time transport visibility and alert delivery
 
@@ -338,11 +338,11 @@ A document-processing flow with upload, parsing, OCR, and dashboard presentation
 
 | Criterion | Score | Weight | Basis |
 |---|---:|---:|---|
-| Repository scale | 100 | 15% | 2387 scanned text files |
-| API surface | 100 | 20% | 1199 detected API endpoints |
-| Data model maturity | 100 | 15% | 195 model or migration artifacts |
-| AI and automation depth | 100 | 20% | 181 bot-related files |
-| Security footprint | 100 | 15% | 253 security-related files |
+| Repository scale | 100 | 15% | 2443 scanned text files |
+| API surface | 100 | 20% | 1223 detected API endpoints |
+| Data model maturity | 100 | 15% | 152 model or migration artifacts |
+| AI and automation depth | 100 | 20% | 184 bot-related files |
+| Security footprint | 100 | 15% | 254 security-related files |
 | Differentiated capabilities | 88 | 15% | 6 evidence-based feature candidates |
 
 ### Recommendations

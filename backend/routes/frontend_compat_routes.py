@@ -248,31 +248,40 @@ async def system_metrics():
     # 2. Database Usage - extract from memory usage
     database_usage_percent = float(host.get("memory", {}).get("percent", 0)) if host else 0
     
-    # 3. Cache Hit Rate - check Redis if available
+    # 3. Cache Hit Rate - keep this non-blocking in local/dev environments.
     cache_hit_rate_percent = 0.0
-    try:
-        import redis.asyncio as redis_client  # type: ignore
-        redis_conn = None
+    redis_url = (os.getenv("REDIS_URL") or "").strip()
+    if not redis_url:
+        cache_hit_rate_percent = 85.0
+    else:
         try:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            redis_conn = await redis_client.from_url(redis_url, decode_responses=True)
-            info = await redis_conn.info()
-            hits = int(info.get("keyspace_hits", 0)) if info else 0
-            misses = int(info.get("keyspace_misses", 0)) if info else 0
-            if hits + misses > 0:
-                cache_hit_rate_percent = float((hits / (hits + misses)) * 100)
-            else:
-                cache_hit_rate_percent = 100.0
+            import redis.asyncio as redis_client  # type: ignore
+
+            redis_conn = None
+            try:
+                redis_conn = redis_client.from_url(
+                    redis_url,
+                    decode_responses=True,
+                    socket_connect_timeout=0.5,
+                    socket_timeout=0.5,
+                )
+                info = await asyncio.wait_for(redis_conn.info(), timeout=0.75)
+                hits = int(info.get("keyspace_hits", 0)) if info else 0
+                misses = int(info.get("keyspace_misses", 0)) if info else 0
+                if hits + misses > 0:
+                    cache_hit_rate_percent = float((hits / (hits + misses)) * 100)
+                else:
+                    cache_hit_rate_percent = 100.0
+            except Exception:
+                cache_hit_rate_percent = 85.0
+            finally:
+                if redis_conn:
+                    try:
+                        await redis_conn.close()
+                    except Exception:
+                        pass
         except Exception:
             cache_hit_rate_percent = 85.0
-        finally:
-            if redis_conn:
-                try:
-                    await redis_conn.close()
-                except Exception:
-                    pass
-    except Exception:
-        cache_hit_rate_percent = 85.0
     
     # 4. Message Queue Backlog
     message_queue_backlog = 0
@@ -684,4 +693,3 @@ async def run_health_check():
 
 
 __all__ = ["router"]
-

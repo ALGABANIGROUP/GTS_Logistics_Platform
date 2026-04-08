@@ -3,18 +3,21 @@ Transport Management API Routes
 Handles shipments, trucks, tracking, and WebSocket real-time updates
 """
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
-from typing import List, Dict, Any
 from datetime import datetime, timedelta
-import json
-import asyncio
+import logging
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import OperationalError
+
 from backend.database.config import get_db
 from ..models.shipment import Shipment
 from ..models.truck_location import TruckLocation
 
 router = APIRouter(prefix="/api/v1/transport", tags=["transport"])
+logger = logging.getLogger(__name__)
 
 # Active WebSocket connections for real-time updates
 active_connections: Dict[str, List[WebSocket]] = {
@@ -52,6 +55,131 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+def _to_iso(value: Any) -> str | None:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return None
+
+
+def _coords(lat: Any, lng: Any) -> list[float] | None:
+    if lat is None or lng is None:
+        return None
+    try:
+        return [float(lat), float(lng)]
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_currency(amount: Any, currency: str | None = "USD") -> str | None:
+    if amount is None:
+        return None
+    try:
+        return f"{currency or 'USD'} {float(amount):,.2f}"
+    except (TypeError, ValueError):
+        return None
+
+
+def _serialize_shipment(shipment: Shipment) -> dict[str, Any]:
+    origin = _coords(
+        getattr(shipment, "origin_latitude", None),
+        getattr(shipment, "origin_longitude", None),
+    )
+    destination = _coords(
+        getattr(shipment, "destination_latitude", None),
+        getattr(shipment, "destination_longitude", None),
+    )
+    current_location = _coords(
+        getattr(shipment, "current_latitude", None),
+        getattr(shipment, "current_longitude", None),
+    ) or origin or destination
+
+    progress = getattr(shipment, "progress_percentage", None)
+    if progress is None:
+        total = getattr(shipment, "distance_total_km", None)
+        traveled = getattr(shipment, "distance_traveled_km", None)
+        if total:
+            try:
+                progress = round((float(traveled or 0) / float(total)) * 100, 2)
+            except (TypeError, ValueError, ZeroDivisionError):
+                progress = 0
+
+    name = (
+        getattr(shipment, "goods_description", None)
+        or getattr(shipment, "shipment_number", None)
+        or f"Shipment #{getattr(shipment, 'id', 'unknown')}"
+    )
+    from_label = ", ".join(
+        part
+        for part in [
+            getattr(shipment, "origin_city", None),
+            getattr(shipment, "origin_state", None),
+        ]
+        if part
+    ) or getattr(shipment, "origin_address", None) or "Origin"
+    to_label = ", ".join(
+        part
+        for part in [
+            getattr(shipment, "destination_city", None),
+            getattr(shipment, "destination_state", None),
+        ]
+        if part
+    ) or getattr(shipment, "destination_address", None) or "Destination"
+
+    return {
+        "id": getattr(shipment, "id", None),
+        "shipmentNumber": getattr(shipment, "shipment_number", None),
+        "name": name,
+        "status": getattr(shipment, "status", "pending"),
+        "from": origin,
+        "to": destination,
+        "fromLabel": from_label,
+        "toLabel": to_label,
+        "currentLocation": current_location,
+        "currentLocationDescription": getattr(shipment, "current_location_description", None),
+        "driver": getattr(shipment, "driver_name", None),
+        "driverPhone": getattr(shipment, "driver_phone", None),
+        "estimatedArrival": _to_iso(getattr(shipment, "delivery_deadline", None))
+        or _to_iso(getattr(shipment, "delivery_scheduled", None)),
+        "pickupScheduled": _to_iso(getattr(shipment, "pickup_scheduled", None)),
+        "deliveryScheduled": _to_iso(getattr(shipment, "delivery_scheduled", None)),
+        "weight": f"{getattr(shipment, 'weight_kg', 0)} kg" if getattr(shipment, "weight_kg", None) is not None else None,
+        "value": _format_currency(
+            getattr(shipment, "total_price", None) or getattr(shipment, "base_price", None),
+            getattr(shipment, "currency", "USD"),
+        ),
+        "progress": progress or 0,
+        "shipmentType": getattr(shipment, "shipment_type", None),
+        "paymentStatus": getattr(shipment, "payment_status", None),
+        "referenceNumber": getattr(shipment, "reference_number", None),
+        "truckId": getattr(shipment, "truck_id", None),
+        "driverId": getattr(shipment, "driver_id", None),
+        "assigned_driver": getattr(shipment, "driver_name", None),
+        "raw": shipment.to_dict(),
+    }
+
+
+def _serialize_truck(truck: TruckLocation) -> dict[str, Any]:
+    return {
+        "id": getattr(truck, "id", None),
+        "license": getattr(truck, "license_plate", None),
+        "licensePlate": getattr(truck, "license_plate", None),
+        "truckNumber": getattr(truck, "truck_number", None),
+        "status": getattr(truck, "status", "stopped"),
+        "currentLocation": _coords(
+            getattr(truck, "latitude", None),
+            getattr(truck, "longitude", None),
+        ),
+        "driver": getattr(truck, "driver_name", None),
+        "driverId": getattr(truck, "driver_id", None),
+        "speed": getattr(truck, "speed", 0) or 0,
+        "heading": getattr(truck, "heading", 0) or 0,
+        "shipmentId": getattr(truck, "current_shipment_id", None),
+        "fuelLevel": getattr(truck, "fuel_level", None),
+        "lastUpdate": _to_iso(getattr(truck, "last_update", None)),
+        "raw": truck.to_dict(),
+    }
+
+
 # ==================== Shipment Routes ====================
 
 @router.get("/shipments")
@@ -59,92 +187,93 @@ async def get_shipments(
     status: str = Query(None),
     limit: int = Query(100),
     offset: int = Query(0),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get all shipments with optional filtering
     """
-    query = db.query(Shipment)
-    
+    query = select(Shipment)
+
     if status:
-        query = query.filter(Shipment.status == status)
-    
-    total = query.count()
-    shipments = query.offset(offset).limit(limit).all()
-    
-    return {
-        "data": shipments,
-        "total": total,
-        "limit": limit,
-        "offset": offset
-    }
+        query = query.where(Shipment.status == status)
+
+    try:
+        result = await db.execute(query.offset(offset).limit(limit))
+        shipments = result.scalars().all()
+    except OperationalError as exc:
+        logger.warning("Transport shipments query unavailable: %s", exc)
+        return []
+    return [_serialize_shipment(shipment) for shipment in shipments]
 
 
 @router.get("/shipments/{shipment_id}")
-async def get_shipment(shipment_id: int, db: Session = Depends(get_db)):
+async def get_shipment(shipment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get details of a specific shipment
     """
-    shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
-    
+    result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
+    shipment = result.scalar_one_or_none()
+
     if not shipment:
-        return {"error": "Shipment not found"}, 404
-    
+        raise HTTPException(status_code=404, detail="Shipment not found")
+
     return {
-        "data": shipment,
+        "data": _serialize_shipment(shipment),
         "current_location": {
-            "lat": getattr(shipment, 'current_lat', None),
-            "lng": getattr(shipment, 'current_lng', None),
-            "timestamp": getattr(shipment, 'last_location_update', None)
-        }
+            "lat": getattr(shipment, 'current_latitude', None),
+            "lng": getattr(shipment, 'current_longitude', None),
+            "timestamp": _to_iso(getattr(shipment, 'updated_at', None)),
+        },
     }
 
 
 @router.post("/shipments")
 async def create_shipment(
     shipment_data: dict,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Create a new shipment
     """
     new_shipment = Shipment(**shipment_data)
     db.add(new_shipment)
-    db.commit()
-    db.refresh(new_shipment)
+    await db.commit()
+    await db.refresh(new_shipment)
     
-    return {"data": new_shipment, "message": "Shipment created successfully"}
+    return {"data": _serialize_shipment(new_shipment), "message": "Shipment created successfully"}
 
 
 @router.put("/shipments/{shipment_id}")
 async def update_shipment(
     shipment_id: int,
     update_data: dict,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Update a shipment's details
     """
-    shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
-    
+    result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
+    shipment = result.scalar_one_or_none()
+
     if not shipment:
-        return {"error": "Shipment not found"}, 404
-    
+        raise HTTPException(status_code=404, detail="Shipment not found")
+
     for key, value in update_data.items():
         setattr(shipment, key, value)
-    
-    db.commit()
-    db.refresh(shipment)
-    
-    return {"data": shipment, "message": "Shipment updated successfully"}
+
+    await db.commit()
+    await db.refresh(shipment)
+
+    return {"data": _serialize_shipment(shipment), "message": "Shipment updated successfully"}
 
 
 @router.post("/shipments/{shipment_id}/track")
-async def track_shipment(shipment_id: int, db: Session = Depends(get_db)):
+async def track_shipment(shipment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get tracking information for a specific shipment
     """
-    shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
+    shipment_result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
+    shipment = shipment_result.scalar_one_or_none()
     
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
@@ -152,7 +281,8 @@ async def track_shipment(shipment_id: int, db: Session = Depends(get_db)):
     truck_location = None
     truck_id = getattr(shipment, 'truck_id', None)
     if truck_id is not None:
-        truck_location = db.query(TruckLocation).filter(TruckLocation.id == truck_id).first()
+        truck_result = await db.execute(select(TruckLocation).where(TruckLocation.id == truck_id))
+        truck_location = truck_result.scalar_one_or_none()
 
     current_lat = getattr(shipment, 'current_latitude', None)
     current_lng = getattr(shipment, 'current_longitude', None)
@@ -220,22 +350,23 @@ async def track_shipment(shipment_id: int, db: Session = Depends(get_db)):
 async def update_shipment_location(
     shipment_id: int,
     location: dict,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Update shipment current location (from GPS/tracking device)
     """
-    shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
-    
+    result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
+    shipment = result.scalar_one_or_none()
+
     if not shipment:
-        return {"error": "Shipment not found"}, 404
-    
-    setattr(shipment, 'current_lat', location.get('lat'))
-    setattr(shipment, 'current_lng', location.get('lng'))
-    setattr(shipment, 'last_location_update', datetime.utcnow())
-    
-    db.commit()
-    
+        raise HTTPException(status_code=404, detail="Shipment not found")
+
+    setattr(shipment, 'current_latitude', location.get('lat'))
+    setattr(shipment, 'current_longitude', location.get('lng'))
+    setattr(shipment, 'updated_at', datetime.utcnow())
+
+    await db.commit()
+
     # Broadcast location update to tracking channel
     await manager.broadcast({
         "type": "location_update",
@@ -244,9 +375,9 @@ async def update_shipment_location(
             "lat": location.get('lat'),
             "lng": location.get('lng'),
             "timestamp": datetime.utcnow().isoformat()
-        }
+        },
     }, 'tracking')
-    
+
     return {"status": "updated", "message": "Location updated successfully"}
 
 
@@ -257,41 +388,41 @@ async def get_trucks(
     active_only: bool = Query(False),
     limit: int = Query(100),
     offset: int = Query(0),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get all trucks with optional filtering for active only
     """
-    query = db.query(TruckLocation)
-    
+    query = select(TruckLocation)
+
     if active_only:
         # Filter for recent updates (last 30 minutes)
         cutoff_time = datetime.utcnow() - timedelta(minutes=30)
-        query = query.filter(TruckLocation.last_update > cutoff_time)
-    
-    total = query.count()
-    trucks = query.offset(offset).limit(limit).all()
-    
-    return {
-        "data": trucks,
-        "total": total,
-        "limit": limit,
-        "offset": offset
-    }
+        query = query.where(TruckLocation.last_update > cutoff_time)
+
+    try:
+        result = await db.execute(query.offset(offset).limit(limit))
+        trucks = result.scalars().all()
+    except OperationalError as exc:
+        logger.warning("Transport trucks query unavailable: %s", exc)
+        return []
+
+    return [_serialize_truck(truck) for truck in trucks]
 
 
 @router.get("/trucks/{truck_id}")
-async def get_truck(truck_id: int, db: Session = Depends(get_db)):
+async def get_truck(truck_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get details of a specific truck
     """
-    truck = db.query(TruckLocation).filter(TruckLocation.id == truck_id).first()
-    
+    result = await db.execute(select(TruckLocation).where(TruckLocation.id == truck_id))
+    truck = result.scalar_one_or_none()
+
     if not truck:
-        return {"error": "Truck not found"}, 404
-    
+        raise HTTPException(status_code=404, detail="Truck not found")
+
     return {
-        "data": truck
+        "data": _serialize_truck(truck)
     }
 
 
@@ -299,12 +430,13 @@ async def get_truck(truck_id: int, db: Session = Depends(get_db)):
 async def update_truck_location(
     truck_id: int,
     location_data: dict,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Update truck location from driver app or tracking device
     """
-    truck = db.query(TruckLocation).filter(TruckLocation.id == truck_id).first()
+    result = await db.execute(select(TruckLocation).where(TruckLocation.id == truck_id))
+    truck = result.scalar_one_or_none()
     
     if not truck:
         # Create new truck location record
@@ -327,8 +459,8 @@ async def update_truck_location(
         truck.status = location_data.get('status', truck.status)
         truck.last_update = datetime.utcnow()
     
-    db.commit()
-    db.refresh(truck)
+    await db.commit()
+    await db.refresh(truck)
     
     # Broadcast location update
     await manager.broadcast({
@@ -456,12 +588,23 @@ async def websocket_driver(websocket: WebSocket, driver_id: str):
 # ==================== Statistics & Reports ====================
 
 @router.get("/statistics")
-async def get_transport_statistics(db: Session = Depends(get_db)):
+async def get_transport_statistics(db: AsyncSession = Depends(get_db)):
     """
     Get transport statistics and metrics
     """
-    shipments = db.query(Shipment).all() if hasattr(db, 'query') else []
-    trucks = db.query(TruckLocation).all() if hasattr(db, 'query') else []
+    try:
+        shipments_result = await db.execute(select(Shipment))
+        shipments = shipments_result.scalars().all()
+    except OperationalError as exc:
+        logger.warning("Transport statistics shipment query unavailable: %s", exc)
+        shipments = []
+
+    try:
+        trucks_result = await db.execute(select(TruckLocation))
+        trucks = trucks_result.scalars().all()
+    except OperationalError as exc:
+        logger.warning("Transport statistics truck query unavailable: %s", exc)
+        trucks = []
     
     stats = {
         "total_shipments": len(shipments),
@@ -478,7 +621,7 @@ async def get_transport_statistics(db: Session = Depends(get_db)):
 
 
 @router.get("/performance")
-async def get_performance_metrics(db: Session = Depends(get_db)):
+async def get_performance_metrics(db: AsyncSession = Depends(get_db)):
     """
     Get performance metrics and KPIs
     """

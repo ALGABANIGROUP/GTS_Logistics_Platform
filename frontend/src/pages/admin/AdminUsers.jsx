@@ -1,6 +1,29 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import RequireAuth from '../../components/RequireAuth.jsx';
-import axiosClient from "@/api/axiosClient";
+import axiosClient from "../../api/axiosClient";
+import { useNotification } from "../../contexts/NotificationContext";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Slide,
+  Pagination,
+  PaginationItem,
+  CircularProgress,
+  Box,
+  Alert,
+  Snackbar,
+  AlertTitle,
+  IconButton
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import WarningIcon from '@mui/icons-material/Warning';
+import InfoIcon from '@mui/icons-material/Info';
 
 // English-only role mappings (matches backend/security/rbac.py INTERNAL_ROLE_ORDER + PARTNER_ROLE)
 const ROLE_DISPLAY = {
@@ -28,6 +51,227 @@ const DELETE_REASONS = [
   { value: "other", label: "Other Reason" },
 ];
 
+// ==================== Confirmation Dialogs ====================
+
+// Transition for smooth dialog animation
+const Transition = React.forwardRef(function Transition(
+  props,
+  ref,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+// Delete User Confirmation
+const DeleteConfirmDialog = ({ open, user, onClose, onConfirm }) => {
+  return (
+    <Dialog
+      open={open}
+      TransitionComponent={Transition}
+      keepMounted
+      onClose={onClose}
+      aria-describedby="alert-dialog-slide-description"
+    >
+      <DialogTitle sx={{ bgcolor: '#ff4444', color: 'white' }}>
+        ⚠️ Confirm Delete User
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-slide-description" sx={{ mt: 2 }}>
+          Are you sure you want to delete the user <strong>{user?.full_name || user?.email}</strong>?
+          <br /><br />
+          <span style={{ color: '#ff4444' }}>
+            This action cannot be undone. The user will be permanently removed from the system.
+          </span>
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="error" variant="contained">
+          Delete Permanently
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Bulk Delete Confirmation
+const BulkDeleteConfirmDialog = ({ open, count, onClose, onConfirm }) => {
+  return (
+    <Dialog
+      open={open}
+      TransitionComponent={Transition}
+      keepMounted
+      onClose={onClose}
+    >
+      <DialogTitle sx={{ bgcolor: '#ff4444', color: 'white' }}>
+        ⚠️ Confirm Bulk Delete
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mt: 2 }}>
+          You are about to delete <strong>{count} users</strong> permanently.
+          <br /><br />
+          <span style={{ color: '#ff4444' }}>
+            This action cannot be undone. All selected users will be permanently removed.
+          </span>
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="error" variant="contained">
+          Delete All ({count})
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Toggle Status Confirmation (Activate/Deactivate)
+const ToggleStatusDialog = ({ open, user, action, onClose, onConfirm }) => {
+  const isActivating = action === 'activate';
+
+  return (
+    <Dialog
+      open={open}
+      TransitionComponent={Transition}
+      keepMounted
+      onClose={onClose}
+    >
+      <DialogTitle sx={{ bgcolor: isActivating ? '#4caf50' : '#ff9800', color: 'white' }}>
+        {isActivating ? '✅ Confirm Activation' : '⚠️ Confirm Deactivation'}
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mt: 2 }}>
+          Are you sure you want to <strong>{isActivating ? 'activate' : 'deactivate'}</strong> the user
+          <br />
+          <strong>{user?.full_name || user?.email}</strong>?
+          <br /><br />
+          {!isActivating && (
+            <span style={{ color: '#ff9800' }}>
+              Deactivated users will not be able to access the system.
+            </span>
+          )}
+          {isActivating && (
+            <span style={{ color: '#4caf50' }}>
+              Activated users will regain full access to the system.
+            </span>
+          )}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button
+          onClick={onConfirm}
+          color={isActivating ? 'success' : 'warning'}
+          variant="contained"
+        >
+          {isActivating ? 'Activate' : 'Deactivate'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Create/Edit User Save Confirmation
+const SaveConfirmDialog = ({ open, isEditing, onClose, onConfirm }) => {
+  return (
+    <Dialog
+      open={open}
+      TransitionComponent={Transition}
+      keepMounted
+      onClose={onClose}
+    >
+      <DialogTitle sx={{ bgcolor: '#2196f3', color: 'white' }}>
+        💾 Confirm Save
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mt: 2 }}>
+          Are you sure you want to {isEditing ? 'update' : 'create'} this user?
+          <br /><br />
+          Please review all information before saving.
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Review
+        </Button>
+        <Button onClick={onConfirm} color="primary" variant="contained">
+          Save
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Bulk Activate Confirmation
+const BulkActivateDialog = ({ open, count, onClose, onConfirm }) => {
+  return (
+    <Dialog
+      open={open}
+      TransitionComponent={Transition}
+      keepMounted
+      onClose={onClose}
+    >
+      <DialogTitle sx={{ bgcolor: '#4caf50', color: 'white' }}>
+        ✅ Confirm Bulk Activation
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText sx={{ mt: 2 }}>
+          You are about to activate <strong>{count} users</strong>.
+          <br /><br />
+          These users will regain full access to the system.
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="success" variant="contained">
+          Activate All ({count})
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Success/Error Snackbar
+const NotificationSnackbar = ({ open, message, severity, onClose }) => {
+  const getIcon = (severity) => {
+    switch (severity) {
+      case 'success':
+        return <CheckCircleIcon sx={{ mr: 1 }} />;
+      case 'error':
+        return <ErrorIcon sx={{ mr: 1 }} />;
+      case 'warning':
+        return <WarningIcon sx={{ mr: 1 }} />;
+      default:
+        return <InfoIcon sx={{ mr: 1 }} />;
+    }
+  };
+
+  return (
+    <Snackbar
+      open={open}
+      autoHideDuration={5000}
+      onClose={onClose}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <Alert
+        onClose={onClose}
+        severity={severity}
+        icon={getIcon(severity)}
+        sx={{ width: '100%' }}
+      >
+        {message}
+      </Alert>
+    </Snackbar>
+  );
+};
+
 export default function AdminUsers() {
   return (
     <RequireAuth roles={["admin", "owner", "super_admin"]}>
@@ -37,6 +281,19 @@ export default function AdminUsers() {
 }
 
 function AdminUsersContent() {
+  // Notification system
+  const { showSuccess, showError, showWarning, showInfo } = useNotification();
+
+  // ==================== DIALOG STATES (Fixes ReferenceErrors) ====================
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [bulkActivateDialogOpen, setBulkActivateDialogOpen] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [bulkDeleteReason, setBulkDeleteReason] = useState("");
+  const [bulkDeleteNotes, setBulkDeleteNotes] = useState("");
+
   // State management
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,19 +301,25 @@ function AdminUsersContent() {
   const [notice, setNotice] = useState("");
   const [serverStats, setServerStats] = useState(null);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  // UI state
+  // UI state (Consolidating with Dialog States above)
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [toggleAction, setToggleAction] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -75,22 +338,32 @@ function AdminUsersContent() {
   const [notifyUser, setNotifyUser] = useState(false);
   const [archiveData, setArchiveData] = useState(true);
 
-  // Load data
-  useEffect(() => {
-    loadUsers();
-    loadStats();
-  }, []);
-
-  const loadUsers = async () => {
+  // Load users with pagination
+  const loadUsers = useCallback(async (pageNum = 1, limit = rowsPerPage) => {
     setLoading(true);
     setError("");
     try {
-      const [res, activityRes] = await Promise.all([
-        axiosClient.get("/api/v1/admin/users/management"),
-        axiosClient.get("/api/v1/admin/users/activity/recent?limit=100").catch(() => ({ data: [] })),
+      const params = {
+        page: pageNum,
+        limit: limit,
+        search: searchQuery,
+        role: filterRole,
+        status: filterStatus
+      };
+
+      const [res, activityRes] = await Promise.allSettled([
+        axiosClient.get("/api/v1/admin/users/management", { params }),
+        axiosClient.get("/api/v1/admin/users/activity/recent?limit=100"),
       ]);
-      const userList = res?.data?.users || res?.data?.data?.users || res?.data?.data || res?.data || [];
-      const activityList = activityRes?.data || [];
+
+      if (res.status === 'rejected') {
+        throw new Error(res.reason?.response?.data?.detail || res.reason?.message || "Connection to API failed");
+      }
+
+      const userList = res.value?.data?.users || res.value?.data?.data || [];
+      const total = res.value?.data?.total || userList.length;
+      const activityList = activityRes.status === 'fulfilled' ? activityRes.value.data : [];
+
       const lastLoginById = new Map();
       const lastLoginByEmail = new Map();
 
@@ -118,13 +391,18 @@ function AdminUsersContent() {
       }) : [];
 
       setUsers(normalizedUsers);
+      setTotalUsers(total);
+      setPage(pageNum);
+      setHasMore(normalizedUsers.length === limit);
     } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Failed to load users");
+      const errorMsg = err?.response?.data?.detail || err?.message || "Failed to load users";
+      setError(errorMsg);
       setUsers([]);
+      showError(errorMsg, 'Loading Error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, filterRole, filterStatus, rowsPerPage, showError]);
 
   const loadStats = async () => {
     try {
@@ -135,35 +413,14 @@ function AdminUsersContent() {
     }
   };
 
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    let result = users;
+  // Load data
+  useEffect(() => {
+    loadUsers(1, rowsPerPage);
+    loadStats();
+  }, [loadUsers, rowsPerPage]);
 
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(user =>
-        user.full_name?.toLowerCase().includes(query) ||
-        user.email?.toLowerCase().includes(query) ||
-        user.username?.toLowerCase().includes(query) ||
-        user.phone_number?.toLowerCase().includes(query) ||
-        String(user.id).includes(query)
-      );
-    }
-
-    // Role filter
-    if (filterRole) {
-      result = result.filter(user => user.role === filterRole);
-    }
-
-    // Status filter
-    if (filterStatus) {
-      const isActive = filterStatus === "active";
-      result = result.filter(user => user.is_active === isActive);
-    }
-
-    return result;
-  }, [users, searchQuery, filterRole, filterStatus]);
+  // Filtered users (now handled server-side)
+  const filteredUsers = users;
 
   const selectedSet = useMemo(() => new Set(selectedIds.map((id) => String(id))), [selectedIds]);
   const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every((user) => selectedSet.has(String(user.id)));
@@ -191,13 +448,22 @@ function AdminUsersContent() {
 
   const handleCreate = async () => {
     if (!formData.email || !formData.password) {
-      setError("Email and password are required");
+      showError("Email and password are required", "Validation Error");
       return;
     }
 
+    setSaveDialogOpen(true);
+  };
+
+  const confirmCreate = async () => {
     try {
+      showInfo('Creating user...', 'Processing');
       await axiosClient.post("/api/v1/admin/users", formData);
-      setNotice("User created successfully.");
+
+      showSuccess(
+        `User "${formData.full_name || formData.email}" has been created successfully.`,
+        'User Created'
+      );
       setShowCreateModal(false);
       setFormData({
         full_name: "",
@@ -208,17 +474,30 @@ function AdminUsersContent() {
         role: "user",
         is_active: true,
       });
-      await loadUsers();
+      await loadUsers(1, rowsPerPage);
       await loadStats();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to create user");
+      showError(err?.response?.data?.detail || "Failed to create user", "Creation Failed");
     }
   };
 
   const handleEdit = async () => {
     if (!selectedUser) return;
+    setSaveDialogOpen(true);
+  };
 
+  const confirmSave = async () => {
     try {
+      if (selectedUser) await confirmEdit();
+      else await confirmCreate();
+    } finally {
+      setSaveDialogOpen(false);
+    }
+  };
+
+  const confirmEdit = async () => {
+    try {
+      showInfo('Updating user...', 'Processing');
       const payload = normalizeUpdatePayload({
         full_name: formData.full_name,
         email: formData.email,
@@ -229,61 +508,89 @@ function AdminUsersContent() {
         password: formData.password,
       });
       await axiosClient.patch(`/api/v1/admin/users/${selectedUser.id}`, payload);
+
+      showSuccess(
+        `User "${formData.full_name || formData.email}" has been updated successfully.`,
+        'User Updated'
+      );
       setShowEditModal(false);
       setSelectedUser(null);
-      setError("");
-      setNotice("User updated instantly by System Admin Bot.");
-      await loadUsers();
+      await loadUsers(page, rowsPerPage);
       await loadStats();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to update user");
+      showError(err?.response?.data?.detail || "Failed to update user", "Update Failed");
     }
   };
 
   const handleDelete = async () => {
     if (!selectedUser || !deleteReason) {
-      setError("Please select a reason for deletion");
+      showError("Please select a reason for deletion", "Validation Error");
       return;
     }
 
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
     try {
+      showWarning(`Deleting user "${selectedUser.full_name || selectedUser.email}"...`, 'Processing');
       await axiosClient.delete(`/api/v1/admin/users/${selectedUser.id}`);
-      setShowDeleteModal(false);
+
+      showSuccess(
+        `User "${selectedUser.full_name || selectedUser.email}" has been permanently deleted.`,
+        'User Deleted'
+      );
       setSelectedUser(null);
       setDeleteReason("");
       setDeleteNotes("");
-      setError("");
-      setNotice("User deactivated instantly by System Admin Bot.");
-      await loadUsers();
+      await loadUsers(page, rowsPerPage);
       await loadStats();
     } catch (err) {
       try {
         await axiosClient.patch(`/api/v1/admin/users/${selectedUser.id}`, { is_active: false });
-        setShowDeleteModal(false);
+        showSuccess(
+          `User "${selectedUser.full_name || selectedUser.email}" has been archived (deletion unavailable).`,
+          'User Archived'
+        );
         setSelectedUser(null);
         setDeleteReason("");
         setDeleteNotes("");
-        setError("");
-        setNotice("User archived instantly by System Admin Bot because full deletion was unavailable.");
-        await loadUsers();
+        await loadUsers(page, rowsPerPage);
         await loadStats();
       } catch (fallbackErr) {
-        setError(fallbackErr?.response?.data?.detail || err?.response?.data?.detail || "Failed to delete user");
+        showError(fallbackErr?.response?.data?.detail || err?.response?.data?.detail || "Failed to delete user", "Deletion Failed");
       }
+    } finally {
+      setDeleteDialogOpen(false);
     }
   };
 
   const handleToggleStatus = async (user) => {
+    setSelectedUser(user);
+    setToggleAction(user.is_active ? 'deactivate' : 'activate');
+    setToggleStatusDialogOpen(true);
+  };
+
+  const confirmToggleStatus = async () => {
+    const isActivating = toggleAction === 'activate';
     try {
-      await axiosClient.patch(`/api/v1/admin/users/${user.id}`, {
-        is_active: !user.is_active
+      showInfo(`${isActivating ? 'Activating' : 'Deactivating'} user...`, 'Processing');
+      await axiosClient.patch(`/api/v1/admin/users/${selectedUser.id}`, {
+        is_active: isActivating
       });
-      setError("");
-      setNotice(`User ${user.is_active ? "deactivated" : "activated"} instantly by System Admin Bot.`);
-      await loadUsers();
+
+      showSuccess(
+        `User "${selectedUser.full_name || selectedUser.email}" has been ${isActivating ? 'activated' : 'deactivated'} successfully.`,
+        `User ${isActivating ? 'Activated' : 'Deactivated'}`
+      );
+      setSelectedUser(null);
+      setToggleAction(null);
+      await loadUsers(page, rowsPerPage);
       await loadStats();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to toggle user status");
+      showError(err?.response?.data?.detail || `Failed to ${toggleAction} user`, `${toggleAction.charAt(0).toUpperCase() + toggleAction.slice(1)} Failed`);
+    } finally {
+      setToggleStatusDialogOpen(false);
     }
   };
 
@@ -310,54 +617,43 @@ function AdminUsersContent() {
 
   const clearSelection = () => setSelectedIds([]);
 
-  const handleBulkDisable = async (confirmed = false) => {
+  const handleBulkDisable = async () => {
     if (!selectedCount) return;
-    if (!confirmed) {
-      setConfirmAction({
-        kind: "disable",
-        title: "Disable selected users?",
-        message: `This will disable ${selectedCount} selected user(s).`,
-        confirmLabel: "Disable",
-      });
-      return;
-    }
+    // This will be handled by the UI button click
+  };
 
+  const confirmBulkDisable = async () => {
     setBulkBusy(true);
     try {
+      showInfo(`Disabling ${selectedCount} users...`, 'Processing');
       const results = await Promise.allSettled(
         selectedIds.map((id) => axiosClient.patch(`/api/v1/admin/users/${id}`, { is_active: false }))
       );
       const failed = results.filter((r) => r.status === "rejected").length;
+
       if (failed) {
-        setError(`${failed} user(s) failed to update.`);
-        setNotice("");
+        showError(`${failed} user(s) failed to update.`, 'Partial Failure');
       } else {
-        setError("");
-        setNotice(`${selectedCount} user(s) disabled successfully.`);
+        showSuccess(`${selectedCount} user(s) disabled successfully.`, 'Bulk Disable Complete');
       }
-      await loadUsers();
+      await loadUsers(page, rowsPerPage);
       clearSelection();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to update users");
+      showError(err?.response?.data?.detail || "Failed to update users", "Bulk Operation Failed");
     } finally {
       setBulkBusy(false);
     }
   };
 
-  const handleBulkDelete = async (confirmed = false) => {
+  const handleBulkDelete = async () => {
     if (!selectedCount) return;
-    if (!confirmed) {
-      setConfirmAction({
-        kind: "delete",
-        title: "Delete selected users?",
-        message: `This will permanently remove ${selectedCount} selected user(s) where possible and disable any remaining accounts.`,
-        confirmLabel: "Delete",
-      });
-      return;
-    }
+    setBulkDeleteDialogOpen(true);
+  };
 
+  const confirmBulkDelete = async () => {
     setBulkBusy(true);
     try {
+      showWarning(`Deleting ${selectedCount} users...`, 'Processing');
       const results = await Promise.allSettled(
         selectedIds.map(async (id) => {
           try {
@@ -368,19 +664,48 @@ function AdminUsersContent() {
         })
       );
       const failed = results.filter((r) => r.status === "rejected").length;
+
       if (failed) {
-        setError(`${failed} user(s) failed to delete.`);
-        setNotice("");
+        showError(`${failed} user(s) failed to delete.`, 'Partial Failure');
       } else {
-        setError("");
-        setNotice(`${selectedCount} user(s) processed successfully.`);
+        showSuccess(`${selectedCount} user(s) processed successfully.`, 'Bulk Delete Complete');
       }
-      await loadUsers();
+      await loadUsers(page, rowsPerPage);
       clearSelection();
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to delete users");
+      showError(err?.response?.data?.detail || "Failed to delete users", "Bulk Operation Failed");
     } finally {
       setBulkBusy(false);
+      setBulkDeleteDialogOpen(false);
+    }
+  };
+
+  const handleBulkActivate = async () => {
+    if (!selectedCount) return;
+    setBulkActivateDialogOpen(true);
+  };
+
+  const confirmBulkActivate = async () => {
+    setBulkBusy(true);
+    try {
+      showInfo(`Activating ${selectedCount} users...`, 'Processing');
+      const results = await Promise.allSettled(
+        selectedIds.map((id) => axiosClient.patch(`/api/v1/admin/users/${id}`, { is_active: true }))
+      );
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      if (failed) {
+        showError(`${failed} user(s) failed to update.`, 'Partial Failure');
+      } else {
+        showSuccess(`${selectedCount} user(s) activated successfully.`, 'Bulk Activate Complete');
+      }
+      await loadUsers(page, rowsPerPage);
+      clearSelection();
+    } catch (err) {
+      showError(err?.response?.data?.detail || "Failed to update users", "Bulk Operation Failed");
+    } finally {
+      setBulkBusy(false);
+      setBulkActivateDialogOpen(false);
     }
   };
 
@@ -413,28 +738,70 @@ function AdminUsersContent() {
   };
 
   const exportToCSV = () => {
-    const csvData = filteredUsers.map(user => ({
-      ID: user.id,
-      Name: user.full_name || "",
-      Email: user.email,
-      Role: ROLE_DISPLAY[user.role] || user.role,
-      Status: user.is_active ? "Active" : "Inactive",
-      Joined: formatDate(user.created_at),
-      LastLogin: formatRelativeTime(user.last_login),
-    }));
+    try {
+      showInfo('Preparing CSV export...', 'Processing');
+      const csvData = filteredUsers.map(user => ({
+        ID: user.id,
+        Name: user.full_name || "",
+        Email: user.email,
+        Role: ROLE_DISPLAY[user.role] || user.role,
+        Status: user.is_active ? "Active" : "Inactive",
+        Joined: formatDate(user.created_at),
+        LastLogin: formatRelativeTime(user.last_login),
+      }));
 
-    const headers = Object.keys(csvData[0]);
-    const csv = [
-      headers.join(","),
-      ...csvData.map(row => headers.map(h => row[h]).join(","))
-    ].join("\n");
+      const headers = Object.keys(csvData[0]);
+      const csv = [
+        headers.join(","),
+        ...csvData.map(row => headers.map(h => row[h]).join(","))
+      ].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `users_export_${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `users_export_${new Date().toISOString().split("T")[0]}.csv`;
+      link.click();
+
+      showSuccess('CSV export completed successfully.', 'Export Complete');
+    } catch (error) {
+      showError('Failed to export users. Please try again.', 'Export Failed');
+    }
+  };
+
+  // Pagination handlers
+  const handlePageChange = (event, newPage) => {
+    loadUsers(newPage, rowsPerPage);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    const newLimit = parseInt(event.target.value, 10);
+    setRowsPerPage(newLimit);
+    loadUsers(1, newLimit);
+  };
+
+  // Filter change handlers
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    // Debounce the API call
+    setTimeout(() => loadUsers(1, rowsPerPage), 300);
+  };
+
+  const handleRoleFilterChange = (value) => {
+    setFilterRole(value);
+    loadUsers(1, rowsPerPage);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setFilterStatus(value);
+    loadUsers(1, rowsPerPage);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setFilterRole("");
+    setFilterStatus("");
+    loadUsers(1, rowsPerPage);
   };
 
   if (loading) {
@@ -536,13 +903,13 @@ function AdminUsersContent() {
               type="text"
               placeholder="Search by name, email, phone, or ID..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           <select
             value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
+            onChange={handleRoleFilterChange}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Roles</option>
@@ -552,7 +919,7 @@ function AdminUsersContent() {
           </select>
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={handleStatusFilterChange}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Status</option>
@@ -561,11 +928,7 @@ function AdminUsersContent() {
           </select>
           {(searchQuery || filterRole || filterStatus) && (
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setFilterRole("");
-                setFilterStatus("");
-              }}
+              onClick={handleClearFilters}
               className="px-4 py-2 text-gray-600 hover:text-gray-900"
             >
               Clear
@@ -722,7 +1085,7 @@ function AdminUsersContent() {
                           type="button"
                           onClick={() => {
                             setSelectedUser(user);
-                            setShowDeleteModal(true);
+                            setDeleteDialogOpen(true);
                           }}
                           className="text-red-600 hover:text-red-900"
                         >
@@ -737,6 +1100,44 @@ function AdminUsersContent() {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalUsers > rowsPerPage && (
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-gray-700">
+            Showing {Math.min((page - 1) * rowsPerPage + 1, totalUsers)} to {Math.min(page * rowsPerPage, totalUsers)} of {totalUsers} users
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              <option value={10}>10 per page</option>
+              <option value={25}>25 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-700">
+              Page {page} of {Math.ceil(totalUsers / rowsPerPage)}
+            </span>
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === Math.ceil(totalUsers / rowsPerPage)}
+              className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {confirmAction && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
@@ -908,7 +1309,7 @@ function AdminUsersContent() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedUser && (
+      {deleteDialogOpen && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
@@ -997,7 +1398,7 @@ function AdminUsersContent() {
               <div className="mt-6 flex gap-3 justify-end">
                 <button
                   onClick={() => {
-                    setShowDeleteModal(false);
+                    setDeleteDialogOpen(false);
                     setSelectedUser(null);
                     setDeleteReason("");
                     setDeleteNotes("");
@@ -1018,6 +1419,53 @@ function AdminUsersContent() {
           </div>
         </div>
       )}
+
+      {/* MUI Confirmation Dialogs */}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        user={selectedUser}
+        deleteReason={deleteReason}
+        setDeleteReason={setDeleteReason}
+        deleteNotes={deleteNotes}
+        setDeleteNotes={setDeleteNotes}
+      />
+
+      <BulkDeleteConfirmDialog
+        open={bulkDeleteDialogOpen}
+        onClose={() => setBulkDeleteDialogOpen(false)}
+        onConfirm={confirmBulkDelete}
+        selectedUsers={selectedUsers}
+        deleteReason={bulkDeleteReason}
+        setDeleteReason={setBulkDeleteReason}
+        deleteNotes={bulkDeleteNotes}
+        setDeleteNotes={setBulkDeleteNotes}
+      />
+
+      <ToggleStatusDialog
+        open={toggleStatusDialogOpen}
+        onClose={() => setToggleStatusDialogOpen(false)}
+        onConfirm={confirmToggleStatus}
+        user={selectedUser}
+        newStatus={!selectedUser?.is_active}
+      />
+
+      <SaveConfirmDialog
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+        onConfirm={confirmSave}
+        user={selectedUser}
+        formData={formData}
+        isEditing={!!selectedUser}
+      />
+
+      <BulkActivateDialog
+        open={bulkActivateDialogOpen}
+        onClose={() => setBulkActivateDialogOpen(false)}
+        onConfirm={confirmBulkActivate}
+        selectedUsers={selectedUsers}
+      />
     </div>
   );
 }

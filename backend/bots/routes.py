@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from backend.database.connection import get_db
@@ -48,4 +49,5 @@ async def execute_bot_manual(
         "command_id": db_command.id,
         "technical_command": technical_command
     }
+
 

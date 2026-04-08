@@ -1,15 +1,75 @@
 services:
+  # Backend API Service
   - type: web
-    name: GTS-Logistics-API
+    name: gts-backend
     runtime: python
     plan: starter
     region: oregon
     rootDir: .
     branch: main
-    buildCommand: pip install -r backend/requirements.txt
+    autoDeploy: false  # ⚠️ تعطيل النشر التلقائي لتوفير الدقائق
+
+    # تحسين أمر البناء لتوفير الوقت
+    buildCommand: |
+      echo "🚀 بدء البناء المحسن..."
+      pip install --upgrade pip
+      pip install --no-cache-dir -r requirements.txt
+      echo "✅ تم الانتهاء من البناء"
+
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health/ping
-    autoDeploy: true
+
+    # فلترة الملفات التي تؤدي لبناء جديد
+    buildFilter:
+      paths:
+        - backend/**
+        - requirements.txt
+        - render.yaml
+        - alembic.ini
+      ignoredPaths:
+        - frontend/**
+        - docs/**
+        - tests/**
+        - *.md
+        - .github/**
+
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: ENVIRONMENT
+        value: production
+
+  # Frontend Static Site
+  - type: web
+    name: gts-frontend
+    runtime: static
+    plan: starter
+    region: oregon
+    rootDir: frontend
+    branch: main
+    autoDeploy: false  # ⚠️ تعطيل النشر التلقائي
+
+    # تحسين بناء الفرونت اند
+    buildCommand: |
+      echo "🎨 بناء الفرونت اند..."
+      npm ci --only=production
+      npm run build
+      echo "✅ تم بناء الفرونت اند"
+
+    staticPublishPath: ./dist
+
+    # فلترة الملفات للفرونت اند فقط
+    buildFilter:
+      paths:
+        - frontend/**
+        - package.json
+        - package-lock.json
+      ignoredPaths:
+        - backend/**
+        - docs/**
+        - tests/**
+        - *.md
+
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0

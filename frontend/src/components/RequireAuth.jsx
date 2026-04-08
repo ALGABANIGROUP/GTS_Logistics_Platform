@@ -1,33 +1,51 @@
-import React from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext.jsx";
-import { hasRequiredRole, normalizeUserRole } from "../utils/userRole";
+/* eslint-disable react/prop-types */
 
-export default function RequireAuth({ children, roles, requiredRole }) {
-  const { authReady, isAuthenticated, accountStatus, user } = useAuth();
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { CircularProgress, Box } from '@mui/material';
+
+const RequireAuth = ({ children, allowedRoles = [] }) => {
+  const { user, role, isLoading, isAuthenticated } = useAuth();
   const location = useLocation();
+  const resolvedRole =
+    role ||
+    user?.effective_role ||
+    user?.role ||
+    user?.db_role ||
+    user?.token_role ||
+    null;
 
-  if (!authReady) return <div className="min-h-screen" aria-busy="true" />;
-  if (!isAuthenticated) {
-    const next = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/login?next=${next}`} replace />;
-  }
-  if (accountStatus && accountStatus !== "active") {
-    return <Navigate to="/account-inactive" replace />;
-  }
+  // Debug logs for troubleshooting access
+  console.log('[RequireAuth] State:', { isLoading, isAuthenticated, userRole: resolvedRole, allowedRoles });
 
-  // Check if roles are required
-  const allowedRoles = roles || (requiredRole ? [requiredRole] : null);
-  if (allowedRoles && user?.role) {
-    const userRole = normalizeUserRole(user.role);
-    const allowed = allowedRoles.map(normalizeUserRole);
-
-    if (!hasRequiredRole(userRole, allowed)) {
-      console.warn(`[RequireAuth] User role '${userRole}' not in allowed roles:`, allowedRoles);
-      return <Navigate to="/unauthorized" replace />;
-    }
+  // Show loading indicator while fetching user info
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  if (children) return children;
-  return <Outlet />;
-}
+  // Redirect to login if not authenticated
+  if (!isAuthenticated || !user) {
+    console.warn('[RequireAuth] Access denied: User not authenticated. Redirecting to login.');
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (resolvedRole === 'super_admin') {
+    console.log('[RequireAuth] Super admin granted access.');
+    return children;
+  }
+
+  // Check if current user role is permitted
+  if (allowedRoles.length > 0 && !allowedRoles.includes(resolvedRole)) {
+    console.error(`[RequireAuth] Access denied: Role "${resolvedRole}" not in allowed list [${allowedRoles.join(', ')}]`);
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  console.log('[RequireAuth] Access granted.');
+  return children;
+};
+
+export default RequireAuth;

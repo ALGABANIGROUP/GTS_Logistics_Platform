@@ -1,156 +1,94 @@
-from __future__ import annotations
-
-from typing import Any
-
-from fastapi import APIRouter, HTTPException, Query
+# backend/routes/bot_collaboration.py
+"""
+Bot Collaboration Routes - AI bot coordination and teamwork
+"""
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
+import logging
+import asyncio
 
-from backend.core.alerts.smart_alert_engine import AlertSeverity, SmartAlertEngine
-from backend.core.reporting.smart_report_engine import ReportType, SmartReportEngine
-from backend.services.real_bot_connector import RealBotConnector
-from backend.services.executive_dashboard import ExecutiveDashboard
+logger = logging.getLogger(__name__)
 
+router = APIRouter(prefix="/bots/collaboration", tags=["bot_collaboration"])
 
-router = APIRouter(prefix="/api/v1/bot-collaboration", tags=["Bot Collaboration"])
+class CollaborationTask(BaseModel):
+    task_id: str
+    task_type: str  # "analysis", "execution", "research", "coordination"
+    assigned_bots: List[str]
+    input_data: Dict[str, Any]
+    status: str = "pending"
+    created_at: datetime = Field(default_factory=datetime.now)
+    completed_at: Optional[datetime] = None
+    result: Optional[Dict[str, Any]] = None
 
+class BotMessage(BaseModel):
+    from_bot: str
+    to_bot: str
+    message_type: str  # "request", "response", "notification", "query"
+    content: Dict[str, Any]
+    timestamp: datetime = Field(default_factory=datetime.now)
 
-class AlertIngestRequest(BaseModel):
-    bot_name: str = Field(..., min_length=1)
-    category: str = "operational"
-    severity: str = "info"
-    title: str = Field(..., min_length=1)
-    description: str = Field(..., min_length=1)
-    affected_entity: str = "system"
-    data: dict[str, Any] = Field(default_factory=dict)
-    auto_resolve: bool = False
-    auto_resolve_time: int = 300
+# Storage
+collaboration_tasks: List[CollaborationTask] = []
+bot_messages: List[BotMessage] = []
 
+@router.post("/task")
+async def create_collaboration_task(task: CollaborationTask, background_tasks: BackgroundTasks):
+    """Create a collaboration task for multiple bots"""
+    task.task_id = f"task_{len(collaboration_tasks) + 1}"
+    collaboration_tasks.append(task)
 
-class ResolveAlertRequest(BaseModel):
-    resolution_note: str = ""
+    # Process in background
+    background_tasks.add_task(process_collaboration_task, task)
 
+    return {"task_id": task.task_id, "status": "created"}
 
-_report_engine = SmartReportEngine()
-_alert_engine = SmartAlertEngine()
-_dashboard = ExecutiveDashboard(_report_engine, _alert_engine)
-_connectors_initialized = False
+@router.get("/task/{task_id}")
+async def get_task_status(task_id: str):
+    """Get collaboration task status"""
+    for task in collaboration_tasks:
+        if task.task_id == task_id:
+            return task
+    raise HTTPException(status_code=404, detail="Task not found")
 
+@router.post("/message")
+async def send_bot_message(message: BotMessage):
+    """Send message between bots"""
+    bot_messages.append(message)
+    logger.info(f"Bot message: {message.from_bot} -> {message.to_bot}: {message.message_type}")
+    return {"status": "sent", "message_id": len(bot_messages)}
 
-async def _ensure_default_connectors() -> None:
-    global _connectors_initialized
-    if _connectors_initialized:
-        return
-    connectors = {
-        "freight_broker": RealBotConnector("freight_broker"),
-        "dispatcher": RealBotConnector("dispatcher"),
-        "safety_manager": RealBotConnector("safety_manager"),
-        "finance_bot": RealBotConnector("finance_bot"),
-        "customer_service": RealBotConnector("customer_service"),
-        "system_manager": RealBotConnector("system_manager"),
-        "sales_bot": RealBotConnector("sales_bot"),
-    }
-    await _report_engine.register_bot_connectors(connectors)
-    await _alert_engine.register_bot_connectors(connectors)
-    _connectors_initialized = True
+@router.get("/messages/{bot_name}")
+async def get_bot_messages(bot_name: str, limit: int = 50):
+    """Get messages for a specific bot"""
+    messages = [m for m in bot_messages if m.to_bot == bot_name or m.from_bot == bot_name]
+    return messages[-limit:]
 
+async def process_collaboration_task(task: CollaborationTask):
+    """Process collaboration task in background"""
+    logger.info(f"Processing collaboration task: {task.task_id}")
 
-@router.get("/connectors")
-async def list_connectors():
-    await _ensure_default_connectors()
+    # Simulate bot collaboration
+    results = {}
+    for bot in task.assigned_bots:
+        # Assign subtask to each bot
+        result = await assign_bot_subtask(bot, task)
+        results[bot] = result
+
+    # Update task with results
+    task.status = "completed"
+    task.completed_at = datetime.now()
+    task.result = results
+
+    logger.info(f"Collaboration task completed: {task.task_id}")
+
+async def assign_bot_subtask(bot_name: str, task: CollaborationTask) -> Dict[str, Any]:
+    """Assign subtask to specific bot"""
+    # Placeholder for bot-specific logic
     return {
-        "success": True,
-        "report_connectors": sorted(_report_engine.bot_connectors.keys()),
-        "alert_connectors": sorted(_alert_engine.bot_connectors.keys()),
+        "bot": bot_name,
+        "status": "success",
+        "output": f"{bot_name} processed {task.task_type}"
     }
-
-
-@router.get("/bots/status")
-async def get_bots_status():
-    await _ensure_default_connectors()
-    statuses = {}
-    for bot_name, connector in _report_engine.bot_connectors.items():
-        if hasattr(connector, "health_check"):
-            statuses[bot_name] = await connector.health_check()
-        else:
-            statuses[bot_name] = {"status": "unknown"}
-
-    available = [name for name, status in statuses.items() if status.get("status") != "unavailable"]
-    if not available:
-        return {
-            "success": False,
-            "status": 503,
-            "error": "No bots available for collaboration",
-            "data": {"available_bots": [], "bot_statuses": statuses},
-        }
-
-    return {
-        "success": True,
-        "available_bots": available,
-        "bot_statuses": statuses,
-    }
-
-
-@router.get("/report")
-async def get_unified_report(
-    report_type: ReportType = Query(default=ReportType.EXECUTIVE_OVERVIEW),
-    force_refresh: bool = False,
-):
-    await _ensure_default_connectors()
-    report = await _report_engine.generate_unified_report(report_type=report_type, force_refresh=force_refresh)
-    return {"success": True, "report": report}
-
-
-@router.get("/report/trends")
-async def get_report_trends(days: int = 30):
-    trends = await _report_engine.get_historical_trends(days=days)
-    return {"success": "error" not in trends, "trends": trends}
-
-
-@router.post("/alerts/ingest")
-async def ingest_alert(request: AlertIngestRequest):
-    await _ensure_default_connectors()
-    alert = await _alert_engine.ingest_alert(request.model_dump())
-    return {"success": True, "alert": alert}
-
-
-@router.get("/alerts/active")
-async def get_active_alerts(severity: str | None = Query(default=None)):
-    await _ensure_default_connectors()
-    severity_filter = AlertSeverity(severity) if severity else None
-    alerts = await _alert_engine.get_active_alerts(severity=severity_filter)
-    return {"success": True, "alerts": alerts}
-
-
-@router.post("/alerts/{alert_id}/resolve")
-async def resolve_alert(alert_id: str, request: ResolveAlertRequest):
-    resolved = await _alert_engine.resolve_alert(alert_id, request.resolution_note)
-    if not resolved:
-        raise HTTPException(status_code=404, detail="Alert not found")
-    return {"success": True, "alert": resolved}
-
-
-@router.get("/alerts/composite")
-async def get_composite_alerts(status: str = "active"):
-    await _ensure_default_connectors()
-    alerts = await _alert_engine.get_composite_alerts(status=status)
-    return {"success": True, "alerts": alerts}
-
-
-@router.get("/alerts/analysis")
-async def get_alert_analysis(days: int = 7):
-    analysis = await _alert_engine.analyze_alert_patterns(days=days)
-    return {"success": "error" not in analysis, "analysis": analysis}
-
-
-@router.get("/dashboard")
-async def get_dashboard(executive_level: str = "general_manager"):
-    await _ensure_default_connectors()
-    dashboard = await _dashboard.render_dashboard(executive_level=executive_level)
-    return {"success": True, "dashboard": dashboard}
-
-
-@router.get("/dashboard/drilldown")
-async def get_dashboard_drilldown(entity: str, entity_id: str):
-    await _ensure_default_connectors()
-    details = await _dashboard.get_drilldown_data(entity, entity_id)
-    return {"success": "error" not in details, "details": details}

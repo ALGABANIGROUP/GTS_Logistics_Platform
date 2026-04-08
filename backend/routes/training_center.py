@@ -1,101 +1,101 @@
-from __future__ import annotations
-
-from pathlib import Path
-from typing import Optional
-
-from fastapi import APIRouter, HTTPException, Query
+# backend/routes/training_center.py
+"""
+Training Center Routes - Educational and training resources
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
+import logging
 
-from backend.training_center import TrainerBot
+logger = logging.getLogger(__name__)
 
+router = APIRouter(prefix="/training", tags=["training"])
 
-router = APIRouter(prefix="/api/v1/training-center", tags=["Training Center"])
+# Models
+class TrainingModule(BaseModel):
+    id: Optional[str] = None
+    title: str
+    description: str
+    category: str  # "onboarding", "compliance", "technical", "soft_skills"
+    duration_minutes: int
+    content_url: str
+    required: bool = False
+    created_at: datetime = Field(default_factory=datetime.now)
 
-_trainer = TrainerBot(
-    data_dir=Path(__file__).resolve().parents[1] / "training_center" / "data",
-    reports_dir=Path(__file__).resolve().parents[1] / "training_center" / "reports",
-)
+class TrainingProgress(BaseModel):
+    user_id: str
+    module_id: str
+    status: str  # "not_started", "in_progress", "completed"
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    score: Optional[float] = None
 
+class TrainingAssessment(BaseModel):
+    module_id: str
+    answers: dict
+    user_id: str
 
-class RegisterBotRequest(BaseModel):
-    bot_key: str = Field(..., min_length=1)
-    level: str = "beginner"
-    version: str = "1.0"
+# Mock data storage (replace with database)
+training_modules = []
+user_progress = []
 
+@router.get("/modules", response_model=List[TrainingModule])
+async def get_training_modules(
+    category: Optional[str] = None,
+    required_only: bool = False
+):
+    """Get available training modules"""
+    modules = training_modules
+    if category:
+        modules = [m for m in modules if m.category == category]
+    if required_only:
+        modules = [m for m in modules if m.required]
+    return modules
 
-class AssessBotRequest(BaseModel):
-    bot_key: str = Field(..., min_length=1)
+@router.post("/modules", response_model=TrainingModule)
+async def create_training_module(module: TrainingModule):
+    """Create new training module (admin only)"""
+    module.id = f"mod_{len(training_modules) + 1}"
+    training_modules.append(module)
+    logger.info(f"Created training module: {module.title}")
+    return module
 
+@router.get("/progress/{user_id}", response_model=List[TrainingProgress])
+async def get_user_progress(user_id: str):
+    """Get user's training progress"""
+    return [p for p in user_progress if p.user_id == user_id]
 
-class CreatePlanRequest(BaseModel):
-    bot_key: str = Field(..., min_length=1)
-    goal: Optional[str] = None
+@router.post("/start/{module_id}")
+async def start_training(module_id: str, user_id: str):
+    """Start a training module"""
+    progress = TrainingProgress(
+        user_id=user_id,
+        module_id=module_id,
+        status="in_progress",
+        started_at=datetime.now()
+    )
+    user_progress.append(progress)
+    return {"status": "started", "module_id": module_id}
 
+@router.post("/complete/{module_id}")
+async def complete_training(module_id: str, user_id: str, assessment: Optional[TrainingAssessment] = None):
+    """Complete a training module"""
+    for progress in user_progress:
+        if progress.user_id == user_id and progress.module_id == module_id:
+            progress.status = "completed"
+            progress.completed_at = datetime.now()
+            if assessment:
+                # Evaluate assessment
+                progress.score = await evaluate_assessment(assessment)
+            return {"status": "completed", "module_id": module_id}
 
-class StartSessionRequest(BaseModel):
-    plan_id: str = Field(..., min_length=1)
+    raise HTTPException(status_code=404, detail="Training session not found")
 
-
-@router.get("/bots")
-async def list_trainable_bots():
-    return {"success": True, "bots": _trainer.list_trainable_bots()}
-
-
-@router.post("/bots/register")
-async def register_bot(request: RegisterBotRequest):
-    try:
-        profile = await _trainer.register_bot(request.bot_key, level=request.level, version=request.version)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return {"success": True, "profile": profile}
-
-
-@router.get("/courses")
-async def list_courses(specialization: str | None = Query(default=None)):
-    return {"success": True, "courses": _trainer.course_manager.list_courses(specialization)}
-
-
-@router.post("/assess")
-async def assess_bot(request: AssessBotRequest):
-    try:
-        assessment = await _trainer.assess_bot_capabilities(request.bot_key)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return {"success": True, "assessment": assessment}
-
-
-@router.post("/plans")
-async def create_plan(request: CreatePlanRequest):
-    try:
-        plan = await _trainer.create_training_plan(request.bot_key, request.goal)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return {"success": True, "plan": plan}
-
-
-@router.post("/sessions/start")
-async def start_session(request: StartSessionRequest):
-    try:
-        result = await _trainer.start_training_session(request.plan_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return {"success": True, **result}
-
-
-@router.get("/sessions/{session_id}")
-async def get_session(session_id: str):
-    session = _trainer.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    return {"success": True, "session": session}
-
-
-@router.get("/reports")
-async def list_reports(bot_key: str | None = Query(default=None)):
-    reports = _trainer.list_reports()
-    if bot_key:
-        reports = [report for report in reports if report.get("bot_key") == _trainer.bot_connector.normalize_bot_key(bot_key)]
-    return {"success": True, "reports": reports}
+async def evaluate_assessment(assessment: TrainingAssessment) -> float:
+    """Evaluate assessment answers"""
+    # Implement assessment evaluation logic
+    return 85.0  # Placeholder
 
 
 @router.get("/reports/{session_id}")

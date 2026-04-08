@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 """
 AI Dispatcher Bot - Intelligent Task Distribution and Workflow Orchestration
 Responsible for distributing tasks across the bot network and optimizing workflows.
@@ -326,3 +327,4 @@ class AIDispatcherBot:
         if active_assignments >= 20 or queue_length >= 40:
             return "elevated"
         return "normal"
+

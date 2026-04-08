@@ -4,9 +4,12 @@
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const SAVED_EMAIL_KEY = 'gts_saved_email';
+const CONTEXT_KEYS = ['auth_context', 'user', 'entitlements'];
 
 const getLocalStorage = () =>
     typeof window !== "undefined" ? window.localStorage : null;
+const getSessionStorage = () =>
+    typeof window !== "undefined" ? window.sessionStorage : null;
 
 /**
  * Write authentication token to localStorage.
@@ -67,10 +70,14 @@ export const readRefreshToken = () => {
  */
 export const clearAuthCache = () => {
     const storage = getLocalStorage();
-    if (!storage) return;
+    const session = getSessionStorage();
     try {
-        storage.removeItem(ACCESS_TOKEN_KEY);
-        storage.removeItem(REFRESH_TOKEN_KEY);
+        storage?.removeItem(ACCESS_TOKEN_KEY);
+        storage?.removeItem(REFRESH_TOKEN_KEY);
+        CONTEXT_KEYS.forEach((key) => {
+            storage?.removeItem(key);
+            session?.removeItem(key);
+        });
         // Optional: clear saved email as well
         // storage.removeItem(SAVED_EMAIL_KEY);
     } catch (e) {

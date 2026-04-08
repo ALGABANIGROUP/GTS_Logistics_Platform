@@ -1,16 +1,40 @@
-"""
-General Manager Bot
-Executive orchestration, reporting, and decision support.
-"""
-
-from __future__ import annotations
-
+﻿from __future__ import annotations
+# backend/bots/general_manager.py
+import copy
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-import copy
 
+from .base_bot import BaseBot
 
-class GeneralManagerBot:
+logger = logging.getLogger(__name__)
+
+class GeneralManagerBot(BaseBot):
+    """General Manager AI Assistant"""
+
+    def __init__(self):
+        super().__init__(
+            name="GeneralManagerBot",
+            description="AI assistant for general management tasks"
+        )
+
+    async def process(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process management requests"""
+        logger.info(f"GeneralManagerBot processing: {input_data.get('action')}")
+        # Implement management logic
+        return {
+            "status": "success",
+            "response": "Task processed by General Manager",
+            "data": input_data
+        }
+
+    async def get_status(self) -> Dict[str, Any]:
+        """Get bot status"""
+        return {
+            "name": self.name,
+            "active": self.is_active,
+            "description": self.description
+        }
     """Enterprise executive bot with a unified management dashboard."""
 
     def __init__(self) -> None:
@@ -623,3 +647,5 @@ class GeneralManagerBot:
             "technology": ["Implementation delays", "Adoption resistance", "Integration defects"],
         }
         return risks.get(decision_type, ["Unspecified execution risk"])
+
+

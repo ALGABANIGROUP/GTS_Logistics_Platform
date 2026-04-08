@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
     ChevronLeft,
     ChevronRight,
@@ -14,71 +15,60 @@ import {
     Flag,
     LifeBuoy,
     ClipboardList,
+    BarChart2,      // For reports
+    LineChart,      // For market_intelligence
+    Activity,       // For system_health
+    CreditCard,     // For subscriptions
+    Banknote,       // For platform_expenses
+    Handshake,      // For partners
+    FileQuestion,   // For portal_requests
+    Ticket,         // For support_tickets
 } from 'lucide-react';
 import SystemSwitcher from '../components/SystemSwitcher.jsx';
 import TopUserBar from '../components/TopUserBar.jsx';
 import RootLayout from '../components/RootLayout.jsx';
+import Footer from '../components/ui/Footer.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { generateSidebarMenu, getRoleInfo } from '../router/dynamicRoutes';
 import SmartSearchBar from '../components/search/SmartSearchBar.jsx';
-import { getUserRole, isAdminRole } from '../utils/userRole.js';
+import { getUserRole } from '../utils/userRole.js';
+
+const iconMap = {
+    overview: <Home className="w-5 h-5" />,
+    users: <Users className="w-5 h-5" />,
+    users_list: <Users className="w-5 h-5" />, // Child of users
+    tenants: <Building className="w-5 h-5" />,
+    reports: <BarChart2 className="w-5 h-5" />,
+    market_intelligence: <LineChart className="w-5 h-5" />,
+    system: <Zap className="w-5 h-5" />, // Parent for system-related items
+    system_health: <Activity className="w-5 h-5" />,
+    settings: <Settings className="w-5 h-5" />, // Platform Settings
+    subscriptions: <CreditCard className="w-5 h-5" />,
+    api_connections: <Plug className="w-5 h-5" />,
+    feature_flags: <Flag className="w-5 h-5" />,
+    platform_expenses: <Banknote className="w-5 h-5" />,
+    partners: <Handshake className="w-5 h-5" />,
+    audit: <ClipboardList className="w-5 h-5" />, // Parent for audit logs
+    audit_logs: <ClipboardList className="w-5 h-5" />, // Specific for audit-logs
+    portal_requests: <FileQuestion className="w-5 h-5" />,
+    notifications: <Bell className="w-5 h-5" />,
+    support: <LifeBuoy className="w-5 h-5" />, // Parent for support
+    support_center: <LifeBuoy className="w-5 h-5" />, // Specific for support center
+    support_tickets: <Ticket className="w-5 h-5" />,
+};
 
 const AdminLayout = ({ children }) => {
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const { user, permissions, isAuthenticated, authReady, loading } = useAuth();
+    const { user, permissions } = useAuth();
 
-    useEffect(() => {
-        if (typeof document === "undefined") return;
-        document.body.classList.add("gts-glass-lite");
-        document.body.classList.remove("gts-no-bg");
-        return () => {
-            document.body.classList.remove("gts-glass-lite");
-        };
-    }, []);
-
-    if (!authReady || loading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center text-white">
-                Loading admin workspace...
-            </div>
-        );
-    }
-
-    if (!isAuthenticated || !user) {
-        return <Navigate to="/login" replace />;
-    }
-
-    const userRole = getUserRole(user);
-    if (!isAdminRole(userRole)) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    const iconMap = {
-        overview: <Home className="w-5 h-5" />,
-        users: <Users className="w-5 h-5" />,
-        reports: <FileText className="w-5 h-5" />,
-        system: <Zap className="w-5 h-5" />,
-        audit: <FileText className="w-5 h-5" />,
-        settings: <Settings className="w-5 h-5" />,
-        subscriptions: <Settings className="w-5 h-5" />,
-        api_connections: <Plug className="w-5 h-5" />,
-        tenants: <Building className="w-5 h-5" />,
-        notifications: <Bell className="w-5 h-5" />,
-        feature_flags: <Flag className="w-5 h-5" />,
-        portal_requests: <ClipboardList className="w-5 h-5" />,
-        platform_expenses: <ClipboardList className="w-5 h-5" />,
-        support: <LifeBuoy className="w-5 h-5" />,
-        fleet: <ClipboardList className="w-5 h-5" />,
-        fleet_live_map: <Zap className="w-5 h-5" />,
-    };
-
+    const userRole = user ? getUserRole(user) : null;
     const roleInfo = useMemo(() => getRoleInfo(userRole || 'admin'), [userRole]);
 
     // Build menu items with fallback
     const menuItems = useMemo(() => {
         try {
-            const generated = generateSidebarMenu(userRole || 'admin', permissions || []);
+            const generated = generateSidebarMenu(userRole || 'admin', permissions || []);            
             if (!generated || generated.length === 0) {
                 // Fallback menu if generation fails
                 console.warn('Menu generation returned empty, using fallback');
@@ -119,6 +109,15 @@ const AdminLayout = ({ children }) => {
             return [];
         }
     }, [permissions, userRole]);
+
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+        document.body.classList.add("gts-glass-lite");
+        document.body.classList.remove("gts-no-bg");
+        return () => {
+            document.body.classList.remove("gts-glass-lite");
+        };
+    }, []);
 
     const topbar = (
         <div className="w-full flex flex-wrap items-center justify-between gap-4 px-4 py-3 lg:px-6">
@@ -222,7 +221,7 @@ const AdminLayout = ({ children }) => {
             className="glass-page"
             sidebar={sidebar}
             topbar={topbar}
-            footer={null}
+            footer={<Footer />}
             contentClassName="p-8"
         >
             <div className="dashboard-grid gap-6">
@@ -230,6 +229,10 @@ const AdminLayout = ({ children }) => {
             </div>
         </RootLayout>
     );
+};
+
+AdminLayout.propTypes = {
+    children: PropTypes.node,
 };
 
 export default AdminLayout;

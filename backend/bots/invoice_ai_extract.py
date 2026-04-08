@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 import re
 from typing import Dict
 
@@ -27,3 +28,4 @@ def extract_invoice_fields(text: str) -> Dict[str, str]:
 # Example:
 # fields = extract_invoice_fields(text)
 # print(fields)
+

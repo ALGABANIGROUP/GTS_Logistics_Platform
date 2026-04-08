@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 """
 SALE - Sales Intelligence Bot
 Sales Intelligence
@@ -590,3 +591,4 @@ class SalesIntelligenceBot:
         if "competitor" in message_lower:
             return await self.get_competitor_analysis()
         return await self.status()
+

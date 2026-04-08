@@ -2,6 +2,7 @@
 import React from "react";
 import Navbar from "../components/ui/Navbar.jsx";
 import TopUserBar from "../components/TopUserBar.jsx";
+import Footer from "../components/ui/Footer.jsx";
 import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
@@ -15,6 +16,8 @@ const MainLayout = () => {
         <main className="flex-1 p-6 overflow-y-auto bg-slate-50 dark:bg-slate-800">
           <Outlet />
         </main>
+
+        <Footer />
       </div>
     </div>
   );

@@ -1,48 +1,44 @@
 {
   "project_name": "GTS Logistics",
-  "project_root": "C:\\Users\\enjoy\\dev\\GTS",
-  "inspection_date": "2026-03-25T10:42:46.459029+00:00",
+  "project_root": "C:\\Users\\enjoy\\dev\\GTS-new",
+  "inspection_date": "2026-04-01T11:14:49.667487+00:00",
   "statistics": {
-    "total_files": 2387,
-    "total_lines": 503819,
-    "total_directories": 210,
-    "python_files": 1186,
-    "python_lines": 181708,
-    "javascript_files": 618,
-    "typescript_files": 20,
-    "html_files": 28,
+    "total_files": 2443,
+    "total_lines": 502370,
+    "total_directories": 209,
+    "python_files": 1248,
+    "python_lines": 187133,
+    "javascript_files": 611,
+    "typescript_files": 17,
+    "html_files": 29,
     "css_files": 88,
-    "json_files": 39,
-    "markdown_files": 342,
-    "sql_files": 53,
+    "json_files": 52,
+    "markdown_files": 379,
+    "sql_files": 1,
     "top_directories": [
       {
         "name": "backend",
-        "files": 942
+        "files": 972
       },
       {
         "name": "frontend",
-        "files": 751
+        "files": 742
       },
       {
         "name": ".",
-        "files": 534
-      },
-      {
-        "name": "tests",
-        "files": 27
-      },
-      {
-        "name": "backups",
-        "files": 22
-      },
-      {
-        "name": "scripts",
-        "files": 22
+        "files": 560
       },
       {
         "name": "docs",
-        "files": 18
+        "files": 34
+      },
+      {
+        "name": "scripts",
+        "files": 29
+      },
+      {
+        "name": "tests",
+        "files": 28
       },
       {
         "name": "search-seo-system",
@@ -55,6 +51,10 @@
       {
         "name": "TheVIZION",
         "files": 11
+      },
+      {
+        "name": "trainer_bot_advanced",
+        "files": 9
       }
     ]
   },
@@ -141,12 +141,6 @@
       "framework": "FastAPI",
       "method": "GET",
       "path": "/",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/",
       "file": "backend/routes/admin_api_connections.py"
     },
     {
@@ -178,24 +172,6 @@
       "method": "POST",
       "path": "/",
       "file": "backend/routes/admin_api_connections_fixed.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/_debug/admin-users",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/_debug/memory-snapshot",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/_debug/routes",
-      "file": "backend/main.py"
     },
     {
       "framework": "FastAPI",
@@ -358,12 +334,6 @@
       "method": "POST",
       "path": "/ai/ask",
       "file": "backend/routes/ai_gateway.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/ai/bots",
-      "file": "backend/main.py"
     },
     {
       "framework": "FastAPI",
@@ -746,20 +716,26 @@
     {
       "framework": "FastAPI",
       "method": "GET",
-      "path": "/ai/{name}/config",
-      "file": "backend/main.py"
+      "path": "/ai/tools/analysis/{analysis_id}",
+      "file": "backend/routes/ai_tools.py"
     },
     {
       "framework": "FastAPI",
       "method": "POST",
-      "path": "/ai/{name}/run",
-      "file": "backend/main.py"
+      "path": "/ai/tools/analyze/text",
+      "file": "backend/routes/ai_tools.py"
     },
     {
       "framework": "FastAPI",
-      "method": "GET",
-      "path": "/ai/{name}/status",
-      "file": "backend/main.py"
+      "method": "POST",
+      "path": "/ai/tools/extract/document",
+      "file": "backend/routes/ai_tools.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/ai/tools/insights/generate",
+      "file": "backend/routes/ai_tools.py"
     },
     {
       "framework": "FastAPI",
@@ -1304,6 +1280,12 @@
     {
       "framework": "FastAPI",
       "method": "GET",
+      "path": "/api/v1/admin/portal/notifications",
+      "file": "backend/routes/admin_unified.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
       "path": "/api/v1/admin/portal/notifications-unified",
       "file": "backend/routes/admin_unified.py"
     },
@@ -1311,6 +1293,24 @@
       "framework": "FastAPI",
       "method": "GET",
       "path": "/api/v1/admin/portal/requests",
+      "file": "backend/routes/admin_portal_requests.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/admin/portal/requests/approve",
+      "file": "backend/routes/admin_portal_requests.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "DELETE",
+      "path": "/api/v1/admin/portal/requests/delete",
+      "file": "backend/routes/admin_portal_requests.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/admin/portal/requests/deny",
       "file": "backend/routes/admin_portal_requests.py"
     },
     {
@@ -1809,6 +1809,12 @@
       "framework": "FastAPI",
       "method": "GET",
       "path": "/api/v1/ai/bots/available",
+      "file": "backend/routes/bots_available_enhanced.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/ai/bots/available",
       "file": "backend/routes/bots_subscription.py"
     },
     {
@@ -2197,15 +2203,57 @@
     },
     {
       "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/ai/operations/metrics",
+      "file": "backend/routes/ai_operations_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/ai/operations/optimize",
+      "file": "backend/routes/ai_operations_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/ai/operations/status",
+      "file": "backend/routes/ai_operations_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/auth/cache/stats",
+      "file": "backend/routes/auth.py"
+    },
+    {
+      "framework": "FastAPI",
       "method": "POST",
       "path": "/api/v1/auth/change-password",
       "file": "backend/routes/auth_me.py"
     },
     {
       "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/auth/check-company",
+      "file": "backend/routes/auth_extended.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/auth/check-email",
+      "file": "backend/routes/auth_extended.py"
+    },
+    {
+      "framework": "FastAPI",
       "method": "POST",
       "path": "/api/v1/auth/forgot-password",
       "file": "backend/routes/auth_reset.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "file": "backend/routes/auth.py"
     },
     {
       "framework": "FastAPI",
@@ -2217,6 +2265,12 @@
       "framework": "FastAPI",
       "method": "GET",
       "path": "/api/v1/auth/me",
+      "file": "backend/routes/auth.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/auth/me",
       "file": "backend/routes/auth_me.py"
     },
     {
@@ -2236,6 +2290,18 @@
       "method": "POST",
       "path": "/api/v1/auth/refresh",
       "file": "backend/routes/auth_secure.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "file": "backend/routes/auth.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "file": "backend/routes/auth_extended.py"
     },
     {
       "framework": "FastAPI",
@@ -2271,6 +2337,12 @@
       "framework": "FastAPI",
       "method": "POST",
       "path": "/api/v1/auth/token",
+      "file": "backend/routes/auth.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/auth/token",
       "file": "backend/routes/auth_me.py"
     },
     {
@@ -2296,66 +2368,6 @@
       "method": "POST",
       "path": "/api/v1/billing/subscription/select",
       "file": "backend/billing/routes.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/alerts/active",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/alerts/analysis",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/alerts/composite",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/bot-collaboration/alerts/ingest",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/bot-collaboration/alerts/{alert_id}/resolve",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/connectors",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/dashboard",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/dashboard/drilldown",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/report",
-      "file": "backend/routes/bot_collaboration.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/bot-collaboration/report/trends",
-      "file": "backend/routes/bot_collaboration.py"
     },
     {
       "framework": "FastAPI",
@@ -3368,12 +3380,6 @@
     {
       "framework": "FastAPI",
       "method": "GET",
-      "path": "/api/v1/email/status",
-      "file": "backend/routes/monitoring.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
       "path": "/api/v1/email/threads",
       "file": "backend/routes/email_center.py"
     },
@@ -3430,12 +3436,6 @@
       "method": "GET",
       "path": "/api/v1/finance-bot/stats",
       "file": "backend/routes/finance_bot_learning.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/finance/bootstrap-demo",
-      "file": "backend/routes/unified_finance_routes.py"
     },
     {
       "framework": "FastAPI",
@@ -3502,6 +3502,18 @@
       "method": "GET",
       "path": "/api/v1/finance/reports/summary",
       "file": "backend/routes/unified_finance_routes.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/fincen/reports/{report_id}",
+      "file": "backend/routes/fincen_routes.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/fincen/reports/{report_type}",
+      "file": "backend/routes/fincen_routes.py"
     },
     {
       "framework": "FastAPI",
@@ -4082,13 +4094,109 @@
     {
       "framework": "FastAPI",
       "method": "GET",
+      "path": "/api/v1/monitoring/alerts",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/alerts/history",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/monitoring/alerts/{alert_id}/acknowledge",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/monitoring/alerts/{alert_id}/resolve",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/debug/info",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/email/status",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/health",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/health/detailed",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/monitoring/maintenance/cleanup",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/metrics",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/metrics/system",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/api/v1/monitoring/sentry/issues",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/monitoring/sentry/test",
+      "file": "backend/routes/monitoring.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
       "path": "/api/v1/notifications/",
       "file": "backend/routes/notifications_api.py"
     },
     {
       "framework": "FastAPI",
       "method": "POST",
+      "path": "/api/v1/notifications/email",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
       "path": "/api/v1/notifications/mark-read/{notification_id}",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/notifications/push",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/notifications/push/register",
       "file": "backend/routes/notifications_api.py"
     },
     {
@@ -4106,7 +4214,31 @@
     {
       "framework": "FastAPI",
       "method": "GET",
+      "path": "/api/v1/notifications/settings",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "PUT",
+      "path": "/api/v1/notifications/settings",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
       "path": "/api/v1/notifications/shipment/{shipment_id}/alerts",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/notifications/sms",
+      "file": "backend/routes/notifications_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/notifications/test",
       "file": "backend/routes/notifications_api.py"
     },
     {
@@ -4431,6 +4563,12 @@
       "framework": "FastAPI",
       "method": "DELETE",
       "path": "/api/v1/platform/expenses/{expense_id}/attachment",
+      "file": "backend/routes/platform_infrastructure_routes.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "DELETE",
+      "path": "/api/v1/platform/expenses/{expense_id}/delete-file",
       "file": "backend/routes/platform_infrastructure_routes.py"
     },
     {
@@ -5126,12 +5264,6 @@
     {
       "framework": "FastAPI",
       "method": "GET",
-      "path": "/api/v1/system/readiness",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
       "path": "/api/v1/systems/available",
       "file": "backend/routes/system_switcher.py"
     },
@@ -5200,66 +5332,6 @@
       "method": "GET",
       "path": "/api/v1/tms-unified/shipments/status/{status}",
       "file": "backend/routes/tms_unified_api.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/training-center/assess",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/training-center/bots",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/training-center/bots/register",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/training-center/courses",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/training-center/plans",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/training-center/reports",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/training-center/reports/{session_id}",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/training-center/sessions/start",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/training-center/sessions/{session_id}",
-      "file": "backend/routes/training_center.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/training-center/stats",
-      "file": "backend/routes/training_center.py"
     },
     {
       "framework": "FastAPI",
@@ -5336,6 +5408,18 @@
     {
       "framework": "FastAPI",
       "method": "GET",
+      "path": "/api/v1/unified/shipments",
+      "file": "backend/routes/unified_shipment_routes.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/api/v1/user/setup",
+      "file": "backend/routes/user_setup.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
       "path": "/api/v1/weather/current",
       "file": "backend/routes/weather.py"
     },
@@ -5368,18 +5452,6 @@
       "method": "POST",
       "path": "/api/v1/webhooks/channels/whatsapp",
       "file": "backend/routes/channels_webhooks.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/api/v1/webhooks/health",
-      "file": "backend/webhooks/payment_webhooks.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/api/v1/webhooks/stripe/payment",
-      "file": "backend/webhooks/payment_webhooks.py"
     },
     {
       "framework": "FastAPI",
@@ -5425,42 +5497,6 @@
     },
     {
       "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/auth/2fa/setup-init",
-      "file": "backend/routes/auth_old.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/auth/2fa/verify-login",
-      "file": "backend/routes/auth_old.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/auth/auth/cache/stats",
-      "file": "backend/routes/auth_old.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/auth/auth/dev-token",
-      "file": "backend/routes/auth_old.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/auth/register",
-      "file": "backend/routes/auth_old.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/auth/token",
-      "file": "backend/routes/auth_old.py"
-    },
-    {
-      "framework": "FastAPI",
       "method": "GET",
       "path": "/auth/debug-user",
       "file": "backend/security/auth.py"
@@ -5475,19 +5511,7 @@
       "framework": "FastAPI",
       "method": "GET",
       "path": "/auth/me",
-      "file": "backend/routes/auth.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/auth/me",
       "file": "backend/routes/auth_new.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/auth/me",
-      "file": "backend/routes/auth_old.py"
     },
     {
       "framework": "FastAPI",
@@ -5511,12 +5535,6 @@
       "framework": "FastAPI",
       "method": "POST",
       "path": "/auth/refresh",
-      "file": "backend/routes/auth.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/refresh",
       "file": "backend/routes/auth_new.py"
     },
     {
@@ -5524,12 +5542,6 @@
       "method": "POST",
       "path": "/auth/refresh",
       "file": "backend/security/auth.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/register",
-      "file": "backend/routes/auth_old.py"
     },
     {
       "framework": "FastAPI",
@@ -5553,19 +5565,7 @@
       "framework": "FastAPI",
       "method": "POST",
       "path": "/auth/token",
-      "file": "backend/routes/auth.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/token",
       "file": "backend/routes/auth_new.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "POST",
-      "path": "/auth/token",
-      "file": "backend/routes/auth_old.py"
     },
     {
       "framework": "FastAPI",
@@ -5596,6 +5596,30 @@
       "method": "GET",
       "path": "/bots/catalog",
       "file": "backend/routes/ai_bots_routes.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/bots/collaboration/message",
+      "file": "backend/routes/bot_collaboration.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/bots/collaboration/messages/{bot_name}",
+      "file": "backend/routes/bot_collaboration.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/bots/collaboration/task",
+      "file": "backend/routes/bot_collaboration.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/bots/collaboration/task/{task_id}",
+      "file": "backend/routes/bot_collaboration.py"
     },
     {
       "framework": "FastAPI",
@@ -6206,18 +6230,6 @@
     {
       "framework": "FastAPI",
       "method": "GET",
-      "path": "/health/sentry",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/healthz",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
       "path": "/information/news",
       "file": "backend/routes/ai_bots_routes.py"
     },
@@ -6553,6 +6565,54 @@
     },
     {
       "framework": "FastAPI",
+      "method": "GET",
+      "path": "/marketplace/boards",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/marketplace/boards/{board_id}/loads",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/marketplace/loads",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/marketplace/loads",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/marketplace/loads/{load_id}",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/marketplace/loads/{load_id}/bid",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/marketplace/loads/{load_id}/bids",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/marketplace/loads/{load_id}/bids/{bid_id}/accept",
+      "file": "backend/routes/marketplace.py"
+    },
+    {
+      "framework": "FastAPI",
       "method": "POST",
       "path": "/messages",
       "file": "backend/routes/quo_webhooks.py"
@@ -6692,6 +6752,48 @@
     {
       "framework": "FastAPI",
       "method": "GET",
+      "path": "/operations/alerts",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/operations/alerts",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/operations/alerts/{alert_id}/resolve",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/operations/health",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/operations/logs/recent",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/operations/metrics",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/operations/services/health",
+      "file": "backend/routes/operations.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
       "path": "/ops/llm/ping",
       "file": "backend/routes/ops_llm.py"
     },
@@ -6811,6 +6913,12 @@
     },
     {
       "framework": "FastAPI",
+      "method": "GET",
+      "path": "/robots.txt",
+      "file": "backend/routes/seo_public.py"
+    },
+    {
+      "framework": "FastAPI",
       "method": "POST",
       "path": "/send-sms",
       "file": "backend/routes/ai_calls_api.py"
@@ -6880,6 +6988,12 @@
       "method": "POST",
       "path": "/shipments/lifecycle",
       "file": "backend/routes/tms_api.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/sitemap.xml",
+      "file": "backend/routes/seo_public.py"
     },
     {
       "framework": "FastAPI",
@@ -7051,18 +7165,6 @@
     },
     {
       "framework": "FastAPI",
-      "method": "GET",
-      "path": "/test/roles",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
-      "method": "GET",
-      "path": "/test/roles2",
-      "file": "backend/main.py"
-    },
-    {
-      "framework": "FastAPI",
       "method": "POST",
       "path": "/test/seed",
       "file": "backend/routes/test_seed.py"
@@ -7078,6 +7180,48 @@
       "method": "POST",
       "path": "/tickets",
       "file": "backend/security/quota_dependency.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/training/complete/{module_id}",
+      "file": "backend/routes/training_center.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/training/modules",
+      "file": "backend/routes/training_center.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/training/modules",
+      "file": "backend/routes/training_center.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/training/progress/{user_id}",
+      "file": "backend/routes/training_center.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/training/reports/{session_id}",
+      "file": "backend/routes/training_center.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "POST",
+      "path": "/training/start/{module_id}",
+      "file": "backend/routes/training_center.py"
+    },
+    {
+      "framework": "FastAPI",
+      "method": "GET",
+      "path": "/training/stats",
+      "file": "backend/routes/training_center.py"
     },
     {
       "framework": "FastAPI",
@@ -7481,6 +7625,11 @@
       "language": "py"
     },
     {
+      "name": "base_bot",
+      "file": "backend/bots/base_bot.py",
+      "language": "py"
+    },
+    {
       "name": "freight_bot",
       "file": "backend/bots/freight_bot.py",
       "language": "py"
@@ -7676,6 +7825,11 @@
       "language": "py"
     },
     {
+      "name": "email_dispatcher",
+      "file": "backend/services/email_dispatcher.py",
+      "language": "py"
+    },
+    {
       "name": "ivr_bot",
       "file": "backend/services/ivr_bot.py",
       "language": "py"
@@ -7683,6 +7837,11 @@
     {
       "name": "platform_webhook_dispatcher",
       "file": "backend/services/platform_webhook_dispatcher.py",
+      "language": "py"
+    },
+    {
+      "name": "real_bot_connector",
+      "file": "backend/services/real_bot_connector.py",
       "language": "py"
     },
     {
@@ -7698,6 +7857,11 @@
     {
       "name": "test_bot_collaboration_routes",
       "file": "backend/tests/test_bot_collaboration_routes.py",
+      "language": "py"
+    },
+    {
+      "name": "test_bot_startup_fixes",
+      "file": "backend/tests/test_bot_startup_fixes.py",
       "language": "py"
     },
     {
@@ -8141,11 +8305,6 @@
       "language": "jsx"
     },
     {
-      "name": "SUDAPayBotDashboard",
-      "file": "frontend/src/pages/ai-bots/SUDAPayBotDashboard.jsx",
-      "language": "jsx"
-    },
-    {
       "name": "bots",
       "file": "frontend/src/types/bots.ts",
       "language": "ts"
@@ -8229,6 +8388,7 @@
       "AIMaintenanceDevBotEnhanced",
       "ai_dispatcher",
       "ai_dispatcher_quick_run",
+      "email_dispatcher",
       "platform_webhook_dispatcher",
       "test_maintenance_dev_bot"
     ],
@@ -8275,7 +8435,6 @@
       "FinanceBotPanel",
       "MarketingBot",
       "PaymentBotDashboard",
-      "SUDAPayBotDashboard",
       "UnifiedBotsDashboard",
       "activate_all_bots",
       "ai-bot-communication",
@@ -8286,6 +8445,7 @@
       "ai_dev_bot",
       "ai_dev_bot_analysis_api",
       "ai_finance_bot",
+      "base_bot",
       "bf1c2d3e4f5a_add_bot_os_tables",
       "bot",
       "bot_accounts",
@@ -8344,6 +8504,7 @@
       "operations_bot",
       "partner_bot",
       "quick_bot_test",
+      "real_bot_connector",
       "register_all_bots_for_learning",
       "run_telegram_bot",
       "safety_bot",
@@ -8358,6 +8519,7 @@
       "test_all_bots_api",
       "test_bot_collaboration_routes",
       "test_bot_learning",
+      "test_bot_startup_fixes",
       "test_bot_status",
       "test_bots",
       "test_bots_os",
@@ -8771,18 +8933,6 @@
     {
       "name": "Expense",
       "table": "",
-      "file": "backend/models/financial.py",
-      "type": "ORM model"
-    },
-    {
-      "name": "Invoice",
-      "table": "invoices",
-      "file": "backend/models/financial.py",
-      "type": "ORM model"
-    },
-    {
-      "name": "Payment",
-      "table": "payments",
       "file": "backend/models/financial.py",
       "type": "ORM model"
     },
@@ -9321,255 +9471,9 @@
       "type": "ORM model"
     },
     {
-      "name": "add_city_column",
+      "name": "init",
       "table": "",
-      "file": "add_city_column.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "add_incidents_columns",
-      "table": "",
-      "file": "add_incidents_columns.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "add_security_columns",
-      "table": "",
-      "file": "add_security_columns.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "alter_carriers",
-      "table": "",
-      "file": "alter_carriers.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "_upgrade_head",
-      "table": "",
-      "file": "backend/_upgrade_head.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "001_add_timestamps",
-      "table": "",
-      "file": "backend/database/migrations/001_add_timestamps.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "002_create_shipment_events",
-      "table": "",
-      "file": "backend/database/migrations/002_create_shipment_events.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "003_create_billing_core",
-      "table": "",
-      "file": "backend/database/migrations/003_create_billing_core.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "004_create_dispatch_core",
-      "table": "",
-      "file": "backend/database/migrations/004_create_dispatch_core.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "005_create_email_center",
-      "table": "",
-      "file": "backend/database/migrations/005_create_email_center.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "006_create_email_access",
-      "table": "",
-      "file": "backend/database/migrations/006_create_email_access.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "007_add_auth_audit_logs",
-      "table": "",
-      "file": "backend/database/migrations/007_add_auth_audit_logs.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "007_create_portal_access_requests",
-      "table": "",
-      "file": "backend/database/migrations/007_create_portal_access_requests.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "008_create_billing_tables",
-      "table": "",
-      "file": "backend/database/migrations/008_create_billing_tables.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "009_create_billing_tables",
-      "table": "",
-      "file": "backend/database/migrations/009_create_billing_tables.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "010_phase1_2_trial_grace_access",
-      "table": "",
-      "file": "backend/database/migrations/010_phase1_2_trial_grace_access.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "011_phase1_3_auto_downgrade_dunning",
-      "table": "",
-      "file": "backend/database/migrations/011_phase1_3_auto_downgrade_dunning.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "012_add_tenant_columns",
-      "table": "",
-      "file": "backend/database/migrations/012_add_tenant_columns.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "013_add_tenant_id_to_users",
-      "table": "",
-      "file": "backend/database/migrations/013_add_tenant_id_to_users.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "_smoke_schema_20250929_223515",
-      "table": "",
-      "file": "backups/_smoke_schema_20250929_223515.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20250930_141959",
-      "table": "",
-      "file": "backups/gts_schema_20250930_141959.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20250930_182745",
-      "table": "",
-      "file": "backups/gts_schema_20250930_182745.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20250930_183059",
-      "table": "",
-      "file": "backups/gts_schema_20250930_183059.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20250930_190017",
-      "table": "",
-      "file": "backups/gts_schema_20250930_190017.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20250930_191703",
-      "table": "",
-      "file": "backups/gts_schema_20250930_191703.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20251001_031504",
-      "table": "",
-      "file": "backups/gts_schema_20251001_031504.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20251002_031504",
-      "table": "",
-      "file": "backups/gts_schema_20251002_031504.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20251003_031505",
-      "table": "",
-      "file": "backups/gts_schema_20251003_031505.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20251004_031504",
-      "table": "",
-      "file": "backups/gts_schema_20251004_031504.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20251008_031503",
-      "table": "",
-      "file": "backups/gts_schema_20251008_031503.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_schema_20251009_031503",
-      "table": "",
-      "file": "backups/gts_schema_20251009_031503.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "carriers_shippers",
-      "table": "",
-      "file": "carriers_shippers.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "clean_ai_bots",
-      "table": "",
-      "file": "clean_ai_bots.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "create_subscriptions_simple",
-      "table": "",
-      "file": "create_subscriptions_simple.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "create_subscriptions_table",
-      "table": "",
-      "file": "create_subscriptions_table.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "fix_ai_bot_issues_table",
-      "table": "",
-      "file": "fix_ai_bot_issues_table.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "fix_database_seed_rbac",
-      "table": "",
-      "file": "fix_database_seed_rbac.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "fix_missing_bots",
-      "table": "",
-      "file": "fix_missing_bots.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "fix_roles_table",
-      "table": "",
-      "file": "fix_roles_table.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "gts_backup_2025",
-      "table": "",
-      "file": "gts_backup_2025.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "create_subscription_tables",
-      "table": "",
-      "file": "scripts/create_subscription_tables.sql",
-      "type": "SQL migration/script"
-    },
-    {
-      "name": "simple_db_fix",
-      "table": "",
-      "file": "simple_db_fix.sql",
+      "file": "init.sql",
       "type": "SQL migration/script"
     }
   ],
@@ -9622,6 +9526,11 @@
     {
       "name": "MULTI_TENANT_SECURITY_IMPLEMENTATION_PLAN.md",
       "path": "MULTI_TENANT_SECURITY_IMPLEMENTATION_PLAN.md",
+      "reason": "Matched security-related file naming"
+    },
+    {
+      "name": "PERFORMANCE_SECURITY_IMPROVEMENTS.md",
+      "path": "PERFORMANCE_SECURITY_IMPROVEMENTS.md",
       "reason": "Matched security-related file naming"
     },
     {
@@ -9717,16 +9626,6 @@
     {
       "name": "add_roles_columns_migration.py",
       "path": "add_roles_columns_migration.py",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "add_security_columns.sql",
-      "path": "add_security_columns.sql",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "audit_report_20260112_132759.json",
-      "path": "audit_report_20260112_132759.json",
       "reason": "Matched security-related file naming"
     },
     {
@@ -9960,6 +9859,11 @@
       "reason": "Matched security-related file naming"
     },
     {
+      "name": "auth_service.py",
+      "path": "backend/api/services/auth_service.py",
+      "reason": "Matched security-related file naming"
+    },
+    {
       "name": "__init__.py",
       "path": "backend/auth/__init__.py",
       "reason": "Matched security-related file naming"
@@ -9997,11 +9901,6 @@
     {
       "name": "security.py",
       "path": "backend/core/security.py",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "007_add_auth_audit_logs.sql",
-      "path": "backend/database/migrations/007_add_auth_audit_logs.sql",
       "reason": "Matched security-related file naming"
     },
     {
@@ -10072,11 +9971,6 @@
     {
       "name": "auth_new.py",
       "path": "backend/routes/auth_new.py",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "auth_old.py",
-      "path": "backend/routes/auth_old.py",
       "reason": "Matched security-related file naming"
     },
     {
@@ -10207,6 +10101,11 @@
     {
       "name": "rate_limit.py",
       "path": "backend/security/rate_limit.py",
+      "reason": "Matched security-related file naming"
+    },
+    {
+      "name": "rate_limiter.py",
+      "path": "backend/security/rate_limiter.py",
       "reason": "Matched security-related file naming"
     },
     {
@@ -10355,6 +10254,11 @@
       "reason": "Matched security-related file naming"
     },
     {
+      "name": "__init__.py",
+      "path": "backend/webhooks/__init__.py",
+      "reason": "Matched security-related file naming"
+    },
+    {
       "name": "payment_webhooks.py",
       "path": "backend/webhooks/payment_webhooks.py",
       "reason": "Matched security-related file naming"
@@ -10425,18 +10329,13 @@
       "reason": "Matched security-related file naming"
     },
     {
+      "name": "MOCK_FINAL_AUDIT.md",
+      "path": "docs/MOCK_FINAL_AUDIT.md",
+      "reason": "Matched security-related file naming"
+    },
+    {
       "name": "WEBHOOK_INTEGRATION_SPEC.md",
       "path": "docs/WEBHOOK_INTEGRATION_SPEC.md",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "fix_database_seed_rbac.sql",
-      "path": "fix_database_seed_rbac.sql",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "fix_roles_table.sql",
-      "path": "fix_roles_table.sql",
       "reason": "Matched security-related file naming"
     },
     {
@@ -10556,11 +10455,6 @@
     },
     {
       "name": "AuthContext.jsx",
-      "path": "frontend/src/context/AuthContext.jsx",
-      "reason": "Matched security-related file naming"
-    },
-    {
-      "name": "AuthContext.jsx",
       "path": "frontend/src/contexts/AuthContext.jsx",
       "reason": "Matched security-related file naming"
     },
@@ -10645,11 +10539,6 @@
       "reason": "Matched security-related file naming"
     },
     {
-      "name": "RequireAuth.jsx",
-      "path": "frontend/src/routes/RequireAuth.jsx",
-      "reason": "Matched security-related file naming"
-    },
-    {
       "name": "securityService.js",
       "path": "frontend/src/services/securityService.js",
       "reason": "Matched security-related file naming"
@@ -10695,6 +10584,11 @@
       "reason": "Matched security-related file naming"
     },
     {
+      "name": "pip_audit_backend.json",
+      "path": "pip_audit_backend.json",
+      "reason": "Matched security-related file naming"
+    },
+    {
       "name": "remove_auth_deps.py",
       "path": "remove_auth_deps.py",
       "reason": "Matched security-related file naming"
@@ -10722,6 +10616,11 @@
     {
       "name": "rbac_seed.py",
       "path": "scripts/rbac_seed.py",
+      "reason": "Matched security-related file naming"
+    },
+    {
+      "name": "security_audit.py",
+      "path": "scripts/security_audit.py",
       "reason": "Matched security-related file naming"
     },
     {
@@ -10825,6 +10724,16 @@
       "reason": "Matched security-related file naming"
     },
     {
+      "name": "update_user_role.py",
+      "path": "update_user_role.py",
+      "reason": "Matched security-related file naming"
+    },
+    {
+      "name": "update_user_role_pg.py",
+      "path": "update_user_role_pg.py",
+      "reason": "Matched security-related file naming"
+    },
+    {
       "name": "verify_security_final.py",
       "path": "verify_security_final.py",
       "reason": "Matched security-related file naming"
@@ -10848,6 +10757,7 @@
         "backend/ai/bots/__init__.py",
         "backend/ai/bots/mapleload.py",
         "backend/bots/ai_dispatcher.py",
+        "backend/bots/base_bot.py",
         "backend/bots/command_parser.py",
         "backend/bots/commands.py",
         "backend/bots/customer_service.py",
@@ -10855,8 +10765,7 @@
         "backend/bots/executive_intelligence.py",
         "backend/bots/finance_intelligence.py",
         "backend/bots/freight_bookings.py",
-        "backend/bots/freight_bot.py",
-        "backend/bots/freight_broker.py"
+        "backend/bots/freight_bot.py"
       ],
       "confidence": "High"
     },
@@ -10903,6 +10812,7 @@
       "description": "A dedicated training-center and trainer-bot subsystem exists for structured training workflows.",
       "evidence": [
         "INCIDENT_RESPONSE_TRAINING_GUIDE.md",
+        "SUPPORT_TEAM_TRAINING.md",
         "backend/bots/trainer_bot.py",
         "backend/routes/training_center.py",
         "backend/safety/core/training_manager.py",
@@ -10912,8 +10822,7 @@
         "backend/tests/test_training_center_routes.py",
         "backend/training_center/assessment_engine.py",
         "backend/training_center/main.py",
-        "backend/training_center/simulation_engine.py",
-        "backend/training_center/trainer_bot.py"
+        "backend/training_center/simulation_engine.py"
       ],
       "confidence": "Medium"
     },
@@ -10966,9 +10875,9 @@
         "backend/ai/bots/__init__.py",
         "backend/ai/bots/mapleload.py",
         "backend/bots/ai_dispatcher.py",
+        "backend/bots/base_bot.py",
         "backend/bots/command_parser.py",
-        "backend/bots/commands.py",
-        "backend/bots/customer_service.py"
+        "backend/bots/commands.py"
       ],
       "confidence": "High"
     },
@@ -11009,11 +10918,11 @@
       "basis": "Training center subsystem",
       "evidence": [
         "INCIDENT_RESPONSE_TRAINING_GUIDE.md",
+        "SUPPORT_TEAM_TRAINING.md",
         "backend/bots/trainer_bot.py",
         "backend/routes/training_center.py",
         "backend/safety/core/training_manager.py",
-        "backend/tests/test_trainer_runtime_bot.py",
-        "backend/tests/test_training_center.py"
+        "backend/tests/test_trainer_runtime_bot.py"
       ],
       "confidence": "Medium"
     },
@@ -11056,31 +10965,31 @@
         "name": "Repository scale",
         "score": 100,
         "weight": 0.15,
-        "basis": "2387 scanned text files"
+        "basis": "2443 scanned text files"
       },
       {
         "name": "API surface",
         "score": 100,
         "weight": 0.2,
-        "basis": "1199 detected API endpoints"
+        "basis": "1223 detected API endpoints"
       },
       {
         "name": "Data model maturity",
         "score": 100,
         "weight": 0.15,
-        "basis": "195 model or migration artifacts"
+        "basis": "152 model or migration artifacts"
       },
       {
         "name": "AI and automation depth",
         "score": 100,
         "weight": 0.2,
-        "basis": "181 bot-related files"
+        "basis": "184 bot-related files"
       },
       {
         "name": "Security footprint",
         "score": 100,
         "weight": 0.15,
-        "basis": "253 security-related files"
+        "basis": "254 security-related files"
       },
       {
         "name": "Differentiated capabilities",

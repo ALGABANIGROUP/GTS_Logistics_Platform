@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
-import RequireAuth from '../routes/RequireAuth';
+import RequireAuth from '../components/RequireAuth';
 
 vi.mock('../contexts/AuthContext.jsx', () => ({
     useAuth: vi.fn(),
@@ -18,7 +18,7 @@ function renderWithRoutes(initialPath = '/private', roles = undefined) {
                 </Route>
                 <Route path="/login" element={<div>LOGIN_PAGE</div>} />
                 <Route path="/account-inactive" element={<div>INACTIVE_PAGE</div>} />
-                <Route path="/403" element={<div>FORBIDDEN_PAGE</div>} />
+                <Route path="/unauthorized" element={<div>UNAUTHORIZED_PAGE</div>} />
             </Routes>
         </MemoryRouter>
     );
@@ -32,7 +32,7 @@ describe('RequireAuth', () => {
     it('renders protected route when authenticated and authorized', () => {
         useAuth.mockReturnValue({
             user: { effective_role: 'admin' },
-            loading: false,
+            authReady: true,
             isAuthenticated: true,
             accountStatus: 'active',
         });
@@ -45,7 +45,7 @@ describe('RequireAuth', () => {
     it('redirects unauthenticated users to login', () => {
         useAuth.mockReturnValue({
             user: null,
-            loading: false,
+            authReady: true,
             isAuthenticated: false,
             accountStatus: null,
         });
@@ -58,7 +58,7 @@ describe('RequireAuth', () => {
     it('redirects inactive accounts to account inactive page', () => {
         useAuth.mockReturnValue({
             user: { role: 'admin' },
-            loading: false,
+            authReady: true,
             isAuthenticated: true,
             accountStatus: 'inactive',
         });
@@ -68,36 +68,36 @@ describe('RequireAuth', () => {
         expect(screen.getByText('INACTIVE_PAGE')).toBeInTheDocument();
     });
 
-    it('redirects to forbidden when role does not match', () => {
+    it('redirects to unauthorized when role does not match', () => {
         useAuth.mockReturnValue({
             user: { role: 'user' },
-            loading: false,
+            authReady: true,
             isAuthenticated: true,
             accountStatus: 'active',
         });
 
         renderWithRoutes('/private', ['admin']);
 
-        expect(screen.getByText('FORBIDDEN_PAGE')).toBeInTheDocument();
+        expect(screen.getByText('UNAUTHORIZED_PAGE')).toBeInTheDocument();
     });
 
-    it('returns null while auth state is loading', () => {
+    it('renders a pending shell while auth state is loading', () => {
         useAuth.mockReturnValue({
             user: null,
-            loading: true,
+            authReady: false,
             isAuthenticated: false,
             accountStatus: null,
         });
 
         const { container } = renderWithRoutes('/private', ['admin']);
 
-        expect(container).toBeEmptyDOMElement();
+        expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
     });
 
     it('renders protected route when roles are not required', () => {
         useAuth.mockReturnValue({
             user: { role: 'user' },
-            loading: false,
+            authReady: true,
             isAuthenticated: true,
             accountStatus: 'active',
         });
@@ -110,7 +110,7 @@ describe('RequireAuth', () => {
     it('accepts users with role present in roles array', () => {
         useAuth.mockReturnValue({
             user: { roles: ['dispatcher', 'manager'] },
-            loading: false,
+            authReady: true,
             isAuthenticated: true,
             accountStatus: 'active',
         });
@@ -120,16 +120,16 @@ describe('RequireAuth', () => {
         expect(screen.getByText('PRIVATE_PAGE')).toBeInTheDocument();
     });
 
-    it('redirects to forbidden when user has no role metadata and roles are required', () => {
+    it('redirects to unauthorized when user has no role metadata and roles are required', () => {
         useAuth.mockReturnValue({
             user: {},
-            loading: false,
+            authReady: true,
             isAuthenticated: true,
             accountStatus: 'active',
         });
 
         renderWithRoutes('/private', ['admin']);
 
-        expect(screen.getByText('FORBIDDEN_PAGE')).toBeInTheDocument();
+        expect(screen.getByText('UNAUTHORIZED_PAGE')).toBeInTheDocument();
     });
 });

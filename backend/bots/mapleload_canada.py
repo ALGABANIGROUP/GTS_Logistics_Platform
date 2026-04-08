@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 """
 MapleLoad Canada Bot Integration
 Handles daily freight rate updates, analysis, and email notifications
@@ -705,3 +706,4 @@ async def shutdown_mapleload_bot():
         logger.info("[MapleLoadBot] Shutdown successfully")
     except Exception as e:
         logger.error(f"[MapleLoadBot] Shutdown failed: {e}")
+

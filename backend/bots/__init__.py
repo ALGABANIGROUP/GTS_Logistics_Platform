@@ -1,13 +1,23 @@
+﻿from __future__ import annotations
+# backend/bots/__init__.py
 """
-GTS Logistics AI Bots Package
+Bots module for GTS Logistics Platform
 """
-
 import logging
-from typing import List
+
+from .base_bot import BaseBot
+from .general_manager import GeneralManagerBot
+from .freight_broker import FreightBrokerBot
+from .operations_manager import OperationsManagerBot
 
 logger = logging.getLogger(__name__)
 
-# Core bots
+__all__ = [
+    'BaseBot',
+    'GeneralManagerBot',
+    'FreightBrokerBot',
+    'OperationsManagerBot'
+]
 from .general_manager import GeneralManagerBot
 from .freight_broker import FreightBrokerBot
 from .operations_manager import OperationsManagerBot
@@ -159,3 +169,4 @@ def activate_all_bots():
 
 # Call this on startup
 activate_all_bots()
+

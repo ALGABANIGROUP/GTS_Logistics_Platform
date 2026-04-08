@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from importlib import import_module
-from typing import AsyncIterator, Optional
+from typing import AsyncIterator, Callable, Optional
 
 # Ensure env is loaded before importing database config
 try:
@@ -71,6 +71,11 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
             await session.close()
 
 
+async def get_db() -> AsyncIterator[AsyncSession]:
+    async for session in get_async_session():
+        yield session
+
+
 @asynccontextmanager
 async def async_session() -> AsyncIterator[AsyncSession]:
     _ensure_sessionmaker()
@@ -95,3 +100,12 @@ async def wrap_session_factory(session_factory: Callable[[], AsyncIterator[Async
     async for session in provider:
         yield session
         break
+
+
+__all__ = [
+    "async_session",
+    "async_session_maker",
+    "get_async_session",
+    "get_db",
+    "wrap_session_factory",
+]

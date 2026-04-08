@@ -161,6 +161,21 @@ async def get_expenses(db: AsyncSession = Depends(get_finance_db)) -> List[Expen
         raise HTTPException(status_code=500, detail=f"get_expenses_error: {e!s}")
 
 
+@router.get("/expenses/{expense_id}", response_model=ExpenseOut)
+async def get_expense(expense_id: int, db: AsyncSession = Depends(get_finance_db)) -> ExpenseOut:
+    try:
+        result = await db.execute(select(Expense).where(Expense.id == expense_id))
+        obj = result.scalar_one_or_none()
+        if not obj:
+            raise HTTPException(status_code=404, detail="Expense not found")
+        return _to_out(obj)
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception("get_expense failed")
+        raise HTTPException(status_code=500, detail=f"get_expense_error: {e!s}")
+
+
 @router.post("/expenses", response_model=ExpenseOut)
 async def create_expense(expense: ExpenseCreate, db: AsyncSession = Depends(get_finance_db)) -> ExpenseOut:
     try:
@@ -320,6 +335,42 @@ async def finance_summary(db: AsyncSession = Depends(get_finance_db)) -> Dict[st
         raise HTTPException(status_code=500, detail=f"finance_summary_error: {e!s}")
 
 
+@router.get("/expenses/stats")
+async def expense_stats(db: AsyncSession = Depends(get_finance_db)) -> Dict[str, Any]:
+    try:
+        totals = await db.execute(
+            select(
+                func.coalesce(func.count(Expense.id), 0),
+                func.coalesce(func.sum(Expense.amount), 0.0),
+            )
+        )
+        count, total_amount = totals.one()
+
+        by_status_q = await db.execute(
+            select(Expense.status, func.coalesce(func.count(Expense.id), 0)).group_by(Expense.status)
+        )
+        by_status = {str(status): int(total) for status, total in by_status_q.all()}
+
+        by_category_q = await db.execute(
+            select(Expense.category, func.coalesce(func.sum(Expense.amount), 0.0)).group_by(Expense.category)
+        )
+        by_category = {
+            str(category or "Uncategorized"): round(float(total or 0.0), 2)
+            for category, total in by_category_q.all()
+        }
+
+        return {
+            "ok": True,
+            "total_count": int(count or 0),
+            "total_amount": round(float(total_amount or 0.0), 2),
+            "by_status": by_status,
+            "by_category": by_category,
+        }
+    except Exception as e:
+        log.exception("expense_stats failed")
+        raise HTTPException(status_code=500, detail=f"expense_stats_error: {e!s}")
+
+
 @router.post("/upload-csv")
 async def upload_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_finance_db)) -> Dict[str, Any]:
     async with _import_lock:
@@ -384,4 +435,3 @@ async def upload_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
 finance_router = router
 __all__ = ["router", "finance_router"]
 print("[finance_routes] loaded and aliases exported")
-

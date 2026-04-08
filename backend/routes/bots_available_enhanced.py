@@ -99,14 +99,14 @@ ALL_BOTS = [
         "subscription_required": "enterprise",
     },
     {
-        "id": "sales_intelligence",
-        "name": "Sales Intelligence",
-        "description": "Manages customer relationships and drives revenue growth",
-        "icon": "💼",
-        "path": "/ai-bots/sales",
+        "id": "sales_bot",
+        "name": "AI Sales Bot",
+        "description": "Sales analytics, lead management, and revenue tracking",
+        "icon": "💰",
+        "path": "/ai-bots/sales-team",
         "category": "Sales",
         "enabled": True,
-        "subscription_required": "unified",
+        "subscription_required": "basic"
     },
     {
         "id": "marketing_manager",
@@ -283,6 +283,37 @@ async def get_all_bots(
         "active_count": active_count,
         "total_count": len(ALL_BOTS),
         "inactive_count": len(bots) - active_count
+    }
+
+
+@router.get("/available", response_model=Dict[str, Any])
+async def get_available_bots(
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Get available bots for the dashboard"""
+    # For now, return all bots - in production, check user subscription
+    available_bot_ids = SUBSCRIPTION_TIERS["enterprise"]
+    available_bots = [b for b in ALL_BOTS if b["id"] in available_bot_ids and b["enabled"]]
+    
+    # Format for dashboard compatibility
+    formatted_bots = []
+    for bot in available_bots:
+        formatted_bots.append({
+            "bot_key": bot["id"],
+            "display_name": bot["name"],
+            "name": bot["name"],
+            "description": bot["description"],
+            "has_backend": True,  # Assume all have backend for now
+            "category": bot["category"],
+            "subscription_required": bot["subscription_required"]
+        })
+    
+    return {
+        "data": {
+            "bots": formatted_bots
+        },
+        "ok": True
     }
 
 

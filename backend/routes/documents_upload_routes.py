@@ -421,6 +421,27 @@ async def documents_dashboard():
     return payload
 
 
+@router.get("/stats")
+async def documents_stats():
+    records = _all_records()
+    payload = _dashboard_payload(records)
+    stats = payload.get("stats", {})
+    total = int(stats.get("total", 0) or 0)
+    processed = int(stats.get("processed", 0) or 0)
+    pending = int(stats.get("pending", 0) or 0)
+    pending_signatures = int(stats.get("pendingSignatures", 0) or 0)
+    expiring_soon = int(stats.get("expiringSoon", 0) or 0)
+    return {
+        "total_documents": total,
+        "processed_documents": processed,
+        "pending_documents": pending,
+        "pending_signatures": pending_signatures,
+        "expiring_soon": expiring_soon,
+        "storage_used": stats.get("storage", "0 MB"),
+        "success": True,
+    }
+
+
 @router.get("/search")
 async def search_documents(q: str = Query(..., min_length=1)):
     query = q.lower().strip()

@@ -15,6 +15,9 @@ import PageTitleUpdater from "./components/PageTitleUpdater";
 // Auth context
 import { useAuth } from "./contexts/AuthContext.jsx";
 
+// Notification context
+import { NotificationProvider } from "./contexts/NotificationContext.jsx";
+
 // Currency store
 import { useCurrencyStore } from "./stores/useCurrencyStore";
 
@@ -95,6 +98,7 @@ const AIInformationCoordinatorComponent = React.lazy(() => import("./components/
 const AIDevMaintenanceComponent = React.lazy(() => import("./components/bots/AIDevMaintenance"));
 const AILegalConsultantComponent = React.lazy(() => import("./components/bots/AILegalConsultant"));
 const AISafetyManagerComponent = React.lazy(() => import("./components/bots/AISafetyManager"));
+const AISystemManager = React.lazy(() => import("./pages/ai-bots/AISystemManager"));
 const AISalesTeamComponent = React.lazy(() => import("./components/bots/AISalesTeam"));
 const AISecurityManagerComponent = React.lazy(() => import("./components/bots/AISecurityManager"));
 const FreightPulseDashboard = React.lazy(() => import("./pages/FreightPulseDashboard"));
@@ -109,6 +113,7 @@ const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const ActivateAccount = React.lazy(() => import("./pages/ActivateAccount"));
 const AccountInactive = React.lazy(() => import("./pages/auth/AccountInactive"));
+const Unauthorized = React.lazy(() => import("./pages/Unauthorized"));
 const EmailLog = React.lazy(() => import("./components/EmailLog"));
 const Emails = React.lazy(() => import("./pages/Emails"));
 const Shipments = React.lazy(() => import("./pages/Shipments"));
@@ -145,6 +150,10 @@ const AIGeneralManagerAdmin = React.lazy(() => import("./pages/admin/AIGeneralMa
 const SupportCenter = React.lazy(() => import("./pages/admin/SupportCenter"));
 const SupportTickets = React.lazy(() => import("./pages/admin/SupportTickets"));
 const SystemHealth = React.lazy(() => import("./pages/admin/SystemHealth"));
+const OrchestrationDashboard = React.lazy(() => import("./pages/admin/OrchestrationDashboard"));
+const PartnersListPage = React.lazy(() => import("./pages/admin/PartnersListPage"));
+const PartnerDetailsPage = React.lazy(() => import("./pages/admin/PartnerDetailsPage"));
+const Partners = React.lazy(() => import("./pages/admin/Partners"));
 const AdminFooterSettings = React.lazy(() => import("./pages/admin/AdminFooterSettings"));
 const AdminUsers = React.lazy(() => import("./pages/admin/AdminUsers"));
 const MaintenanceCenterPage = React.lazy(() => import("./pages/admin/MaintenanceCenterPage"));
@@ -186,6 +195,7 @@ const TermsAndConditions = React.lazy(() => import("./pages/TermsAndConditions")
 const BotFeatures = React.lazy(() => import("./pages/BotFeatures"));
 const UserSettings = React.lazy(() => import("./pages/UserSettings"));
 const NotificationsPage = React.lazy(() => import("./pages/notifications/Notifications.jsx"));
+const DashboardNotifications = React.lazy(() => import("./pages/dashboard/Notifications.jsx"));
 const Pricing = React.lazy(() => import("./pages/Pricing"));
 const Products = React.lazy(() => import("./pages/Products"));
 const Privacy = React.lazy(() => import("./pages/Privacy"));
@@ -319,8 +329,9 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      {/* Inactivity watcher: auto-logout after idle time */}
-      <InactivityWatcher timeoutMinutes={120} warningMinutesBefore={5} />
+      <NotificationProvider>
+        {/* Inactivity watcher: auto-logout after idle time */}
+        <InactivityWatcher timeoutMinutes={120} warningMinutesBefore={5} />
 
       <AuthChecker>
         <Suspense fallback={<LoadingFallback />}>
@@ -477,6 +488,16 @@ const App = () => {
                 }
               />
               <Route
+                path="/dashboard/notifications"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <DashboardNotifications />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
                 path="/communications"
                 element={
                   <RequireAuth>
@@ -508,6 +529,22 @@ const App = () => {
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/unauthorized"
+                element={
+                  <Layout>
+                    <Unauthorized />
+                  </Layout>
+                }
+              />
+              <Route path="/admin/unified-dashboard" element={<Navigate to="/admin/overview" replace />} />
+              <Route path="/app-store" element={<Navigate to="/contact" replace />} />
+              <Route path="/google-play" element={<Navigate to="/contact" replace />} />
+              <Route path="/tms" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/tms/dashboard" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/finance/platform-expenses" element={<Navigate to="/admin/platform-expenses" replace />} />
+              <Route path="/finance/ai-analysis" element={<Navigate to="/ai-bots/finance" replace />} />
+              <Route path="/ai-bots/trainer" element={<Navigate to="/ai-bots/control?bot=trainer_bot" replace />} />
 
               {/* AI Bots Routes */}
               <Route
@@ -820,6 +857,16 @@ const App = () => {
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/ai-bots/system-manager"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <AISystemManager />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
               {/* Carriers Routes */}
               <Route
                 path="/ai-bots/carriers"
@@ -857,7 +904,17 @@ const App = () => {
               <Route
                 path="/ai-bots/sales"
                 element={
-                  <RequireAuth>
+                  <RequireAuth allowedRoles={['super_admin', 'admin', 'manager', 'user', 'partner']}>
+                    <Layout>
+                      <SalesTeam />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/sales-team"
+                element={
+                  <RequireAuth allowedRoles={['super_admin', 'admin', 'manager', 'user', 'partner']}>
                     <Layout>
                       <SalesTeam />
                     </Layout>
@@ -866,9 +923,21 @@ const App = () => {
               />
               <Route
                 path="/ai-bots/Sales_Team"
+                element={<Navigate to="/ai-bots/sales" replace />}
+              />
+
+              {/* Testing Routes - Remove after verification */}
+              <Route
+                path="/sales-team-test"
                 element={
-                  <Navigate to="/ai-bots/sales" replace />
+                  <Layout>
+                    <SalesTeam />
+                  </Layout>
                 }
+              />
+              <Route
+                path="/public-sales"
+                element={<SalesTeam />}
               />
               <Route
                 path="/ai-bots/strategy"
@@ -1518,6 +1587,7 @@ const App = () => {
                 }
               />
               <Route path="/email" element={<Navigate to="/emails" replace />} />
+              <Route path="/email-logs" element={<Navigate to="/emails" replace />} />
 
               {/* Notifications Center */}
               <Route
@@ -1645,10 +1715,8 @@ const App = () => {
               <Route
                 path="/admin"
                 element={
-                  <RequireAuth>
-                    <RequireAuth roles={["admin", "system_admin", "owner", "super_admin"]}>
-                      <AdminLayout />
-                    </RequireAuth>
+                  <RequireAuth allowedRoles={['admin', 'super_admin']}>
+                    <AdminLayout />
                   </RequireAuth>
                 }
               >
@@ -1670,6 +1738,9 @@ const App = () => {
                 <Route path="fleet/live-map" element={<Navigate to="/ai-bots/freight_broker/live-map" replace />} />
                 <Route path="drivers" element={<AdminDrivers />} />
                 <Route path="operations" element={<OperationsManager />} />
+                <Route path="orchestration" element={<OrchestrationDashboard />} />
+                <Route path="partners" element={<Partners />} />
+                <Route path="logistics-partners" element={<Partners />} />
                 <Route path="ai/general-manager" element={<AIGeneralManagerAdmin />} />
                 <Route path="ai/strategy-advisor" element={<StrategyAdvisor />} />
                 <Route path="ai/marketing-bot" element={<MarketingBot />} />
@@ -1721,6 +1792,7 @@ const App = () => {
           </div>
         </Suspense>
       </AuthChecker>
+      </NotificationProvider>
     </ErrorBoundary>
   );
 };

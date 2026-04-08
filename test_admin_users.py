@@ -8,11 +8,13 @@ async def test_admin_users():
     async with aiohttp.ClientSession() as session:
         # Step 1: Get auth token
         auth_url = "http://127.0.0.1:8000/api/v1/auth/token"
-        auth_data = aiohttp.FormData()
-        auth_data.add_field('username', 'admin@gts.local')
-        auth_data.add_field('password', 'admin123')
+        auth_payload = {
+            "email": "enjoy983@hotmail.com",
+            "password": "Gabani@2026"
+        }
+        headers = {"Content-Type": "application/json"}
         
-        async with session.post(auth_url, data=auth_data) as resp:
+        async with session.post(auth_url, json=auth_payload, headers=headers) as resp:
             if resp.status != 200:
                 print(f"❌ Auth failed: {resp.status}")
                 text = await resp.text()

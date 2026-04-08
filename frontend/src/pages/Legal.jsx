@@ -130,6 +130,27 @@ const Legal = () => {
                             </section>
 
                             <section>
+                                <h2 className="text-xl font-semibold text-white mb-3">Intellectual Property & Innovation</h2>
+                                <p>GTS Logistics has filed a Canadian patent application for its AI-Powered Multi-Bot Orchestration System for Logistics Automation.</p>
+                                <div className="mt-3">
+                                    <h3 className="font-medium text-white mb-2">Patent Details:</h3>
+                                    <p className="text-gray-400 mb-3"><strong>Application No.:</strong> 3306251</p>
+                                    <p className="text-gray-400 mb-3"><strong>Title:</strong> AI Multi-Bot Orchestration System for Logistics Automation</p>
+                                    <h4 className="font-medium text-white mb-2">Protected Systems:</h4>
+                                    <ol className="list-decimal list-inside space-y-1 text-gray-400">
+                                        <li>AI Multi-Bot Orchestration System</li>
+                                        <li>Intelligent Freight Matching with Predictive Analytics</li>
+                                        <li>Unified Cross-Border Payment Processing</li>
+                                        <li>Autonomous Incident Detection and Response</li>
+                                        <li>AI-Powered Document Processing and Compliance</li>
+                                        <li>Predictive Fleet Maintenance and Analytics</li>
+                                        <li>Carrier Onboarding and Continuous Verification</li>
+                                    </ol>
+                                    <p className="text-gray-400 mt-3">This patent protects the core technology that enables autonomous coordination between specialized AI agents without human intervention.</p>
+                                </div>
+                            </section>
+
+                            <section>
                                 <h2 className="text-xl font-semibold text-white mb-3">Download Legal Documents</h2>
                                 <p>Access complete legal agreements and documentation:</p>
                                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -169,7 +190,14 @@ const Legal = () => {
                 {/* Footer */}
                 <div className="container mx-auto px-4 py-6 border-t border-white/20">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-gray-400 text-xs">© 2026 Gabani Transport Solutions LLC – All rights reserved.</p>
+                        <div className="flex flex-col items-center md:items-start gap-2">
+                            <p className="text-gray-400 text-xs">
+                                © 2026 Gabani Transport Solutions LLC – All rights reserved.
+                            </p>
+                            <p className="text-gray-500 text-xs text-center md:text-left">
+                                Canadian Patent Application No. 3306251 | AI Multi-Bot Orchestration System for Logistics Automation
+                            </p>
+                        </div>
                         <div className="flex gap-4 text-xs">
                             <Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link>
                             <Link to="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</Link>

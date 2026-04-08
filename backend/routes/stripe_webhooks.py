@@ -4,8 +4,6 @@ Stripe Webhook Handler - Process payment events
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 import logging
-import hmac
-import hashlib
 import os
 from typing import Dict, Any
 from datetime import datetime
@@ -15,49 +13,26 @@ from backend.database.session import get_async_session
 from backend.models.invoices import Invoice
 from backend.models.payment import Payment, PaymentStatus
 from backend.config import Settings
-from backend.services.stripe_service import get_stripe_service
+from backend.security.webhook_signatures import verify_hmac_sha256_signature
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webhooks/stripe", tags=["Stripe Webhooks"])
 
 settings = Settings()
-stripe_service = get_stripe_service()
 webhook_secret = settings.STRIPE_WEBHOOK_SECRET
-
-
-def _is_production() -> bool:
-    return (os.getenv("ENVIRONMENT") or settings.APP_ENV or "development").strip().lower() in {"production", "prod"}
 
 
 def verify_signature(payload: bytes, signature: str) -> bool:
     """Verify webhook signature from Stripe"""
     if not webhook_secret:
         logger.warning("STRIPE_WEBHOOK_SECRET not configured")
-        return not _is_production()
-
-    try:
-        # Stripe sends signature in format: t=1492774577,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd,v0=...
-        # We need the v1 signature
-        signature_parts = dict(part.split('=', 1) for part in signature.split(','))
-        expected_signature = signature_parts.get('v1')
-
-        if not expected_signature:
-            logger.error("No v1 signature found in Stripe webhook")
-            return False
-
-        # Create expected signature
-        signed_payload = payload
-        expected = hmac.new(
-            webhook_secret.encode(),
-            signed_payload,
-            hashlib.sha256
-        ).hexdigest()
-
-        return hmac.compare_digest(expected, expected_signature)
-
-    except Exception as e:
-        logger.error(f"Error verifying Stripe webhook signature: {e}")
-        return False
+    return verify_hmac_sha256_signature(
+        secret=webhook_secret,
+        payload=payload,
+        signature_header=signature,
+        app_env=os.getenv("ENVIRONMENT") or settings.APP_ENV,
+        preferred_signature_keys=("v1",),
+    )
 
 
 @router.post("/")

@@ -22,8 +22,8 @@ def _user_is_global(user: Dict[str, Any]) -> bool:
     return (
         "system.full_access" in perms
         or "*" in perms
-        or role in ("super_admin", "owner")
-        or bool({"super_admin", "owner"} & roles)
+        or role in ("super_admin", "owner", "admin")
+        or bool({"super_admin", "owner", "admin"} & roles)
     )
 
 

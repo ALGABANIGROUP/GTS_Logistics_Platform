@@ -427,45 +427,85 @@ def _new_refresh_token() -> str:
 
 
 async def _issue_refresh_token(db: AsyncSession, user_id: int) -> str:
-
     now = datetime.now(timezone.utc)
     expires = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     raw = _new_refresh_token()
     token_hash = _hash_refresh_token(raw)
 
-    obj = RefreshToken(
-        user_id=int(user_id),
-        token_hash=token_hash,
-        expires_at=expires,
-        revoked_at=None,
-        replaced_by_id=None,
+    await db.execute(
+        text(
+            """
+            INSERT INTO refresh_tokens (
+                user_id, token_hash, created_at, expires_at, revoked_at, replaced_by_id
+            )
+            VALUES (
+                :user_id, :token_hash, :created_at, :expires_at, NULL, NULL
+            )
+            """
+        ),
+        {
+            "user_id": int(user_id),
+            "token_hash": token_hash,
+            "created_at": now,
+            "expires_at": expires,
+        },
     )
-    db.add(obj)
     await db.commit()
     return raw
 
 
 async def _rotate_refresh_token(db: AsyncSession, *, old_obj: Any) -> str:
-
     now = datetime.now(timezone.utc)
 
     new_raw = _new_refresh_token()
     new_hash = _hash_refresh_token(new_raw)
     new_expires = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-    new_obj = RefreshToken(
-        user_id=int(old_obj.user_id),
-        token_hash=new_hash,
-        expires_at=new_expires,
-        revoked_at=None,
-        replaced_by_id=None,
-    )
-    db.add(new_obj)
-    await db.flush()
+    old_id = getattr(old_obj, "id", None)
+    old_user_id = getattr(old_obj, "user_id", None)
+    if isinstance(old_obj, dict):
+        old_id = old_obj.get("id", old_id)
+        old_user_id = old_obj.get("user_id", old_user_id)
 
-    old_obj.revoked_at = now
-    old_obj.replaced_by_id = new_obj.id
+    if old_id is None or old_user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    result = await db.execute(
+        text(
+            """
+            INSERT INTO refresh_tokens (
+                user_id, token_hash, created_at, expires_at, revoked_at, replaced_by_id
+            )
+            VALUES (
+                :user_id, :token_hash, :created_at, :expires_at, NULL, NULL
+            )
+            RETURNING id
+            """
+        ),
+        {
+            "user_id": int(old_user_id),
+            "token_hash": new_hash,
+            "created_at": now,
+            "expires_at": new_expires,
+        },
+    )
+    new_id = result.scalar_one()
+
+    await db.execute(
+        text(
+            """
+            UPDATE refresh_tokens
+            SET revoked_at = :revoked_at, replaced_by_id = :replaced_by_id
+            WHERE id = :id
+            """
+        ),
+        {
+            "revoked_at": now,
+            "replaced_by_id": int(new_id),
+            "id": int(old_id),
+        },
+    )
 
     await db.commit()
     return new_raw

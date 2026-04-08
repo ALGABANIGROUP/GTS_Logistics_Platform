@@ -196,6 +196,34 @@ async def list_shippers(
         )
 
 
+@router.get("/recent")
+async def get_recent_shippers(
+    limit: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Get recently added shippers
+    """
+    try:
+        result = await db.execute(
+            select(Shipper)
+            .where(Shipper.is_active == True)
+            .order_by(desc(Shipper.created_at))
+            .limit(limit)
+        )
+        shippers = result.scalars().all()
+
+        return {
+            "items": [ShipperResponse.model_validate(shipper) for shipper in shippers],
+            "total": len(shippers)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get recent shippers: {str(e)}"
+        )
+
+
 @router.get("/{shipper_id}", response_model=ShipperResponse)
 async def get_shipper(
     shipper_id: int,

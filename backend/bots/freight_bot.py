@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/freight_bot.py
 """
 Freight Bot
@@ -311,3 +312,4 @@ class FreightBot:
             return await self.get_market_rates()
         else:
             return await self.status()
+

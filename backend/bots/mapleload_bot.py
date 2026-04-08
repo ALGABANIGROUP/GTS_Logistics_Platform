@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/mapleload_bot.py
 """
 MapleLoad Bot
@@ -355,3 +356,4 @@ class MapleLoadBot:
             return await self.analyze_cross_border()
         else:
             return await self.status()
+

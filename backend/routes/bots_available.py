@@ -14,6 +14,7 @@ from backend.security.access_context import build_auth_me_payload
 from backend.security.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/bots", tags=["Bots"])
+compat_router = APIRouter(prefix="/api/v1/ai/bots/available", tags=["AI Bots Compat"])
 
 
 class BotRunPayload(BaseModel):
@@ -34,6 +35,26 @@ def _get_bot_or_404(bot_key: str):
         return registry.get(bot_key)
     except Exception:
         raise HTTPException(status_code=404, detail=f"Bot '{bot_key}' not found")
+
+
+async def _maybe_await(value: Any) -> Any:
+    if hasattr(value, "__await__"):
+        return await value
+    return value
+
+
+async def _bot_config(bot: Any) -> Dict[str, Any]:
+    if hasattr(bot, "config") and callable(getattr(bot, "config")):
+        return await _maybe_await(bot.config())
+    return {"bot": getattr(bot, "name", "unknown"), "mode": "default"}
+
+
+async def _bot_status_payload(bot: Any) -> Dict[str, Any]:
+    if hasattr(bot, "status") and callable(getattr(bot, "status")):
+        return await _maybe_await(bot.status())
+    if hasattr(bot, "get_status") and callable(getattr(bot, "get_status")):
+        return await _maybe_await(bot.get_status())
+    return {"status": "running", "available": True}
 
 
 @router.get("/available")
@@ -68,6 +89,7 @@ async def list_available_bots(
     }
 
 
+@compat_router.post("/{bot_key}/run")
 @router.post("/{bot_key}/run")
 async def run_bot(
     bot_key: str,
@@ -146,6 +168,7 @@ async def run_bot(
     }
 
 
+@compat_router.get("/{bot_key}/status")
 @router.get("/{bot_key}/status")
 async def bot_status(
     bot_key: str,
@@ -156,20 +179,11 @@ async def bot_status(
     """Get the status of a specific bot"""
     bot = _get_bot_or_404(bot_key)
     
-    # Try to get status from bot
-    status_data = {"status": "running", "available": True}
-    
-    if hasattr(bot, "status") and callable(getattr(bot, "status")):
-        try:
-            result = bot.status()
-            # Handle both sync and async
-            if hasattr(result, "__await__"):
-                status_data = await result
-            else:
-                status_data = result
-        except Exception as e:
-            status_data = {"status": "error", "error": str(e), "available": False}
-    
+    try:
+        status_data = await _bot_status_payload(bot)
+    except Exception as e:
+        status_data = {"status": "error", "error": str(e), "available": False}
+
     return {
         "ok": True,
         "bot_key": bot_key,
@@ -177,4 +191,38 @@ async def bot_status(
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
+
+@compat_router.get("/{bot_key}/health")
+@router.get("/{bot_key}/health")
+async def bot_health(
+    bot_key: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db_async),
+    claims: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    return await bot_status(bot_key=bot_key, request=request, db=db, claims=claims)
+
+
+@compat_router.get("/{bot_key}/config")
+@router.get("/{bot_key}/config")
+async def bot_config(
+    bot_key: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db_async),
+    claims: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    bot = _get_bot_or_404(bot_key)
+    try:
+        config_data = await _bot_config(bot)
+    except Exception as e:
+        config_data = {"error": str(e), "available": False}
+    return {
+        "ok": True,
+        "bot_key": bot_key,
+        "config": config_data,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+__all__ = ["compat_router", "router"]
 

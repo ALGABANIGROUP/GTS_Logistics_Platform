@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from backend.database.config import get_db_async
@@ -38,8 +38,7 @@ class IssueOut(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 @router.post("/", response_model=IssueOut)
@@ -112,4 +111,3 @@ async def delete_issue(issue_id: int, db: AsyncSession = Depends(get_db_async)):
     await db.delete(issue)
     await db.commit()
     return {"message": "Issue deleted successfully"}
-

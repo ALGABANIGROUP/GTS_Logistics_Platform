@@ -14,6 +14,23 @@ const readSessionJson = (key) => {
     }
 };
 
+const decodeJwtPayload = (token) => {
+    try {
+        const base64Url = String(token || "").split(".")[1];
+        if (!base64Url) return null;
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
+                .join("")
+        );
+        return JSON.parse(jsonPayload);
+    } catch {
+        return null;
+    }
+};
+
 export const useEntitlements = create((set, get) => ({
     loaded: false,
     role_key: null,
@@ -44,12 +61,14 @@ export const useEntitlements = create((set, get) => ({
         const roleFromEnt = ent?.role_key;
         const roleFromUser = getUserRole(user);
         const roleFromMeta = getUserRole(meta?.user);
-        const finalRole = roleFromEnt || roleFromUser || roleFromMeta || null;
+        const roleFromToken = getUserRole(decodeJwtPayload(token));
+        const finalRole = roleFromEnt || roleFromUser || roleFromMeta || roleFromToken || null;
+        const effectivePermissions = ent?.permissions || meta?.permissions || [];
 
         set({
             loaded: true,
             role_key: finalRole,
-            permissions: ent?.permissions || meta?.permissions || [],
+            permissions: effectivePermissions,
             features: ent?.features || meta?.features || [],
             modules: ent?.modules || meta?.modules || null,
             plan: ent?.plan || meta?.plan || null,
@@ -63,7 +82,14 @@ export const useEntitlements = create((set, get) => ({
     },
 
     hasFeature: (f) => get().features?.includes(f),
-    hasPermission: (p) => get().permissions?.includes(p),
+    hasPermission: (p) => {
+        const role = get().role_key;
+        const permissions = get().permissions || [];
+        if (!p) return true;
+        if (isSuperAdminRole(role)) return true;
+        if (permissions.includes("*")) return true;
+        return permissions.includes(p);
+    },
     hasPlan: (p) => {
         const current = (get().plan || "").toLowerCase();
         return !p || current === String(p).toLowerCase();

@@ -23,7 +23,7 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/admin", tags=["Admin Dashboard"])
+router = APIRouter(tags=["Admin Dashboard"])
 
 _ADMIN_ROLES = {"admin", "super_admin", "owner", "system_admin"}
 _US_CODES = {
@@ -291,7 +291,6 @@ async def verify_admin(request: Request) -> dict:
     return payload
 
 
-@router.get("", summary="Admin API Root")
 @router.get("/", summary="Admin API Root")
 async def admin_root(payload: dict = Depends(verify_admin)):
     """Admin API root endpoint"""

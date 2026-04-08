@@ -91,7 +91,8 @@ frontend/
 │   ├── types/           # TypeScript Types
 │   ├── utils/           # Utilities
 │   ├── config/          # Configuration
-│   └── App.tsx          # Main App Component
+│   ├── main.jsx         # React entry point
+│   └── App.jsx          # Main App Component
 ├── vite.config.js       # Vite Config
 ├── tailwind.config.js   # Tailwind Config
 └── package.json         # Dependencies
@@ -277,7 +278,8 @@ backend/main.py	FastAPI entry point
 backend/config.py	Configuration settings
 backend/models/user.py	User model & schema
 backend/alembic/	Database migrations
-frontend/src/App.tsx	Main React application
+frontend/src/main.jsx	React entry point
+frontend/src/App.jsx	Main React application
 .env	Environment variables
 package.json	Frontend dependencies
 requirements.txt	Backend dependencies

@@ -19,9 +19,12 @@ export default function MarketIntelligenceDashboard() {
   const [selectedMetric, setSelectedMetric] = useState("market_health");
 
   useEffect(() => {
+    if (!canViewIntelligence) {
+      return;
+    }
     fetchShipmentIntelligence();
     fetchReportAnalytics();
-  }, [fetchShipmentIntelligence, fetchReportAnalytics]);
+  }, [canViewIntelligence, fetchShipmentIntelligence, fetchReportAnalytics]);
 
   if (!canViewIntelligence) {
     return (

@@ -4,15 +4,11 @@ Wise Webhook Handler - Process transfer events
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 import logging
-import hmac
-import hashlib
 import os
 from typing import Dict, Any
-from datetime import datetime
-from sqlalchemy import update
 
-from backend.services.wise_service import get_wise_service
 from backend.database.session import get_async_session
+from backend.security.webhook_signatures import verify_hmac_sha256_signature
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webhooks/wise", tags=["Wise Webhooks"])
@@ -20,21 +16,14 @@ router = APIRouter(prefix="/api/webhooks/wise", tags=["Wise Webhooks"])
 webhook_secret = os.getenv("WISE_WEBHOOK_SECRET", "")
 
 
-def _is_production() -> bool:
-    return (os.getenv("ENVIRONMENT") or "development").strip().lower() in {"production", "prod"}
-
-
 def verify_signature(payload: bytes, signature: str) -> bool:
     """Verify webhook signature"""
-    if not webhook_secret:
-        return not _is_production()
-
-    expected = hmac.new(
-        webhook_secret.encode(),
-        payload,
-        hashlib.sha256
-    ).hexdigest()
-    return hmac.compare_digest(expected, signature)
+    return verify_hmac_sha256_signature(
+        secret=webhook_secret,
+        payload=payload,
+        signature_header=signature,
+        app_env=os.getenv("ENVIRONMENT"),
+    )
 
 
 @router.post("/")

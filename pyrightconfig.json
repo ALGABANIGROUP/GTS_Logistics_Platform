@@ -1,6 +1,22 @@
 {
-  "include": ["backend"],
+  "include": [
+    "backend",
+    "frontend/src"
+  ],
+  "exclude": [
+    "backend/__pycache__",
+    "backend/.venv",
+    "frontend/node_modules",
+    "frontend/dist",
+    "uploads",
+    "logs",
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/*.pyd"
+  ],
+  "pythonVersion": "3.8",
   "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
   "stubPath": "typings",
   "extraPaths": [
     "backend",
@@ -9,11 +25,36 @@
     "backend/services",
     "backend/database"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "frontend/node_modules"
-  ]
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportImportCycles": true,
+  "reportUnusedImport": true,
+  "reportUnusedClass": true,
+  "reportUnusedFunction": true,
+  "reportUnusedVariable": true,
+  "reportDuplicateImport": true,
+  "reportConstantRedefinition": true,
+  "reportIncompatibleMethodOverride": true,
+  "reportIncompatibleVariableOverride": true,
+  "reportInconsistentConstructor": true,
+  "reportOverlappingOverloads": true,
+  "reportMissingSuperCall": true,
+  "reportUninitializedInstanceVariable": true,
+  "reportInvalidStringEscapeSequence": true,
+  "reportUnknownParameterType": true,
+  "reportUnknownArgumentType": true,
+  "reportUnknownLambdaType": true,
+  "reportUnknownVariableType": true,
+  "reportUnknownMemberType": true,
+  "reportMissingParameterType": true,
+  "reportMissingTypeArgument": true,
+  "reportInvalidTypeVarUse": true,
+  "reportCallInDefaultInitializer": true,
+  "reportUnnecessaryIsInstance": true,
+  "reportUnnecessaryCast": true,
+  "reportAssertAlwaysTrue": true,
+  "reportSelfClsParameterName": true,
+  "reportImplicitStringConcatenation": true,
+  "reportUnboundVariable": true,
+  "reportUndefinedVariable": true
 }

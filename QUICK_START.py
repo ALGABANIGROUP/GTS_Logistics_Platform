@@ -120,7 +120,7 @@ def main():
         print("  • BACKEND_PORT=8000")
         print("  • FRONTEND_URL=http://127.0.0.1:5173")
         print("  • SMTP_HOST=smtp.gmail.com")
-        print("  • EMAIL_FROM=noreply@gtsdispatcher.com")
+        print("  • EMAIL_FROM=no-reply@gabanilogistics.com")
         print("  • SECRET_KEY=your-super-secret-key")
         print(f"{Colors.END}\n")
     

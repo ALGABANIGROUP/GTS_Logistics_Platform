@@ -188,9 +188,14 @@ const About = () => {
                 {/* Footer */}
                 <div className="container mx-auto px-4 py-6 border-t border-white/20 mt-8">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-gray-400 text-xs">
-                            © 2026 Gabani Transport Solutions LLC – All rights reserved.
-                        </p>
+                        <div className="flex flex-col items-center md:items-start gap-2">
+                            <p className="text-gray-400 text-xs">
+                                © 2026 Gabani Transport Solutions LLC – All rights reserved.
+                            </p>
+                            <p className="text-gray-500 text-xs text-center md:text-left">
+                                Canadian Patent Application No. 3306251 | AI Multi-Bot Orchestration System for Logistics Automation
+                            </p>
+                        </div>
                         <div className="flex gap-4 text-xs">
                             <a href="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</a>
                             <a href="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</a>

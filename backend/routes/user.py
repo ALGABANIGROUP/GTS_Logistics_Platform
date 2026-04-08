@@ -7,7 +7,7 @@ from math import ceil
 from typing import Optional, List, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database.connection import get_db
@@ -54,8 +54,7 @@ class UserOut(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 def _normalize_str(value: Optional[str]) -> Optional[str]:
@@ -403,4 +402,3 @@ async def delete_user(
     await db.delete(user)
     await db.commit()
     return None
-

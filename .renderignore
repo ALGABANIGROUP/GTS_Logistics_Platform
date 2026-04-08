@@ -2,41 +2,41 @@
 # This file reduces build times by ignoring irrelevant file changes
 
 # ============================================================
-# Frontend (Not needed for backend builds)
-# ============================================================
-frontend/
-frontend/**
-
-# ============================================================
-# Documentation & Guides
+# Documentation & Guides (Ignore for builds)
 # ============================================================
 docs/
 *.md
 README.md
 CHANGELOG.md
 AI_*.md
+*.txt
+*.json
+!requirements.txt
+!package.json
+!package-lock.json
 
 # ============================================================
-# Tests & Test Files
+# Tests & Test Files (Ignore for production builds)
 # ============================================================
 tests/
 test_*.py
 *_test.py
 pytest.ini
 .pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
 
 # ============================================================
 # Development Files
 # ============================================================
 .venv/
 venv/
-__pycache__/
-*.pyc
-*.pyo
-*.egg-info/
 .env.local
 .env.development
 .env.*.local
+*.log
+bootstrap_log.txt
 
 # ============================================================
 # IDE & Editor
@@ -48,6 +48,42 @@ __pycache__/
 *.swn
 *~
 .DS_Store
+
+# ============================================================
+# Temporary & Cache Files
+# ============================================================
+.tmp_*
+_archive/
+_trash_*/
+node_modules/
+.pip_cache/
+
+# ============================================================
+# Git & Version Control
+# ============================================================
+.git/
+.github/
+.husky/
+.pre-commit-config.yaml
+.gitattributes
+.gitignore
+
+# ============================================================
+# Analysis & Audit Files
+# ============================================================
+audit/
+reports/
+certification_report.*
+pip_audit_*.json
+security_audit.json
+detect_secrets_scan.json
+
+# ============================================================
+# Build Artifacts
+# ============================================================
+dist/
+build/
+*.egg-info/
 
 # ============================================================
 # Git & CI/CD

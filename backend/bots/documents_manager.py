@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/documents_manager.py
 """
 Documents Manager Bot
@@ -126,3 +127,4 @@ class DocumentsManagerBot:
         extracted_data = self.service.extract_data(text)
 
         return {"document_id": document_id, "extracted_data": extracted_data}
+

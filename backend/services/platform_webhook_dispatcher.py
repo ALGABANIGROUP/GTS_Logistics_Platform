@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import logging
 import time
@@ -9,6 +7,7 @@ from typing import Any, Dict, Tuple
 
 import httpx
 
+from backend.security.webhook_signatures import build_hmac_sha256, build_timestamped_message
 from backend.utils.crypto import decrypt_secret
 
 logger = logging.getLogger(__name__)
@@ -22,8 +21,10 @@ def _resolve_secret(raw_secret: str) -> str:
 
 
 def _build_signature(secret: str, timestamp: str, payload_json: str) -> str:
-    message = f"{timestamp}.{payload_json}"
-    return hmac.new(secret.encode("utf-8"), msg=message.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+    return build_hmac_sha256(
+        secret,
+        build_timestamped_message(timestamp, payload_json.encode("utf-8")),
+    )
 
 
 async def dispatch_platform_webhook(

@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 """
 System Admin Bot - Advanced system administration and troubleshooting
 Handles login issues, user management, and system diagnostics

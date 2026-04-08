@@ -10,7 +10,9 @@ export default defineConfig(({ mode }) => {
   const API_TARGET = env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
   return {
-    plugins: [react()],
+    plugins: [react({
+      jsxRuntime: 'automatic'
+    })],
 
     build: {
       chunkSizeWarningLimit: 1500, // Increase from default 500kB to 1.5MB

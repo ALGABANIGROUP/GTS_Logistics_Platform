@@ -68,23 +68,23 @@ class AdvancedTestSuite:
         print_header("2️⃣  AUTHENTICATION TESTS")
         
         # Test login
-        login_url = f"{self.backend_url}/api/v1/auth/token"
+        login_url = f"{self.backend_url}/api/v1/auth/login"
         login_data = {
             "email": "enjoy983@hotmail.com",
-            "password": "password123"
+            "password": "Gabani@2026"
         }
         
         try:
             start_time = time.time()
             response = requests.post(
                 login_url,
-                data=login_data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                json=login_data,
+                headers={"Content-Type": "application/json"},
                 timeout=10
             )
             elapsed = time.time() - start_time
             
-            print_endpoint_result("/auth/token", "POST", response.status_code, elapsed)
+            print_endpoint_result("/api/v1/auth/login", "POST", response.status_code, elapsed)
             
             if response.status_code == 200:
                 data = response.json()

@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/partner_bot.py
 """
 Partner Bot
@@ -230,3 +231,4 @@ class PartnerBot:
             return await self.onboard_partner(context or {})
         else:
             return await self.status()
+

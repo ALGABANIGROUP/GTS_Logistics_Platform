@@ -329,7 +329,8 @@ EXTERNAL SERVICES
 ### Frontend Files Analyzed
 - `frontend/src/App.jsx` (1347 lines)
 - `frontend/package.json` (24 dependencies)
-- `frontend/src/routes/AppRoutes.jsx`
+- `frontend/src/main.jsx`
+- `frontend/src/components/RequireAuth.jsx`
 - `frontend/src/contexts/AuthContext.jsx`
 
 ### Configuration Files
@@ -447,4 +448,3 @@ Next steps: Library updates, compatibility verification, and API testing.
 ---
 
 **📌 This is your one-stop reference for Phase 1. Bookmark this file for easy access.**
-

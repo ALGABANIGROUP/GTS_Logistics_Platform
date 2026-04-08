@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from backend.database.config import get_db_async
 from backend.models.document import Document
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 router = APIRouter()
 
@@ -19,8 +19,7 @@ class DocumentStatusOut(BaseModel):
     expires_at: str | None
     status: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 @router.get("/ai/documents/expiring", response_model=List[DocumentStatusOut])
@@ -65,4 +64,3 @@ async def get_documents_summary(db: AsyncSession = Depends(get_db_async)):
     )
     valid = len([d for d in all_docs if d.expires_at and d.expires_at > soon])
     return {"expired": expired, "expiring_soon": soon_expiring, "valid": valid}
-

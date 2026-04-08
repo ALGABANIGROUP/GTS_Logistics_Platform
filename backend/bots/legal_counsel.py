@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 # backend/bots/legal_counsel.py
 """
 LG - Legal Counsel Bot
@@ -303,3 +304,4 @@ class LegalCounselBot:
             return await self.check_legal_compliance(domain)
         else:
             return await self.status()
+

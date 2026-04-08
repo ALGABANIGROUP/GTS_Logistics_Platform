@@ -1,155 +1,125 @@
+// frontend/src/services/salesService.js
 import axiosClient from '../api/axiosClient';
 
-/**
- * Sales Service - Real API Integration
- * Connects to the active Sales bot through the unified AI route.
- */
+// استخدام Mock Data مؤقتاً
+const USE_MOCK_DATA = true;
 
-class SalesService {
-    async runAction(action, context = {}) {
-        const response = await axiosClient.post('/api/v1/bots/sales_bot/run', {
-            message: action.replaceAll('_', ' '),
-            context: {
-                action,
-                ...context,
-            },
-            meta: {
-                source: 'salesService',
-            },
-        });
-
-        return response.data?.data || response.data?.result || response.data || {};
-    }
-
-    async getStatus() {
-        try {
-            const response = await axiosClient.get('/api/v1/bots/sales_bot/status');
-            return response.data?.data || response.data || {};
-        } catch (error) {
-            console.error('Failed to get sales bot status:', error);
-            throw error;
+export const SalesService = {
+  /**
+   * الحصول على بيانات لوحة تحكم المبيعات
+   */
+  async getDashboardData() {
+    if (USE_MOCK_DATA) {
+      // بيانات تجريبية
+      return {
+        summary: {
+          total_revenue: 284500,
+          total_orders: 156,
+          active_customers: 42,
+          conversion_rate: 24.5,
+          average_order_value: 1824,
+          revenue_growth: 15.5,
+          monthly_target: 300000,
+          monthly_achieved: 284500
+        },
+        recent_activities: [
+          { id: 1, action: "New lead acquired", customer: "Fast Freight Inc.", value: 12500, status: "qualified", date: new Date().toISOString() },
+          { id: 2, action: "Quote sent", customer: "Maple Load Canada", value: 8750, status: "pending", date: new Date().toISOString() },
+          { id: 3, action: "Deal closed", customer: "GTS Logistics", value: 34200, status: "won", date: new Date(Date.now() - 86400000).toISOString() }
+        ],
+        pipeline: [
+          { stage: "Lead", count: 23, value: 184000 },
+          { stage: "Qualified", count: 15, value: 125000 },
+          { stage: "Proposal", count: 8, value: 89000 },
+          { stage: "Negotiation", count: 5, value: 67000 },
+          { stage: "Closed Won", count: 12, value: 245000 }
+        ],
+        top_customers: [
+          { id: 1, name: "Fast Freight Inc.", revenue: 125000, orders: 28, last_order: "2026-04-01" },
+          { id: 2, name: "Maple Load Canada", revenue: 89000, orders: 19, last_order: "2026-03-28" },
+          { id: 3, name: "GTS Logistics", revenue: 67000, orders: 15, last_order: "2026-03-25" }
+        ],
+        performance_metrics: [
+          { metric: "Calls Made", target: 200, achieved: 185, percentage: 92.5 },
+          { metric: "Meetings Scheduled", target: 50, achieved: 42, percentage: 84 },
+          { metric: "Proposals Sent", target: 30, achieved: 28, percentage: 93.3 },
+          { metric: "Deals Closed", target: 20, achieved: 18, percentage: 90 }
+        ],
+        bot_status: {
+          name: "AI Sales Bot",
+          status: "active",
+          last_run: new Date().toISOString(),
+          tasks_completed: 156,
+          success_rate: 94.5
         }
+      };
     }
 
-    async getDashboardData() {
-        try {
-            return await this.runAction('dashboard');
-        } catch (error) {
-            console.error('Failed to get sales dashboard:', error);
-            throw error;
-        }
+    // الكود الأصلي للاتصال بـ API الحقيقي
+    try {
+      const response = await axiosClient.get('/api/v1/sales/dashboard');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching sales dashboard:', error);
+      throw error;
     }
+  },
 
-    async getLeads() {
-        try {
-            const data = await this.runAction('get_leads');
-            return data.leads || [];
-        } catch (error) {
-            console.error('Failed to get leads:', error);
-            return [];
-        }
+  /**
+   * الحصول على قائمة العملاء
+   */
+  async getCustomers() {
+    if (USE_MOCK_DATA) {
+      return [
+        { id: 1, name: "Fast Freight Inc.", email: "contact@fastfreight.com", phone: "+1-800-555-0100", status: "active", total_spent: 125000 },
+        { id: 2, name: "Maple Load Canada", email: "info@mapleload.ca", phone: "+1-800-555-0200", status: "active", total_spent: 89000 },
+        { id: 3, name: "GTS Logistics", email: "info@gtslogistics.com", phone: "+1-800-555-0300", status: "active", total_spent: 67000 }
+      ];
     }
-
-    async getDeals() {
-        try {
-            const data = await this.runAction('get_deals');
-            return data.deals || [];
-        } catch (error) {
-            console.error('Failed to get deals:', error);
-            return [];
-        }
+    try {
+      const response = await axiosClient.get('/api/v1/sales/customers');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
     }
+  },
 
-    async getCustomers() {
-        try {
-            const data = await this.runAction('get_customers');
-            return data.customers || [];
-        } catch (error) {
-            console.error('Failed to get customers:', error);
-            return [];
-        }
+  /**
+   * الحصول على قائمة المبيعات
+   */
+  async getSales() {
+    if (USE_MOCK_DATA) {
+      return [
+        { id: 1, customer: "Fast Freight Inc.", amount: 12500, date: new Date().toISOString(), status: "completed" },
+        { id: 2, customer: "Maple Load Canada", amount: 8750, date: new Date().toISOString(), status: "pending" },
+        { id: 3, customer: "GTS Logistics", amount: 34200, date: new Date(Date.now() - 86400000).toISOString(), status: "completed" }
+      ];
     }
-
-    async getForecast(months = 12) {
-        try {
-            const data = await this.runAction('forecast_revenue', { months });
-            return data.forecast?.projections || data.forecast || [];
-        } catch (error) {
-            console.error('Failed to get forecast:', error);
-            return [];
-        }
+    try {
+      const response = await axiosClient.get('/api/v1/sales/list');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching sales:', error);
+      throw error;
     }
+  },
 
-    async createLead(leadData) {
-        try {
-            return await this.runAction('create_lead', { data: leadData });
-        } catch (error) {
-            console.error('Failed to create lead:', error);
-            throw error;
-        }
+  /**
+   * إنشاء صفقة جديدة
+   */
+  async createDeal(data) {
+    if (USE_MOCK_DATA) {
+      return { id: Date.now(), ...data, status: "pending", created_at: new Date().toISOString() };
     }
-
-    async updateLeadStatus(leadId, status) {
-        try {
-            return await this.runAction('update_lead', {
-                lead_id: leadId,
-                status,
-            });
-        } catch (error) {
-            console.error('Failed to update lead:', error);
-            throw error;
-        }
+    try {
+      const response = await axiosClient.post('/api/v1/sales/deals', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating deal:', error);
+      throw error;
     }
+  }
+};
 
-    async createDeal(dealData) {
-        try {
-            return await this.runAction('create_deal', { data: dealData });
-        } catch (error) {
-            console.error('Failed to create deal:', error);
-            throw error;
-        }
-    }
-
-    async updateDealStage(dealId, stage) {
-        try {
-            return await this.runAction('update_deal', {
-                deal_id: dealId,
-                stage,
-            });
-        } catch (error) {
-            console.error('Failed to update deal:', error);
-            throw error;
-        }
-    }
-
-    async analyzeCustomer(customerId) {
-        try {
-            return await this.runAction('analyze_customers', {
-                customer_id: customerId,
-            });
-        } catch (error) {
-            console.error('Failed to analyze customer:', error);
-            throw error;
-        }
-    }
-
-    async optimizeSales() {
-        try {
-            return await this.runAction('optimize_sales');
-        } catch (error) {
-            console.error('Failed to optimize sales:', error);
-            throw error;
-        }
-    }
-
-    async activateBackend() {
-        try {
-            return await this.runAction('activate');
-        } catch (error) {
-            console.error('Failed to activate backend:', error);
-            throw error;
-        }
-    }
-}
-
-export default new SalesService();
+export default SalesService;

@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database.config import get_db_async
 from backend.auth import get_password_hash, verify_password
@@ -22,12 +22,9 @@ from backend.security.auth import (
     get_current_user,
     create_access_token,
 )
-from backend.models.refresh_token import RefreshToken
-from backend.models.user import User
-
 log = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 class ChangePasswordPayload(BaseModel):
@@ -277,36 +274,56 @@ async def auth_refresh(
             )
 
         token_hash = _hash_refresh_token(refresh_token)
-        stmt = select(RefreshToken).where(RefreshToken.token_hash == token_hash)
-        result = await db.execute(stmt)
-        rt_obj = result.scalars().first()
+        result = await db.execute(
+            text(
+                """
+                SELECT id, user_id, expires_at, revoked_at
+                FROM refresh_tokens
+                WHERE token_hash = :token_hash
+                LIMIT 1
+                """
+            ),
+            {"token_hash": token_hash},
+        )
+        rt_obj = result.mappings().first()
 
         if not rt_obj:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
         now = datetime.now(timezone.utc)
-        if rt_obj.revoked_at is not None:
+        if rt_obj.get("revoked_at") is not None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked")
 
-        if rt_obj.expires_at and rt_obj.expires_at < now:
+        if rt_obj.get("expires_at") and rt_obj.get("expires_at") < now:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired")
 
-        user = await db.get(User, rt_obj.user_id)
+        user_row = await db.execute(
+            text(
+                """
+                SELECT id, email, role, is_active, COALESCE(token_version, 0) AS token_version
+                FROM users
+                WHERE id = :user_id
+                LIMIT 1
+                """
+            ),
+            {"user_id": int(rt_obj.get("user_id"))},
+        )
+        user = user_row.mappings().first()
         if not user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
-        if not user.is_active:
+        if not user.get("is_active", True):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found or inactive")
 
         new_access_token = create_access_token(
-            subject=user.id,
-            email=user.email,
-            role=user.role,
-            token_version=int(getattr(user, "token_version", 0) or 0),
+            subject=user.get("id"),
+            email=user.get("email"),
+            role=user.get("role"),
+            token_version=int(user.get("token_version", 0) or 0),
         )
         new_refresh_token = await _rotate_refresh_token(db, old_obj=rt_obj)
 
-        log.info(f"Refresh token used for user {user.id}")
+        log.info("Refresh token used for user %s", user.get("id"))
 
         return {
             "ok": True,

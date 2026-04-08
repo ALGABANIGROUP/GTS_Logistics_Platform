@@ -367,11 +367,11 @@ const DispatchBoard = () => {
                             {shipments
                                 .filter(s => s.status === status || (status === 'unassigned' && !s.assigned_driver))
                                 .map(shipment => (
-                                    <div key={shipment.id} className="dispatch-card">
-                                        <div className="card-title">{shipment.name}</div>
-                                        <div className="card-details">
-                                            <p>From: {shipment.from}</p>
-                                            <p>To: {shipment.to}</p>
+                                        <div key={shipment.id} className="dispatch-card">
+                                            <div className="card-title">{shipment.name}</div>
+                                            <div className="card-details">
+                                            <p>From: {shipment.fromLabel || shipment.from}</p>
+                                            <p>To: {shipment.toLabel || shipment.to}</p>
                                             <p>Driver: {shipment.driver || 'Unassigned'}</p>
                                         </div>
                                     </div>

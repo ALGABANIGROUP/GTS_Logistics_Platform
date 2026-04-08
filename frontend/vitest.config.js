@@ -13,7 +13,7 @@ export default defineConfig({
             reporter: ['text', 'lcov'],
             include: [
                 'src/api/paymentApi.js',
-                'src/routes/RequireAuth.jsx',
+                'src/components/RequireAuth.jsx',
                 'src/hooks/useTruckWS.js',
                 'src/services/metaDataApi.js',
                 'src/services/metaDataService.js',

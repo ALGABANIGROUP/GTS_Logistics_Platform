@@ -1,10 +1,11 @@
-import axiosClient from "./axiosClient";
+import { settings } from "../config/settings";
 import {
     clearAuthCache,
     readAuthToken,
     writeAuthToken,
     writeRefreshToken,
 } from "../utils/authStorage";
+import axiosClient from "./axiosClient";
 
 export function storeAccessToken(token) {
     writeAuthToken(token);
@@ -20,12 +21,11 @@ export function clearAccessToken() {
 
 export const authApi = {
     login: async ({ email, password }) => {
-        const data = new URLSearchParams();
-        data.append("username", email);
-        data.append("password", password);
-
-        const res = await axiosClient.post("/api/v1/auth/token", data, {
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        const res = await axiosClient.post(settings.ENDPOINTS.AUTH.LOGIN, {
+            email,
+            password,
+        }, {
+            headers: { "Content-Type": "application/json" },
         });
 
         const token = res?.data?.access_token;

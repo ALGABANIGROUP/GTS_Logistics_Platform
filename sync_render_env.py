@@ -48,20 +48,25 @@ ENV_VARS: Dict[str, str] = {
     "SMTP_HOST": "mail.gabanilogistics.com",
     "SMTP_PORT": "465",
     "SMTP_SECURE": "true",
-    "SMTP_USER": "noreply@gabanilogistics.com",
+    "SMTP_USER": "no-reply@gabanilogistics.com",
     "SMTP_FROM": "no-reply@gabanilogistics.com",
     
     "IMAP_HOST": "mail.gabanilogistics.com",
     "IMAP_PORT": "993",
     "IMAP_SSL": "true",
-    "IMAP_USER": "noreply@gabanilogistics.com",
+    "IMAP_USER": "customers@gabanilogistics.com",
     
     "POP3_HOST": "mail.gabanilogistics.com",
     "POP3_PORT": "995",
     "POP3_SSL": "true",
-    "POP3_USER": "noreply@gabanilogistics.com",
+    "POP3_USER": "support@gabanistore.com",
     
-    "EMAIL_MAILBOXES": "accounts@gabanilogistics.com,admin@gabanilogistics.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,finance@gabanilogistics.com,freight@gabanilogistics.com,intel@gabanilogistics.com,investments@gabanilogistics.com,marketing@gabanilogistics.com,no-reply@gabanilogistics.com,operations@gabanilogistics.com,safety@gabanilogistics.com,sales@gabanilogistics.com,strategy@gabanilogistics.com,aidispatcher@gtsdispatcher.com,driver@gabanistore.com,security@gabanistore.com,support@gabanistore.com",
+    "EMAIL_MAILBOXES": "accounts@gabanilogistics.com,admin@gabanilogistics.com,finance@gabanilogistics.com,operations@gabanilogistics.com,freight@gabanilogistics.com,aidispatcher@gabanistore.com,driver@gabanistore.com,support@gabanistore.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,safety@gabanilogistics.com,marketing@gabanilogistics.com,sales@gabanilogistics.com,strategy@gabanilogistics.com,intel@gabanilogistics.com,investments@gabanilogistics.com,security@gabanistore.com,no-reply@gabanilogistics.com",
+    "EMAIL_ADMINISTRATION_MAILBOXES": "accounts@gabanilogistics.com,admin@gabanilogistics.com,finance@gabanilogistics.com",
+    "EMAIL_OPERATIONS_MAILBOXES": "operations@gabanilogistics.com,freight@gabanilogistics.com,aidispatcher@gabanistore.com,driver@gabanistore.com",
+    "EMAIL_SUPPORT_MAILBOXES": "support@gabanistore.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,safety@gabanilogistics.com",
+    "EMAIL_MARKETING_MAILBOXES": "marketing@gabanilogistics.com,sales@gabanilogistics.com,strategy@gabanilogistics.com,intel@gabanilogistics.com,investments@gabanilogistics.com",
+    "EMAIL_SYSTEM_MAILBOXES": "security@gabanistore.com,no-reply@gabanilogistics.com",
     
     # CORS
     "FRONTEND_URL": "https://api.gtsdispatcher.com",
@@ -83,6 +88,7 @@ ENV_VARS: Dict[str, str] = {
 
 SENSITIVE_VARS = {
     # ⚠️ These must be set manually in Render dashboard (for security)
+    "EMAIL_SHARED_PASSWORD": "YOUR_SHARED_EMAIL_PASSWORD_HERE",
     "SMTP_PASSWORD": "YOUR_SMTP_PASSWORD_HERE",
     "IMAP_PASSWORD": "YOUR_IMAP_PASSWORD_HERE",
     "POP3_PASSWORD": "YOUR_POP3_PASSWORD_HERE",

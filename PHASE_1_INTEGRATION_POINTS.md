@@ -591,7 +591,7 @@ Error: Standard error formatting
 
 ### 9.2 Frontend Routing
 
-**Router Configuration:** `frontend/src/routes/AppRoutes.jsx`
+**Router Configuration:** `frontend/src/App.jsx`
 
 **Route Categories:**
 - Public routes (login, register)
@@ -600,7 +600,7 @@ Error: Standard error formatting
 - Feature-gated routes (with feature flags)
 
 **Access Control Components:**
-- `<RequireAuth>` - Basic authentication
+- `<RequireAuth>` (`frontend/src/components/RequireAuth.jsx`) - Basic authentication
 - `<RequireRole>` - Role-based access
 - `<RequireModule>` - Module availability
 - `<RequireFeature>` - Feature flags
@@ -839,4 +839,3 @@ Frontend                      Backend
 **Report Status:** ✅ COMPLETE  
 **Generated:** February 3, 2026  
 **Ready for:** Task 5 - Library Updates
-

@@ -8,6 +8,7 @@ const REGISTRATION_REOPEN_DATE = import.meta.env.VITE_REGISTRATION_REOPEN_DATE |
 // Sidebar items with access conditions
 export const sidebarItems = [
     { to: "/dashboard", label: "Dashboard", module: "dashboard" },
+    { to: "/dashboard/notifications", label: "Notifications", module: "notifications" },
     { to: "/ai-bots", label: "AI Bots", module: "ai-bots" },
     { to: "/emails", label: "Email Logs", module: "email-logs" },
     { to: "/admin", label: "Admin Panel", module: "admin" },

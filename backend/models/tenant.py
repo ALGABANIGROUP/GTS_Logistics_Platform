@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, List
 
 from sqlalchemy import String, Boolean, DateTime, UniqueConstraint, Index, Enum, JSON
 import enum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class TenantPlan(str, enum.Enum):
     """Subscription plans"""
@@ -29,9 +30,11 @@ class BillingStatus(str, enum.Enum):
     PAST_DUE = "past_due"
     CANCELLED = "cancelled"
 
-from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 from backend.database.base import Base
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class Tenant(Base):
@@ -98,3 +101,8 @@ class Tenant(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
+    users: Mapped[List["User"]] = relationship(
+        "User",
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+    )

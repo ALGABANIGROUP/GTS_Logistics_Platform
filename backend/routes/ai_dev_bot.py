@@ -11,7 +11,7 @@ from backend.utils.role_protected import RoleChecker
 admin_or_manager_required = RoleChecker(["admin", "manager"])
 load_dotenv()
 router = APIRouter(
-    prefix="/ai/dev_bot",
+    prefix="/ai/devbot",
     tags=["AI Dev & Maintenance Bot"],
     dependencies=[Depends(admin_or_manager_required)],
 )
@@ -54,3 +54,83 @@ async def analyze_issue(issue: IssueInput):
     root_cause = next((line.replace('Root cause:', '').strip() for line in lines if 'root' in line.lower()), 'N/A')
     solution = next((line.replace('Solution:', '').strip() for line in lines if 'solution' in line.lower()), 'N/A')
     return AIResponse(summary=summary, root_cause=root_cause, solution=solution)
+
+
+@router.get('/overview')
+async def get_devbot_overview():
+    """
+    Get development bot maintenance overview with mock data
+    """
+    from datetime import datetime, timedelta
+    import random
+
+    # Mock system health data
+    system_health = {
+        "memory": random.randint(45, 85),
+        "cpu": random.randint(20, 70),
+        "disk": random.randint(30, 90),
+        "network": random.randint(10, 50),
+        "uptime": "7d 14h 32m",
+        "last_backup": (datetime.now() - timedelta(hours=random.randint(1, 24))).isoformat(),
+        "active_connections": random.randint(5, 25)
+    }
+
+    # Mock performance data
+    performance = [
+        {"timestamp": (datetime.now() - timedelta(minutes=i*5)).isoformat(), "response_time": random.randint(50, 200), "throughput": random.randint(10, 50)}
+        for i in range(20)
+    ]
+
+    # Mock logs
+    log_types = ["INFO", "WARNING", "ERROR", "DEBUG"]
+    log_messages = [
+        "Memory optimization completed",
+        "Database connection pool refreshed",
+        "Cache invalidation triggered",
+        "Background task completed",
+        "API rate limit check passed",
+        "Security scan completed",
+        "Log rotation executed",
+        "Health check passed"
+    ]
+
+    logs = [
+        {
+            "timestamp": (datetime.now() - timedelta(minutes=random.randint(1, 60))).isoformat(),
+            "level": random.choice(log_types),
+            "message": random.choice(log_messages),
+            "source": random.choice(["system", "api", "database", "cache"])
+        }
+        for _ in range(10)
+    ]
+
+    # Mock suggestions
+    suggestions = [
+        {
+            "id": f"sugg_{i+1}",
+            "title": f"Optimization Suggestion {i+1}",
+            "description": f"Consider implementing {random.choice(['caching', 'database indexing', 'async processing', 'memory pooling'])} to improve performance",
+            "priority": random.choice(["high", "medium", "low"]),
+            "estimated_impact": f"{random.randint(10, 40)}% improvement",
+            "implementation_effort": random.choice(["low", "medium", "high"])
+        }
+        for i in range(5)
+    ]
+
+    # Mock bot status
+    bot_status = {
+        "active_bots": random.randint(8, 12),
+        "idle_bots": random.randint(2, 5),
+        "maintenance_mode": random.choice([True, False]),
+        "last_maintenance": (datetime.now() - timedelta(hours=random.randint(1, 48))).isoformat(),
+        "version": "2.1.4",
+        "uptime_percentage": random.randint(95, 99)
+    }
+
+    return {
+        "systemHealth": system_health,
+        "performance": performance,
+        "logs": logs,
+        "suggestions": suggestions,
+        "botStatus": bot_status
+    }

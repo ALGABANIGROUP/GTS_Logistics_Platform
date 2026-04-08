@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useCallback,
   useContext,
@@ -15,6 +15,27 @@ const RETRY_DELAY_MS = 4000;
 const CACHE_TTL_MS = 90_000;
 
 const SystemReadinessContext = createContext(null);
+
+const isReadyResponse = (data) => {
+  if (!data || typeof data !== "object") return false;
+  if (data.ok === true) return true;
+  if (String(data.status || "").toLowerCase() === "ready") return true;
+  const checks = data.checks;
+  if (checks && typeof checks === "object") {
+    const values = Object.values(checks);
+    if (
+      values.length > 0 &&
+      values.every((value) => {
+        if (value && typeof value === "object") return value.ok === true;
+        const normalized = String(value || "").toLowerCase();
+        return normalized === "ok" || normalized === "ready" || normalized === "connected" || normalized === "up";
+      })
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
 
 export const SystemReadinessProvider = ({ children }) => {
   const [state, setState] = useState({
@@ -76,7 +97,7 @@ export const SystemReadinessProvider = ({ children }) => {
         }
 
         const data = await res.json();
-        const ok = Boolean(data?.ok);
+        const ok = isReadyResponse(data);
 
         setState({
           loading: false,

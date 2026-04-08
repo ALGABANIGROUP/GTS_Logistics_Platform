@@ -1,3 +1,4 @@
+﻿from __future__ import annotations
 import io
 from typing import List
 from fastapi import UploadFile
@@ -47,3 +48,4 @@ def extract_invoice_text(file: UploadFile) -> str:
 # async def extract_invoice(file: UploadFile = File(...)):
 #     text = extract_invoice_text(file)
 #     return {"text": text}
+

@@ -176,8 +176,9 @@ def check_frontend() -> Dict[str, Any]:
         "package.json",
         "vite.config.js",
         "src/main.jsx",
+        "src/App.jsx",
         "src/contexts/AuthContext.jsx",
-        "src/routes/AppRoutes.jsx"
+        "src/components/RequireAuth.jsx",
     ]
     
     for file in key_files:
