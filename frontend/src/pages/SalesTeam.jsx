@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import salesService from '../services/salesService';
 
-// SalesTeam.jsx - في بداية الملف
-const BYPASS_AUTH = true;  // ✅ تجاوز المصادقة مؤقتاً
+// SalesTeam.jsx - at the beginning of the file
+const BYPASS_AUTH = true;  // Temporarily bypass authentication
 
 // Constants
 const LEAD_STATUS = {
@@ -101,12 +101,12 @@ const SalesTeam = () => {
 
             const data = await salesService.getDashboardData();
 
-            // ✅ التحقق من صحة البيانات المستلمة
+            // Validate received data
             if (!data || typeof data !== 'object') {
                 throw new Error('Invalid dashboard data received');
             }
 
-            // تعيين البيانات مع قيم افتراضية
+            // Set data with default values
             setDashboard({
                 summary: data.summary || {
                     total_revenue: 0,
@@ -128,7 +128,7 @@ const SalesTeam = () => {
         } catch (error) {
             console.log('Using fallback data for Sales Team');
 
-            // ✅ بيانات احتياطية في حالة الفشل
+            // Fallback data in case of failure
             setDashboard({
                 summary: {
                     total_revenue: 284500,

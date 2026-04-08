@@ -57,13 +57,13 @@ const AITrainerBot = () => {
 
   const { showSuccess, showError } = useNotification();
 
-  // جلب جميع البيانات
+  // Fetch all data
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       console.log('Fetching trainer dashboard...');
 
-      // جلب البيانات من API
+      // Fetch data from API
       const [dashboardRes, coursesRes, progressRes, simulationsRes, certsRes, statsRes] = await Promise.all([
         axiosClient.get('/api/v1/trainer/dashboard').catch(e => ({ data: null })),
         axiosClient.get('/api/v1/trainer/courses').catch(e => ({ data: { courses: [] } })),
@@ -84,7 +84,7 @@ const AITrainerBot = () => {
       console.error('Error fetching trainer data:', error);
       showError('Failed to load training data. Using mock data.');
 
-      // بيانات احتياطية (Mock Data)
+      // Fallback mock data
       setCourses([
         { id: "course_001", title: "Commercial Vehicle Safety Inspection", category: "safety", duration_hours: 4, difficulty: "beginner", status: "published", enrolled_users: 156, completion_rate: 87.5 },
         { id: "course_002", title: "HOS Compliance for Drivers", category: "compliance", duration_hours: 3, difficulty: "beginner", status: "published", enrolled_users: 234, completion_rate: 92.3 },
@@ -124,7 +124,7 @@ const AITrainerBot = () => {
     fetchAllData();
   }, [fetchAllData]);
 
-  // بدء دورة تدريبية
+  // Start training course
   const startCourse = async (courseId) => {
     try {
       await axiosClient.post(`/api/v1/trainer/progress/${courseId}/start`);
@@ -135,7 +135,7 @@ const AITrainerBot = () => {
     }
   };
 
-  // الحصول على لون صعوبة الدورة
+  // Get course difficulty color
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case 'beginner': return '#4caf50';
@@ -145,7 +145,7 @@ const AITrainerBot = () => {
     }
   };
 
-  // الحصول على أيقونة الفئة
+  // Get category icon
   const getCategoryIcon = (category) => {
     const icons = {
       safety: '🛡️',

@@ -171,7 +171,7 @@ const Partners = () => {
     }
   }, []);
 
-  // جلب الشركاء
+  // Fetch partners
   const fetchPartners = useCallback(async () => {
     setLoading(true);
     try {
@@ -193,7 +193,7 @@ const Partners = () => {
     }
   }, [page, rowsPerPage, searchTerm, partnerType, statusFilter, showError]);
 
-  // جلب الإحصائيات
+  // Fetch statistics
   const fetchStats = useCallback(async () => {
     try {
       const response = await axiosClient.get('/api/v1/partners/stats/summary');
@@ -222,7 +222,7 @@ const Partners = () => {
     }
   }, [partnerType, tabValue]);
 
-  // فتح حوار إنشاء/تعديل
+  // Open create/edit dialog
   const handleOpenDialog = (partner = null) => {
     if (partner) {
       setEditingPartner(partner);
@@ -269,7 +269,7 @@ const Partners = () => {
     setEditingPartner(null);
   };
 
-  // إضافة علامة (Tag)
+  // Add tag
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
       setFormData({ ...formData, tags: [...formData.tags, tagInput.trim()] });
@@ -281,7 +281,7 @@ const Partners = () => {
     setFormData({ ...formData, tags: formData.tags.filter(tag => tag !== tagToRemove) });
   };
 
-  // حفظ شريك
+  // Save partner
   const handleSavePartner = async () => {
     if (!formData.name) {
       showError('Partner name is required');
@@ -307,7 +307,7 @@ const Partners = () => {
     }
   };
 
-  // حذف شريك
+  // Delete partner
   const handleDeleteClick = (partner) => {
     setPartnerToDelete(partner);
     setDeleteDialogOpen(true);
@@ -329,7 +329,7 @@ const Partners = () => {
     }
   };
 
-  // الحصول على أيقونة نوع الشريك
+  // Get partner type icon
   const getPartnerIcon = (type) => {
     switch (type) {
       case 'carrier': return <TruckIcon sx={{ color: '#2196f3' }} />;

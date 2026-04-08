@@ -31,7 +31,7 @@ async def get_users_management(
     Get all users from database for management page
     """
     
-    # التحقق من صلاحيات admin
+    # Check admin permissions
     user_role = current_user.get("role", "").lower()
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(
@@ -40,37 +40,37 @@ async def get_users_management(
         )
     
     try:
-        # استعلام أساسي
+        # Base query
         query = select(User)
         
-        # تطبيق البحث
+        # Apply search filter
         if search:
             query = query.where(
                 (User.email.contains(search)) |
                 (User.full_name.contains(search))
             )
         
-        # تطبيق فلتر الدور
+        # Apply role filter
         if role and role != "all":
             query = query.where(User.role == role)
         
-        # تطبيق فلتر الحالة
+        # Apply status filter
         if status and status != "all":
             is_active = status == "active"
             query = query.where(User.is_active == is_active)
         
-        # حساب العدد الإجمالي
+        # Calculate total count
         count_query = select(func.count()).select_from(query.subquery())
         total = await session.scalar(count_query)
         
-        # تطبيق pagination
+        # Apply pagination
         query = query.offset((page - 1) * limit).limit(limit)
         
-        # تنفيذ الاستعلام
+        # Execute query
         result = await session.execute(query)
         users = result.scalars().all()
         
-        # تنسيق البيانات
+        # Format data
         users_list = []
         for user in users:
             users_list.append({
@@ -111,17 +111,17 @@ async def get_users_stats(
     """Get user statistics"""
     
     try:
-        # إجمالي المستخدمين
+        # Total users
         total_result = await session.execute(select(func.count()).select_from(User))
         total = total_result.scalar() or 0
         
-        # المستخدمين النشطين
+        # Active users
         active_result = await session.execute(
             select(func.count()).where(User.is_active == True)
         )
         active = active_result.scalar() or 0
         
-        # المستخدمين المعطلين
+        # Disabled users
         inactive = total - active
         
         return {
@@ -152,7 +152,7 @@ async def get_recent_activity(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
-        # جلب المستخدمين الذين سجلوا دخول مؤخراً
+        # Get recently logged in users
         query = select(User).where(
             User.last_login.isnot(None)
         ).order_by(User.last_login.desc()).limit(limit)

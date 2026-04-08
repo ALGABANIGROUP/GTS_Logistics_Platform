@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr
 from backend.database.session import get_async_session
 from backend.security.auth import get_current_user
 from backend.models.user import User
-from backend.models.tenant import Tenant  # إذا كان موجوداً، أو استخدم نموذج مؤقت
+from backend.models.tenant import Tenant  # If it exists, or use temporary model
 
 router = APIRouter(tags=["Tenants"])
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class TenantResponse(BaseModel):
     user_count: int = 0
 
 
-# ==================== Mock Data (مؤقتاً حتى وجود قاعدة بيانات) ====================
+# ==================== Mock Data (temporary until database exists) =====================
 MOCK_TENANTS = [
     {
         "id": 1,
@@ -136,7 +136,7 @@ async def get_tenants(
     Get all tenants (requires admin access)
     """
 
-    # التحقق من صلاحيات admin
+    # Check admin permissions
     user_role = current_user.get("role", "").lower()
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(
@@ -144,7 +144,7 @@ async def get_tenants(
             detail="Admin access required"
         )
 
-    # فلترة البيانات
+    # Filter data
     tenants = MOCK_TENANTS.copy()
 
     if search:
@@ -244,7 +244,7 @@ async def update_tenant(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
 
-    # تحديث الحقول
+    # Update fields
     if tenant_update.name is not None:
         tenant["name"] = tenant_update.name
     if tenant_update.domain is not None:
@@ -302,7 +302,7 @@ async def get_tenants_stats(
     active = len([t for t in MOCK_TENANTS if t["is_active"]])
     inactive = total - active
 
-    # إحصائيات حسب خطة الاشتراك
+    # Statistics by subscription plan
     by_tier = {}
     for tenant in MOCK_TENANTS:
         tier = tenant["subscription_tier"]

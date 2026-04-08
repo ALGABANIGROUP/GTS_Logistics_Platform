@@ -76,7 +76,7 @@ export default function AIInformationCoordinator() {
     } catch (error) {
       console.log('Using mock data for AI Information Coordinator');
 
-      // Mock Data - معلومات تجريبية
+      // Mock data - test information
       setStatus({
         name: "AI Information Coordinator",
         status: "active",

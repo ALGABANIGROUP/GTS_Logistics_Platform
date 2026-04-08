@@ -23,16 +23,16 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const { showSuccess, showError } = useNotification();
 
-  // جلب الإشعارات
+  // Fetch notifications
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      // محاولة جلب من API حقيقي
+      // Try to fetch from real API
       const response = await axiosClient.get('/api/v1/notifications');
       setNotifications(response.data.notifications || []);
     } catch (error) {
       console.log('Using mock data for notifications');
-      // بيانات تجريبية واقعية (مثل التي تظهر في الصورة)
+      // Realistic test data (like the one shown in the image)
       setNotifications(MOCK_NOTIFICATIONS);
     } finally {
       setLoading(false);
@@ -43,7 +43,7 @@ const Notifications = () => {
     fetchNotifications();
   }, []);
 
-  // تصفية الإشعارات حسب التبويب
+  // Filter notifications by tab
   const getFilteredNotifications = () => {
     switch (tabValue) {
       case 0: // all
@@ -57,7 +57,7 @@ const Notifications = () => {
     }
   };
 
-  // تحديد أيقونة الإشعار حسب النوع
+  // Select notification icon based on type
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'legal':
@@ -73,7 +73,7 @@ const Notifications = () => {
     }
   };
 
-  // تحديد لون الخلفية حسب النوع
+  // Select background color based on type
   const getNotificationBg = (type) => {
     switch (type) {
       case 'legal':
@@ -89,7 +89,7 @@ const Notifications = () => {
     }
   };
 
-  // تحديد اسم البوت المصدر
+  // Select source bot name
   const getBotName = (bot) => {
     const bots = {
       'information_coordinator': '📋 Information Coordinator',
@@ -287,7 +287,7 @@ const Notifications = () => {
   );
 };
 
-// بيانات تجريبية واقعية (مثل التي في الصورة)
+// Realistic test data (like the one in the image)
 const MOCK_NOTIFICATIONS = [
   {
     id: 1,

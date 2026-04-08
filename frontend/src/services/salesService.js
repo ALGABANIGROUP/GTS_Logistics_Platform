@@ -1,16 +1,16 @@
 // frontend/src/services/salesService.js
 import axiosClient from '../api/axiosClient';
 
-// استخدام Mock Data مؤقتاً
+// Use Mock Data temporarily
 const USE_MOCK_DATA = true;
 
 export const SalesService = {
   /**
-   * الحصول على بيانات لوحة تحكم المبيعات
+  * Get sales dashboard data
    */
   async getDashboardData() {
     if (USE_MOCK_DATA) {
-      // بيانات تجريبية
+      // Test data
       return {
         summary: {
           total_revenue: 284500,
@@ -55,7 +55,7 @@ export const SalesService = {
       };
     }
 
-    // الكود الأصلي للاتصال بـ API الحقيقي
+    // Original code for real API connection
     try {
       const response = await axiosClient.get('/api/v1/sales/dashboard');
       return response.data;
@@ -66,7 +66,7 @@ export const SalesService = {
   },
 
   /**
-   * الحصول على قائمة العملاء
+  * Get customer list
    */
   async getCustomers() {
     if (USE_MOCK_DATA) {
@@ -86,7 +86,7 @@ export const SalesService = {
   },
 
   /**
-   * الحصول على قائمة المبيعات
+  * Get sales list
    */
   async getSales() {
     if (USE_MOCK_DATA) {
@@ -106,7 +106,7 @@ export const SalesService = {
   },
 
   /**
-   * إنشاء صفقة جديدة
+  * Create new deal
    */
   async createDeal(data) {
     if (USE_MOCK_DATA) {

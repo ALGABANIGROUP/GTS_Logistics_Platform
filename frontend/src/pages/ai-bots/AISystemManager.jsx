@@ -58,7 +58,7 @@ const AISystemManager = () => {
   
   const { showSuccess, showError } = useNotification();
 
-  // جلب جميع البيانات
+  // Fetch all data
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
@@ -101,7 +101,7 @@ const AISystemManager = () => {
       console.error('Error fetching system data:', error);
       showError('Failed to fetch system data. Using mock data.');
       
-      // بيانات احتياطية (Mock Data)
+      // Fallback mock data
       setSystemHealth({
         status: "healthy",
         metrics: {
@@ -158,7 +158,7 @@ const AISystemManager = () => {
     fetchAllData();
   }, [fetchAllData]);
 
-  // تحليل SQL
+  // Analyze SQL
   const handleAnalyzeQuery = async () => {
     if (!sqlQuery.trim()) {
       showError('Please enter a SQL query to analyze');

@@ -47,7 +47,7 @@ class UserResponse(BaseModel):
     tenant_name: Optional[str]
 
 
-# ==================== Mock Database (للتطوير - استبدل بقاعدة بيانات حقيقية) ====================
+# ==================== Mock Database (for development - replace with real database) ====================
 MOCK_USERS = [
     {
         "id": 1,
@@ -172,14 +172,14 @@ async def get_all_users(
 ):
     """Get all users with pagination and filtering"""
 
-    # التحقق من صلاحيات super_admin
+    # Check super_admin permissions
     user_role = current_user.get("role", "").lower()
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Admin access required")
 
     users = MOCK_USERS.copy()
 
-    # تطبيق الفلاتر
+    # Apply filters
     if search:
         search_lower = search.lower()
         users = [
@@ -242,7 +242,7 @@ async def create_user(
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    # التحقق من وجود البريد
+    # Check if email exists
     existing = next((u for u in MOCK_USERS if u["email"] == user_data.email), None)
     if existing:
         raise HTTPException(status_code=400, detail="User with this email already exists")
@@ -418,7 +418,7 @@ async def get_recent_audit_logs(
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    # بيانات تجريبية لسجل التدقيق
+    # Test data for audit log
     audit_logs = [
         {"id": 1, "action": "USER_LOGIN", "user": "admin@gts.com", "timestamp": datetime.now().isoformat(), "status": "success"},
         {"id": 2, "action": "USER_CREATE", "user": "superadmin@gts.com", "timestamp": (datetime.now() - timedelta(hours=1)).isoformat(), "status": "success"},

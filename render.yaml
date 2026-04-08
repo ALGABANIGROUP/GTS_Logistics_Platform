@@ -7,19 +7,19 @@ services:
     region: oregon
     rootDir: .
     branch: main
-    autoDeploy: false  # ⚠️ تعطيل النشر التلقائي لتوفير الدقائق
+    autoDeploy: false  # Disable auto-deploy to save minutes
 
-    # تحسين أمر البناء لتوفير الوقت
+    # Optimize build command to save time
     buildCommand: |
-      echo "🚀 بدء البناء المحسن..."
+      echo "🚀 Starting optimized build..."
       pip install --upgrade pip
       pip install --no-cache-dir -r requirements.txt
-      echo "✅ تم الانتهاء من البناء"
+      echo "✅ Build completed"
 
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health/ping
 
-    # فلترة الملفات التي تؤدي لبناء جديد
+    # Filter files that trigger new builds
     buildFilter:
       paths:
         - backend/**
@@ -47,18 +47,18 @@ services:
     region: oregon
     rootDir: frontend
     branch: main
-    autoDeploy: false  # ⚠️ تعطيل النشر التلقائي
+    autoDeploy: false  # Disable auto-deploy
 
-    # تحسين بناء الفرونت اند
+    # Optimize frontend build
     buildCommand: |
-      echo "🎨 بناء الفرونت اند..."
+      echo "🎨 Building frontend..."
       npm ci --only=production
       npm run build
-      echo "✅ تم بناء الفرونت اند"
+      echo "✅ Frontend build completed"
 
     staticPublishPath: ./dist
 
-    # فلترة الملفات للفرونت اند فقط
+    # Filter files for frontend only
     buildFilter:
       paths:
         - frontend/**

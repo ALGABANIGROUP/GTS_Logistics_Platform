@@ -1,5 +1,5 @@
 // frontend/src/contexts/NotificationContext.jsx
-// نظام إشعارات تفاعلي متقدم
+// Advanced interactive notification system
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Snackbar, Alert, AlertTitle, Slide, IconButton } from '@mui/material';

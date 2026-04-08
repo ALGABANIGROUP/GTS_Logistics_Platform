@@ -48,7 +48,7 @@ class UserAccess(BaseModel):
     last_login: Optional[str]
 
 
-# ==================== Mock Data (سيتم استبدالها بقاعدة بيانات حقيقية) ====================
+# ==================== Mock Data (will be replaced with real database) ====================
 SYSTEM_HEALTH = {
     "cpu_percent": 23.5,
     "cpu_cores": 8,
@@ -157,7 +157,7 @@ RESOURCE_FORECAST = {
 
 # ==================== Helper Functions ====================
 def get_real_system_metrics() -> Dict[str, Any]:
-    """جلب مقاييس النظام الحقيقية"""
+    """Get real system metrics"""
     try:
         metrics = {
             "cpu_percent": psutil.cpu_percent(interval=1),
@@ -369,7 +369,7 @@ async def analyze_sql_query(
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # تحليل بسيط للاستعلام
+    # Simple query analysis
     suggestions = []
     
     if "SELECT *" in query.upper():

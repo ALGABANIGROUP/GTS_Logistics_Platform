@@ -67,7 +67,7 @@ export default function AIOperationsManager() {
       setLearningStats(learningRes.data || {});
     } catch (error) {
       console.log('Using mock data - Backend not available');
-      // بيانات تجريبية
+      // Test data
       setStatus({
         status: "active",
         uptime: "2h 15m",

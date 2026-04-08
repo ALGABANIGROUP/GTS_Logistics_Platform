@@ -325,16 +325,16 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ معالجة 401 - إعادة توجيه إلى login
+// ✅ Handle 401 - redirect to login
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // token غير صالح أو منتهي
+      // token invalid or expired
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
 
-      // إعادة توجيه إلى صفحة login
+      // redirect to login page
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

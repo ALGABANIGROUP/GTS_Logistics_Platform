@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, EmailStr
 
 from backend.database.session import get_db
 from backend.security.auth import get_current_user
-from backend.models.partner import LogisticsPartner  # سننشئ هذا النموذج
+from backend.models.partner import LogisticsPartner  # We will create this model
 
 router = APIRouter(prefix="/api/v1/partners", tags=["Partners"])
 logger = logging.getLogger(__name__)
@@ -74,11 +74,11 @@ class PartnerResponse(BaseModel):
     total_spent: float = 0.0
 
 
-# ==================== Mock Database (سنستبدل بقاعدة بيانات حقيقية لاحقاً) ====================
+# ==================== Mock Database (will be replaced with real database later) ====================
 PARTNERS_DB = []
 PARTNER_ID_COUNTER = 1
 
-# بيانات تجريبية
+# Test data
 MOCK_PARTNERS = [
     {
         "id": 1,

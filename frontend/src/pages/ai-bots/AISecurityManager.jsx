@@ -17,7 +17,7 @@ const AISecurityManager = () => {
 
   const { showSuccess, showError, showInfo } = useNotification();
 
-  // جلب جميع البيانات
+  // Fetch all data
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
@@ -35,7 +35,7 @@ const AISecurityManager = () => {
 
     } catch (error) {
       console.log('Using mock data for Security Manager');
-      // بيانات تجريبية احتياطية
+      // Fallback test data
       setMetrics({
         total_alerts: 12,
         critical_alerts: 2,
@@ -62,7 +62,7 @@ const AISecurityManager = () => {
     fetchAllData();
   }, [fetchAllData]);
 
-  // بدء فحص أمني
+  // Start security scan
   const startSecurityScan = async () => {
     setScanning(true);
     try {
@@ -76,7 +76,7 @@ const AISecurityManager = () => {
     }
   };
 
-  // تحديث حالة التنبيه
+  // Update alert status
   const updateAlertStatus = async () => {
     if (!selectedAlert || !newStatus) return;
 
@@ -90,7 +90,7 @@ const AISecurityManager = () => {
     }
   };
 
-  // الحصول على لون شدة التنبيه
+  // Get alert severity color
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'critical': return { bg: 'border-rose-500/20 bg-rose-500/10 text-rose-200', label: 'Critical' };
@@ -101,7 +101,7 @@ const AISecurityManager = () => {
     }
   };
 
-  // الحصول على لون الحالة
+  // Get status color
   const getStatusColor = (status) => {
     switch (status) {
       case 'new': return { bg: 'border-rose-500/20 bg-rose-500/10 text-rose-200', label: 'New' };

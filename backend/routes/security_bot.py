@@ -50,7 +50,7 @@ class SecurityMetrics(BaseModel):
     last_scan: Optional[str]
 
 
-# ==================== Mock Data (سيتم استبدالها بقاعدة بيانات حقيقية) ====================
+# ==================== Mock Data (will be replaced with real database) ====================
 SECURITY_ALERTS = [
     {
         "id": "alert_001",
