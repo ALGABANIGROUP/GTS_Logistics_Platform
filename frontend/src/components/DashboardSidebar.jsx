@@ -8,6 +8,8 @@ import {
   Email as EmailIcon,
   AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { getUserRole, isAdminRole } from '../utils/userRole.js';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
@@ -20,6 +22,11 @@ const menuItems = [
 const DashboardSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const userRole = getUserRole(user);
+  const visibleMenuItems = menuItems.filter((item) =>
+    item.id === 'admin' ? isAdminRole(userRole) : true
+  );
 
   return (
     <div className="glass-sidebar flex h-screen w-64 flex-shrink-0 flex-col overflow-hidden text-white">
@@ -35,7 +42,7 @@ const DashboardSidebar = () => {
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-2">
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button

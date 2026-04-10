@@ -957,7 +957,7 @@ const App = () => {
               <Route
                 path="/ai-bots/system-admin"
                 element={
-                  <RequireAuth>
+                  <RequireAuth allowedRoles={['admin', 'system_admin', 'super_admin', 'owner']}>
                     <Layout>
                       <AISystemAdmin />
                     </Layout>
@@ -1208,7 +1208,7 @@ const App = () => {
               <Route
                 path="/ai-bots/system-admin-bot"
                 element={
-                  <RequireAuth>
+                  <RequireAuth allowedRoles={['admin', 'system_admin', 'super_admin', 'owner']}>
                     <Layout>
                       <AISystemAdminComponent />
                     </Layout>

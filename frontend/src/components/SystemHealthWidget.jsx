@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosClient from "../api/axiosClient";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { getUserRole, isAdminRole } from "../utils/userRole.js";
 
 const SystemHealthWidget = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const userRole = getUserRole(user);
+    const canViewSystemHealth = isAdminRole(userRole);
     const [systemHealth, setSystemHealth] = useState({
         status: "unknown",
         errorCount: 0,
@@ -19,7 +24,7 @@ const SystemHealthWidget = () => {
     });
 
     const fetchMetrics = async () => {
-        const metricsRes = await axios.get("/api/v1/system/metrics", {
+        const metricsRes = await axiosClient.get("/api/v1/system/metrics", {
             timeout: 5000,
         });
         return {
@@ -31,25 +36,28 @@ const SystemHealthWidget = () => {
     };
 
     const performHealthCheck = async () => {
+        if (!canViewSystemHealth) {
+            return;
+        }
+
         setSystemHealth((prev) => ({ ...prev, loading: true, error: null }));
 
         const checks = [
-            { name: "Database", endpoint: "/api/v1/health/db" },
+            { name: "Database", endpoint: "/health/db" },
             { name: "API", endpoint: "/healthz" },
             { name: "System", endpoint: "/api/v1/system/health" },
-            { name: "Cache", endpoint: "/api/v1/health/redis" },
+            { name: "Cache", endpoint: "/health/redis" },
         ];
 
         let errorCount = 0;
-        let successCount = 0;
 
         for (const check of checks) {
             try {
-                const response = await axios.get(check.endpoint, {
+                const response = await axiosClient.get(check.endpoint, {
                     timeout: 5000,
                 });
                 if (response.status === 200) {
-                    successCount++;
+                    continue;
                 } else {
                     errorCount++;
                 }
@@ -91,11 +99,19 @@ const SystemHealthWidget = () => {
 
     // Auto-check on mount
     useEffect(() => {
+        if (!canViewSystemHealth) {
+            return undefined;
+        }
+
         performHealthCheck();
         // Check every 30 seconds
         const interval = setInterval(performHealthCheck, 30 * 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [canViewSystemHealth]);
+
+    if (!canViewSystemHealth) {
+        return null;
+    }
 
     const statusColors = {
         healthy: {

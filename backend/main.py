@@ -3115,3 +3115,17 @@ async def _debug_admin_users(_user: dict = Depends(require_roles(["super_admin"]
 @app.get("/")
 async def root():
     return {"ok": True, "name": "Gabani Transport Solutions (GTS) Backend", "offline": OFFLINE}
+
+
+# ---------------- Load registered routers from registry ----------------
+try:
+    from routes import iter_registered_routers
+    log.info("[main] Loading registered routers from registry...")
+    for module_name, prefix, router in iter_registered_routers(log):
+        try:
+            app.include_router(router, prefix=prefix)
+            log.info(f"[main] Registered router {module_name} mounted at {prefix or '/'}")
+        except Exception as e:
+            log.warning(f"[main] Failed to mount registered router {module_name}: {e}")
+except Exception as e:
+    log.warning(f"[main] Failed to load registered routers: {e}")

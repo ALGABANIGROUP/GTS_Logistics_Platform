@@ -277,7 +277,20 @@ export const AuthProvider = ({ children }) => {
             return { success: true, user: normalizedUser };
         } catch (error) {
             console.error('Login failed:', error);
-            return { success: false, error: error.response?.data?.detail || 'Login failed' };
+
+            const responseDetail = error?.response?.data?.detail;
+            let message =
+                (typeof responseDetail === "object" ? responseDetail?.message : responseDetail) ||
+                error?.response?.data?.message ||
+                error?.message ||
+                "Login failed";
+
+            if (error?.code === "ERR_NETWORK" || !error?.response) {
+                message =
+                    "Unable to reach the server. Check that the backend is running and accessible at the configured API URL.";
+            }
+
+            return { success: false, message };
         }
     }, []);
 

@@ -12,6 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.config import settings
 import logging
 from datetime import datetime
+import ipaddress
 import re
 
 log = logging.getLogger("gts.security")
@@ -22,21 +23,41 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
     Redirect HTTP to HTTPS in production
     Preserve x-forwarded-proto from load balancers
     """
-    
+
+    @staticmethod
+    def _is_local_host(hostname: str | None) -> bool:
+        if not hostname:
+            return False
+
+        normalized = hostname.strip().lower()
+        if normalized in {"localhost", "127.0.0.1", "::1"}:
+            return True
+
+        try:
+            return ipaddress.ip_address(normalized).is_loopback
+        except ValueError:
+            return normalized.endswith(".local")
+
     async def dispatch(self, request: Request, call_next):
+        forwarded_host = request.headers.get("x-forwarded-host", "")
+        host = request.url.hostname or ""
+        effective_host = (forwarded_host.split(",")[0].strip() or host)
+
         # Check if we should redirect to HTTPS
         should_redirect = (
+            getattr(settings, "ENFORCE_HTTPS", False) and
             not settings.DEBUG and
             request.url.scheme == "http" and
-            request.headers.get("x-forwarded-proto") != "https"
+            request.headers.get("x-forwarded-proto") != "https" and
+            not self._is_local_host(effective_host)
         )
-        
+
         if should_redirect:
             # Redirect to HTTPS
             https_url = request.url.replace(scheme="https")
             log.warning(f"Redirecting HTTP request to HTTPS: {request.url.path}")
             return RedirectResponse(url=https_url, status_code=301)
-        
+
         response = await call_next(request)
         return response
 
@@ -48,10 +69,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
+
         # Strict Transport Security (HSTS)
         # Tell browsers to always use HTTPS for this domain
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        forwarded_proto = request.headers.get("x-forwarded-proto", "")
+        is_https = request.url.scheme == "https" or forwarded_proto == "https"
+        if getattr(settings, "ENFORCE_HTTPS", False) and is_https:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         
         # Content Security Policy (CSP)
         # Prevent XSS attacks by controlling where resources can load from
@@ -59,9 +83,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "img-src 'self' data: https:; "
+            "img-src 'self' data: https: http:; "
             "font-src 'self' https://fonts.googleapis.com; "
-            "connect-src 'self' https://api.sentry.io; "
+            "connect-src 'self' https://api.sentry.io http: https: ws: wss:; "
             "frame-ancestors 'none';"
         )
         
@@ -155,10 +179,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Clean old entries (older than 2 minutes)
             import time
             cutoff_time = datetime.now().timestamp() - 120
-            expired_keys = [
-                k for k, v in self.requests.items()
-                if datetime.strptime(k.split(":")[1], "%Y-%m-%d %H:%M").timestamp() < cutoff_time
-            ]
+            expired_keys = []
+            for k in list(self.requests.keys()):
+                try:
+                    timestamp_str = k.split(":")[1] if ":" in k else ""
+                    if timestamp_str:
+                        # Handle both formats: with and without minutes
+                        if len(timestamp_str.split()) == 2 and len(timestamp_str.split()[1].split(":")) == 1:
+                            # Format is "2026-04-08 21" - add :00 for minutes
+                            timestamp_str += ":00"
+                        parsed_time = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M").timestamp()
+                        if parsed_time < cutoff_time:
+                            expired_keys.append(k)
+                except (ValueError, IndexError):
+                    # If parsing fails, consider it expired
+                    expired_keys.append(k)
             for k in expired_keys:
                 del self.requests[k]
         

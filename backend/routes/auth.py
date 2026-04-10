@@ -121,6 +121,70 @@ async def get_current_user(token: str = Depends(oauth2_scheme), session: AsyncSe
     return user
 
 
+@router.post("/login")
+async def login_json(
+    credentials: dict = Body(...),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """Login endpoint - accepts JSON credentials"""
+    if get_async_session is None:
+        raise HTTPException(status_code=500, detail="Database not available")
+    
+    email = credentials.get("email")
+    password = credentials.get("password")
+    
+    if not email or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email and password are required"
+        )
+    
+    user = await _fetch_user_by_login(session, email)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Verify password
+    hashed_password = str(user.get("hashed_password") or "")
+    if not hashed_password or not bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create access token
+    access_token = create_access_token(
+        data={
+            "sub": str(user["id"]),
+            "email": user["email"],
+            "role": user.get("role") or "user",
+            "tv": int(user.get("token_version") or 0),
+        }
+    )
+
+    # Create refresh token
+    refresh_token = create_access_token(
+        data={
+            "sub": str(user["id"]),
+            "type": "refresh",
+            "tv": int(user.get("token_version") or 0),
+        },
+        expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    }
+
+
 @router.post("/token")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),

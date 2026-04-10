@@ -40,8 +40,10 @@ async def get_users_management(
         )
     
     try:
-        # Base query
-        query = select(User)
+        # Base query - exclude admin and super_admin users
+        query = select(User).where(
+            User.role.not_in(["admin", "super_admin"])
+        )
         
         # Apply search filter
         if search:

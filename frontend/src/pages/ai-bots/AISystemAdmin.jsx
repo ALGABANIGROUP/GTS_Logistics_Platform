@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axiosClient from "../../api/axiosClient";
-import { adminService } from "../../services/adminService";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import { getUserRole, isAdminRole } from "../../utils/userRole.js";
 
 const BOT_KEY = "system_bot";
 const glassCard =
@@ -46,8 +47,119 @@ function compactList(items, limit = 3) {
   return `${items.slice(0, limit).join(", ")} +${items.length - limit}`;
 }
 
+function settledData(result, fallback = {}) {
+  if (result.status !== "fulfilled") return fallback;
+  return result.value?.data ?? result.value ?? fallback;
+}
+
+function extractBotPayload(data, fallback = {}) {
+  return data?.data || data?.result || data || fallback;
+}
+
+function bytesToGb(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return 0;
+  return Number((num / (1024 ** 3)).toFixed(1));
+}
+
+function formatUptimeFromSeconds(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return "unknown";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h`;
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
+function normalizeRoles(data) {
+  const rawRoles = data?.data?.roles || data?.roles || [];
+  return rawRoles.map((role) => ({
+    key: role.key || role.value || role.role || "user",
+    name: role.name_en || role.label || role.name || role.value || role.key || "User",
+    permissions: Array.isArray(role.permissions) ? role.permissions : [],
+  }));
+}
+
+function normalizeBotCatalog(data) {
+  const rawBots = data?.data?.bots || data?.bots || [];
+  return rawBots.map((bot) => ({
+    key: bot.bot_key || bot.bot_code || bot.key || bot.name,
+    name: bot.display_name || bot.name || bot.bot_key || bot.bot_code || "Bot",
+    category: bot.category || "general",
+    status: bot.status || {},
+  }));
+}
+
+function normalizeFeatureFlags(data) {
+  const flags = data?.flags || {};
+  if (Array.isArray(flags)) {
+    return flags;
+  }
+  if (Array.isArray(flags.enabled)) {
+    return flags.enabled;
+  }
+  if (Array.isArray(data?.enabled)) {
+    return data.enabled;
+  }
+  return [];
+}
+
+function normalizeSystemHealth(metricsData, healthData, botCatalog) {
+  const host = metricsData?.host || {};
+  const cpu = host.cpu || {};
+  const memory = host.memory || {};
+  const disk = host.disk || {};
+  const health = healthData?.health || {};
+  const activeBots = botCatalog.filter((bot) => {
+    const statusValue = String(bot.status?.status || "").toLowerCase();
+    return statusValue && statusValue !== "stopped" && statusValue !== "disabled" && statusValue !== "error";
+  }).length;
+
+  return {
+    status: health.overall_status || healthData?.status || "unknown",
+    system: {
+      cpu: {
+        percent: Number(cpu.percent || 0),
+        cores: Number(cpu.cores || 0),
+        cores_physical: Number(cpu.cores || 0),
+      },
+      memory: {
+        percent: Number(memory.percent || 0),
+        total_gb: bytesToGb(memory.total),
+        available_gb: Math.max(0, bytesToGb(memory.total) - bytesToGb(memory.used)),
+        used_gb: bytesToGb(memory.used),
+      },
+      disk: {
+        percent: Number(disk.percent || 0),
+        total_gb: bytesToGb(disk.total),
+        free_gb: Math.max(0, bytesToGb(disk.total) - bytesToGb(disk.used)),
+        used_gb: bytesToGb(disk.used),
+      },
+      uptime: formatUptimeFromSeconds(metricsData?.uptime_seconds),
+    },
+    system_health: {
+      running_bots: activeBots,
+      total_bots: botCatalog.length,
+    },
+  };
+}
+
+function normalizeDatabaseHealth(data) {
+  return {
+    status: data?.connected ? "healthy" : data?.status || "unknown",
+    database: {
+      size_gb: null,
+      response_time_ms: data?.response_time_ms ?? null,
+    },
+  };
+}
+
 export default function AISystemAdmin({ botKey = BOT_KEY }) {
   const resolvedBotKey = botKey || BOT_KEY;
+  const { user } = useAuth();
+  const userRole = getUserRole(user);
+  const canAccessSystemManager = isAdminRole(userRole);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [savingUser, setSavingUser] = useState(false);
@@ -109,6 +221,12 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
   };
 
   const loadAll = async () => {
+    if (!canAccessSystemManager) {
+      setError("Admin access required.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -116,53 +234,72 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
         statusRes,
         configRes,
         dashboardRes,
-        systemHealthRes,
-        databaseHealthRes,
+        systemMetricsRes,
+        systemStatusRes,
+        databaseStatsRes,
         usersRes,
         rolesRes,
         botCatalogRes,
+        featureFlagsRes,
         userStatsRes,
         alertsRes,
         bottlenecksRes,
         forecastRes,
-      ] = await Promise.all([
-        axiosClient.get(`/api/v1/ai/bots/available/${resolvedBotKey}/status`).catch(() => ({ data: {} })),
-        axiosClient
-          .post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "config" } })
-          .catch(() => ({ data: {} })),
-        axiosClient
-          .post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "dashboard" } })
-          .catch(() => ({ data: {} })),
-        adminService.getSystemHealth(),
-        adminService.getDatabaseHealth(),
-        axiosClient.get("/api/v1/admin/users/management").catch(() => ({ data: { users: [] } })),
-        axiosClient.get("/api/v1/admin/users/roles").catch(() => ({ data: { roles: [] } })),
-        axiosClient.get("/api/v1/admin/users/bots/catalog").catch(() => ({ data: { bots: [], features: [] } })),
-        axiosClient.get("/api/v1/admin/users/stats/summary").catch(() => ({ data: {} })),
-        axiosClient
-          .post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "get_active_alerts" } })
-          .catch(() => ({ data: {} })),
-        axiosClient
-          .post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "check_bottlenecks" } })
-          .catch(() => ({ data: {} })),
-        axiosClient
-          .post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "predict_resources", days: 30 } })
-          .catch(() => ({ data: {} })),
+      ] = await Promise.allSettled([
+        axiosClient.get(`/api/v1/ai/bots/available/${resolvedBotKey}/status`),
+        axiosClient.post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "config" } }),
+        axiosClient.post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "dashboard" } }),
+        axiosClient.get("/api/v1/system/metrics"),
+        axiosClient.get("/api/v1/system/health"),
+        axiosClient.get("/api/v1/system/database/stats"),
+        axiosClient.get("/api/v1/admin/users-unified/management", { params: { limit: 200 } }),
+        axiosClient.get("/api/v1/admin/roles"),
+        axiosClient.get("/api/v1/bots/catalog"),
+        axiosClient.get("/api/v1/system/feature-flags"),
+        axiosClient.get("/api/v1/admin/users/stats"),
+        axiosClient.post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "get_active_alerts" } }),
+        axiosClient.post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "check_bottlenecks" } }),
+        axiosClient.post(`/api/v1/ai/bots/available/${resolvedBotKey}/run`, { context: { action: "predict_resources", days: 30 } }),
       ]);
 
-      setStatus(statusRes.data?.data || statusRes.data?.status || statusRes.data || {});
-      setConfig(configRes.data?.data || configRes.data?.result || configRes.data || {});
-      setDashboard(dashboardRes.data?.data || dashboardRes.data?.result || dashboardRes.data || {});
-      setSystemHealth(systemHealthRes || {});
-      setDatabaseHealth(databaseHealthRes || {});
-      setUsers(usersRes.data?.users || []);
-      setRoles(rolesRes.data?.roles || []);
-      setBotCatalog(botCatalogRes.data?.bots || []);
-      setAvailableFeatures(botCatalogRes.data?.features || []);
-      setUserStats(userStatsRes.data || {});
-      setAlerts(alertsRes.data?.data?.alerts || alertsRes.data?.result?.alerts || alertsRes.data?.alerts || []);
-      setBottlenecks(bottlenecksRes.data?.data || bottlenecksRes.data?.result || {});
-      setForecast(forecastRes.data?.data || forecastRes.data?.result || {});
+      const statusData = settledData(statusRes);
+      const configData = extractBotPayload(settledData(configRes));
+      const dashboardData = extractBotPayload(settledData(dashboardRes));
+      const botCatalogData = normalizeBotCatalog(settledData(botCatalogRes));
+      const usersData = settledData(usersRes)?.users || [];
+      const normalizedUsers = usersData.map((entry) => ({
+        ...entry,
+        assigned_bots: Array.isArray(entry.assigned_bots) ? entry.assigned_bots : [],
+        features: Array.isArray(entry.features) ? entry.features : [],
+      }));
+      const userStatsData = settledData(userStatsRes);
+      const normalizedUserStats = {
+        ...userStatsData,
+        active_users:
+          userStatsData?.active_users ??
+          userStatsData?.active ??
+          normalizedUsers.filter((entry) => entry.is_active).length,
+      };
+
+      setStatus(statusData?.data || statusData?.status || statusData || {});
+      setConfig(configData);
+      setDashboard(dashboardData);
+      setBotCatalog(botCatalogData);
+      setSystemHealth(
+        normalizeSystemHealth(
+          settledData(systemMetricsRes),
+          settledData(systemStatusRes),
+          botCatalogData
+        )
+      );
+      setDatabaseHealth(normalizeDatabaseHealth(settledData(databaseStatsRes)));
+      setUsers(normalizedUsers);
+      setRoles(normalizeRoles(settledData(rolesRes)));
+      setAvailableFeatures(normalizeFeatureFlags(settledData(featureFlagsRes)));
+      setUserStats(normalizedUserStats);
+      setAlerts(extractBotPayload(settledData(alertsRes)).alerts || []);
+      setBottlenecks(extractBotPayload(settledData(bottlenecksRes)));
+      setForecast(extractBotPayload(settledData(forecastRes)));
     } catch (loadError) {
       setError(loadError?.response?.data?.detail || loadError.message || "Failed to load System Manager");
     } finally {
@@ -171,16 +308,34 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
   };
 
   useEffect(() => {
+    if (!canAccessSystemManager) {
+      setLoading(false);
+      return;
+    }
     loadAll();
-  }, [resolvedBotKey]);
+  }, [canAccessSystemManager, resolvedBotKey]);
 
   const dashboardStats = dashboard?.stats || {};
   const dashboardAlerts = dashboard?.alerts || [];
   const combinedAlerts = alerts.length ? alerts : dashboardAlerts;
-  const topBots = dashboard?.bots || [];
-  const summary = status?.system_health || {};
+  const topBots = dashboard?.bots?.length
+    ? dashboard.bots
+    : botCatalog.slice(0, 8).map((bot) => ({
+        bot_name: bot.name,
+        status: bot.status?.status || "unknown",
+        response_time_ms: bot.status?.response_time_ms ?? "N/A",
+        cpu_usage: bot.status?.cpu_usage ?? "N/A",
+        memory_usage_mb: bot.status?.memory_usage_mb ?? "N/A",
+      }));
+  const summary = status?.system_health || systemHealth?.system_health || {};
   const system = systemHealth?.system || {};
-  const roleBreakdown = userStats?.users_by_role || {};
+  const roleBreakdown = Object.keys(userStats?.users_by_role || {}).length
+    ? userStats.users_by_role
+    : users.reduce((acc, entry) => {
+        const key = String(entry.role || "user");
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
   const roleCards = roles.length ? roles : [];
 
   const accessCoverage = useMemo(() => {
@@ -258,11 +413,11 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
       if (form.password.trim()) payload.password = form.password;
 
       if (editingUser) {
-        await axiosClient.patch(`/api/v1/admin/users/${editingUser.id}`, payload);
+        await axiosClient.patch(`/api/v1/admin/users-unified/${editingUser.id}`, payload);
         appendLog("User Updated", { id: editingUser.id, email: form.email, role: form.role }, "healthy");
         setNotice(`Updated ${form.email}.`);
       } else {
-        await axiosClient.post("/api/v1/admin/users", payload);
+        await axiosClient.post("/api/v1/admin/users-unified", payload);
         appendLog("User Created", { email: form.email, role: form.role }, "healthy");
         setNotice(`Created ${form.email}.`);
       }
@@ -282,7 +437,7 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
     setBusy(true);
     setError("");
     try {
-      await axiosClient.delete(`/api/v1/admin/users/${user.id}`);
+      await axiosClient.delete(`/api/v1/admin/users-unified/${user.id}`);
       appendLog("User Deactivated", { id: user.id, email: user.email }, "warning");
       setNotice(`Deactivated ${user.email}.`);
       await loadAll();
@@ -322,6 +477,19 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
         <div className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-b-2 border-emerald-400" />
           <p className="text-slate-300">Loading System Manager dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canAccessSystemManager) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+        <div className="max-w-lg rounded-3xl border border-rose-500/20 bg-rose-500/10 p-6 text-center shadow-xl shadow-black/30">
+          <h1 className="text-xl font-bold text-white">Access Restricted</h1>
+          <p className="mt-3 text-sm text-rose-100">
+            AI System Manager is available only to admin roles. This page no longer shows placeholder zeros for non-admin users.
+          </p>
         </div>
       </div>
     );
@@ -372,7 +540,7 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
             { label: "System Health", value: `${Math.round(((summary.running_bots || 0) / Math.max(summary.total_bots || 1, 1)) * 100)}%`, note: `${summary.running_bots || 0}/${summary.total_bots || 0} bots running`, tone: "from-emerald-500 to-teal-700" },
             { label: "CPU Usage", value: pct(system.cpu?.percent), note: `${system.cpu?.cores || 0} logical cores`, tone: "from-cyan-500 to-blue-700" },
             { label: "Memory Usage", value: pct(system.memory?.percent), note: `${system.memory?.used_gb || 0} GB used`, tone: "from-violet-500 to-fuchsia-700" },
-            { label: "Protected Users", value: userStats.active_users || users.filter((user) => user.is_active).length, note: `${accessCoverage.protectedUsers} users with bot or feature scopes`, tone: "from-amber-500 to-orange-700" },
+            { label: "Protected Users", value: accessCoverage.protectedUsers, note: `${accessCoverage.protectedUsers} users with bot or feature scopes`, tone: "from-amber-500 to-orange-700" },
             { label: "Bot Assignments", value: accessCoverage.botAssignments, note: `${availableFeatures.length} available feature flags`, tone: "from-slate-500 to-slate-700" },
           ].map((item) => (
             <div key={item.label} className={`rounded-2xl bg-gradient-to-br ${item.tone} p-5 text-white shadow-lg`}>

@@ -434,6 +434,9 @@ async def get_users_management(
                 "is_banned": user.is_banned,
                 "ban_reason": user.ban_reason,
                 "banned_until": user.banned_until.isoformat() if user.banned_until else None,
+                "assigned_bots": user.assigned_bots or [],
+                "features": user.features or [],
+                "last_login": user.last_login.isoformat() if user.last_login else None,
                 "created_at": user.created_at.isoformat() if user.created_at else None,
                 "updated_at": user.updated_at.isoformat() if user.updated_at else None,
                 "status": "active" if user.is_active and not user.is_banned else ("banned" if user.is_banned else "inactive")
@@ -917,6 +920,9 @@ async def get_users_admin(
                 "is_banned": user.is_banned,
                 "ban_reason": user.ban_reason,
                 "banned_until": user.banned_until.isoformat() if user.banned_until else None,
+                "assigned_bots": user.assigned_bots or [],
+                "features": user.features or [],
+                "last_login": user.last_login.isoformat() if user.last_login else None,
                 "created_at": user.created_at.isoformat() if user.created_at else None,
                 "updated_at": user.updated_at.isoformat() if user.updated_at else None,
                 "status": "active" if user.is_active and not user.is_banned else ("banned" if user.is_banned else "inactive")
@@ -1359,6 +1365,8 @@ async def create_user(
             user_type=body.get("user_type", ""),
             role=body.get("role", "user"),
             is_active=body.get("is_active", True),
+            assigned_bots=body.get("assigned_bots") or [],
+            features=body.get("features") or [],
         )
         
         if body.get("password"):
@@ -1417,6 +1425,10 @@ async def update_user(
             user.user_type = body["user_type"]
         if "role" in body:
             user.role = body["role"]
+        if "assigned_bots" in body:
+            user.assigned_bots = body.get("assigned_bots") or []
+        if "features" in body:
+            user.features = body.get("features") or []
         
         session.add(user)
         await session.commit()
@@ -1463,6 +1475,10 @@ async def patch_user(
             user.user_type = body["user_type"]
         if "role" in body:
             user.role = body["role"]
+        if "assigned_bots" in body:
+            user.assigned_bots = body.get("assigned_bots") or []
+        if "features" in body:
+            user.features = body.get("features") or []
         if "is_active" in body:
             user.is_active = body["is_active"]
         if "is_banned" in body:
@@ -1615,4 +1631,3 @@ async def get_portal_notifications(
             "total_count": 0,
             "message": "Notifications are currently unavailable",
         }
-

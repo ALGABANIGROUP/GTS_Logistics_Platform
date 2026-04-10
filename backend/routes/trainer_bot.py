@@ -216,6 +216,11 @@ SIMULATIONS = [
 
 # ==================== API Endpoints ====================
 
+@router.get("/test")
+async def test_trainer_endpoint():
+    """Test endpoint that doesn't require authentication"""
+    return {"status": "ok", "message": "Trainer bot router is working"}
+
 @router.get("/dashboard")
 async def get_trainer_dashboard(
     current_user: Dict[str, Any] = Depends(get_current_user)

@@ -121,7 +121,11 @@ const Login = () => {
         }));
       }
 
-      setGeneralError(result?.message || 'Login failed. Please check your credentials.');
+      setGeneralError(
+        result?.message ||
+        result?.error ||
+        'Login failed. Please check your credentials.'
+      );
     } finally {
       setIsLoading(false);
     }
