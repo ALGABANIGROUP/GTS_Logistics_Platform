@@ -2,36 +2,56 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
-import logging
 
 from backend.database.session import get_async_session
-from backend.security.auth import require_roles, get_current_user
+from backend.security.auth import get_current_user
 from backend.models.user import User
 
-router = APIRouter(tags=["Admin Users"])
-logger = logging.getLogger(__name__)
-
-# Create require_auth for admin access
-require_auth = require_roles(["admin", "super_admin"])
+router = APIRouter(prefix="/api/v1/admin/users", tags=["Admin Users"])
 
 
-@router.get("/management")
-async def get_users_management(
-    page: int = 1,
-    limit: int = 25,
-    search: Optional[str] = None,
-    role: Optional[str] = None,
-    status: Optional[str] = None,
-    session: AsyncSession = Depends(get_async_session),
+# ==================== Models ====================
+class UserUpdate(BaseModel):
+    """Model for user update request"""
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+    phone: Optional[str] = None
+    tenant_id: Optional[int] = None
+
+
+class UserResponse(BaseModel):
+    """Model for user response"""
+    id: int
+    email: str
+    full_name: str
+    role: str
+    is_active: bool
+    phone: Optional[str] = None
+    created_at: str
+    last_login: Optional[str] = None
+
+
+# ==================== PATCH Endpoint ====================
+@router.patch("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    db: AsyncSession = Depends(get_async_session),
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Get all users from database for management page
+    Update a user by ID (admin only)
+    
+    - **user_id**: ID of the user to update
+    - **user_update**: Fields to update
     """
     
-    # Check admin permissions
+    # التحقق من صلاحيات admin
     user_role = current_user.get("role", "").lower()
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(
@@ -39,182 +59,155 @@ async def get_users_management(
             detail="Admin access required"
         )
     
-    try:
-        # Base query - exclude admin and super_admin users
-        query = select(User).where(
-            User.role.not_in(["admin", "super_admin"])
+    # البحث عن المستخدم
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found"
         )
-        
-        # Apply search filter
-        if search:
-            query = query.where(
-                (User.email.contains(search)) |
-                (User.full_name.contains(search))
-            )
-        
-        # Apply role filter
-        if role and role != "all":
-            query = query.where(User.role == role)
-        
-        # Apply status filter
-        if status and status != "all":
-            is_active = status == "active"
-            query = query.where(User.is_active == is_active)
-        
-        # Calculate total count
-        count_query = select(func.count()).select_from(query.subquery())
-        total = await session.scalar(count_query)
-        
-        # Apply pagination
-        query = query.offset((page - 1) * limit).limit(limit)
-        
-        # Execute query
-        result = await session.execute(query)
-        users = result.scalars().all()
-        
-        # Format data
-        users_list = []
-        for user in users:
-            users_list.append({
-                "id": user.id,
-                "email": user.email,
-                "full_name": user.full_name or user.email.split('@')[0],
-                "role": user.role,
-                "is_active": user.is_active,
-                "created_at": user.created_at.isoformat() if user.created_at else datetime.now().isoformat(),
-                "last_login": None  # Not implemented yet
-            })
-        
-        logger.info(f"Returning {len(users_list)} users")
-        logger.info(f"Returning {len(users_list)} users")
-        return {
-            "users": users_list,
-            "total": total or 0,
-            "page": page,
-            "limit": limit
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to fetch users: {e}")
-        return {
-            "users": [],
-            "total": 0,
-            "page": page,
-            "limit": limit,
-            "error": str(e)
-        }
+    
+    # تحديث الحقول
+    update_data = user_update.dict(exclude_unset=True)
+    
+    for field, value in update_data.items():
+        if value is not None:
+            setattr(user, field, value)
+    
+    user.updated_at = datetime.utcnow()
+    
+    await db.commit()
+    await db.refresh(user)
+    
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role,
+        is_active=user.is_active,
+        phone=getattr(user, "phone", None),
+        created_at=user.created_at.isoformat() if user.created_at else datetime.utcnow().isoformat(),
+        last_login=user.last_login.isoformat() if user.last_login else None
+    )
 
 
-@router.get("/stats")
-async def get_users_stats(
-    session: AsyncSession = Depends(get_async_session),
+# ==================== GET Users Endpoint ====================
+@router.get("/management")
+async def get_users_management(
+    page: int = 1,
+    limit: int = 25,
+    search: Optional[str] = None,
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    db: AsyncSession = Depends(get_async_session),
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
-    """Get user statistics"""
+    """Get users for management page"""
     
-    try:
-        # Total users
-        total_result = await session.execute(select(func.count()).select_from(User))
-        total = total_result.scalar() or 0
-        
-        # Active users
-        active_result = await session.execute(
-            select(func.count()).where(User.is_active == True)
-        )
-        active = active_result.scalar() or 0
-        
-        # Disabled users
-        inactive = total - active
-        
-        return {
-            "total": total,
-            "active": active,
-            "inactive": inactive
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to fetch user stats: {e}")
-        return {
-            "total": 0,
-            "active": 0,
-            "inactive": 0
-        }
-
-
-@router.get("/activity/recent")
-async def get_recent_activity(
-    limit: int = 10,
-    session: AsyncSession = Depends(get_async_session),
-    payload: Dict[str, Any] = Depends(require_auth)
-):
-    """Get recent user login activity"""
-    
-    user_role = payload.get("role", "").lower()
+    user_role = current_user.get("role", "").lower()
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    try:
-        # Get recently logged in users
-        query = select(User).where(
-            User.last_login.isnot(None)
-        ).order_by(User.last_login.desc()).limit(limit)
-        
-        result = await session.execute(query)
-        users = result.scalars().all()
-        
-        activity = []
-        for user in users:
-            activity.append({
-                "id": user.id,
-                "email": user.email,
-                "full_name": user.full_name,
-                "role": user.role,
-                "last_login": user.last_login.isoformat() if user.last_login else None,
-                "is_active": user.is_active
-            })
-        
-        return {"activity": activity}
-        
-    except Exception as e:
-        logger.error(f"Failed to fetch recent activity: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+    query = select(User)
+    
+    if search:
+        query = query.where(
+            (User.email.contains(search)) | 
+            (User.full_name.contains(search))
         )
-
-
-@router.get("/{user_id}")
-async def get_user_by_id(
-    user_id: int,
-    session: AsyncSession = Depends(get_async_session),
-    payload: Dict[str, Any] = Depends(require_auth)
-):
-    """Get single user by ID"""
     
-    user_role = payload.get("role", "").lower()
-    if user_role not in ["super_admin", "admin"]:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    if role and role != "all":
+        query = query.where(User.role == role)
     
-    try:
-        result = await session.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
-        
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        return {
+    if status == "active":
+        query = query.where(User.is_active == True)
+    elif status == "inactive":
+        query = query.where(User.is_active == False)
+    
+    total_result = await db.execute(select(func.count()).select_from(query.subquery()))
+    total = total_result.scalar() or 0
+    
+    query = query.offset((page - 1) * limit).limit(limit)
+    result = await db.execute(query)
+    users = result.scalars().all()
+    
+    users_list = []
+    for user in users:
+        users_list.append({
             "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
             "role": user.role,
             "is_active": user.is_active,
             "created_at": user.created_at.isoformat() if user.created_at else None,
-            "last_login": user.last_login.isoformat() if user.last_login else None,
-            "phone": getattr(user, "phone", None)
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to fetch user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+            "last_login": user.last_login.isoformat() if user.last_login else None
+        })
+    
+    return {
+        "users": users_list,
+        "total": total,
+        "page": page,
+        "limit": limit
+    }
+
+
+@router.get("/{user_id}")
+async def get_user_by_id(
+    user_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Get user by ID"""
+    
+    user_role = current_user.get("role", "").lower()
+    if user_role not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": user.role,
+        "is_active": user.is_active,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "last_login": user.last_login.isoformat() if user.last_login else None
+    }
+
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: int,
+    permanent: bool = False,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Delete or deactivate a user"""
+    
+    user_role = current_user.get("role", "").lower()
+    if user_role != "super_admin":
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if permanent:
+        await db.delete(user)
+        message = "User permanently deleted"
+    else:
+        user.is_active = False
+        message = "User deactivated"
+    
+    await db.commit()
+    
+    return {"message": message, "user_id": user_id}
