@@ -51,7 +51,7 @@ async def update_user(
     - **user_update**: Fields to update
     """
     
-    # التحقق من صلاحيات admin
+    # Check admin permissions
     user_role = current_user.get("role", "").lower()
     if user_role not in ["super_admin", "admin"]:
         raise HTTPException(
@@ -59,7 +59,7 @@ async def update_user(
             detail="Admin access required"
         )
     
-    # البحث عن المستخدم
+    # Find the user
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
@@ -69,7 +69,7 @@ async def update_user(
             detail=f"User with id {user_id} not found"
         )
     
-    # تحديث الحقول
+    # Update fields
     update_data = user_update.dict(exclude_unset=True)
     
     for field, value in update_data.items():
