@@ -14,6 +14,7 @@ _optional_modules = [
     ("password_reset_token", "PasswordResetToken"),
     ("tenant", "Tenant"),
     ("partner", "LogisticsPartner"),
+    ("invoices", "Invoice"),
     ("social_media", "SocialMedia"),
     ("ws_notifications", "WSNotification"),
     ("platform_expense", "PlatformExpense"),
