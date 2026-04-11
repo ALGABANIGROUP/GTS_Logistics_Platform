@@ -29,8 +29,8 @@ async def _ensure_schema(session) -> None:
     if _schema_initialized:
         return
     if not hasattr(session, "execute"):
-        # Test doubles may provide only the minimal API used by route handlers.
-        _schema_initialized = True
+        # Test doubles (DummySession) don't have execute; skip without marking
+        # schema as initialized so a real session will create tables later.
         return
 
     try:
