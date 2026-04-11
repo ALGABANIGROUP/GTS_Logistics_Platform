@@ -38,6 +38,12 @@ from backend.models.payment import (
 from backend.models.invoices import Invoice
 
 logger = logging.getLogger(__name__)
+_fallback_app_env = os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "development"
+_fallback_frontend_url = (
+    "https://www.gtsdispatcher.com"
+    if _fallback_app_env == "production"
+    else "http://127.0.0.1:5173"
+)
 
 
 # ============================================================================
@@ -101,7 +107,7 @@ class PaymentService:
         frontend_base = str(
             os.getenv("FRONTEND_URL")
             or os.getenv("GTS_FRONTEND_URL")
-            or "http://127.0.0.1:5173"
+            or _fallback_frontend_url
         ).rstrip("/")
         return f"{frontend_base}/pay/{payment_id}"
 

@@ -4,12 +4,21 @@ Handles all email notifications across GTS Main & TMS systems
 """
 
 import logging
+import os
 from datetime import datetime
 from typing import Dict, List
 
 from backend.utils.email_utils import send_email
 
 logger = logging.getLogger(__name__)
+APP_ENV = os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "development"
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://www.gtsdispatcher.com" if APP_ENV == "production" else "http://127.0.0.1:5173",
+).rstrip("/")
+ADMIN_URL = os.getenv("ADMIN_URL", f"{FRONTEND_URL}/admin").rstrip("/")
+TMS_DASHBOARD_URL = f"{FRONTEND_URL}/dashboard/tms"
+ADMIN_TMS_REQUESTS_URL = f"{ADMIN_URL}/overview?tab=tms-requests"
 
 
 class UnifiedEmailSystem:
@@ -102,7 +111,7 @@ class UnifiedEmailSystem:
             <ul>
                 <li><strong>Company:</strong> {company_name}</li>
                 <li><strong>Plan:</strong> {plan.upper()}</li>
-                <li><strong>Dashboard:</strong> <a href="http://127.0.0.1:5173/dashboard/tms">Access TMS Dashboard</a></li>
+                <li><strong>Dashboard:</strong> <a href="{TMS_DASHBOARD_URL}">Access TMS Dashboard</a></li>
             </ul>
             <p>The TMS Load Board feature is currently restricted to US and Canada.</p>
             <p>Questions? Contact our support team at <a href="mailto:{UnifiedEmailSystem.EMAIL_CONFIG['support_email']}">{UnifiedEmailSystem.EMAIL_CONFIG['support_email']}</a></p>
@@ -153,7 +162,7 @@ class UnifiedEmailSystem:
                 <li><strong>Request ID:</strong> {request_id}</li>
                 <li><strong>Date:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M')}</li>
             </ul>
-            <p><a href="http://127.0.0.1:5173/admin/unified-dashboard?tab=tms-requests">Review Request</a></p>
+            <p><a href="{ADMIN_TMS_REQUESTS_URL}">Review Request</a></p>
         </body>
         </html>
         """

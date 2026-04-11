@@ -18,6 +18,13 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "") or os.getenv("SMTP_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM") or os.getenv("SMTP_FROM") or "no-reply@gabanilogistics.com"
 MAIL_ADMIN = os.getenv("MAIL_ADMIN", "") or os.getenv("ADMIN_EMAIL", "")
 ACTIVATION_BASE_URL = os.getenv("ACTIVATION_BASE_URL", "")
+APP_ENV = os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "development"
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://www.gtsdispatcher.com" if APP_ENV == "production" else "http://localhost:5173",
+).rstrip("/")
+ADMIN_BASE_URL = os.getenv("ADMIN_URL", f"{FRONTEND_URL}/admin").rstrip("/")
+PORTAL_REQUESTS_URL = f"{ADMIN_BASE_URL}/portal-requests"
 
 
 class RegisterPayload(BaseModel):
@@ -96,7 +103,7 @@ def send_admin_notification(user_email: str, user_name: str = "", role: str = "u
         f"Name: {display_name}\n"
         f"Email: {user_email}\n"
         f"Role: {role}\n\n"
-        "Review this request at: http://localhost:5173/admin/portal-requests"
+        f"Review this request at: {PORTAL_REQUESTS_URL}"
     )
     html = f"""
     <html>
@@ -107,7 +114,7 @@ def send_admin_notification(user_email: str, user_name: str = "", role: str = "u
           <li><strong>Email:</strong> {user_email}</li>
           <li><strong>Role:</strong> {role}</li>
         </ul>
-        <p>Review this request at: <a href="http://localhost:5173/admin/portal-requests">Admin Portal Requests</a></p>
+        <p>Review this request at: <a href="{PORTAL_REQUESTS_URL}">Admin Portal Requests</a></p>
       </body>
     </html>
     """

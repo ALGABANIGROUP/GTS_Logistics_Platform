@@ -36,8 +36,9 @@ class UserResponse(BaseModel):
     last_login: Optional[str] = None
 
 
-# ==================== PATCH Endpoint ====================
+# ==================== Update Endpoint ====================
 @router.patch("/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
     user_update: UserUpdate,

@@ -40,10 +40,17 @@ try:
     from backend.config import settings as _settings  # type: ignore
     settings: Any = _settings
 except Exception:
+    _fallback_app_env = os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "development"
+    _fallback_frontend_url = (
+        "https://www.gtsdispatcher.com"
+        if _fallback_app_env == "production"
+        else "http://127.0.0.1:5173"
+    )
+
     class _FallbackSettings:
-        FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://127.0.0.1:5173")
+        FRONTEND_URL: str = os.getenv("FRONTEND_URL", _fallback_frontend_url)
         APP_NAME: str = os.getenv("APP_NAME", "Gabani Transport Solutions (GTS)")
-        APP_ENV: str = os.getenv("APP_ENV", "development")
+        APP_ENV: str = _fallback_app_env
         ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@example.com")
         SMTP_FROM: str = os.getenv("SMTP_FROM", "admin@example.com")
         CORS_ORIGINS: list[str] = [item.strip() for item in os.getenv("CORS_ORIGINS", "").split(",") if item.strip()]
@@ -157,7 +164,7 @@ async def _approve_request(req_id: int, db: AsyncSession) -> Dict[str, Any]:
 
     login_url = _login_url()
     system_label = str(rec.get("system") or "standard").upper()
-    onboarding_link = "https://your-domain.com/tms-onboarding"
+    onboarding_link = f"{str(getattr(settings, 'FRONTEND_URL', '') or '').rstrip('/')}/tms-onboarding"
 
     if raw_password:
         body = f"""<!DOCTYPE html>
@@ -329,7 +336,7 @@ async def bulk_approve_requests_v1(
         await update_portal_request_status(req_id, "approved", decided_by="admin")
         approved_count += 1
 
-        payment_link = f"https://www.gtsdispatcher.com/payment?request_id={req_id}"
+        payment_link = f"{str(getattr(settings, 'FRONTEND_URL', '') or '').rstrip('/')}/payment?request_id={req_id}"
         await _send_bulk_request_email(
             email=str(rec.get("email") or ""),
             subject="Your GTS account is approved - Complete Payment",

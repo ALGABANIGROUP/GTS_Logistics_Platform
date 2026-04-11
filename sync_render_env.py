@@ -69,9 +69,12 @@ ENV_VARS: Dict[str, str] = {
     "EMAIL_SYSTEM_MAILBOXES": "security@gabanistore.com,no-reply@gabanilogistics.com",
     
     # CORS
-    "FRONTEND_URL": "https://api.gtsdispatcher.com",
-    "ADMIN_URL": "https://api.gtsdispatcher.com",
-    "ALLOWED_ORIGINS": "https://api.gtsdispatcher.com,https://gabanilogistics.com",
+    "APP_ENV": "production",
+    "FRONTEND_URL": "https://www.gtsdispatcher.com",
+    "ADMIN_URL": "https://www.gtsdispatcher.com/admin",
+    "INTERNAL_BASE_URL": "https://api.gtsdispatcher.com",
+    "API_BASE_URL": "https://api.gtsdispatcher.com",
+    "ALLOWED_ORIGINS": "https://www.gtsdispatcher.com,https://gtsdispatcher.com,https://api.gtsdispatcher.com,https://gabanilogistics.com",
     
     # Health Check
     "HEALTHCHECK_DB_TIMEOUT_SECONDS": "10",

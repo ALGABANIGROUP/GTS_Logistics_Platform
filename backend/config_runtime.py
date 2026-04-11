@@ -9,6 +9,16 @@ from dotenv import load_dotenv
 
 _BACKEND_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _BACKEND_DIR.parent
+_APP_ENV = os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "development"
+_IS_PRODUCTION = _APP_ENV == "production"
+_DEFAULT_FRONTEND_URL = "https://www.gtsdispatcher.com" if _IS_PRODUCTION else "http://localhost:5173"
+_DEFAULT_ADMIN_URL = f"{_DEFAULT_FRONTEND_URL}/admin"
+_DEFAULT_API_BASE_URL = "https://api.gtsdispatcher.com" if _IS_PRODUCTION else "http://127.0.0.1:8000"
+_DEFAULT_CORS_ORIGINS = (
+    "https://www.gtsdispatcher.com,https://gtsdispatcher.com,https://api.gtsdispatcher.com"
+    if _IS_PRODUCTION
+    else "http://localhost:5173,http://localhost:3000"
+)
 
 for _env_path in (_PROJECT_ROOT / ".env", _BACKEND_DIR / ".env"):
     if _env_path.exists():
@@ -17,7 +27,7 @@ for _env_path in (_PROJECT_ROOT / ".env", _BACKEND_DIR / ".env"):
 
 @dataclass
 class Settings:
-    APP_ENV: str = os.getenv("APP_ENV", "development")
+    APP_ENV: str = _APP_ENV
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("1", "true", "yes")
 
     ASYNC_DATABASE_URL: Optional[str] = os.getenv("ASYNC_DATABASE_URL")
@@ -35,11 +45,11 @@ class Settings:
 
     ALLOWED_ORIGINS: str = os.getenv(
         "ALLOWED_ORIGINS",
-        "http://localhost:5173,http://localhost:3000" if os.getenv("APP_ENV") != "production" else "",
+        _DEFAULT_CORS_ORIGINS,
     )
     GTS_CORS_ORIGINS: str = os.getenv(
         "GTS_CORS_ORIGINS",
-        "http://localhost:5173,http://localhost:3000" if os.getenv("APP_ENV") != "production" else "",
+        _DEFAULT_CORS_ORIGINS,
     )
 
     ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "")
@@ -67,7 +77,7 @@ class Settings:
     QUO_BASE_URL: str = os.getenv("QUO_BASE_URL", "https://api.openphone.com/v1")
     QUO_AUTH_SCHEME: str = os.getenv("QUO_AUTH_SCHEME", "bearer")
     QUO_WEBHOOK_SECRET: str = os.getenv("QUO_WEBHOOK_SECRET", "")
-    API_BASE_URL: str = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+    API_BASE_URL: str = os.getenv("API_BASE_URL", _DEFAULT_API_BASE_URL)
     DEFAULT_CALLER_ID: str = os.getenv("DEFAULT_CALLER_ID", "")
 
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
@@ -101,8 +111,8 @@ class Settings:
     STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
     STRIPE_ENABLED: bool = bool(STRIPE_SECRET_KEY)
 
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
-    ADMIN_URL: str = os.getenv("ADMIN_URL", "http://localhost:5173")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", _DEFAULT_FRONTEND_URL)
+    ADMIN_URL: str = os.getenv("ADMIN_URL", _DEFAULT_ADMIN_URL)
 
     SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-change-me")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
@@ -126,11 +136,11 @@ class Settings:
     jwt_public_key_pem: str = os.getenv("JWT_PUBLIC_KEY_PEM", "")
 
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(
-        os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "1000" if os.getenv("APP_ENV") == "production" else "120")
+        os.getenv("RATE_LIMIT_REQUESTS_PER_MINUTE", "1000" if _IS_PRODUCTION else "120")
     )
     ENFORCE_HTTPS: bool = os.getenv(
         "ENFORCE_HTTPS",
-        "true" if os.getenv("APP_ENV") == "production" else "false",
+        "true" if _IS_PRODUCTION else "false",
     ).lower() in ("1", "true", "yes")
     ENABLE_SECURITY_HEADERS: bool = os.getenv("ENABLE_SECURITY_HEADERS", "true").lower() in ("1", "true", "yes")
 

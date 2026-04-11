@@ -10,6 +10,7 @@ import { NotificationProvider } from "./contexts/NotificationContext.jsx";
 import EntitlementsProvider from "./components/EntitlementsProvider.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import BodyClassGate from "./components/BodyClassGate.jsx";
+import { installNetworkRuntime } from "./bootstrap/networkRuntime.js";
 import appPackage from "../package.json";
 import "./styles/theme.css";
 import "./styles/glassmorphism.css";
@@ -107,6 +108,8 @@ if (typeof window !== "undefined" && GA_MEASUREMENT_ID) {
     window.__GTS_UPDATE_GOOGLE_CONSENT__("denied");
   }
 }
+
+installNetworkRuntime();
 
 // Initialize Sentry for error monitoring and performance tracking
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;

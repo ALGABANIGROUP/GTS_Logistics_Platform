@@ -40,18 +40,25 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
+_fallback_app_env = os.getenv("APP_ENV") or os.getenv("ENVIRONMENT") or "development"
+_fallback_frontend_url = (
+    "https://www.gtsdispatcher.com"
+    if _fallback_app_env == "production"
+    else "http://localhost:5173"
+)
+
 if get_settings is not None:
     try:
         settings = get_settings()
     except Exception:
         settings = SimpleNamespace(
-            ENVIRONMENT="development",
-            FRONTEND_URL="http://localhost:5173",
+            ENVIRONMENT=_fallback_app_env,
+            FRONTEND_URL=_fallback_frontend_url,
         )
 else:
     settings = SimpleNamespace(
-        ENVIRONMENT="development",
-        FRONTEND_URL="http://localhost:5173",
+        ENVIRONMENT=_fallback_app_env,
+        FRONTEND_URL=_fallback_frontend_url,
     )
 
 # ============================================================================
@@ -253,7 +260,7 @@ def _parse_plan_invoice_number(number: str) -> Dict[str, Optional[int]]:
 
 
 def _build_public_payment_link(payment_id: int | str) -> str:
-    frontend_base = str(getattr(settings, "FRONTEND_URL", "") or "http://127.0.0.1:5173").rstrip("/")
+    frontend_base = str(getattr(settings, "FRONTEND_URL", "") or _fallback_frontend_url).rstrip("/")
     return f"{frontend_base}/pay/{payment_id}"
 
 

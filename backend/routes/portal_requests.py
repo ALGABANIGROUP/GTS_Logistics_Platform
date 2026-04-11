@@ -26,6 +26,12 @@ from backend.database.config import get_db_async
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["portal"], include_in_schema=True)
+_admin_base = str(getattr(settings, "ADMIN_URL", "") or "").rstrip("/")
+_portal_requests_url = (
+    f"{_admin_base}/portal-requests"
+    if _admin_base
+    else f"{str(getattr(settings, 'FRONTEND_URL', '') or '').rstrip('/')}/admin/portal-requests"
+)
 
 # hCaptcha secret key from environment
 HCAPTCHA_SECRET = settings.HCAPTCHA_SECRET or os.getenv("HCAPTCHA_SECRET", "")
@@ -297,7 +303,7 @@ async def create_request(
         f"Document: {document_name or '-'}\n"
         f"IP Address: {client_ip}\n\n"
         f"Comment:\n{comment or '-'}\n\n"
-        f"Review this request at: {settings.ADMIN_URL}/admin/portal-requests"
+        f"Review this request at: {_portal_requests_url}"
     )
 
     background_tasks.add_task(send_admin_notification, subject_admin, body_admin)
