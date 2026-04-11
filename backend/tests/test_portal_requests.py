@@ -11,8 +11,27 @@ from backend.routes import portal_requests as portal_module
 def _override_db_dependency():
     async def _fake_db():
         class DummySession:
+            async def execute(self, *args, **kwargs):
+                # Return a dummy result that looks like an empty query result
+                class DummyResult:
+                    def scalar_one_or_none(self):
+                        return None
+                    def scalar(self):
+                        return 0
+                    def fetchone(self):
+                        return (0,)
+                    def fetchall(self):
+                        return []
+                return DummyResult()
+
             async def close(self):
                 return None
+
+            async def commit(self):
+                pass
+
+            async def rollback(self):
+                pass
 
         dummy = DummySession()
         try:
@@ -115,4 +134,3 @@ async def test_verify_email_endpoint_success(async_client, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["success"] is True
-
