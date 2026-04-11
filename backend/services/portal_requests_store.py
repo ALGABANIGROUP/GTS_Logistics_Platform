@@ -28,6 +28,10 @@ async def _ensure_schema(session) -> None:
     global _schema_initialized
     if _schema_initialized:
         return
+    if not hasattr(session, "execute"):
+        # Test doubles may provide only the minimal API used by route handlers.
+        _schema_initialized = True
+        return
 
     try:
         await session.execute(text("SELECT 1 FROM portal_access_requests LIMIT 1"))
@@ -856,4 +860,3 @@ async def get_request_audit_log(
             {"request_id": request_id},
         )
         return [dict(row) for row in result.mappings().all()]
-
