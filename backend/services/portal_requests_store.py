@@ -24,11 +24,16 @@ def _normalize_status(value: Optional[str]) -> Optional[str]:
     return value
 
 
+def _is_test_session(session) -> bool:
+    """Return True when *session* is a lightweight test double (no SQL API)."""
+    return not hasattr(session, "execute")
+
+
 async def _ensure_schema(session) -> None:
     global _schema_initialized
     if _schema_initialized:
         return
-    if not hasattr(session, "execute"):
+    if _is_test_session(session):
         # Test doubles may provide only the minimal API used by route handlers.
         _schema_initialized = True
         return
@@ -623,7 +628,7 @@ async def check_ip_rate_limit(
     async with _maybe_session(session) as (session, owns_session):
         await _ensure_schema(session)
 
-        if not hasattr(session, "execute"):
+        if _is_test_session(session):
             # Test double – treat as not rate-limited so the route can proceed.
             return False
 

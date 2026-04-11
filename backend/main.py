@@ -298,9 +298,9 @@ def _try_import_router(abs_mod: str, rel_mod: str):
     # aliases the top-level package name ("routes") but leaves sub-modules
     # (e.g. "routes.portal_requests") as a separate object from
     # "backend.routes.portal_requests", breaking monkeypatching in tests.
-    backend_name = abs_mod if abs_mod.startswith("backend.") else f"backend.{abs_mod}"
+    canonical_module_path = abs_mod if abs_mod.startswith("backend.") else f"backend.{abs_mod}"
     try:
-        mod = importlib.import_module(backend_name)
+        mod = importlib.import_module(canonical_module_path)
         # Register the unprefixed alias so any ``import routes.X`` performed
         # later (or already in sys.modules) returns the same object.
         if abs_mod not in sys.modules:
