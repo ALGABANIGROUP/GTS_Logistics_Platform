@@ -216,12 +216,11 @@ class User(Base, TenantScopedMixin):
     )
 
     # Import LogisticsPartner here to avoid circular imports
-    from .partner import LogisticsPartner
-    partner: Mapped[Optional["LogisticsPartner"]] = relationship(
-        lambda: LogisticsPartner,
-        back_populates="users",
-        lazy="select",
-    )
+    # from .partner import LogisticsPartner
+    # partner: Mapped[Optional["LogisticsPartner"]] = relationship(
+    #     lambda: LogisticsPartner,
+    #     lazy="select",
+    # )
 
     # audit_logs: Mapped[List["AuditLog"]] = relationship(
     #     "AuditLog",

@@ -213,7 +213,7 @@ class LogisticsPartner(Base):
     updated_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    users = relationship("User", back_populates="partner", lazy="selectin")
+    # users = relationship("User", back_populates="partner", lazy="selectin")  # Removed due to no foreign key
     shipments_as_carrier = relationship(
         "backend.models.models.Shipment",
         foreign_keys="backend.models.models.Shipment.carrier_id",

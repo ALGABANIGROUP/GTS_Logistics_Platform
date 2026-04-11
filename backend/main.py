@@ -2335,10 +2335,21 @@ except Exception as e:
 
 # Invoices router (CRUD + webhook events)
 try:
-    from routes.invoices import router as invoices_router
-    app.include_router(invoices_router)
+    print("DEBUG: Importing invoices_router")
+    from backend.routes.invoices import router as invoices_router
+    print("DEBUG: Invoices router imported successfully")
+    print(f"DEBUG: Invoices router has {len(invoices_router.routes)} routes")
+    try:
+        app.include_router(invoices_router, dependencies=[])
+        print(f"DEBUG: Invoices router included successfully, routes: {len(invoices_router.routes)}")
+    except Exception as e:
+        print(f"DEBUG: Failed to include invoices_router: {e}")
+        import traceback
+        traceback.print_exc()
     log.info("[main] invoices router mounted at /api/v1/invoices")
+    print("DEBUG: Invoices router log done")
 except Exception as e:
+    print(f"DEBUG: Failed to import invoices_router: {e}")
     log.warning("[main] invoices router mount failed: %s", e)
 
 # Freight Broker router (commission calculation, profit tracking, analytics)
@@ -3114,6 +3125,7 @@ async def _debug_admin_users(_user: dict = Depends(require_roles(["super_admin"]
 
 @app.get("/")
 async def root():
+    print("DEBUG: root endpoint called")
     return {"ok": True, "name": "Gabani Transport Solutions (GTS) Backend", "offline": OFFLINE}
 
 
@@ -3129,3 +3141,4 @@ try:
             log.warning(f"[main] Failed to mount registered router {module_name}: {e}")
 except Exception as e:
     log.warning(f"[main] Failed to load registered routers: {e}")
+# test

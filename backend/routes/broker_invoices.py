@@ -10,8 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.database.session import get_async_session
-from backend.models.broker_commission import (
+from database.session import get_async_session
+from models.broker_commission import (
     EnhancedInvoice, BrokerCommission, CommissionTier, InvoiceType
 )
 
