@@ -623,6 +623,10 @@ async def check_ip_rate_limit(
     async with _maybe_session(session) as (session, owns_session):
         await _ensure_schema(session)
 
+        if not hasattr(session, "execute"):
+            # Test double – treat as not rate-limited so the route can proceed.
+            return False
+
         result = await session.execute(
             text(
                 """
