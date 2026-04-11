@@ -8,6 +8,7 @@ so the app can boot and critical routes (auth) can load.
 # Core model(s) that must exist
 from .user import User  # noqa: F401
 from .document import Document  # noqa: F401
+from .invoices import Invoice  # noqa: F401
 
 # Optional models (do not fail app startup if missing)
 _optional_modules = [
