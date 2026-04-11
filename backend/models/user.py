@@ -211,7 +211,15 @@ class User(Base, TenantScopedMixin):
 
     tenant: Mapped[Optional["Tenant"]] = relationship(
         lambda: Tenant,
-        backref="users",
+        back_populates="users",
+        lazy="select",
+    )
+
+    # Import LogisticsPartner here to avoid circular imports
+    from .partner import LogisticsPartner
+    partner: Mapped[Optional["LogisticsPartner"]] = relationship(
+        lambda: LogisticsPartner,
+        back_populates="users",
         lazy="select",
     )
 

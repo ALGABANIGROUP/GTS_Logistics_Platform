@@ -13,6 +13,7 @@ from .document import Document  # noqa: F401
 _optional_modules = [
     ("password_reset_token", "PasswordResetToken"),
     ("tenant", "Tenant"),
+    ("partner", "LogisticsPartner"),
     ("social_media", "SocialMedia"),
     ("ws_notifications", "WSNotification"),
     ("platform_expense", "PlatformExpense"),
