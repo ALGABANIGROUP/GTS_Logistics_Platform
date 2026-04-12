@@ -17,22 +17,17 @@ logger = logging.getLogger(__name__)
 _schema_initialized = False
 _portal_table = "portal_access_requests"
 
-
 def _normalize_status(value: Optional[str]) -> Optional[str]:
     if value == "denied":
         return "rejected"
     return value
-
 
 async def _ensure_schema(session) -> None:
     global _schema_initialized
     if _schema_initialized:
         return
     if not hasattr(session, "execute"):
-        # Test doubles (DummySession) don't have execute; skip without marking
-        # schema as initialized so a real session will create tables later.
         return
-
     try:
         await session.execute(text("SELECT 1 FROM portal_access_requests LIMIT 1"))
         await session.execute(text("SELECT 1 FROM email_verifications LIMIT 1"))
@@ -42,7 +37,6 @@ async def _ensure_schema(session) -> None:
         msg = str(exc).lower()
         if "does not exist" not in msg and "undefinedtable" not in msg:
             raise
-
     await session.execute(
         text(
             """
@@ -85,7 +79,6 @@ async def _ensure_schema(session) -> None:
             """
         )
     )
-
     await session.execute(text("ALTER TABLE portal_access_requests ADD COLUMN IF NOT EXISTS request_id TEXT UNIQUE"))
     await session.execute(text("ALTER TABLE portal_access_requests ADD COLUMN IF NOT EXISTS tenant_id TEXT"))
     await session.execute(text("ALTER TABLE portal_access_requests ADD COLUMN IF NOT EXISTS email_normalized TEXT"))
@@ -99,7 +92,6 @@ async def _ensure_schema(session) -> None:
     await session.execute(text("ALTER TABLE portal_access_requests ADD COLUMN IF NOT EXISTS decided_at TIMESTAMPTZ"))
     await session.execute(text("ALTER TABLE portal_access_requests ADD COLUMN IF NOT EXISTS decided_by TEXT"))
     await session.execute(text("ALTER TABLE portal_access_requests ADD COLUMN IF NOT EXISTS ip_address TEXT"))
-
     for column in ("country", "user_type", "system"):
         try:
             await session.execute(
@@ -112,7 +104,6 @@ async def _ensure_schema(session) -> None:
             )
         except Exception as exc:
             logger.debug("portal_access_requests column %s type not altered: %s", column, exc)
-
     await session.execute(
         text(
             """
@@ -127,7 +118,6 @@ async def _ensure_schema(session) -> None:
             """
         )
     )
-
     await session.execute(
         text(
             """
@@ -143,7 +133,6 @@ async def _ensure_schema(session) -> None:
             """
         )
     )
-
     await session.execute(
         text(
             """
@@ -159,7 +148,6 @@ async def _ensure_schema(session) -> None:
             """
         )
     )
-
     await session.execute(
         text(
             """
@@ -212,10 +200,16 @@ async def _ensure_schema(session) -> None:
             """
         )
     )
-
+    await session.execute(
+        text(
+            """
+            CREATE INDEX IF NOT EXISTS idx_portal_requests_ip_address
+            ON portal_access_requests(ip_address);
+            """
+        )
+    )
     await session.commit()
     _schema_initialized = True
-
 
 @asynccontextmanager
 async def _maybe_session(session: Optional[AsyncSession]):
@@ -224,7 +218,6 @@ async def _maybe_session(session: Optional[AsyncSession]):
         return
     async with wrap_session_factory(get_async_session) as scoped_session:
         yield scoped_session, True
-
 
 async def create_portal_request(
     *,
@@ -314,7 +307,6 @@ async def create_portal_request(
             "created_at": row["created_at"],
         }
 
-
 async def list_portal_requests(
     *,
     limit: int = 100,
@@ -379,7 +371,6 @@ async def list_portal_requests(
             row["status"] = _normalize_status(row.get("status"))
         return normalized
 
-
 async def get_portal_request_by_id(
     id: int,
     *,
@@ -407,7 +398,6 @@ async def get_portal_request_by_id(
         data = dict(m)
         data["status"] = _normalize_status(data.get("status"))
         return data
-
 
 async def get_portal_request_by_request_id(
     request_id: str,
@@ -437,7 +427,6 @@ async def get_portal_request_by_request_id(
         data["status"] = _normalize_status(data.get("status"))
         return data
 
-
 async def get_portal_request_by_email(
     email_normalized: str,
     *,
@@ -456,7 +445,7 @@ async def get_portal_request_by_email(
         if tenant_id:
             query += " AND tenant_id = :tenant_id"
             params["tenant_id"] = tenant_id
-        query += """
+        query += ""
             ORDER BY created_at DESC
             LIMIT 1;
         """
@@ -467,7 +456,6 @@ async def get_portal_request_by_email(
         data = dict(m)
         data["status"] = _normalize_status(data.get("status"))
         return data
-
 
 async def update_portal_request_status(
     id: int,
@@ -504,7 +492,6 @@ async def update_portal_request_status(
             await session.commit()
         return True
 
-
 async def delete_portal_request(
     id: int,
     *,
@@ -524,7 +511,6 @@ async def delete_portal_request(
         if owns_session:
             await session.commit()
         return True
-
 
 async def increment_request_attempt(
     id: int,
@@ -546,7 +532,6 @@ async def increment_request_attempt(
         )
         if owns_session:
             await session.commit()
-
 
 async def check_duplicate_today(
     email: str,
@@ -570,7 +555,6 @@ async def check_duplicate_today(
         row = result.mappings().first()
         return row["cnt"] > 0 if row else False
 
-
 async def check_duplicate_email(
     email: str,
     *,
@@ -579,7 +563,6 @@ async def check_duplicate_email(
     email_norm = email.strip().lower()
     if not email_norm:
         return False
-
     async with _maybe_session(session) as (session, owns_session):
         await _ensure_schema(session)
         result = await session.execute(
@@ -596,7 +579,6 @@ async def check_duplicate_email(
         row = result.first()
         if row is not None:
             return True
-
         try:
             legacy = await session.execute(
                 text(
@@ -613,16 +595,16 @@ async def check_duplicate_email(
         except Exception:
             return False
 
-
 async def check_ip_rate_limit(
     ip_address: str,
     requests_per_hour: int = 5,
     *,
     session: Optional[AsyncSession] = None,
 ) -> bool:
+    if not hasattr(session, "execute"):
+        return False
     async with _maybe_session(session) as (session, owns_session):
         await _ensure_schema(session)
-
         result = await session.execute(
             text(
                 """
@@ -637,7 +619,6 @@ async def check_ip_rate_limit(
         row = result.mappings().first()
         count = row["cnt"] if row else 0
         return count >= requests_per_hour
-
 
 async def create_verification_token(
     email: str,
@@ -664,7 +645,6 @@ async def create_verification_token(
         if owns_session:
             await session.commit()
         return True
-
 
 async def verify_email(
     token: str,
@@ -702,7 +682,6 @@ async def verify_email(
         if owns_session:
             await session.commit()
         return email
-
 
 async def create_admin_notification(
     request_id: Optional[int],
@@ -759,7 +738,6 @@ async def create_admin_notification(
                     await session.rollback()
                 return False
 
-
 async def list_admin_notifications(
     limit: int = 50,
     unread_only: bool = False,
@@ -776,7 +754,6 @@ async def list_admin_notifications(
 
         rows = await session.execute(text(query), {"limit": limit})
         return [dict(row) for row in rows.mappings().all()]
-
 
 async def log_audit_action(
     request_id: Optional[int],
@@ -839,7 +816,6 @@ async def log_audit_action(
                 if owns_session:
                     await session.rollback()
                 return False
-
 
 async def get_request_audit_log(
     request_id: int,
