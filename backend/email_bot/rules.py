@@ -3,7 +3,7 @@
 PRIORITY_RULES = {
     "CRITICAL": [
         {"contains": ["urgent", "emergency", "critical"]},
-        {"from_domain": ["security@gabanistore.com", "safety@gabanistore.com"]},
+        {"from_domain": ["security@gabanilogistics.com", "safety@gabanilogistics.com"]},
         {"subject_contains": ["ALERT", "BREACH", "ACCIDENT"]},
     ],
     "HIGH": [

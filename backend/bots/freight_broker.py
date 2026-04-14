@@ -1,8 +1,11 @@
 ﻿from __future__ import annotations
 # backend/bots/freight_broker.py
-from .base_bot import BaseBot
+from copy import deepcopy
+from datetime import datetime, timezone
 import logging
-from typing import Dict, Any
+from typing import Any, Dict, List
+
+from .base_bot import BaseBot
 
 logger = logging.getLogger(__name__)
 
@@ -270,5 +273,4 @@ class FreightBrokerBot(BaseBot):
             2,
         ) if quoted_price else 0.0
         return {"ok": True, "shipment": deepcopy(shipment), "carrier": deepcopy(carrier)}
-
 

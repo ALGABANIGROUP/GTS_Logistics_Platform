@@ -24,10 +24,10 @@ import json
 import html
 
 # Import app and dependencies
-from backend.main import app
 from backend.config import settings
 from backend.models.user import User
 from backend.auth import get_password_hash
+from tests.conftest import _build_test_app
 
 
 # ============================================================================
@@ -37,7 +37,7 @@ from backend.auth import get_password_hash
 @pytest.fixture
 async def async_client():
     """Create async HTTP client for testing"""
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=_build_test_app())
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
@@ -505,30 +505,37 @@ class TestRBACImplementation:
 class TestAuthenticationSecurity:
     """Test authentication security"""
     
-    @pytest.mark.asyncio
-    async def test_password_complexity_requirements(self, async_client):
-        """Test password complexity is enforced"""
+    def test_password_complexity_requirements(self):
+        """Test password complexity validation function directly"""
+        from backend.routes.auth import _validate_password_complexity
+        from fastapi import HTTPException
+        
+        # Test weak passwords should raise HTTPException
         weak_passwords = [
-            "123456",
-            "password",
-            "abc123",
-            "test",
-            "12345678"
+            "123456",  # Too short, no uppercase, no lowercase, no special chars
+            "password",  # No uppercase, no digits
+            "abc123",  # No uppercase
+            "test",  # Too short
+            "12345678"  # No uppercase, no lowercase
         ]
         
         for weak_password in weak_passwords:
-            response = await async_client.post(
-                "/api/v1/auth/register",
-                json={
-                    "email": "weak_pass@test.com",
-                    "password": weak_password,
-                    "full_name": "Test User"
-                }
-            )
-            
-            # Should reject weak password
-            assert response.status_code in [400, 422], \
-                f"Weak password '{weak_password}' was accepted!"
+            with pytest.raises(HTTPException) as exc_info:
+                _validate_password_complexity(weak_password)
+            assert exc_info.value.status_code in [400, 422], \
+                f"Weak password '{weak_password}' should be rejected"
+        
+        # Test strong passwords should not raise exception
+        strong_passwords = [
+            "StrongPass123!",
+            "MySecurePassword1",
+            "Complex!Password#2024",
+            "Abc123Def456"
+        ]
+        
+        for strong_password in strong_passwords:
+            # Should not raise any exception
+            _validate_password_complexity(strong_password)
     
     @pytest.mark.asyncio
     async def test_brute_force_protection(self, async_client):

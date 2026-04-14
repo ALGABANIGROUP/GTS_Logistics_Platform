@@ -82,7 +82,7 @@ Backend: 8000
 Frontend: 5173
 Database: 5432
 Contact Points
-Support: support@gabanistore.com
+Support: support@gabanilogistics.com
 Operations: operations@gabanilogistics.com
 📚 Important Files
 Reports (For Reading)
@@ -269,7 +269,7 @@ Run Backend and Frontend
 Enjoy GTS! 🚀
 
 📞 Need Help?
-📧 support@gabanistore.com
+📧 support@gabanilogistics.com
 🏢 operations@gabanilogistics.com
 🌐 https://app.gtsdispatcher.com
 

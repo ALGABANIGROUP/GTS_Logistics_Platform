@@ -42,7 +42,7 @@ ENV_VARS: Dict[str, str] = {
     
     # Email
     "ADMIN_EMAIL": "admin@gabanilogistics.com",
-    "SUPPORT_EMAIL": "support@gabanistore.com",
+    "SUPPORT_EMAIL": "support@gabanilogistics.com",
     "MAIL_FROM": "no-reply@gabanilogistics.com",
     
     "SMTP_HOST": "mail.gabanilogistics.com",
@@ -59,14 +59,14 @@ ENV_VARS: Dict[str, str] = {
     "POP3_HOST": "mail.gabanilogistics.com",
     "POP3_PORT": "995",
     "POP3_SSL": "true",
-    "POP3_USER": "support@gabanistore.com",
+    "POP3_USER": "support@gabanilogistics.com",
     
-    "EMAIL_MAILBOXES": "accounts@gabanilogistics.com,admin@gabanilogistics.com,finance@gabanilogistics.com,operations@gabanilogistics.com,freight@gabanilogistics.com,aidispatcher@gabanistore.com,driver@gabanistore.com,support@gabanistore.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,safety@gabanilogistics.com,marketing@gabanilogistics.com,sales@gabanilogistics.com,strategy@gabanilogistics.com,intel@gabanilogistics.com,investments@gabanilogistics.com,security@gabanistore.com,no-reply@gabanilogistics.com",
+    "EMAIL_MAILBOXES": "accounts@gabanilogistics.com,admin@gabanilogistics.com,finance@gabanilogistics.com,operations@gabanilogistics.com,freight@gabanilogistics.com,aidispatcher@gabanilogistics.com,driver@gabanilogistics.com,support@gabanilogistics.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,safety@gabanilogistics.com,marketing@gabanilogistics.com,sales@gabanilogistics.com,strategy@gabanilogistics.com,intel@gabanilogistics.com,investments@gabanilogistics.com,security@gabanilogistics.com,no-reply@gabanilogistics.com",
     "EMAIL_ADMINISTRATION_MAILBOXES": "accounts@gabanilogistics.com,admin@gabanilogistics.com,finance@gabanilogistics.com",
-    "EMAIL_OPERATIONS_MAILBOXES": "operations@gabanilogistics.com,freight@gabanilogistics.com,aidispatcher@gabanistore.com,driver@gabanistore.com",
-    "EMAIL_SUPPORT_MAILBOXES": "support@gabanistore.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,safety@gabanilogistics.com",
+    "EMAIL_OPERATIONS_MAILBOXES": "operations@gabanilogistics.com,freight@gabanilogistics.com,aidispatcher@gabanilogistics.com,driver@gabanilogistics.com",
+    "EMAIL_SUPPORT_MAILBOXES": "support@gabanilogistics.com,customers@gabanilogistics.com,doccontrol@gabanilogistics.com,safety@gabanilogistics.com",
     "EMAIL_MARKETING_MAILBOXES": "marketing@gabanilogistics.com,sales@gabanilogistics.com,strategy@gabanilogistics.com,intel@gabanilogistics.com,investments@gabanilogistics.com",
-    "EMAIL_SYSTEM_MAILBOXES": "security@gabanistore.com,no-reply@gabanilogistics.com",
+    "EMAIL_SYSTEM_MAILBOXES": "security@gabanilogistics.com,no-reply@gabanilogistics.com",
     
     # CORS
     "APP_ENV": "production",

@@ -28,7 +28,7 @@ TARGET_EMAILS = [
     "safety@gabanilogistics.com",
     "sales@gabanilogistics.com",
     "strategy@gabanilogistics.com",
-    "aidispatcher@gabanistore.com",
+    "aidispatcher@gabanilogistics.com",
 ]
 
 

@@ -349,7 +349,7 @@ Always use environment variables
 
 📞 For Further Assistance
 
-Email: support@gabanistore.com
+Email: support@gabanilogistics.com
 
 Operations: operations@gabanilogistics.com
 

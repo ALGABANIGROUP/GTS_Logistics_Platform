@@ -18,15 +18,15 @@ accounts@gabanilogistics.com     → Finance Bot
 admin@gabanilogistics.com        → General Manager
 customers@gabanilogistics.com    → Customer Service
 doccontrol@gabanilogistics.com   → Documents Manager
-driver@gabanistore.com           → Operations Manager
+driver@gabanilogistics.com           → Operations Manager
 finance@gabanilogistics.com      → Finance Bot
 freight@gabanilogistics.com      → Freight Broker
 investments@gabanilogistics.com  → Strategy Advisor
-legal@gabanilogistics.com        → Legal Consultant
+operations@gabanilogistics.com        → Legal Consultant
 marketing@gabanilogistics.com    → Sales/Strategy Advisor
 operations@gabanilogistics.com   → Operations Manager
-safety@gabanistore.com           → Safety Manager
-security@gabanistore.com         → Security Manager
+safety@gabanilogistics.com           → Safety Manager
+security@gabanilogistics.com         → Security Manager
 ```
 
 ### 3. **Workflow Automation**

@@ -1202,7 +1202,7 @@ export default function LegalConsultantDashboard() {
               </div>
               <div>
                 <div className="text-xs text-white/50">Contact</div>
-                <div className="text-white">legal@gabanilogistics.com</div>
+                <div className="text-white">operations@gabanilogistics.com</div>
               </div>
             </div>
             <div className="space-y-2 text-xs text-white/60">

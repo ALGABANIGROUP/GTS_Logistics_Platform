@@ -8,10 +8,9 @@ from typing import Optional, Dict, List
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 import logging
 
-from backend.models.user import User
-from backend.models.unified_models import UserSystemsAccess
 from backend.core.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,13 @@ class UnifiedAuthSystem:
         
         # Search for user
         user_result = await session.execute(
-            text("SELECT id, email, full_name, is_active, password_hash FROM users WHERE email = :email"),
+            text(
+                """
+                SELECT id, email, full_name, is_active, hashed_password, role
+                FROM users
+                WHERE email = :email
+                """
+            ),
             {"email": email},
         )
         user = user_result.mappings().first()
@@ -56,25 +61,38 @@ class UnifiedAuthSystem:
             return None
         
         # Verify password
-        if not self.verify_password(password, str(user["password_hash"])):
+        stored_hash = user.get("hashed_password")
+        if not stored_hash or not self.verify_password(password, str(stored_hash)):
             logger.warning(f"Failed login attempt: Incorrect password for user {email}")
             return None
         
         # Get available systems
-        access_result = await session.execute(
-            text(
-                """
-                SELECT system_type, access_level
-                FROM user_systems_access
-                WHERE user_id = :user_id AND is_active = TRUE
-                """
-            ),
-            {"user_id": str(user["id"])},
-        )
-        systems = [
-            {"system_type": row["system_type"], "access_level": row["access_level"]}
-            for row in access_result.mappings().all()
-        ]
+        systems: List[Dict[str, str]] = []
+        try:
+            access_result = await session.execute(
+                text(
+                    """
+                    SELECT system_type, access_level
+                    FROM user_systems_access
+                    WHERE user_id = :user_id AND is_active = TRUE
+                    """
+                ),
+                {"user_id": str(user["id"])},
+            )
+            systems = [
+                {"system_type": row["system_type"], "access_level": row["access_level"]}
+                for row in access_result.mappings().all()
+            ]
+        except SQLAlchemyError as exc:
+            logger.warning("Failed to load unified systems access for %s: %s", email, exc)
+
+        if not systems:
+            systems = [
+                {
+                    "system_type": "gts_main",
+                    "access_level": str(user.get("role") or "user"),
+                }
+            ]
         
         return {
             "user_id": str(user["id"]),
@@ -174,4 +192,3 @@ class UnifiedAuthSystem:
 
 # Create single instance of the system
 unified_auth = UnifiedAuthSystem()
-

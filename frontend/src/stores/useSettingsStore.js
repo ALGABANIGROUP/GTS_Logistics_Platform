@@ -37,7 +37,7 @@ export const useSettingsStore = create((set, get) => ({
         primaryColor: "#1E40AF",
         secondaryColor: "#3B82F6",
         companyName: "Gabani Logistics",
-        companyEmail: "info@gabanilogistics.com",
+        companyEmail: "support@gabanilogistics.com",
         companyPhone: "+966 123 456 789",
         companyAddress: "Riyadh, Saudi Arabia",
     },

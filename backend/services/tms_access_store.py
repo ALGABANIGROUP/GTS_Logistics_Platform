@@ -11,14 +11,31 @@ logger = logging.getLogger(__name__)
 _schema_initialized = False
 
 
+def _dialect_name(session) -> str:
+    bind = session.get_bind()
+    return getattr(getattr(bind, "dialect", None), "name", "")
+
+
 async def _ensure_schema(session) -> None:
     global _schema_initialized
     if _schema_initialized:
         return
-    # Store TMS access grants per user
-    await session.execute(
-        text(
+    dialect = _dialect_name(session)
+    if dialect == "sqlite":
+        create_table_sql = """
+            CREATE TABLE IF NOT EXISTS tms_access (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                email TEXT,
+                tms_enabled BOOLEAN DEFAULT true,
+                granted_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                granted_by TEXT,
+                notes TEXT,
+                UNIQUE(email)
+            );
             """
+    else:
+        create_table_sql = """
             CREATE TABLE IF NOT EXISTS tms_access (
                 id BIGSERIAL PRIMARY KEY,
                 user_id INTEGER,
@@ -30,7 +47,9 @@ async def _ensure_schema(session) -> None:
                 UNIQUE(email)
             );
             """
-        )
+    # Store TMS access grants per user
+    await session.execute(
+        text(create_table_sql)
     )
     await session.execute(
         text(
@@ -53,11 +72,13 @@ async def grant_tms_access(
 
     async with wrap_session_factory(get_async_session) as session:
         await _ensure_schema(session)
+        dialect = _dialect_name(session)
+        timestamp_expr = "CURRENT_TIMESTAMP" if dialect == "sqlite" else "NOW()"
         result = await session.execute(
             text(
-                """
+                f"""
                 INSERT INTO tms_access (email, tms_enabled, granted_by, notes, granted_at)
-                VALUES (:email, true, :granted_by, :notes, NOW())
+                VALUES (:email, true, :granted_by, :notes, {timestamp_expr})
                 ON CONFLICT (email) DO UPDATE SET
                     tms_enabled = true,
                     granted_by = EXCLUDED.granted_by,
@@ -123,4 +144,3 @@ async def list_tms_access(limit: int = 100) -> List[Dict[str, Any]]:
             {"limit": limit},
         )
         return [dict(row) for row in rows.mappings().all()]
-

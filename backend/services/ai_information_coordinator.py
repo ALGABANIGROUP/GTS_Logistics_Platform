@@ -14,6 +14,33 @@ try:
 except Exception:
     BeautifulSoup = None  # type: ignore
 
+try:
+    import feedparser  # type: ignore
+except Exception:
+    feedparser = None  # type: ignore
+
+REQUEST_INTERVAL_SEC = 1.5
+
+
+@dataclass
+class SourceSpec:
+    name: str
+    feed_url: Optional[str]
+    region: str
+    category: str
+
+
+@dataclass
+class NewsItem:
+    source: str
+    title: str
+    url: str
+    published_at: str
+    tags: List[str]
+    category: str
+    region: str
+    raw_excerpt: str
+
 
 @dataclass
 class CacheItem:
@@ -45,6 +72,9 @@ class TTLCache:
             if len(self._store) >= self.max_items:
                 self._store.pop(next(iter(self._store.keys())), None)
         self._store[key] = CacheItem(value=value, expires_at=time.time() + self.ttl_seconds)
+
+    def clear(self) -> None:
+        self._store.clear()
 
 
 class CanadianNewsScraper:
@@ -100,6 +130,10 @@ class CanadianNewsScraper:
                 "Chrome/120.0 Safari/537.36"
             )
         }
+
+    def reset_state(self) -> None:
+        self.last_request_time.clear()
+        self.cache.clear()
 
     def _rate_limit(self, source_name: str) -> None:
         last = self.last_request_time.get(source_name)
@@ -283,12 +317,121 @@ def get_canadian_scraper() -> CanadianNewsScraper:
     return _canadian_scraper_singleton
 
 
-def get_canadian_logistics_news() -> List[str]:
-    return get_canadian_scraper().get_canadian_logistics_news()
+def _reset_state() -> None:
+    global _canadian_scraper_singleton
+    if _canadian_scraper_singleton is not None:
+        _canadian_scraper_singleton.reset_state()
+    _canadian_scraper_singleton = CanadianNewsScraper(
+        request_delay=REQUEST_INTERVAL_SEC,
+        ttl_seconds=3600,
+    )
 
 
-def get_comprehensive_canadian_logistics_news() -> Dict[str, List[str]]:
-    return get_canadian_scraper().get_comprehensive_canadian_logistics_news()
+def _categorize(title: str, source: SourceSpec, summary: str = "") -> str:
+    text = f"{title} {summary} {source.name} {source.category}".lower()
+    if any(term in text for term in ("rail", "railway", "corridor", "cn", "cp")):
+        return "railways"
+    if any(term in text for term in ("port", "harbour", "harbor", "terminal")):
+        return "ports"
+    if any(term in text for term in ("truck", "trucking", "freight", "carrier")):
+        return "trucking"
+    if any(term in text for term in ("transport canada", "government", "statscan")):
+        return "government"
+    return source.category or "industry"
+
+
+def fetch_feed(source: SourceSpec) -> List[NewsItem]:
+    if not source.feed_url:
+        return []
+
+    scraper = get_canadian_scraper()
+    scraper.request_delay = REQUEST_INTERVAL_SEC
+    cache_key = f"feed::{source.feed_url}"
+    cached = scraper.cache.get(cache_key)
+    if isinstance(cached, list):
+        return cached
+
+    if requests is None or feedparser is None:
+        return []
+
+    now = time.time()
+    last_request = scraper.last_request_time.get(source.feed_url)
+    if last_request and now - last_request < scraper.request_delay:
+        time.sleep(scraper.request_delay - (now - last_request))
+
+    response = requests.get(source.feed_url, headers=scraper.default_headers, timeout=12)
+    if hasattr(response, "raise_for_status"):
+        response.raise_for_status()
+
+    parsed = feedparser.parse(response.text)
+    items: List[NewsItem] = []
+    for entry in getattr(parsed, "entries", []) or []:
+        tags = [tag.get("term", "") for tag in entry.get("tags", []) if isinstance(tag, dict)]
+        title = str(entry.get("title", "")).strip()
+        summary = str(entry.get("summary", "") or "")
+        items.append(
+            NewsItem(
+                source=source.name,
+                title=title,
+                url=str(entry.get("link", "")).strip(),
+                published_at=str(entry.get("published", "") or ""),
+                tags=[tag for tag in tags if tag],
+                category=_categorize(title, source, summary),
+                region=source.region,
+                raw_excerpt=summary,
+            )
+        )
+
+    scraper.last_request_time[source.feed_url] = time.time()
+    scraper.cache.set(cache_key, items)
+    return items
+
+
+def get_canadian_logistics_news() -> List[NewsItem]:
+    sources = [
+        SourceSpec(
+            name="Transport Canada",
+            feed_url="https://tc.canada.ca/en/news/rss.xml",
+            region="national",
+            category="government",
+        ),
+        SourceSpec(
+            name="Canadian Shipper",
+            feed_url="https://www.canadianshipper.com/feed/",
+            region="national",
+            category="industry",
+        ),
+        SourceSpec(
+            name="TruckNews",
+            feed_url="https://www.trucknews.com/feed/",
+            region="national",
+            category="trucking",
+        ),
+    ]
+    items: List[NewsItem] = []
+    for source in sources:
+        try:
+            items.extend(fetch_feed(source))
+        except Exception:
+            continue
+    return items
+
+
+def get_comprehensive_canadian_logistics_news() -> Dict[str, List[NewsItem]]:
+    items = get_canadian_logistics_news()
+    grouped: Dict[str, List[NewsItem]] = {
+        "government": [],
+        "trucking": [],
+        "ports": [],
+        "railways": [],
+        "industry": [],
+        "regional": [],
+        "international": [],
+        "errors": [],
+    }
+    for item in items:
+        grouped.setdefault(item.category, []).append(item)
+    return grouped
 
 
 def get_filtered_canadian_news(
@@ -296,11 +439,21 @@ def get_filtered_canadian_news(
     category: Optional[str] = None,
     keywords: Optional[str] = None,
 ) -> Dict[str, Any]:
-    return get_canadian_scraper().get_filtered_canadian_news(
-        province=province,
-        category=category,
-        keywords=keywords,
-    )
+    items = get_canadian_logistics_news()
+    filtered = items
+    if province:
+        province_norm = province.strip().lower()
+        filtered = [item for item in filtered if item.region == province_norm]
+    if category:
+        filtered = [item for item in filtered if item.category == category]
+    if keywords:
+        terms = [term.strip().lower() for term in keywords.split(",") if term.strip()]
+        filtered = [
+            item
+            for item in filtered
+            if any(term in f"{item.title} {item.raw_excerpt}".lower() for term in terms)
+        ]
+    return {"items": filtered, "count": len(filtered)}
 
 
 def get_daily_canadian_news_summary() -> Dict[str, Any]:

@@ -121,7 +121,7 @@ if (tenant.email_mode === 'byod') {
 user@${tenant.slug}.gabanilogistics.com
 
 // Mailboxes for advanced plans
-user@gabanilogistics.com
+support@gabanilogistics.com
 ```
 
 ## Implementation

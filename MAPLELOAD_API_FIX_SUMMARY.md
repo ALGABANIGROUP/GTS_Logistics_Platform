@@ -106,8 +106,9 @@ The MapleLoad Canada bot now has full access to:
   - Country (Canada, USA, North America)
   - Verification status
 - **Load board integration** (PickATruckLoad, Freightera, etc.)
-- **Warehouse provider database** (VersaCold, Congebec, DelGate, etc.)
-- **Logistics provider directory** (MTS, Canadian Freightways, etc.)
+- **Warehouse provider database** (InterFulfillment, 3PL Links, Stallion Express, AMZ Prep, Mantoria Inc., 18 Wheels Logistics, VersaCold, Congebec, DelGate, etc.)
+- **Logistics provider directory** (Pride Group Logistics, Day & Ross, Andy Transport, Boutin Express, AirTime Express, Armour Transportation, MTS, Canadian Freightways, etc.)
+- **Global shipping companies** (DSV Canada, Kuehne + Nagel, DHL Supply Chain)
 
 ## Files Changed
 1. ✅ [backend/bots/mapleload_canada.py](backend/bots/mapleload_canada.py) - Added `Any` import

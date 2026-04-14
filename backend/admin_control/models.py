@@ -15,7 +15,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-from database.base import Base
+from backend.database.base import Base
 
 
 class OrgUnit(Base):

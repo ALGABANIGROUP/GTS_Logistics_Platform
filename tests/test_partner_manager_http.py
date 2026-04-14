@@ -1,13 +1,17 @@
 # tests/test_partner_manager_http.py
 # NOTE: ASCII only.
 import os
+import pytest
 import requests
 
 BASE_URL = os.environ.get("GTS_BASE_URL", "http://127.0.0.1:8010")
 
 
 def _dev_token(role: str) -> str:
-    resp = requests.get(f"{BASE_URL}/api/v1/auth/dev-token?role={role}", timeout=10)
+    try:
+        resp = requests.get(f"{BASE_URL}/api/v1/auth/dev-token?role={role}", timeout=10)
+    except requests.RequestException as exc:
+        pytest.skip(f"Live partner manager backend unavailable at {BASE_URL}: {exc}")
     resp.raise_for_status()
     return resp.json()["access_token"]
 

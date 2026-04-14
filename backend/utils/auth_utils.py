@@ -13,7 +13,14 @@ from backend.core.settings import settings
 from backend.database.config import get_db
 from backend.models.user import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+pwd_context = CryptContext(
+    schemes=['argon2', 'bcrypt'], 
+    deprecated='auto', 
+    argon2__rounds=2,
+    argon2__memory_cost=102400,
+    argon2__parallelism=8,
+    argon2__hash_len=32
+)
 DEFAULT_SECRET_KEY = 'development-placeholder-not-for-production'
 SECRET_KEY = settings.JWT_SECRET_KEY or settings.SECRET_KEY or DEFAULT_SECRET_KEY
 ALGORITHM = 'HS256'
@@ -24,9 +31,19 @@ if (os.getenv("ENVIRONMENT") or settings.APP_ENV or "development").strip().lower
         raise RuntimeError("JWT secret must not use the development default in production.")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    # ✅ Truncate password to 72 bytes max (for bcrypt compatibility)
+    plain_bytes = plain_password.encode('utf-8')
+    if len(plain_bytes) > 72:
+        plain_password = plain_bytes[:72].decode('utf-8', errors='ignore')
+    
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
+    # ✅ Truncate password to 72 bytes max (for bcrypt compatibility)
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password = password_bytes[:72].decode('utf-8', errors='ignore')
+    
     return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta]=None) -> str:

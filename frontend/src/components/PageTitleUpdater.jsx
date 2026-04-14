@@ -77,6 +77,8 @@ const PageTitleUpdater = () => {
         '/admin/portal-requests': 'Portal Requests | GTS',
         '/admin/notifications': 'Notifications | GTS',
         '/admin/platform-expenses': 'Platform Expenses | GTS',
+        '/admin/TheVIZION': 'TheVIZION | GTS',
+        '/admin/TheVIZION/task-manager': 'Task Manager | TheVIZION | GTS',
 
         // Support & Community
         '/support': 'Support | GTS',

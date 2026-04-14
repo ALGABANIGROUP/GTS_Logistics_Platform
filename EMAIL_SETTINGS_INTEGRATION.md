@@ -209,5 +209,5 @@ EMAIL_SHARED_PASSWORD=shared-password
 For issues or questions:
 - Check backend logs: `backend/logs/`
 - Check Email Center: `localhost:8000/docs#/Email%20Center`
-- Email Support: support@gabanistore.com
+- Email Support: support@gabanilogistics.com
 - Operations: operations@gabanilogistics.com

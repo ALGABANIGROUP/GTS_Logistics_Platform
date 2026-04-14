@@ -121,7 +121,7 @@ const PartnerAgreementPage = () => {
           {tokenIssue && (
             <div className="flex flex-wrap gap-2 pt-1">
               <a
-                href="mailto:partners@gabanilogistics.com?subject=Partner%20Agreement%20Link%20Request"
+                href="mailto:investments@gabanilogistics.com?subject=Partner%20Agreement%20Link%20Request"
                 className="px-3 py-1.5 rounded-md bg-sky-500/80 text-white text-xs hover:bg-sky-500/90"
               >
                 Request a new link

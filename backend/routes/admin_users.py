@@ -12,6 +12,17 @@ from backend.models.user import User
 
 router = APIRouter(prefix="/api/v1/admin/users", tags=["Admin Users"])
 
+PUBLIC_ROLE_OPTIONS = [
+    {"value": "super_admin", "label": "Super Admin", "description": "Full system access"},
+    {"value": "admin", "label": "Admin", "description": "Administrative access"},
+    {"value": "system_admin", "label": "System Admin", "description": "System administration"},
+    {"value": "manager", "label": "Manager", "description": "Management access"},
+    {"value": "user", "label": "User", "description": "Regular user access"},
+    {"value": "partner", "label": "Partner", "description": "Partner access"},
+    {"value": "owner", "label": "Owner", "description": "Company owner"},
+    {"value": "operator", "label": "Operator", "description": "System operator"},
+]
+
 
 # ==================== Models ====================
 class UserUpdate(BaseModel):
@@ -34,6 +45,17 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     created_at: str
     last_login: Optional[str] = None
+
+
+@router.get("/roles/public")
+async def get_public_roles() -> Dict[str, Any]:
+    """Return role metadata without requiring authentication."""
+    return {
+        "status": "success",
+        "data": {
+            "roles": PUBLIC_ROLE_OPTIONS,
+        },
+    }
 
 
 # ==================== Update Endpoint ====================

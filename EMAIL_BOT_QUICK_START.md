@@ -17,15 +17,15 @@ All 13 mailbox configs are ready in `backend/services/mailboxes/`:
 - ✅ admin.py (admin@gabanilogistics.com)
 - ✅ customers.py (customers@gabanilogistics.com)
 - ✅ documents.py (doccontrol@gabanilogistics.com)
-- ✅ driver.py (driver@gabanistore.com) **[NEW]**
+- ✅ driver.py (driver@gabanilogistics.com) **[NEW]**
 - ✅ finance.py (finance@gabanilogistics.com)
 - ✅ freight.py (freight@gabanilogistics.com)
 - ✅ investments.py (investments@gabanilogistics.com) **[NEW]**
-- ✅ legal.py (legal@gabanilogistics.com)
+- ✅ legal.py (operations@gabanilogistics.com)
 - ✅ marketing.py (marketing@gabanilogistics.com)
 - ✅ operations.py (operations@gabanilogistics.com)
-- ✅ safety.py (safety@gabanistore.com)
-- ✅ security.py (security@gabanistore.com) **[NEW]**
+- ✅ safety.py (safety@gabanilogistics.com)
+- ✅ security.py (security@gabanilogistics.com) **[NEW]**
 
 ### 3. Start Backend
 ```bash
@@ -109,7 +109,7 @@ POST `/api/v1/email/mappings` with custom configuration:
 ### Disable Auto-Execution for Security
 ```json
 {
-  "email_account": "security@gabanistore.com",
+  "email_account": "security@gabanilogistics.com",
   "primary_bot": "security_manager",
   "auto_execute": false,
   "requires_approval": true,

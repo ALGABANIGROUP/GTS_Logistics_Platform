@@ -176,7 +176,7 @@ const Legal = () => {
                             <section>
                                 <h2 className="text-xl font-semibold text-white mb-3">Contact Legal Team</h2>
                                 <p>For legal questions or to request specific agreements:</p>
-                                <p className="mt-2 text-gray-400">📧 <a href="mailto:support@gabanistore.com" className="text-red-400 hover:underline">support@gabanistore.com</a></p>
+                                <p className="mt-2 text-gray-400">📧 <a href="mailto:support@gabanilogistics.com" className="text-red-400 hover:underline">support@gabanilogistics.com</a></p>
                                 <p className="mt-2 text-sm text-gray-400">Legal consultations are available for enterprise customers.</p>
                             </section>
                         </div>

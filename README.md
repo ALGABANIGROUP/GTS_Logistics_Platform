@@ -156,7 +156,7 @@ python security_audit.py
 
 ## 📞 الدعم
 
-- **الدعم الفني**: support@gabanistore.com
+- **الدعم الفني**: support@gabanilogistics.com
 - **العمليات**: operations@gabanilogistics.com
 - **المنصة**: تحقق من السجلات في `backend/logs/`
 

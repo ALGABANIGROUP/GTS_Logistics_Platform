@@ -36,6 +36,15 @@ class PostLoadRequest(BaseModel):
     shipment_info: Dict[str, Any] = Field(default_factory=dict)
 
 
+def get_provider(_name: str = "truckerpath"):
+    return TruckerPathService
+
+
+def _resolve_provider(name: str = "truckerpath"):
+    provider = get_provider(name)
+    return provider() if isinstance(provider, type) else provider
+
+
 def _provider_error_status(result: dict[str, Any]) -> int:
     if result.get("error") == "truckerpath_not_configured":
         return 503
@@ -54,7 +63,8 @@ def _unwrap_provider_result(result: Any, default_error: str) -> dict[str, Any]:
 
 
 async def _status_payload() -> dict[str, Any]:
-    health = await TruckerPathService.ping()
+    provider = _resolve_provider("truckerpath")
+    health = await provider.ping()
     ok = bool(health.get("ok", False))
     return {
         "ok": ok,
@@ -86,7 +96,8 @@ async def list_loads(
     equipment: Optional[str] = None,
 ):
     filters = {"origin": origin, "destination": destination, "equipment": equipment}
-    result = await TruckerPathService.list_loads(limit=limit, **{k: v for k, v in filters.items() if v})
+    provider = _resolve_provider("truckerpath")
+    result = await provider.list_loads(limit=limit, **{k: v for k, v in filters.items() if v})
     data = _unwrap_provider_result(result, "Failed to fetch loads")
     loads = list(data.get("loads") or [])
     return {
@@ -112,8 +123,9 @@ async def compat_list_loads(
 
 @router.post("/post-load")
 async def post_load(payload: PostLoadRequest = Body(...)):
+    provider = _resolve_provider("truckerpath")
     result = _unwrap_provider_result(
-        await TruckerPathService.post_load(payload.model_dump()),
+        await provider.post_load(payload.model_dump()),
         "TruckerPath post failed",
     )
     try:
@@ -130,8 +142,9 @@ async def compat_post_load(payload: PostLoadRequest = Body(...)):
 
 @router.post("/company")
 async def create_company(payload: dict[str, Any] = Body(...)):
+    provider = _resolve_provider("truckerpath")
     return _unwrap_provider_result(
-        await TruckerPathService.create_company(payload),
+        await provider.create_company(payload),
         "Create company failed",
     )
 
@@ -143,8 +156,9 @@ async def compat_create_company(payload: dict[str, Any] = Body(...)):
 
 @router.post("/webhook/register")
 async def register_webhook(payload: dict[str, Any] = Body(...)):
+    provider = _resolve_provider("truckerpath")
     return _unwrap_provider_result(
-        await TruckerPathService.register_webhook(payload),
+        await provider.register_webhook(payload),
         "Register webhook failed",
     )
 
@@ -156,8 +170,9 @@ async def compat_register_webhook(payload: dict[str, Any] = Body(...)):
 
 @router.post("/webhook/add")
 async def register_webhook_add(payload: dict[str, Any] = Body(...)):
+    provider = _resolve_provider("truckerpath")
     return _unwrap_provider_result(
-        await TruckerPathService.register_webhook_add(payload),
+        await provider.register_webhook_add(payload),
         "Register webhook(add) failed",
     )
 
@@ -169,8 +184,9 @@ async def compat_register_webhook_add(payload: dict[str, Any] = Body(...)):
 
 @router.post("/tracking/create")
 async def tracking_create(payload: dict[str, Any] = Body(...)):
+    provider = _resolve_provider("truckerpath")
     return _unwrap_provider_result(
-        await TruckerPathService.tracking_create(payload),
+        await provider.tracking_create(payload),
         "Tracking create failed",
     )
 
@@ -182,8 +198,9 @@ async def compat_tracking_create(payload: dict[str, Any] = Body(...)):
 
 @router.post("/tracking/points")
 async def push_tracking_points(payload: dict[str, Any] = Body(...)):
+    provider = _resolve_provider("truckerpath")
     return _unwrap_provider_result(
-        await TruckerPathService.push_tracking_points(payload),
+        await provider.push_tracking_points(payload),
         "Push tracking points failed",
     )
 

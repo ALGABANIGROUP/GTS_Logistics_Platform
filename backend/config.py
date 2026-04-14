@@ -124,7 +124,7 @@ class Settings:
     ADMIN_URL: str = os.getenv("ADMIN_URL", _DEFAULT_ADMIN_URL)
 
     # JWT / Auth - CRITICAL: Must be changed in production
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-change-me")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-change-me-to-32-bytes-or-more!!")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", os.getenv("GTS_JWT_SECRET", SECRET_KEY))
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", ALGORITHM)
@@ -139,7 +139,7 @@ class Settings:
         """Validate security configuration on startup"""
         # CRITICAL: Validate SECRET_KEY in production
         if self.APP_ENV == "production":
-            if not self.SECRET_KEY or self.SECRET_KEY == "dev-secret-change-me":
+            if not self.SECRET_KEY or self.SECRET_KEY == "dev-secret-change-me-to-32-bytes-or-more!!":
                 raise ValueError(
                     "CRITICAL SECURITY ERROR: SECRET_KEY must be changed in production! "
                     "Set a strong SECRET_KEY in environment variables."
@@ -157,7 +157,7 @@ class Settings:
                 )
         
         # Warning for development
-        elif self.SECRET_KEY == "dev-secret-change-me":
+        elif self.SECRET_KEY == "dev-secret-change-me-to-32-bytes-or-more!!":
             import warnings
             warnings.warn(
                 "Using default SECRET_KEY in development. This is fine for dev but never use in production!",

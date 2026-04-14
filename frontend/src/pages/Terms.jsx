@@ -115,7 +115,7 @@ const Terms = () => {
                             <section>
                                 <h2 className="text-xl font-semibold text-white mb-3">14. Contact Information</h2>
                                 <p>For questions about these Terms, contact our Legal Team:</p>
-                                <p className="mt-2 text-gray-400">📧 <a href="mailto:support@gabanistore.com" className="text-red-400 hover:underline">support@gabanistore.com</a></p>
+                                <p className="mt-2 text-gray-400">📧 <a href="mailto:support@gabanilogistics.com" className="text-red-400 hover:underline">support@gabanilogistics.com</a></p>
                             </section>
                         </div>
 

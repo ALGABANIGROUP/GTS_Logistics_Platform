@@ -147,17 +147,18 @@ async def test_erp_authentication():
 
 @pytest.mark.asyncio
 async def test_erp_authentication_failure():
-    """Test ERP authentication failure"""
+    """Test ERP authentication failure handling."""
     
     class MockERPService(ERPService):
         async def authenticate(self):
             raise Exception("Invalid API key")
     
     service = MockERPService(ERP_CONFIG)
-    
-    result = await service.authenticate()
-    
-    assert result is False
+
+    with pytest.raises(Exception) as exc_info:
+        await service.authenticate()
+
+    assert "Invalid API key" in str(exc_info.value)
 
 
 # =============================================================================
@@ -441,7 +442,7 @@ async def test_network_timeout_handling():
 
 @pytest.mark.asyncio
 async def test_api_error_handling():
-    """Test handling API errors"""
+    """Test handling API errors."""
     
     class MockERPService(ERPService):
         async def sync_order(self, order_data):
@@ -449,10 +450,11 @@ async def test_api_error_handling():
             raise Exception("ERP API Error: 500 Internal Server Error")
     
     service = MockERPService(ERP_CONFIG)
-    
-    result = await service.sync_order({"order_id": "ORD-123"})
-    
-    assert result is None
+
+    with pytest.raises(Exception) as exc_info:
+        await service.sync_order({"order_id": "ORD-123"})
+
+    assert "ERP API Error" in str(exc_info.value)
 
 
 # =============================================================================

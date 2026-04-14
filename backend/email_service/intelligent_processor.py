@@ -69,7 +69,7 @@ class IntelligentEmailProcessor:
 				"responsibilities": ["documents", "approvals", "archiving"],
 				"priority": "medium",
 			},
-			"driver@gabanistore.com": {
+			"driver@gabanilogistics.com": {
 				"bot": "operations_manager",
 				"system": "tms",
 				"responsibilities": ["driver_management", "operations"],
@@ -111,13 +111,13 @@ class IntelligentEmailProcessor:
 				"responsibilities": ["operations_coordination"],
 				"priority": "high",
 			},
-			"safety@gabanistore.com": {
+			"safety@gabanilogistics.com": {
 				"bot": "safety_manager",
 				"system": "both",
 				"responsibilities": ["safety_incidents", "compliance"],
 				"priority": "critical",
 			},
-			"security@gabanistore.com": {
+			"security@gabanilogistics.com": {
 				"bot": "security_manager",
 				"system": "admin",
 				"responsibilities": ["security_alerts", "investigations"],
@@ -175,19 +175,19 @@ class IntelligentEmailProcessor:
 				lambda: "driver" in keywords,
 				lambda: "schedule" in keywords,
 				lambda: "dispatch" in keywords,
-				lambda: email.get("to") in {"driver@gabanistore.com", "operations@gabanilogistics.com"},
+				lambda: email.get("to") in {"driver@gabanilogistics.com", "operations@gabanilogistics.com"},
 			],
 			"safety_manager": [
 				lambda: "safety" in keywords,
 				lambda: "accident" in keywords,
 				lambda: "incident" in keywords,
-				lambda: email.get("to") == "safety@gabanistore.com",
+				lambda: email.get("to") == "safety@gabanilogistics.com",
 			],
 			"security_manager": [
 				lambda: "security" in keywords,
 				lambda: "breach" in keywords,
 				lambda: "investigation" in keywords,
-				lambda: email.get("to") == "security@gabanistore.com",
+				lambda: email.get("to") == "security@gabanilogistics.com",
 			],
 		}
 		for bot_name, conditions in rules.items():

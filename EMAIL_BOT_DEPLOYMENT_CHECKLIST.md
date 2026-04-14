@@ -10,15 +10,15 @@
   - [x] admin@gabanilogistics.com
   - [x] customers@gabanilogistics.com
   - [x] doccontrol@gabanilogistics.com
-  - [x] driver@gabanistore.com
+  - [x] driver@gabanilogistics.com
   - [x] finance@gabanilogistics.com
   - [x] freight@gabanilogistics.com
   - [x] investments@gabanilogistics.com
-  - [x] legal@gabanilogistics.com
+  - [x] operations@gabanilogistics.com
   - [x] marketing@gabanilogistics.com
   - [x] operations@gabanilogistics.com
-  - [x] safety@gabanistore.com
-  - [x] security@gabanistore.com
+  - [x] safety@gabanilogistics.com
+  - [x] security@gabanilogistics.com
 
 ### Backend Components
 - [x] `backend/email/intelligent_processor.py` - Email classification

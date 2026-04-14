@@ -433,7 +433,7 @@ docker-compose ps
 
 ### قنوات الدعم
 
-- **البريد الإلكتروني**: support@gabanistore.com
+- **البريد الإلكتروني**: support@gabanilogistics.com
 - **الهاتف**: +1 (555) 123-4567
 - **الدردشة المباشرة**: https://chat.gts-logistics.com
 - **منتدى المجتمع**: https://community.gts-logistics.com
@@ -469,7 +469,7 @@ python scripts/diagnostic_report.py
 ## 📞 معلومات الاتصال
 
 **GTS Logistics Support Team**
-- Email: support@gabanistore.com
+- Email: support@gabanilogistics.com
 - Phone: +1 (555) 123-4567
 - Website: https://gts-logistics.com
 - Documentation: https://docs.gts-logistics.com

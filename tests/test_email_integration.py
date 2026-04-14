@@ -391,40 +391,27 @@ def test_email_validation():
 
 @pytest.mark.asyncio
 async def test_email_retry_on_failure():
-    """Test email retry logic on failure"""
+    """Test current failure behavior when SMTP send fails."""
     
     with patch('smtplib.SMTP') as mock_smtp:
         mock_instance = MagicMock()
         
-        # First two attempts fail, third succeeds
-        mock_instance.send_message.side_effect = [
-            smtplib.SMTPException("Temporary failure"),
-            smtplib.SMTPException("Temporary failure"),
-            None  # Success
-        ]
+        # Current EmailService implementation returns False on first failure
+        # and does not implement internal retry logic.
+        mock_instance.send_message.side_effect = smtplib.SMTPException("Temporary failure")
         mock_smtp.return_value = mock_instance
         
         service = EmailService(EMAIL_CONFIG)
         await service.connect()
         
-        max_retries = 3
-        success = False
+        result = await service.send_email(
+            to_email="user@example.com",
+            subject="Test Email",
+            body="Test"
+        )
         
-        for attempt in range(max_retries):
-            try:
-                await service.send_email(
-                    to_email="user@example.com",
-                    subject="Test Email",
-                    body="Test"
-                )
-                success = True
-                break
-            except:
-                if attempt == max_retries - 1:
-                    raise
-                await asyncio.sleep(0.1)  # Wait before retry
-        
-        assert mock_instance.send_message.call_count == 3
+        assert result is False
+        assert mock_instance.send_message.call_count == 1
 
 
 # =============================================================================

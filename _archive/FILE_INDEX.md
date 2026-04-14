@@ -360,7 +360,7 @@ END
 - **Hours**: 9 AM - 6 PM EST, Mon-Fri
 
 ### Emergency Support
-- **Critical Issues**: emergency@gabanilogistics.com
+- **Critical Issues**: security@gabanilogistics.com
 - **On-Call**: +1-XXX-XXX-XXXX (24/7)
 - **Response Time**: <30 minutes for critical issues
 

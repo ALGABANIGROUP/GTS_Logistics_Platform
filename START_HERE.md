@@ -332,7 +332,7 @@ Once running, access these URLs:
 - **Phone**: +1-XXX-XXX-XXXX
 
 ### Emergency
-- **Email**: emergency@gabanilogistics.com
+- **Email**: security@gabanilogistics.com
 - **Hotline**: +1-XXX-XXX-XXXX (24/7)
 
 ---

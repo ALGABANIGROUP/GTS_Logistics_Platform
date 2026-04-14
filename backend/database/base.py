@@ -10,7 +10,9 @@ Declarative Base and shared SQLAlchemy metadata for the project.
 """
 
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from sqlalchemy import MetaData
+from sqlalchemy import ARRAY, MetaData
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.dialects.postgresql import JSONB
 
 # ---------------------------------------------------------------------------
 # Naming conventions help Alembic generate stable, portable migrations.
@@ -23,6 +25,16 @@ NAMING_CONVENTIONS = {
     "pk": "pk_%(table_name)s",
 }
 metadata = MetaData(naming_convention=NAMING_CONVENTIONS)
+
+
+@compiles(JSONB, "sqlite")
+def _compile_jsonb_sqlite(_type, _compiler, **_kw) -> str:
+    return "JSON"
+
+
+@compiles(ARRAY, "sqlite")
+def _compile_array_sqlite(_type, _compiler, **_kw) -> str:
+    return "JSON"
 
 
 class Base(DeclarativeBase):

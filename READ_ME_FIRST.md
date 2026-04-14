@@ -333,7 +333,7 @@ python backend/tools/create_admin_user.py              # Admin user
 - +1-XXX-XXX-XXXX (during business hours)
 
 ### Emergency
-- emergency@gabanilogistics.com
+- security@gabanilogistics.com
 
 ---
 

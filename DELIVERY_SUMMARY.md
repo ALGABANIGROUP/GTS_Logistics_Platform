@@ -397,7 +397,7 @@ Password: AdminPass123! (or as configured)
 - **Phone**: +1-XXX-XXX-XXXX
 
 ### Emergency
-- **Emergency Email**: emergency@gabanilogistics.com
+- **Emergency Email**: security@gabanilogistics.com
 - **24/7 Hotline**: +1-XXX-XXX-XXXX
 
 ---

@@ -29,7 +29,7 @@ async def main() -> None:
 
     # ✅ E2E cleanup patterns
     email_like_patterns = [
-        "refresh-%@gabanistore.com",   # refresh-YYYY...@gabanistore.com
+        "refresh-%@example.com",   # refresh-YYYY...@example.com
     ]
     full_name_like_patterns = [
         "REFRESH TEST %",              # REFRESH TEST YYYY...
@@ -39,7 +39,7 @@ async def main() -> None:
     ]
 
     # ⚠️ Optionally include this account if needed:
-    # exact_emails.append("driver@gabanistore.com")
+    # exact_emails.append("driver@gabanilogistics.com")
 
     def user_match_clause():
         clauses = []
@@ -118,4 +118,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

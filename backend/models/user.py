@@ -222,12 +222,12 @@ class User(Base, TenantScopedMixin):
     #     lazy="select",
     # )
 
-    # audit_logs: Mapped[List["AuditLog"]] = relationship(
-    #     "AuditLog",
-    #     back_populates="user",
-    #     lazy="select",
-    #     cascade="all, delete-orphan",
-    # )
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog",
+        back_populates="user",
+        lazy="select",
+        cascade="all, delete-orphan",
+    )
 
     shipments: Mapped[List["LegacyShipment"]] = relationship(
         "backend.models.models.Shipment",

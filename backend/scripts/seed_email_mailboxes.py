@@ -56,10 +56,10 @@ MAILBOXES: list[MailboxSeed] = [
     MailboxSeed("safety@gabanilogistics.com", "Safety", "mail.gabanilogistics.com", "mail.gabanilogistics.com"),
     MailboxSeed("sales@gabanilogistics.com", "Sales", "mail.gabanilogistics.com", "mail.gabanilogistics.com"),
     MailboxSeed("strategy@gabanilogistics.com", "Strategy", "mail.gabanilogistics.com", "mail.gabanilogistics.com"),
-    MailboxSeed("aidispatcher@gabanistore.com", "AI Dispatcher", "mail.gabanistore.com", "mail.gabanistore.com"),
-    MailboxSeed("driver@gabanistore.com", "Driver", "mail.gabanistore.com", "mail.gabanistore.com"),
-    MailboxSeed("security@gabanistore.com", "Security", "mail.gabanistore.com", "mail.gabanistore.com"),
-    MailboxSeed("support@gabanistore.com", "Support", "mail.gabanistore.com", "mail.gabanistore.com"),
+    MailboxSeed("aidispatcher@gabanilogistics.com", "AI Dispatcher", "mail.gabanistore.com", "mail.gabanistore.com"),
+    MailboxSeed("driver@gabanilogistics.com", "Driver", "mail.gabanistore.com", "mail.gabanistore.com"),
+    MailboxSeed("security@gabanilogistics.com", "Security", "mail.gabanistore.com", "mail.gabanistore.com"),
+    MailboxSeed("support@gabanilogistics.com", "Support", "mail.gabanistore.com", "mail.gabanistore.com"),
 ]
 
 

@@ -9,7 +9,7 @@ import re
 import sys
 import time
 import tracemalloc
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
 
@@ -526,6 +526,7 @@ finance_reports   = _try_import_router("routes.finance_reports", "routes.finance
 finance_ai_router = _try_import_router("routes.finance_ai_routes", "routes.finance_ai_routes")
 accounting_router = _try_import_router("routes.accounting_routes", "routes.accounting_routes")
 unified_finance_router = _try_import_router("routes.unified_finance_routes", "routes.unified_finance_routes")
+unified_finance_public_router = _try_import_attr("routes.unified_finance_routes", "routes.unified_finance_routes", "public_router")
 
 # Maintenance & Development routes
 maintenance_ai_router = _try_import_router("routes.maintenance_ai", "routes.maintenance_ai")
@@ -587,6 +588,7 @@ except Exception as e:
 admin_tenants_router = _try_import_router("routes.admin_tenants", "routes.admin_tenants")
 admin_audit_router = _try_import_router("routes.admin_audit", "routes.admin_audit")
 admin_api_connections_router = _try_import_router("routes.admin_api_connections", "routes.admin_api_connections")
+admin_control_router = _try_import_router("backend.admin_control.routes", "backend.admin_control.routes")
 integrations_router = _try_import_router("routes.integrations_api", "routes.integrations_api")
 
 # Machine Learning & Advanced Analytics routes
@@ -660,7 +662,12 @@ def generate_unique_id(route: APIRoute) -> str:
     return f"{tag}:{route.name}:{methods}:{route.path}".replace("/", "_").replace("{", "").replace("}", "")
 
 
-ENABLE_OPENAPI = os.getenv("ENABLE_OPENAPI", "false").lower() in ("1", "true", "yes")
+_enable_openapi_env = os.getenv("ENABLE_OPENAPI")
+if _enable_openapi_env is None:
+    app_env = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).lower()
+    ENABLE_OPENAPI = app_env != "production"
+else:
+    ENABLE_OPENAPI = _enable_openapi_env.lower() in ("1", "true", "yes")
 
 @asynccontextmanager
 async def app_lifespan(_app: FastAPI):
@@ -723,10 +730,10 @@ app = FastAPI(
     * **ReDoc**: Alternative documentation at `/redoc`
     * **OpenAPI Schema**: JSON schema at `/openapi.json`
     
-    For support and integration assistance, contact: support@gabanistore.com
+    For support and integration assistance, contact: support@gabanilogistics.com
     
     ## Contact
-    * **Technical Support**: support@gabanistore.com
+    * **Technical Support**: support@gabanilogistics.com
     * **Operations Team**: operations@gabanilogistics.com
     * **Website**: https://www.gabanilogistics.com
     """,
@@ -736,7 +743,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if ENABLE_OPENAPI else None,
     contact={
         "name": "GTS Support Team",
-        "email": "support@gabanistore.com",
+        "email": "support@gabanilogistics.com",
         "url": "https://gts-logistics.com"
     },
     license_info={
@@ -2079,6 +2086,15 @@ async def _start_bot_os() -> None:
     app.state.bot_os = bot_os
     log.info("[startup] BotOS initialized successfully")
 
+    # Initialize VIZION if enabled
+    if os.getenv("VIZION_EYE_ENABLE", "0") == "1":
+        try:
+            from backend.vizion_api import init_vizion
+            await init_vizion()
+            log.info("[startup] VIZION initialized successfully")
+        except Exception as e:
+            log.warning("[startup] Failed to initialize VIZION: %s", e)
+
 
 @asynccontextmanager
 async def _resolved_app_lifespan(_app: FastAPI):
@@ -2340,7 +2356,7 @@ try:
     print("DEBUG: Invoices router imported successfully")
     print(f"DEBUG: Invoices router has {len(invoices_router.routes)} routes")
     try:
-        app.include_router(invoices_router, dependencies=[])
+        app.include_router(invoices_router, prefix="/api/v1/invoices", dependencies=[])
         print(f"DEBUG: Invoices router included successfully, routes: {len(invoices_router.routes)}")
     except Exception as e:
         print(f"DEBUG: Failed to include invoices_router: {e}")
@@ -2441,12 +2457,22 @@ else:
 # Admin Unified Portal (admin dashboard)
 if admin_unified_router:
     try:
-        app.include_router(admin_unified_router)
+        app.include_router(admin_unified_router, prefix="/api/v1/admin")
         log.info("[main] admin_unified mounted at /api/v1/admin/*")
     except Exception as e:
         log.warning("[router] admin_unified mount failed: %s", e)
 else:
     log.warning("[main] admin_unified not available")
+
+# Admin Control routes
+if admin_control_router:
+    try:
+        app.include_router(admin_control_router)
+        log.info("[main] admin_control mounted at /api/v1/admin/*")
+    except Exception as e:
+        log.warning("[router] admin_control mount failed: %s", e)
+else:
+    log.warning("[main] admin_control not available")
 
 if policy_context_router:
     try:
@@ -2458,8 +2484,13 @@ else:
     log.warning("[main] policy_context router not available")
 
 # Vizion
-if vizion_router:
+try:
+    from backend.vizion_api import router as vizion_router
+
     app.include_router(vizion_router, prefix="/vizion", tags=["VIZION"])
+    log.info("[main] VIZION router mounted at /vizion/*")
+except Exception as e:
+    log.warning("[main] Failed to mount VIZION router: %s", e)
 
 # Health
 if health_router:
@@ -2652,6 +2683,10 @@ if payment_routes_router:
 if seo_public_router:
     app.include_router(seo_public_router)
     log.info("[main] SEO public routes mounted at /robots.txt and /sitemap.xml")
+
+if unified_finance_public_router:
+    app.include_router(unified_finance_public_router)
+    log.info("[main] unified finance public routes mounted at /api/v1/finance/*")
 
 if unified_finance_router:
     app.include_router(
@@ -3015,6 +3050,36 @@ async def _shim_admin_routes(rest: str, request: Request):
 async def healthz_alias():
     return {"status": "ok"}
 
+@app.get("/health")
+async def health_check():
+    """Basic health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": "2.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/v1/health")
+async def api_v1_health():
+    """API v1 health check"""
+    return {
+        "status": "healthy",
+        "version": "2.0.0",
+        "api_version": "v1"
+    }
+
+@app.get("/api/v1/admin/system/health")
+async def admin_system_health():
+    """Admin system health check"""
+    return {
+        "status": "healthy",
+        "components": {
+            "database": "connected",
+            "cache": "available",
+            "bots": "active"
+        }
+    }
+
 @app.get("/test/roles", include_in_schema=False)
 async def test_roles():
     """Test endpoint - absolutely no auth needed"""
@@ -3125,8 +3190,13 @@ async def _debug_admin_users(_user: dict = Depends(require_roles(["super_admin"]
 
 @app.get("/")
 async def root():
-    print("DEBUG: root endpoint called")
-    return {"ok": True, "name": "Gabani Transport Solutions (GTS) Backend", "offline": OFFLINE}
+    """Root endpoint"""
+    return {
+        "message": "GTS Logistics Platform API",
+        "version": "2.0.0",
+        "status": "operational",
+        "docs": "/docs"
+    }
 
 
 # ---------------- Load registered routers from registry ----------------

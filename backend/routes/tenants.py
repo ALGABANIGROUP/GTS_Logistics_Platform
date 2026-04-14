@@ -70,7 +70,7 @@ MOCK_TENANTS = [
         "id": 2,
         "name": "Gabani Transport Solutions",
         "domain": "gabanilogistics.com",
-        "email": "info@gabanilogistics.com",
+        "email": "support@gabanilogistics.com",
         "phone": "+1-800-555-0456",
         "address": "456 Transport Blvd, Chicago, IL 60601",
         "subscription_tier": "enterprise",

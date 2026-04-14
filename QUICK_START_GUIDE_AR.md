@@ -313,7 +313,7 @@ Email not working	Verify SMTP credentials
 Contact Points
 
 Technical Support:
-support@gabanistore.com
+support@gabanilogistics.com
 
 Operations:
 operations@gabanilogistics.com

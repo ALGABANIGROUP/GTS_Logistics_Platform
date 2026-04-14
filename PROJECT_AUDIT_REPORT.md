@@ -342,7 +342,7 @@ Security
 
 📞 Contact Points
 
-Technical Support: support@gabanistore.com
+Technical Support: support@gabanilogistics.com
 
 Operations Team: operations@gabanilogistics.com
 

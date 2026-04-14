@@ -428,7 +428,7 @@ python SYSTEM_DIAGNOSTICS.py
 - **Phone**: +1-XXX-XXX-XXXX (during business hours)
 
 ### Emergency Support
-- **Critical issues**: emergency@gabanilogistics.com
+- **Critical issues**: security@gabanilogistics.com
 - **24/7 Hotline**: +1-XXX-XXX-XXXX
 - **Response**: <30 minutes for critical
 
@@ -590,9 +590,9 @@ python PRODUCTION_READINESS_CHECKLIST.py
 | Role | Email | Phone | Availability |
 |------|-------|-------|--------------|
 | **Support** | support@gabanilogistics.com | - | 9AM-6PM EST |
-| **DevOps** | devops@gabanilogistics.com | - | 8AM-8PM EST |
-| **Emergency** | emergency@gabanilogistics.com | +1-XXX-XXX-XXXX | 24/7 |
-| **Billing** | billing@gabanilogistics.com | - | 9AM-5PM EST |
+| **DevOps** | security@gabanilogistics.com | - | 8AM-8PM EST |
+| **Emergency** | security@gabanilogistics.com | +1-XXX-XXX-XXXX | 24/7 |
+| **Billing** | accounts@gabanilogistics.com | - | 9AM-5PM EST |
 
 ---
 

@@ -63,11 +63,11 @@ ROLE_USER_MAP = [
     SeedUser(role="marketing_manager", email="marketing@gabanilogistics.com", full_name="Marketing Manager"),
     SeedUser(role="partner_manager", email="investments@gabanilogistics.com", full_name="Partner Manager"),
     SeedUser(role="safety_manager", email="safety@gabanilogistics.com", full_name="Safety Manager"),
-    SeedUser(role="security_manager", email="security@gabanistore.com", full_name="Security Manager"),
+    SeedUser(role="security_manager", email="security@gabanilogistics.com", full_name="Security Manager"),
     SeedUser(role="sales", email="sales@gabanilogistics.com", full_name="Sales"),
     SeedUser(role="ai_dispatcher", email="aidispatcher@gtsdispatcher.com", full_name="AI Dispatcher"),
-    SeedUser(role="general_manager", email="gm@gabanilogistics.com", full_name="General Manager"),
-    SeedUser(role="dev_maintenance_cto", email="cto@gabanilogistics.com", full_name="Dev Maintenance CTO"),
+    SeedUser(role="general_manager", email="admin@gabanilogistics.com", full_name="General Manager"),
+    SeedUser(role="dev_maintenance_cto", email="admin@gabanilogistics.com", full_name="Dev Maintenance CTO"),
 ]
 
 

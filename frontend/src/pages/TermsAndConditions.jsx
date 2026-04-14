@@ -140,7 +140,7 @@ const TermsAndConditions = () => {
                         <h4>Main Emails</h4>
                         <div className="contact-item">
                             <span className="label">Support & Help:</span>
-                            <a href="mailto:support@gabanistore.com">support@gabanistore.com</a>
+                            <a href="mailto:support@gabanilogistics.com">support@gabanilogistics.com</a>
                         </div>
                         <div className="contact-item">
                             <span className="label">Operations:</span>

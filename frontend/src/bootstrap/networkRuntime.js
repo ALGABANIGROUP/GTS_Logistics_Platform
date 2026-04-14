@@ -116,15 +116,16 @@ export const installNetworkRuntime = () => {
 
   const NativeWebSocket = window.WebSocket;
   class RoutedWebSocket extends NativeWebSocket {
+    static CONNECTING = NativeWebSocket.CONNECTING;
+    static OPEN = NativeWebSocket.OPEN;
+    static CLOSING = NativeWebSocket.CLOSING;
+    static CLOSED = NativeWebSocket.CLOSED;
+
     constructor(url, protocols) {
       super(rewriteWsUrl(url), protocols);
     }
   }
 
-  RoutedWebSocket.CONNECTING = NativeWebSocket.CONNECTING;
-  RoutedWebSocket.OPEN = NativeWebSocket.OPEN;
-  RoutedWebSocket.CLOSING = NativeWebSocket.CLOSING;
-  RoutedWebSocket.CLOSED = NativeWebSocket.CLOSED;
   window.WebSocket = RoutedWebSocket;
   window.__GTS_NETWORK_RUNTIME_INSTALLED__ = true;
 };

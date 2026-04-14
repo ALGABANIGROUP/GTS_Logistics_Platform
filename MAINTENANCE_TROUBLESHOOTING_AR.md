@@ -89,21 +89,21 @@ Step 1: Check email settings in .env
 # Ensure the following exist:
 SMTP_HOST=mail.gabanilogistics.com
 SMTP_PORT=465
-SMTP_USER=noreply@gabanilogistics.com
-SMTP_FROM=noreply@gabanilogistics.com
+SMTP_USER=no-reply@gabanilogistics.com
+SMTP_FROM=no-reply@gabanilogistics.com
 IMAP_HOST=mail.gabanilogistics.com
 IMAP_PORT=993
-IMAP_USER=noreply@gabanilogistics.com
+IMAP_USER=no-reply@gabanilogistics.com
 POP3_HOST=mail.gabanilogistics.com
 POP3_PORT=995
-POP3_USER=noreply@gabanilogistics.com
+POP3_USER=no-reply@gabanilogistics.com
 
 Step 2: Test SMTP connection
 
 import smtplib
 smtp = smtplib.SMTP('mail.gabanilogistics.com', 465)
 smtp.starttls()
-smtp.login('noreply@gabanilogistics.com', 'PASSWORD')
+smtp.login('no-reply@gabanilogistics.com', 'PASSWORD')
 print('✓ SMTP Connection OK')
 smtp.quit()
 
@@ -111,7 +111,7 @@ Step 3: Test IMAP connection
 
 import imaplib
 imap = imaplib.IMAP4_SSL('mail.gabanilogistics.com', 993)
-imap.login('noreply@gabanilogistics.com', 'PASSWORD')
+imap.login('no-reply@gabanilogistics.com', 'PASSWORD')
 print('✓ IMAP Connection OK')
 imap.close()
 
@@ -419,7 +419,7 @@ Apply solutions step by step
 
 Request support
 
-support@gabanistore.com
+support@gabanilogistics.com
 
 operations@gabanilogistics.com
 

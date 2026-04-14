@@ -72,8 +72,8 @@ Pre-configured buttons for common tasks:
 - API Docs 🔌
 
 ## Contact Information
-- Technical Support: support@gabanistore.com
-- Development Team: dev@gabanilogistics.com
+- Technical Support: support@gabanilogistics.com
+- Development Team: admin@gabanilogistics.com
 - System Admin: admin@gabanilogistics.com
 - Emergency Hotline: Available 24/7
 

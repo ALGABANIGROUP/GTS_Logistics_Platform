@@ -3,6 +3,6 @@ import os
 def get_credentials():
     return {
         "imap_server": "mail.gabanilogistics.com",
-        "email_account": "security@gabanistore.com",
+        "email_account": "security@gabanilogistics.com",
         "email_password": os.getenv("EMAIL_PASSWORD")
     }

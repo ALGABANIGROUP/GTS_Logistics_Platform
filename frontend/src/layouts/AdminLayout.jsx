@@ -23,6 +23,8 @@ import {
     Handshake,      // For partners
     FileQuestion,   // For portal_requests
     Ticket,         // For support_tickets
+    CheckSquare,   // For task_manager
+    Eye,           // For the_vizion
 } from 'lucide-react';
 import SystemSwitcher from '../components/SystemSwitcher.jsx';
 import TopUserBar from '../components/TopUserBar.jsx';
@@ -55,6 +57,8 @@ const iconMap = {
     support: <LifeBuoy className="w-5 h-5" />, // Parent for support
     support_center: <LifeBuoy className="w-5 h-5" />, // Specific for support center
     support_tickets: <Ticket className="w-5 h-5" />,
+    task_manager: <CheckSquare className="w-5 h-5" />,
+    the_vizion: <Eye className="w-5 h-5" />,
 };
 
 const AdminLayout = ({ children }) => {

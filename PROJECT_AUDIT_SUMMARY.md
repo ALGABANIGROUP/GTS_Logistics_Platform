@@ -195,7 +195,7 @@ Monitoring
 📞 Contact Points
 Technical Support
 
-Email: support@gabanistore.com
+Email: support@gabanilogistics.com
 
 Operations: operations@gabanilogistics.com
 

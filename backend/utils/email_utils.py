@@ -53,16 +53,16 @@ BOT_EMAIL_MAPPING = {
     "safety_manager_bot": "safety@gabanilogistics.com",
     "safety_bot": "safety@gabanilogistics.com",
 
-    "security": "security@gabanistore.com",
-    "security_manager": "security@gabanistore.com",
-    "security_manager_bot": "security@gabanistore.com",
-    "security_bot": "security@gabanistore.com",
+    "security": "security@gabanilogistics.com",
+    "security_manager": "security@gabanilogistics.com",
+    "security_manager_bot": "security@gabanilogistics.com",
+    "security_bot": "security@gabanilogistics.com",
 
     "admin": "admin@gabanilogistics.com",
     "system_admin": "admin@gabanilogistics.com",
 
     "customer_service": "customers@gabanilogistics.com",
-    "service": "support@gabanistore.com",
+    "service": "support@gabanilogistics.com",
     "documents": "doccontrol@gabanilogistics.com",
     "documents_manager": "doccontrol@gabanilogistics.com",
 
@@ -85,9 +85,9 @@ BOT_EMAIL_MAPPING = {
     "expenses": "accounts@gabanilogistics.com",
     "accounts": "accounts@gabanilogistics.com",
 
-    "ai_dispatcher": "aidispatcher@gabanistore.com",
-    "aidispatcher": "aidispatcher@gabanistore.com",
-    "dispatcher": "aidispatcher@gabanistore.com",
+    "ai_dispatcher": "aidispatcher@gabanilogistics.com",
+    "aidispatcher": "aidispatcher@gabanilogistics.com",
+    "dispatcher": "aidispatcher@gabanilogistics.com",
 
     "maintenance_dev": "no-reply@gabanilogistics.com",
     "trainer": "no-reply@gabanilogistics.com",

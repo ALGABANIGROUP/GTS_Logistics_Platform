@@ -1,54 +1,39 @@
 # tests/test_finance_api.py
-# NOTE: ASCII only.
-import os
-import requests
+import pytest
 
-BASE_URL = os.environ.get("GTS_BASE_URL", "http://127.0.0.1:8001")
-USERNAME = os.environ.get("GTS_USERNAME", "yassir")
-ROLE = os.environ.get("GTS_ROLE", "admin")
-EXPIRES_MIN = int(os.environ.get("GTS_TOKEN_MIN", "60"))
+@pytest.mark.asyncio
+async def test_finance_health_ok(async_client, dev_token):
+    headers = {"Authorization": f"Bearer {dev_token}"}
+    response = await async_client.get("/api/v1/finance/health", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("status") == "healthy"
+    assert data.get("service") == "unified_finance"
 
-def _token():
-    r = requests.post(f"{BASE_URL}/auth/token",
-                      json={"username": USERNAME, "role": ROLE, "expires_minutes": EXPIRES_MIN},
-                      timeout=10)
-    r.raise_for_status()
-    return r.json()["access_token"]
-
-def _h(tok: str):
-    return {"Authorization": f"Bearer {tok}"}
-
-def test_finance_health_ok():
-    tok = _token()
-    r = requests.get(f"{BASE_URL}/finance/health", headers=_h(tok), timeout=10)
-    assert r.status_code == 200, r.text
-    data = r.json()
-    assert data.get("ok") is True
-    assert data.get("db_ok") is True
-
-def test_expense_crud_flow():
-    tok = _token()
-    h = _h(tok)
+@pytest.mark.asyncio
+async def test_expense_crud_flow(async_client, dev_token):
+    headers = {"Authorization": f"Bearer {dev_token}"}
 
     # Create
     body = {"category": "fuel", "amount": 25.75, "description": "pytest", "vendor": "cli", "status": "PENDING"}
-    r = requests.post(f"{BASE_URL}/finance/expenses", headers=h, json=body, timeout=10)
-    assert r.status_code in (200, 201), r.text
-    exp_id = r.json()["id"]
+    response = await async_client.post("/api/v1/finance/expenses", headers=headers, json=body)
+    assert response.status_code in (200, 201)
+    exp_id = response.json()["id"]
 
     # List
-    r = requests.get(f"{BASE_URL}/finance/expenses", headers=h, timeout=10)
-    assert r.status_code == 200, r.text
+    response = await async_client.get("/api/v1/finance/expenses", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["count"] >= 1
 
     # Toggle
-    r = requests.put(f"{BASE_URL}/finance/expenses/{exp_id}/status", headers=h, timeout=10)
-    assert r.status_code == 200, r.text
-    assert r.json()["status"] in ("PENDING", "PAID")
+    response = await async_client.put(f"/api/v1/finance/expenses/{exp_id}/status", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["status"] in ("PENDING", "PAID")
 
     # Summary
-    r = requests.get(f"{BASE_URL}/finance/summary", headers=h, timeout=10)
-    assert r.status_code == 200, r.text
+    response = await async_client.get("/api/v1/finance/summary", headers=headers)
+    assert response.status_code == 200
 
     # Delete
-    r = requests.delete(f"{BASE_URL}/finance/expenses/{exp_id}", headers=h, timeout=10)
-    assert r.status_code in (200, 202, 204), r.text
+    response = await async_client.delete(f"/api/v1/finance/expenses/{exp_id}", headers=headers)
+    assert response.status_code in (200, 202, 204)

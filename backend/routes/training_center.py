@@ -1,111 +1,130 @@
-# backend/routes/training_center.py
-"""
-Training Center Routes - Educational and training resources
-"""
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from datetime import datetime
+from __future__ import annotations
+
 import logging
+from typing import Any, Optional
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
+
+from backend.training_center.core.trainer_bot import TrainerBot
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/training", tags=["training"])
+router = APIRouter(prefix="/api/v1/training-center", tags=["training-center"])
+_trainer = TrainerBot()
 
-# Models
-class TrainingModule(BaseModel):
-    id: Optional[str] = None
-    title: str
-    description: str
-    category: str  # "onboarding", "compliance", "technical", "soft_skills"
-    duration_minutes: int
-    content_url: str
-    required: bool = False
-    created_at: datetime = Field(default_factory=datetime.now)
 
-class TrainingProgress(BaseModel):
-    user_id: str
-    module_id: str
-    status: str  # "not_started", "in_progress", "completed"
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    score: Optional[float] = None
+class RegisterBotRequest(BaseModel):
+    bot_key: str
+    level: Optional[str] = "beginner"
+    version: Optional[str] = "1.0"
 
-class TrainingAssessment(BaseModel):
-    module_id: str
-    answers: dict
-    user_id: str
 
-# Mock data storage (replace with database)
-training_modules = []
-user_progress = []
+class AssessBotRequest(BaseModel):
+    bot_key: str
 
-@router.get("/modules", response_model=List[TrainingModule])
-async def get_training_modules(
-    category: Optional[str] = None,
-    required_only: bool = False
-):
-    """Get available training modules"""
-    modules = training_modules
-    if category:
-        modules = [m for m in modules if m.category == category]
-    if required_only:
-        modules = [m for m in modules if m.required]
-    return modules
 
-@router.post("/modules", response_model=TrainingModule)
-async def create_training_module(module: TrainingModule):
-    """Create new training module (admin only)"""
-    module.id = f"mod_{len(training_modules) + 1}"
-    training_modules.append(module)
-    logger.info(f"Created training module: {module.title}")
-    return module
+class CreatePlanRequest(BaseModel):
+    bot_key: str
+    goal: Optional[str] = None
 
-@router.get("/progress/{user_id}", response_model=List[TrainingProgress])
-async def get_user_progress(user_id: str):
-    """Get user's training progress"""
-    return [p for p in user_progress if p.user_id == user_id]
 
-@router.post("/start/{module_id}")
-async def start_training(module_id: str, user_id: str):
-    """Start a training module"""
-    progress = TrainingProgress(
-        user_id=user_id,
-        module_id=module_id,
-        status="in_progress",
-        started_at=datetime.now()
-    )
-    user_progress.append(progress)
-    return {"status": "started", "module_id": module_id}
+class StartSessionRequest(BaseModel):
+    plan_id: str
 
-@router.post("/complete/{module_id}")
-async def complete_training(module_id: str, user_id: str, assessment: Optional[TrainingAssessment] = None):
-    """Complete a training module"""
-    for progress in user_progress:
-        if progress.user_id == user_id and progress.module_id == module_id:
-            progress.status = "completed"
-            progress.completed_at = datetime.now()
-            if assessment:
-                # Evaluate assessment
-                progress.score = await evaluate_assessment(assessment)
-            return {"status": "completed", "module_id": module_id}
 
-    raise HTTPException(status_code=404, detail="Training session not found")
+def _normalize_bot_key(bot_key: Optional[str]) -> Optional[str]:
+    if not bot_key:
+        return None
+    return _trainer.bot_connector.normalize_bot_key(bot_key)
 
-async def evaluate_assessment(assessment: TrainingAssessment) -> float:
-    """Evaluate assessment answers"""
-    # Implement assessment evaluation logic
-    return 85.0  # Placeholder
+
+def _bad_request(exc: Exception) -> HTTPException:
+    return HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/bots")
+async def list_trainable_bots() -> dict[str, Any]:
+    return {"success": True, "bots": _trainer.list_trainable_bots()}
+
+
+@router.post("/bots/register")
+async def register_bot(payload: RegisterBotRequest) -> dict[str, Any]:
+    try:
+        profile = await _trainer.register_bot(
+            payload.bot_key,
+            level=payload.level,
+            version=payload.version,
+        )
+    except ValueError as exc:
+        raise _bad_request(exc) from exc
+    return {"success": True, "profile": profile}
+
+
+@router.post("/assess")
+async def assess_bot(payload: AssessBotRequest) -> dict[str, Any]:
+    try:
+        assessment = await _trainer.assess_bot_capabilities(payload.bot_key)
+    except ValueError as exc:
+        raise _bad_request(exc) from exc
+    return {"success": True, "assessment": assessment}
+
+
+@router.post("/plans")
+async def create_training_plan(payload: CreatePlanRequest) -> dict[str, Any]:
+    try:
+        plan = await _trainer.create_training_plan(payload.bot_key, payload.goal)
+    except ValueError as exc:
+        raise _bad_request(exc) from exc
+    return {"success": True, "plan": plan}
+
+
+@router.get("/courses")
+async def list_courses(
+    specialization: Optional[str] = Query(default=None),
+) -> dict[str, Any]:
+    courses = await _trainer.list_available_courses()
+    if specialization:
+        courses = [course for course in courses if course.get("specialization") == specialization]
+    return {"success": True, "courses": courses}
+
+
+@router.post("/sessions/start")
+async def start_training_session(payload: StartSessionRequest) -> dict[str, Any]:
+    try:
+        result = await _trainer.start_training_session(payload.plan_id)
+    except ValueError as exc:
+        raise _bad_request(exc) from exc
+    return {"success": True, **result}
+
+
+@router.get("/sessions/{session_id}")
+async def get_training_session(session_id: str) -> dict[str, Any]:
+    session = _trainer.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+    return {"success": True, "session": session}
 
 
 @router.get("/reports/{session_id}")
-async def get_report(session_id: str):
+async def get_training_report(session_id: str) -> dict[str, Any]:
     report = _trainer.get_report(session_id)
     if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail="Training report not found")
     return {"success": True, "report": report}
 
 
+@router.get("/reports")
+async def list_training_reports(
+    bot_key: Optional[str] = Query(default=None),
+) -> dict[str, Any]:
+    normalized_bot_key = _normalize_bot_key(bot_key)
+    reports = _trainer.list_reports()
+    if normalized_bot_key:
+        reports = [report for report in reports if report.get("bot_key") == normalized_bot_key]
+    return {"success": True, "reports": reports}
+
+
 @router.get("/stats")
-async def get_stats():
+async def get_training_stats() -> dict[str, Any]:
     return {"success": True, "stats": _trainer.get_stats()}

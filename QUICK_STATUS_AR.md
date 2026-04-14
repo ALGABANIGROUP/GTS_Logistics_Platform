@@ -41,7 +41,7 @@ EMAIL = SMTP/IMAP/POP3 Enabled ✅
 ✅ Security: Protected and Reliable
 📞 Support
 
-Email: support@gabanistore.com
+Email: support@gabanilogistics.com
 
 Operations: operations@gabanilogistics.com
 

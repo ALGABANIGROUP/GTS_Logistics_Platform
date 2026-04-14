@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import sys
 import pytest
 
 from backend.main import app
 from backend.database.config import get_db_async
-from backend.routes import portal_requests as portal_module
+
+portal_module = sys.modules.get("routes.portal_requests")
+if portal_module is None:
+    from backend.routes import portal_requests as portal_module
 
 
 @pytest.fixture(autouse=True)
@@ -115,4 +119,3 @@ async def test_verify_email_endpoint_success(async_client, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["success"] is True
-

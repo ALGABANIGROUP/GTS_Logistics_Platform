@@ -184,7 +184,7 @@ curl -X POST http://localhost:8000/api/v1/incidents/INC-001/resolve \
 
 ### After Training
 - **Reference Guide**: `INCIDENT_RESPONSE_README.md`
-- **Technical Support**: support@gabanistore.com
+- **Technical Support**: support@gabanilogistics.com
 - **Operations Management**: operations@gabanilogistics.com
 
 ## ✅ Training Checklist

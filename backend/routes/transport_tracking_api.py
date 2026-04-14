@@ -79,6 +79,15 @@ def _format_currency(amount: Any, currency: str | None = "USD") -> str | None:
         return None
 
 
+async def _get_model_by_id(db: Any, model: Any, record_id: int) -> Any:
+    if hasattr(db, "execute"):
+        result = await db.execute(select(model).where(model.id == record_id))
+        return result.scalar_one_or_none()
+    if hasattr(db, "query"):
+        return db.query(model).filter(model.id == record_id).first()
+    raise AttributeError("Database dependency must expose execute() or query()")
+
+
 def _serialize_shipment(shipment: Shipment) -> dict[str, Any]:
     origin = _coords(
         getattr(shipment, "origin_latitude", None),
@@ -211,8 +220,7 @@ async def get_shipment(shipment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get details of a specific shipment
     """
-    result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
-    shipment = result.scalar_one_or_none()
+    shipment = await _get_model_by_id(db, Shipment, shipment_id)
 
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
@@ -252,8 +260,7 @@ async def update_shipment(
     """
     Update a shipment's details
     """
-    result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
-    shipment = result.scalar_one_or_none()
+    shipment = await _get_model_by_id(db, Shipment, shipment_id)
 
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
@@ -272,8 +279,7 @@ async def track_shipment(shipment_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get tracking information for a specific shipment
     """
-    shipment_result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
-    shipment = shipment_result.scalar_one_or_none()
+    shipment = await _get_model_by_id(db, Shipment, shipment_id)
     
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
@@ -281,8 +287,7 @@ async def track_shipment(shipment_id: int, db: AsyncSession = Depends(get_db)):
     truck_location = None
     truck_id = getattr(shipment, 'truck_id', None)
     if truck_id is not None:
-        truck_result = await db.execute(select(TruckLocation).where(TruckLocation.id == truck_id))
-        truck_location = truck_result.scalar_one_or_none()
+        truck_location = await _get_model_by_id(db, TruckLocation, truck_id)
 
     current_lat = getattr(shipment, 'current_latitude', None)
     current_lng = getattr(shipment, 'current_longitude', None)
@@ -355,8 +360,7 @@ async def update_shipment_location(
     """
     Update shipment current location (from GPS/tracking device)
     """
-    result = await db.execute(select(Shipment).where(Shipment.id == shipment_id))
-    shipment = result.scalar_one_or_none()
+    shipment = await _get_model_by_id(db, Shipment, shipment_id)
 
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
@@ -415,8 +419,7 @@ async def get_truck(truck_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get details of a specific truck
     """
-    result = await db.execute(select(TruckLocation).where(TruckLocation.id == truck_id))
-    truck = result.scalar_one_or_none()
+    truck = await _get_model_by_id(db, TruckLocation, truck_id)
 
     if not truck:
         raise HTTPException(status_code=404, detail="Truck not found")

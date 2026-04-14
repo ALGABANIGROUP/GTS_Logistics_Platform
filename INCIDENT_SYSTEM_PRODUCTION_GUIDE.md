@@ -65,7 +65,7 @@ API_LOG_PATH=/var/log/gts/api.log
 
 # Alerts
 ALERT_EMAIL=oncall@gts.com
-SMTP_USERNAME=alerts@gabanilogistics.com
+SMTP_USERNAME=security@gabanilogistics.com
 SMTP_PASSWORD=your-production-password
 
 # External integrations

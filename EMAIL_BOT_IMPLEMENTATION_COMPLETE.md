@@ -84,9 +84,9 @@ Dashboard + API Endpoints
 ```
 
 **New mailboxes added:**
-- `driver.py` - driver@gabanistore.com
+- `driver.py` - driver@gabanilogistics.com
 - `investments.py` - investments@gabanilogistics.com
-- `security.py` - security@gabanistore.com
+- `security.py` - security@gabanilogistics.com
 
 ### 3. **API Endpoints** (`backend/routes/email_bot_routes.py` - NEW, 450+ lines)
 

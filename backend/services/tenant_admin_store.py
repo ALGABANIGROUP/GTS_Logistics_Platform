@@ -8,7 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 TABLE_NAME = "admin_tenants"
 
 
+def _dialect_name(session: AsyncSession) -> str:
+    bind = session.get_bind()
+    return getattr(getattr(bind, "dialect", None), "name", "")
+
+
 async def _ensure_table(session: AsyncSession) -> None:
+    dialect = _dialect_name(session)
+    updated_at_type = "TEXT DEFAULT CURRENT_TIMESTAMP" if dialect == "sqlite" else "TIMESTAMPTZ DEFAULT NOW()"
     await session.execute(
         text(
             f"""
@@ -26,7 +33,7 @@ async def _ensure_table(session: AsyncSession) -> None:
                 contact_phone TEXT,
                 storage_used TEXT,
                 total_storage TEXT,
-                updated_at TIMESTAMPTZ DEFAULT NOW()
+                updated_at {updated_at_type}
             );
             """
         )
@@ -54,13 +61,19 @@ def _row_to_dict(row: Any) -> Dict[str, Any]:
 
 async def list_admin_tenants(session: AsyncSession) -> list[Dict[str, Any]]:
     await _ensure_table(session)
+    dialect = _dialect_name(session)
+    order_clause = (
+        "ORDER BY CASE WHEN created_date IS NULL THEN 1 ELSE 0 END, created_date DESC, tenant_id"
+        if dialect == "sqlite"
+        else "ORDER BY created_date DESC NULLS LAST, tenant_id"
+    )
     result = await session.execute(
         text(
             f"""
             SELECT tenant_id, company_name, domain, status, users_count, max_users, plan,
                    subscription_end, created_date, contact_email, contact_phone, storage_used, total_storage
             FROM {TABLE_NAME}
-            ORDER BY created_date DESC NULLS LAST, tenant_id
+            {order_clause}
             """
         )
     )
@@ -125,6 +138,8 @@ async def update_admin_tenant(
     session: AsyncSession, tenant_id: str, payload: Dict[str, Any]
 ) -> Dict[str, Any]:
     await _ensure_table(session)
+    dialect = _dialect_name(session)
+    current_timestamp = "CURRENT_TIMESTAMP" if dialect == "sqlite" else "NOW()"
     await session.execute(
         text(
             f"""
@@ -141,7 +156,7 @@ async def update_admin_tenant(
                 contact_phone = :contact_phone,
                 storage_used = :storage_used,
                 total_storage = :total_storage,
-                updated_at = NOW()
+                updated_at = {current_timestamp}
             WHERE tenant_id = :tenant_id
             """
         ),

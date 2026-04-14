@@ -158,6 +158,8 @@ const AdminFooterSettings = React.lazy(() => import("./pages/admin/AdminFooterSe
 const AdminUsers = React.lazy(() => import("./pages/admin/AdminUsers"));
 const MaintenanceCenterPage = React.lazy(() => import("./pages/admin/MaintenanceCenterPage"));
 const APIConnectionsManager = React.lazy(() => import("./pages/APIConnectionsManager"));
+const TaskManager = React.lazy(() => import("./pages/TaskManager"));
+const TheVIZIONDashboard = React.lazy(() => import("./pages/admin/TheVIZIONDashboard"));
 
 // Support System Routes
 import { getSupportRoutes } from "./pages/support/routes";
@@ -510,6 +512,16 @@ const App = () => {
               <Route
                 path="/settings"
                 element={<UserSettings />}
+              />
+              <Route
+                path="/task-manager"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <TaskManager />
+                    </Layout>
+                  </RequireAuth>
+                }
               />
 
 
@@ -1760,6 +1772,8 @@ const App = () => {
                 <Route path="Admin-Users" element={<Navigate to="/admin/users" replace />} />
                 <Route path="maintenance-center" element={<MaintenanceCenterPage />} />
                 <Route path="api-connections" element={<APIConnectionsManager />} />
+                <Route path="TheVIZION" element={<TheVIZIONDashboard />} />
+                <Route path="TheVIZION/task-manager" element={<TaskManager />} />
                 {/* Market Intelligence */}
                 <Route path="market-intelligence" element={<MarketIntelligenceDashboard />} />
                 {/* Reports */}

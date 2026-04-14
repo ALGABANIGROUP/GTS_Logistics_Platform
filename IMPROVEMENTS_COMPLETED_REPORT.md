@@ -369,7 +369,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 **Gabani Transport Solutions (GTS Corp.)**  
 📧 Operations: operations@gabanilogistics.com  
-📧 Support: support@gabanistore.com  
+📧 Support: support@gabanilogistics.com  
 📧 Admin: admin@gabanilogistics.com  
 
 ---

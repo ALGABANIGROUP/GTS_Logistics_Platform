@@ -14,7 +14,7 @@ Use it for load boards, carriers, payment gateways, tracking providers, and webh
 - Provider type: loadboard | carrier | payment | tracking | webhook
 - Business owner: Operations Manager
 - Technical owner: Backend Integrations Team
-- Support contact: support@gabanistore.com
+- Support contact: support@gabanilogistics.com
 - Escalation contact: operations@gabanilogistics.com
 
 ## Scope and Use Cases

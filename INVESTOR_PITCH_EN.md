@@ -161,8 +161,8 @@ We're building:
 ## 📞 What's Next?
 
 ```
-Investor?                    📧 investment@gabanilogistics.com
-Tech Partner?                📧 tech@gabanilogistics.com
+Investor?                    📧 investments@gabanilogistics.com
+Tech Partner?                📧 investments@gabanilogistics.com
 Potential Customer?          📧 sales@gabanilogistics.com
 Questions?                   📞 +249 900 000 000
 ```

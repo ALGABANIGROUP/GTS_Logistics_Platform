@@ -52,6 +52,7 @@ BOT_POLICIES: Dict[str, BotPolicySpec] = {
     "operations_manager": BotPolicySpec(visible_to_roles={"admin", "system_admin", "super_admin"}),
     "operations_manager_bot": BotPolicySpec(visible_to_roles={"admin", "system_admin", "super_admin"}),
     "partner_bot": BotPolicySpec(visible_to_roles={"admin", "partner", "system_admin", "super_admin"}),
+    "partner_manager": BotPolicySpec(visible_to_roles={"admin", "system_admin", "super_admin"}),
     "safety_bot": BotPolicySpec(
         visible_to_roles={"admin", "subscription_user", "super_admin"},
         required_features={"safety_access"},
@@ -97,6 +98,7 @@ BOT_LAYERS: Dict[str, str] = {
     "operations_manager": "execution",
     "operations_manager_bot": "execution",
     "partner_bot": "support",
+    "partner_manager": "governance",
     "safety_bot": "governance",
     "sales_bot": "support",
     "security_bot": "governance",

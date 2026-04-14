@@ -47,6 +47,16 @@ const menuTemplates = {
             path: "/admin/platform-expenses",
         },
         {
+            id: "the_vizion",
+            title: "TheVIZION",
+            path: "/admin/TheVIZION",
+            permission: "vizion.view",
+            children: [
+                { id: "vizion_overview", title: "Observability Hub", path: "/admin/TheVIZION", permission: "vizion.view" },
+                { id: "task_manager", title: "Task Manager", path: "/admin/TheVIZION/task-manager", permission: "vizion.tasks" },
+            ],
+        },
+        {
             id: "partners",
             title: "Partners",
             path: "/admin/partners",
@@ -121,6 +131,16 @@ const menuTemplates = {
             id: "platform_expenses",
             title: "Platform Expenses",
             path: "/admin/platform-expenses",
+        },
+        {
+            id: "the_vizion",
+            title: "TheVIZION",
+            path: "/admin/TheVIZION",
+            permission: "vizion.view",
+            children: [
+                { id: "vizion_overview", title: "Observability Hub", path: "/admin/TheVIZION", permission: "vizion.view" },
+                { id: "task_manager", title: "Task Manager", path: "/admin/TheVIZION/task-manager", permission: "vizion.tasks" },
+            ],
         },
         {
             id: "partners",

@@ -190,8 +190,8 @@ We are building:
 ## 📞 Next?
 
 ```
-Are you an investor? 📧 investment@gabanilogistics.com
-Are you a technology partner? 📧 tech@gabanilogistics.com
+Are you an investor? 📧 investments@gabanilogistics.com
+Are you a technology partner? 📧 investments@gabanilogistics.com
 Are you a potential customer? 📧 sales@gabanilogistics.com
 Do you have a question? 📞 +249 900 000 000
 ```

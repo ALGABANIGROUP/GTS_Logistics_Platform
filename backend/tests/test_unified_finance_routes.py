@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+import sys
 import pytest
 
 from backend.main import app
-from routes import unified_finance_routes as unified_finance_module
+
+unified_finance_module = (
+    sys.modules.get("routes.unified_finance_routes")
+    or sys.modules.get("backend.routes.unified_finance_routes")
+)
+if unified_finance_module is None:
+    from backend.routes import unified_finance_routes as unified_finance_module
 
 
 @pytest.fixture(autouse=True)
@@ -119,7 +126,7 @@ def override_unified_finance_dependencies(fake_unified_finance_service):
     for route in app.routes:
         if getattr(route, "path", "").startswith("/api/v1/finance") and hasattr(route, "dependant"):
             for dep in route.dependant.dependencies:
-                if getattr(dep.call, "__module__", "") == "security.auth" and getattr(dep.call, "__name__", "") == "_dep":
+                if getattr(dep.call, "__module__", "") in {"security.auth", "backend.security.auth"} and getattr(dep.call, "__name__", "") == "_dep":
                     finance_role_dep = dep.call
                     break
         if finance_role_dep is not None:

@@ -52,7 +52,7 @@ class EmailBotIntegration:
                 "requires_approval": True,
                 "priority": "high"
             },
-            "driver@gabanistore.com": {
+            "driver@gabanilogistics.com": {
                 "primary_bot": "operations_manager",
                 "backup_bot": "freight_broker",
                 "workflows": ["driver_coordination", "dispatch_management", "route_optimization"],
@@ -84,7 +84,7 @@ class EmailBotIntegration:
                 "requires_approval": True,
                 "priority": "medium"
             },
-            "legal@gabanilogistics.com": {
+            "operations@gabanilogistics.com": {
                 "primary_bot": "legal_consultant",
                 "backup_bot": "general_manager",
                 "workflows": ["contract_review", "compliance_check", "dispute_handling"],
@@ -108,7 +108,7 @@ class EmailBotIntegration:
                 "requires_approval": False,
                 "priority": "high"
             },
-            "safety@gabanistore.com": {
+            "safety@gabanilogistics.com": {
                 "primary_bot": "safety_manager",
                 "backup_bot": "maintenance_dev",
                 "workflows": ["incident_reporting", "compliance_tracking", "preventive_measures"],
@@ -116,7 +116,7 @@ class EmailBotIntegration:
                 "requires_approval": False,
                 "priority": "critical"
             },
-            "security@gabanistore.com": {
+            "security@gabanilogistics.com": {
                 "primary_bot": "security_manager",
                 "backup_bot": "general_manager",
                 "workflows": ["threat_assessment", "breach_response", "investigation"],
@@ -259,7 +259,7 @@ class EmailBotIntegration:
 
     def add_custom_mapping(self, email_account: str, bot_config: Dict[str, Any]) -> None:
         """Add or update custom email-to-bot mapping."""
-        if not email_account.endswith(("@gabanilogistics.com", "@gabanistore.com")):
+        if not email_account.endswith("@gabanilogistics.com"):
             raise ValueError("Invalid email domain")
         self.email_to_bot_mapping[email_account] = bot_config
         logger.info(f"Added custom mapping for {email_account} -> {bot_config.get('primary_bot')}")

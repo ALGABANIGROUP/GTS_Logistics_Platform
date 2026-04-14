@@ -58,11 +58,11 @@ const LiveChat = () => {
         } else if (input.includes('price') || input.includes('cost') || input.includes('quote')) {
             return 'To get a custom quote, please specify:\n📍 Origin point\n📍 Destination point\n📦 Cargo type\n⚖️ Approximate weight';
         } else if (input.includes('contact') || input.includes('email') || input.includes('reach')) {
-            return 'You can contact us via:\n📧 support@gabanistore.com\n🏢 operations@gabanilogistics.com\n⏰ Available Monday - Friday, 9 AM - 6 PM PST';
+            return 'You can contact us via:\n📧 support@gabanilogistics.com\n🏢 operations@gabanilogistics.com\n⏰ Available Monday - Friday, 9 AM - 6 PM PST';
         } else if (input.includes('thanks') || input.includes('thank')) {
             return 'You\'re welcome! Happy to help 😊 Do you need any other assistance?';
         } else {
-            return 'Thank you for your message. Our support team will review your request and respond as soon as possible. You can also contact us directly at: support@gabanistore.com';
+            return 'Thank you for your message. Our support team will review your request and respond as soon as possible. You can also contact us directly at: support@gabanilogistics.com';
         }
     };
 

@@ -88,7 +88,7 @@ const Privacy = () => {
                                     <li>Request deletion of your data</li>
                                     <li>Opt out of marketing communications</li>
                                 </ul>
-                                <p className="mt-2">To exercise these rights, contact us at <a href="mailto:support@gabanistore.com" className="text-red-400 hover:underline">support@gabanistore.com</a>.</p>
+                                <p className="mt-2">To exercise these rights, contact us at <a href="mailto:support@gabanilogistics.com" className="text-red-400 hover:underline">support@gabanilogistics.com</a>.</p>
                             </section>
 
                             <section>
@@ -114,7 +114,7 @@ const Privacy = () => {
                             <section>
                                 <h2 className="text-xl font-semibold text-white mb-3">10. Contact Us</h2>
                                 <p>If you have questions about this Privacy Policy, please contact our Legal Team:</p>
-                                <p className="mt-2 text-gray-400">📧 <a href="mailto:support@gabanistore.com" className="text-red-400 hover:underline">support@gabanistore.com</a></p>
+                                <p className="mt-2 text-gray-400">📧 <a href="mailto:support@gabanilogistics.com" className="text-red-400 hover:underline">support@gabanilogistics.com</a></p>
                                 <p>📍 Gabani Transport Solutions LLC, 2261 Market Street, San Francisco, CA 94114, USA</p>
                             </section>
                         </div>

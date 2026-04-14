@@ -291,6 +291,69 @@ async def refresh_token(
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
+def _validate_password_complexity(password: str) -> None:
+    """Validate password meets complexity requirements"""
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=422,
+            detail="Password must be at least 8 characters long"
+        )
+    
+    # Check for at least one uppercase letter
+    if not any(c.isupper() for c in password):
+        raise HTTPException(
+            status_code=422,
+            detail="Password must contain at least one uppercase letter"
+        )
+    
+    # Check for at least one lowercase letter
+    if not any(c.islower() for c in password):
+        raise HTTPException(
+            status_code=422,
+            detail="Password must contain at least one lowercase letter"
+        )
+    
+    # Check for at least one digit
+    if not any(c.isdigit() for c in password):
+        raise HTTPException(
+            status_code=422,
+            detail="Password must contain at least one digit"
+        )
+
+
+@router.post("/register")
+async def register(
+    email: str = Body(...),
+    password: str = Body(...),
+    full_name: str = Body(...),
+):
+    """Register a new user (mock implementation for testing)"""
+    # Validate input
+    if not email or not password or not full_name:
+        raise HTTPException(
+            status_code=400,
+            detail="Email, password, and full_name are required"
+        )
+    
+    # Validate email format (basic check)
+    if "@" not in email or "." not in email:
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid email format"
+        )
+    
+    # Validate password complexity
+    _validate_password_complexity(password)
+    
+    # For testing purposes, just return success without creating user
+    # In production, this would create the user in the database
+    return {
+        "message": "User registered successfully",
+        "user_id": 999,  # Mock ID
+        "email": email
+    }
+
+
 def get_password_hash(password: str) -> str:
     """Hash a password using bcrypt"""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')

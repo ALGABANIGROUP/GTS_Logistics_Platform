@@ -494,7 +494,11 @@ async def get_admin_config() -> Dict[str, Any]:
         "app_name": getattr(settings, "APP_NAME", "Gabani Transport Solutions (GTS)"),
         "environment": getattr(settings, "APP_ENV", "development"),
         "admin_email": getattr(settings, "ADMIN_EMAIL", "admin@example.com"),
-        "cors_origins": getattr(settings, "CORS_ORIGINS", []),
+        "cors_origins": (
+            getattr(settings, "CORS_ORIGINS", None)
+            or getattr(settings, "GTS_CORS_ORIGINS", None)
+            or getattr(settings, "ALLOWED_ORIGINS", [])
+        ),
         "rate_limiting": {
             "enabled": getattr(settings, "RATE_LIMIT_ENABLED", True),
             "requests": getattr(settings, "RATE_LIMIT_REQUESTS", 100),

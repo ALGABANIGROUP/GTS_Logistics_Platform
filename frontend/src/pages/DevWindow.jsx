@@ -554,7 +554,7 @@ function FocusPanel({ task, onClose, onChanged }) {
 /** ===========================
  *  Page
  *  =========================== */
-export default function DevWindow() {
+export default function DevWindow({ title = "Developer Window" }) {
   const [category, setCategory] = useState("");
   const [order, setOrder] = useState("priority");
   const [includeEta, setIncludeEta] = useState(true);
@@ -594,7 +594,7 @@ export default function DevWindow() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Developer Window</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="secondary" onClick={reloadAll}>
@@ -730,4 +730,3 @@ export default function DevWindow() {
     </div>
   );
 }
-

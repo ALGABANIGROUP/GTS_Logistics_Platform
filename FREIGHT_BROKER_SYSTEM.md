@@ -377,4 +377,4 @@ curl http://localhost:8000/api/v1/broker/reports/commission-summary
 
 For issues or questions about the freight broker system, contact:
 - **Operations:** operations@gabanilogistics.com
-- **Support:** support@gabanistore.com
+- **Support:** support@gabanilogistics.com

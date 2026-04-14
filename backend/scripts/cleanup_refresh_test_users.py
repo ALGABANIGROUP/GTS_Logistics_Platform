@@ -28,7 +28,7 @@ async def _fetch_targets(session) -> Sequence[tuple[int, str, str | None]]:
 
     stmt = select(User.id, User.email, User.full_name).where(
         or_(
-            User.email.like("refresh-%@gabanistore.com"),
+            User.email.like("refresh-%@example.com"),
             User.full_name.like("REFRESH TEST %"),
         )
     )
@@ -78,4 +78,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

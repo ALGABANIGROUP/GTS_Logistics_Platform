@@ -102,21 +102,21 @@ Configuration Files	10+
 SMTP Configuration:
   Host: mail.gabanilogistics.com
   Port: 465
-  User: noreply@gabanilogistics.com
+  User: no-reply@gabanilogistics.com
   Protocol: SSL/TLS
   Status: ✅ Configured
 
 IMAP Configuration:
   Host: mail.gabanilogistics.com
   Port: 993
-  User: noreply@gabanilogistics.com
+  User: no-reply@gabanilogistics.com
   Protocol: SSL/TLS
   Status: ✅ Configured
 
 POP3 Configuration:
   Host: mail.gabanilogistics.com
   Port: 995
-  User: noreply@gabanilogistics.com
+  User: no-reply@gabanilogistics.com
   Protocol: SSL/TLS
   Status: ✅ Configured
 📋 Available Documentation Files
@@ -225,7 +225,7 @@ Deployment Readiness:     ★★★★★ (5/5) - Excellent
 Overall Rating: 4.8/5 - EXCELLENT ⭐⭐⭐⭐⭐
 📞 Support
 
-Email: support@gabanistore.com
+Email: support@gabanilogistics.com
 
 Operations: operations@gabanilogistics.com
 

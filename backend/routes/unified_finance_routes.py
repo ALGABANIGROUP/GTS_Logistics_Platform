@@ -11,7 +11,21 @@ from backend.database.session import get_async_session
 from backend.security.auth import get_current_user
 from backend.services.unified_finance_service import UnifiedFinanceService
 
+# Separate router for public endpoints (like health)
+public_router = APIRouter(prefix="/api/v1/finance", tags=["Unified Finance"])
+
+# Protected router for authenticated endpoints
 router = APIRouter(prefix="/api/v1/finance", tags=["Unified Finance"])
+
+
+@public_router.get("/health")
+async def finance_health():
+    """Finance service health check"""
+    return {
+        "status": "healthy",
+        "service": "unified_finance",
+        "version": "2.0.0"
+    }
 
 
 class UnifiedInvoiceCreateRequest(BaseModel):

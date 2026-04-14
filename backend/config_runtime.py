@@ -114,7 +114,7 @@ class Settings:
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", _DEFAULT_FRONTEND_URL)
     ADMIN_URL: str = os.getenv("ADMIN_URL", _DEFAULT_ADMIN_URL)
 
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-change-me")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-change-me-to-32-bytes-or-more!!")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", os.getenv("GTS_JWT_SECRET", SECRET_KEY))
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", ALGORITHM)
@@ -166,7 +166,7 @@ class Settings:
 
     def __post_init__(self) -> None:
         if self.APP_ENV == "production":
-            if not self.SECRET_KEY or self.SECRET_KEY == "dev-secret-change-me":
+            if not self.SECRET_KEY or self.SECRET_KEY == "dev-secret-change-me-to-32-bytes-or-more!!":
                 raise ValueError("CRITICAL SECURITY ERROR: SECRET_KEY must be changed in production.")
             if len(self.SECRET_KEY) < 32:
                 raise ValueError("CRITICAL SECURITY ERROR: SECRET_KEY must be at least 32 characters long.")

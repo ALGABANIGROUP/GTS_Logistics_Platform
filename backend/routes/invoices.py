@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from backend.auth.dependencies import get_current_user
+from sqlalchemy.exc import SQLAlchemyError
 from backend.database.session import get_db
 from backend.models.invoices import Invoice
 
@@ -14,11 +14,11 @@ async def get_invoice(
     db: AsyncSession = Depends(get_db)
 ):
     """Get invoice by ID"""
-    print(f"DEBUG: get_invoice called with {invoice_id}")
-
-    # Query the database for the invoice
-    result = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
-    invoice = result.scalar_one_or_none()
+    try:
+        result = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
+        invoice = result.scalar_one_or_none()
+    except SQLAlchemyError:
+        invoice = None
 
     if not invoice:
         # Return mock data if not found in database

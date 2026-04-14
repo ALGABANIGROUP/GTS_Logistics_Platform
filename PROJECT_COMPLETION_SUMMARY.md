@@ -366,7 +366,7 @@
 ✅ Email support: support@gabanilogistics.com
 ✅ Slack: #gts-support
 ✅ Phone: +1-XXX-XXX-XXXX
-✅ Emergency: emergency@gabanilogistics.com (24/7)
+✅ Emergency: security@gabanilogistics.com (24/7)
 
 ---
 

@@ -242,6 +242,35 @@ Status: ❌ Unprofitable (negotiate higher rate)
 3. **Loadlink** - Canadian-specific
 4. **TruckMiles** - Canadian route optimization
 
+### Canadian Freight Companies Database
+
+#### 3PL & Warehousing Companies
+| Company | Website | Email |
+|---------|---------|-------|
+| InterFulfillment | interfulfillment.com | Contact form |
+| 3PL Links | 3pllinks.com | sales@3pllinks.com |
+| Stallion Express | stallion.ca | hello@stallion.ca |
+| AMZ Prep | amzprep.com | info@amzprep.com |
+| Mantoria Inc. | mantoria.com | info@mantoria.com |
+| 18 Wheels Logistics | 18wheels.ca | info@18wheels.ca |
+
+#### Transportation & Logistics Companies
+| Company | Website | Email |
+|---------|---------|-------|
+| Pride Group Logistics | shipwithpride.com | jaureli@pridegrouplogistics.com |
+| Day & Ross | dayross.com | Pricing request form |
+| Andy Transport | andytransport.com | info@andytransport.com |
+| Boutin Express | boutinexpress.com | info@boutinexpress.com |
+| AirTime Express | airtimeexpress.ca | dispatch@airtimeexpress.ca |
+| Armour Transportation | armour.ca | tcorbett@armour.ca |
+
+#### Global Shipping Companies in Canada
+| Company | Website | Notes |
+|---------|---------|-------|
+| DSV Canada | dsv.com | Air, sea, and land shipping worldwide |
+| Kuehne + Nagel | kuehne-nagel.com | Specialized in large supply chains |
+| DHL Supply Chain | dhl.com | Leader in automation and warehousing |
+
 ### Setup (Future)
 ```env
 TRUCKERPATH_API_KEY=your_key_here
@@ -322,7 +351,7 @@ Demo mode uses mock data. Check:
    - Collect feedback
 
 ## 📞 Support
-- **Technical**: support@gabanistore.com
+- **Technical**: support@gabanilogistics.com
 - **Operations**: operations@gabanilogistics.com
 - **Platform**: Check `backend/logs/` for errors
 
