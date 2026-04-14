@@ -13,6 +13,7 @@ from backend.models.mixins import TenantScopedMixin
 
 # Import Tenant before User class definition to ensure ForeignKey can resolve
 from .tenant import Tenant
+from .audit_log import AuditLog
 
 if TYPE_CHECKING:
     from .document import Document
@@ -222,8 +223,10 @@ class User(Base, TenantScopedMixin):
     #     lazy="select",
     # )
 
+    # Keep this relationship enabled: several auth/email flows instantiate AuditLog
+    # rows through User, and CI tests rely on this mapper being configured.
     audit_logs: Mapped[List["AuditLog"]] = relationship(
-        "AuditLog",
+        lambda: AuditLog,
         back_populates="user",
         lazy="select",
         cascade="all, delete-orphan",

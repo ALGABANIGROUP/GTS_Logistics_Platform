@@ -2,10 +2,10 @@
 # backend/bots/freight_broker.py
 from copy import deepcopy
 from datetime import datetime, timezone
-import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .base_bot import BaseBot
+import logging
 
 logger = logging.getLogger(__name__)
 

@@ -15,8 +15,35 @@ if portal_module is None:
 def _override_db_dependency():
     async def _fake_db():
         class DummySession:
+            async def execute(self, *args, **kwargs):
+                # Return a dummy result that mimics SQLAlchemy AsyncResult
+                class DummyResult:
+                    def scalar_one_or_none(self):
+                        return None
+                    def scalar(self):
+                        return 0
+                    def fetchone(self):
+                        return (0,)
+                    def fetchall(self):
+                        return []
+                    def mappings(self):
+                        class DummyMappings:
+                            def first(self):
+                                return None
+                            def all(self):
+                                return []
+                        return DummyMappings()
+
+                return DummyResult()
+
             async def close(self):
                 return None
+
+            async def commit(self):
+                pass
+
+            async def rollback(self):
+                pass
 
         dummy = DummySession()
         try:
