@@ -89,6 +89,7 @@ async def _ensure_schema(session) -> None:
                 email TEXT NOT NULL,
                 token TEXT NOT NULL UNIQUE,
                 expires_at TIMESTAMPTZ NOT NULL,
+                verified_at TIMESTAMPTZ,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             );
             """
@@ -424,3 +425,143 @@ async def get_request_stats() -> Dict[str, int]:
             stats[status] = count
             stats["total"] += count
         return stats
+
+
+@asynccontextmanager
+async def _maybe_session(session: Optional[AsyncSession] = None):
+    """Context manager that provides a session, creating one if needed."""
+    if session is not None:
+        yield session, False
+        return
+
+    async with get_portal_session() as sess:
+        yield sess, True
+
+
+async def get_portal_request_by_request_id(
+    request_id: str,
+    *,
+    session: Optional[AsyncSession] = None,
+) -> Optional[dict]:
+    """Get portal request by request_id"""
+    async with _maybe_session(session) as (session, owns_session):
+        await _ensure_schema(session)
+        row = await session.execute(
+            text(
+                """
+                SELECT id, request_id, tenant_id, email_normalized,
+                       full_name, company, company_name, email, mobile, country, user_type,
+                       comment, document_name, system, requested_systems,
+                       status, rejection_code, rejection_message, attempts_count,
+                       last_attempt_at, created_at, decided_at, decided_by
+                FROM portal_access_requests
+                WHERE request_id = :request_id;
+                """
+            ),
+            {"request_id": request_id},
+        )
+        m = row.mappings().first()
+        if not m:
+            return None
+        data = dict(m)
+        data["status"] = _normalize_status(data.get("status"))
+        return data
+
+
+async def get_portal_request_by_email(
+    email_normalized: str,
+    *,
+    tenant_id: Optional[str],
+    session: Optional[AsyncSession] = None,
+) -> Optional[dict]:
+    """Get portal request by email"""
+    async with _maybe_session(session) as (session, owns_session):
+        await _ensure_schema(session)
+        query = """
+            SELECT id, request_id, status, created_at, decided_at,
+                   rejection_code, rejection_message, attempts_count, last_attempt_at
+            FROM portal_access_requests
+            WHERE (email_normalized = :email OR LOWER(BTRIM(email)) = :email)
+        """
+        params = {"email": email_normalized}
+        if tenant_id:
+            query += " AND tenant_id = :tenant_id"
+            params["tenant_id"] = tenant_id
+        query += """
+            ORDER BY created_at DESC
+            LIMIT 1;
+        """
+        row = await session.execute(text(query), params)
+        m = row.mappings().first()
+        if not m:
+            return None
+        data = dict(m)
+        data["status"] = _normalize_status(data.get("status"))
+        return data
+
+
+async def create_verification_token(
+    email: str,
+    token: str,
+    expires_hours: int = 24,
+    *,
+    session: Optional[AsyncSession] = None,
+) -> bool:
+    """Create email verification token"""
+    async with _maybe_session(session) as (session, owns_session):
+        await _ensure_schema(session)
+        await session.execute(
+            text(
+                """
+                INSERT INTO email_verifications (email, token, expires_at)
+                VALUES (:email, :token, NOW() + make_interval(hours => :hours))
+                ON CONFLICT (email) DO UPDATE SET
+                    token = :token,
+                    expires_at = NOW() + make_interval(hours => :hours),
+                    verified_at = NULL
+                """
+            ),
+            {"email": email, "token": token, "hours": expires_hours},
+        )
+        if owns_session:
+            await session.commit()
+        return True
+
+
+async def verify_email(
+    token: str,
+    *,
+    session: Optional[AsyncSession] = None,
+) -> Optional[str]:
+    """Verify email token"""
+    async with _maybe_session(session) as (session, owns_session):
+        await _ensure_schema(session)
+        result = await session.execute(
+            text(
+                """
+                SELECT email FROM email_verifications
+                WHERE token = :token
+                AND expires_at > NOW()
+                AND verified_at IS NULL
+                """
+            ),
+            {"token": token},
+        )
+        row = result.mappings().first()
+        if not row:
+            return None
+
+        email = row["email"]
+        await session.execute(
+            text(
+                """
+                UPDATE email_verifications
+                SET verified_at = NOW()
+                WHERE email = :email
+                """
+            ),
+            {"email": email},
+        )
+        if owns_session:
+            await session.commit()
+        return email
