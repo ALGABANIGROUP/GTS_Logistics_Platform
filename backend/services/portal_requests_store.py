@@ -137,7 +137,7 @@ async def create_portal_request(
 
     async with _maybe_session(session) as (sess, owns):
         await _ensure_schema(sess)
-        await sess.execute(
+        result = await sess.execute(
             text(
                 """
                 INSERT INTO portal_access_requests (
@@ -181,10 +181,12 @@ async def create_portal_request(
                 "ip_address": ip_address,
             },
         )
+        row = result.fetchone()
+        db_id = row[0] if row else None
         if owns:
             await sess.commit()
 
-    return {"request_id": request_id, "id": request_id, "status": "pending"}
+    return {"request_id": request_id, "id": db_id, "status": "pending"}
 
 
 async def get_portal_request_by_email(email: str) -> Optional[Dict[str, Any]]:
