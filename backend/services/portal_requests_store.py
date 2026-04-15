@@ -216,10 +216,13 @@ async def get_portal_request_by_id(request_id: str) -> Optional[Dict[str, Any]]:
             text(
                 """
                 SELECT * FROM portal_access_requests
-                WHERE request_id = :request_id
+                WHERE request_id = :request_id OR id = :request_id_int
                 """
             ),
-            {"request_id": request_id},
+            {
+                "request_id": str(request_id),
+                "request_id_int": int(request_id) if str(request_id).isdigit() else -1,
+            },
         )
         row = result.fetchone()
         if row:
