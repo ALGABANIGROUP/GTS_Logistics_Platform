@@ -3,7 +3,7 @@ import axiosClient from './axiosClient';
 const API_BASE = '/api/v1/payments';
 const DEFAULT_CURRENCY = 'USD';
 const DEFAULT_GATEWAY = 'stripe';
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 const paymentApi = {
     async create(data) {

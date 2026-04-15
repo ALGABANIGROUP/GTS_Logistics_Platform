@@ -1,30 +1,17 @@
 /* eslint-disable react/prop-types */
 
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { CircularProgress, Box } from '@mui/material';
 
-const RequireAuth = ({ children, allowedRoles = [] }) => {
-  const { user, role, isLoading, isAuthenticated } = useAuth();
+const RequireAuth = ({ roles, allowedRoles }) => {
+  const { user, authReady, isAuthenticated, accountStatus } = useAuth();
   const location = useLocation();
-  const resolvedRole =
-    role ||
-    user?.effective_role ||
-    user?.role ||
-    user?.db_role ||
-    user?.token_role ||
-    null;
 
-  // Debug logs for troubleshooting access
-  console.log('[RequireAuth] State:', { isLoading, isAuthenticated, userRole: resolvedRole, allowedRoles });
+  const allowedList = roles ?? allowedRoles ?? [];
 
-  // Show loading indicator while fetching user info
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+  // Show a pending shell while auth state is being determined
+  if (!authReady) {
+    return <div aria-busy="true" />;
   }
 
   // Redirect to login if not authenticated
@@ -33,19 +20,41 @@ const RequireAuth = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (resolvedRole === 'super_admin') {
+  // Redirect inactive accounts
+  if (accountStatus === 'inactive') {
+    console.warn('[RequireAuth] Account inactive. Redirecting to account-inactive.');
+    return <Navigate to="/account-inactive" replace />;
+  }
+
+  // Resolve the user's roles
+  const userRolesArray = Array.isArray(user?.roles) ? user.roles : [];
+  const singleRole =
+    user?.effective_role ||
+    user?.role ||
+    user?.db_role ||
+    user?.token_role ||
+    null;
+
+  // Super admin bypass
+  if (singleRole === 'super_admin' || userRolesArray.includes('super_admin')) {
     console.log('[RequireAuth] Super admin granted access.');
-    return children;
+    return <Outlet />;
   }
 
   // Check if current user role is permitted
-  if (allowedRoles.length > 0 && !allowedRoles.includes(resolvedRole)) {
-    console.error(`[RequireAuth] Access denied: Role "${resolvedRole}" not in allowed list [${allowedRoles.join(', ')}]`);
-    return <Navigate to="/unauthorized" replace />;
+  if (allowedList.length > 0) {
+    const hasRole =
+      (singleRole && allowedList.includes(singleRole)) ||
+      userRolesArray.some((r) => allowedList.includes(r));
+
+    if (!hasRole) {
+      console.error(`[RequireAuth] Access denied: role not in allowed list [${allowedList.join(', ')}]`);
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   console.log('[RequireAuth] Access granted.');
-  return children;
+  return <Outlet />;
 };
 
 export default RequireAuth;
