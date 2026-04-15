@@ -195,7 +195,7 @@ export default function Register() {
         country_iso2: form.country?.iso2 || "",
         phone_e164: `${form.country?.callingCode || ""}${normalizedPhone}`,
       };
-      const res = await axiosClient.post("/auth/register", payload);
+      const res = await axiosClient.post("/api/v1/auth/register", payload);
       if (res.data && res.data.ok) {
         setSuccessMessage("Request submitted successfully. We will review it shortly.");
         return;

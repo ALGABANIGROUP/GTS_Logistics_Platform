@@ -29,7 +29,7 @@ export const LoginFormExample = () => {
         setLoading(true);
 
         try {
-            const response = await axiosClient.post("/auth/token", {
+            const response = await axiosClient.post("/api/v1/auth/token", {
                 email,
                 password,
             });

@@ -28,7 +28,7 @@ const Settings = () => {
     setError("");
     setDebugInfo(null);
     try {
-      const res = await axiosClient.get("/auth/debug");
+      const res = await axiosClient.get("/api/v1/auth/debug");
       setDebugInfo(res.data);
     } catch (err) {
       console.error("Settings debug error:", err);

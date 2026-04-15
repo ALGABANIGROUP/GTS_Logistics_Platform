@@ -5,7 +5,7 @@ import logging
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -106,17 +106,17 @@ async def get_portal_session():
 
 
 async def create_portal_request(
-    tenant_id: str,
-    email: str,
-    full_name: str,
-    company: str,
+    tenant_id: str = "",
+    email: str = "",
+    full_name: str = "",
+    company: str = "",
     company_name: Optional[str] = None,
     mobile: Optional[str] = None,
     comment: Optional[str] = None,
     country: Optional[str] = None,
     user_type: Optional[str] = None,
     system: str = "standard",
-    requested_systems: Optional[str] = None,
+    requested_systems: Any = None,
     us_state: Optional[str] = None,
     dot_number: Optional[str] = None,
     mc_number: Optional[str] = None,
@@ -126,12 +126,18 @@ async def create_portal_request(
     ca_company_number: Optional[str] = None,
     document_name: Optional[str] = None,
     ip_address: Optional[str] = None,
-) -> str:
+    *,
+    session: Optional[AsyncSession] = None,
+) -> Dict[str, Any]:
     request_id = str(uuid.uuid4())
     email_normalized = email.lower().strip()
+    # Serialize requested_systems if it's not a string
+    if requested_systems is not None and not isinstance(requested_systems, str):
+        requested_systems = json.dumps(requested_systems)
 
-    async with get_portal_session() as session:
-        await session.execute(
+    async with _maybe_session(session) as (sess, owns):
+        await _ensure_schema(sess)
+        result = await sess.execute(
             text(
                 """
                 INSERT INTO portal_access_requests (
@@ -147,6 +153,7 @@ async def create_portal_request(
                     :us_business_address, :ca_province, :ca_registered_address,
                     :ca_company_number, :document_name, :ip_address
                 )
+                RETURNING id
                 """
             ),
             {
@@ -174,9 +181,12 @@ async def create_portal_request(
                 "ip_address": ip_address,
             },
         )
-        await session.commit()
+        row = result.fetchone()
+        db_id = row[0] if row else None
+        if owns:
+            await sess.commit()
 
-    return request_id
+    return {"request_id": request_id, "id": db_id, "status": "pending"}
 
 
 async def get_portal_request_by_email(email: str) -> Optional[Dict[str, Any]]:
@@ -206,10 +216,13 @@ async def get_portal_request_by_id(request_id: str) -> Optional[Dict[str, Any]]:
             text(
                 """
                 SELECT * FROM portal_access_requests
-                WHERE request_id = :request_id
+                WHERE request_id = :request_id OR id = :request_id_int
                 """
             ),
-            {"request_id": request_id},
+            {
+                "request_id": str(request_id),
+                "request_id_int": int(request_id) if str(request_id).isdigit() else -1,
+            },
         )
         row = result.fetchone()
         if row:
@@ -223,8 +236,10 @@ async def update_portal_request_status(
     decided_by: Optional[str] = None,
     rejection_code: Optional[str] = None,
     rejection_message: Optional[str] = None,
+    reason: Optional[str] = None,
 ) -> bool:
     status = _normalize_status(status)
+    rejection_message = rejection_message or reason
 
     async with get_portal_session() as session:
         result = await session.execute(
@@ -236,11 +251,12 @@ async def update_portal_request_status(
                     decided_by = :decided_by,
                     rejection_code = :rejection_code,
                     rejection_message = :rejection_message
-                WHERE request_id = :request_id
+                WHERE request_id = :request_id OR id = :request_id_int
                 """
             ),
             {
-                "request_id": request_id,
+                "request_id": str(request_id),
+                "request_id_int": int(request_id) if str(request_id).isdigit() else -1,
                 "status": status,
                 "decided_by": decided_by,
                 "rejection_code": rejection_code,
@@ -565,3 +581,250 @@ async def verify_email(
         if owns_session:
             await session.commit()
         return email
+
+
+# ---------------------------------------------------------------------------
+# Functions required by portal_requests.py and admin_portal_requests.py
+# ---------------------------------------------------------------------------
+
+async def increment_request_attempt(
+    request_id: int,
+    *,
+    session: Optional[AsyncSession] = None,
+) -> bool:
+    """Increment the attempt counter for a portal request (by numeric id)."""
+    async with _maybe_session(session) as (sess, owns):
+        await _ensure_schema(sess)
+        result = await sess.execute(
+            text(
+                """
+                UPDATE portal_access_requests
+                SET attempts_count = COALESCE(attempts_count, 0) + 1,
+                    last_attempt_at = NOW()
+                WHERE id = :rid
+                """
+            ),
+            {"rid": request_id},
+        )
+        if owns:
+            await sess.commit()
+        return result.rowcount > 0
+
+
+async def check_ip_rate_limit(
+    ip_address: str,
+    requests_per_hour: int = 5,
+    *,
+    session: Optional[AsyncSession] = None,
+) -> bool:
+    """Return True if the IP has exceeded the rate limit."""
+    async with _maybe_session(session) as (sess, owns):
+        await _ensure_schema(sess)
+        result = await sess.execute(
+            text(
+                """
+                SELECT COUNT(*) FROM portal_access_requests
+                WHERE ip_address = :ip
+                  AND created_at > NOW() - INTERVAL '1 hour'
+                """
+            ),
+            {"ip": ip_address},
+        )
+        count = result.scalar() or 0
+        return count >= requests_per_hour
+
+
+async def create_admin_notification(
+    *,
+    request_id: int,
+    notification_type: str = "info",
+    title: str = "",
+    message: str = "",
+) -> None:
+    """Store an admin notification (best-effort, table created on demand)."""
+    async with get_portal_session() as session:
+        await session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS admin_notifications (
+                    id BIGSERIAL PRIMARY KEY,
+                    request_id BIGINT,
+                    notification_type TEXT DEFAULT 'info',
+                    title TEXT,
+                    message TEXT,
+                    read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+                """
+            )
+        )
+        await session.execute(
+            text(
+                """
+                INSERT INTO admin_notifications (request_id, notification_type, title, message)
+                VALUES (:request_id, :ntype, :title, :message)
+                """
+            ),
+            {
+                "request_id": request_id,
+                "ntype": notification_type,
+                "title": title,
+                "message": message,
+            },
+        )
+        await session.commit()
+
+
+async def log_audit_action(
+    *,
+    request_id: int,
+    action: str,
+    actor: str = "system",
+    details: Optional[Dict[str, Any]] = None,
+    ip_address: Optional[str] = None,
+) -> None:
+    """Log an audit action for a portal request."""
+    async with get_portal_session() as session:
+        await session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS portal_audit_log (
+                    id BIGSERIAL PRIMARY KEY,
+                    request_id BIGINT,
+                    action TEXT NOT NULL,
+                    actor TEXT DEFAULT 'system',
+                    details JSONB,
+                    ip_address TEXT,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+                """
+            )
+        )
+        await session.execute(
+            text(
+                """
+                INSERT INTO portal_audit_log (request_id, action, actor, details, ip_address)
+                VALUES (:request_id, :action, :actor, :details, :ip_address)
+                """
+            ),
+            {
+                "request_id": request_id,
+                "action": action,
+                "actor": actor,
+                "details": json.dumps(details) if details else None,
+                "ip_address": ip_address,
+            },
+        )
+        await session.commit()
+
+
+async def delete_portal_request(*, id: int) -> bool:
+    """Delete a portal request by numeric id."""
+    async with get_portal_session() as session:
+        result = await session.execute(
+            text("DELETE FROM portal_access_requests WHERE id = :rid"),
+            {"rid": id},
+        )
+        await session.commit()
+        return result.rowcount > 0
+
+
+async def list_portal_requests(
+    limit: int = 200,
+    status: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """List portal requests with optional status filter."""
+    status = _normalize_status(status) if status else None
+    async with get_portal_session() as session:
+        if status:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT * FROM portal_access_requests
+                    WHERE status = :status
+                    ORDER BY created_at DESC
+                    LIMIT :limit
+                    """
+                ),
+                {"status": status, "limit": limit},
+            )
+        else:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT * FROM portal_access_requests
+                    ORDER BY created_at DESC
+                    LIMIT :limit
+                    """
+                ),
+                {"limit": limit},
+            )
+        rows = result.mappings().all()
+        out: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(r)
+            d["status"] = _normalize_status(d.get("status"))
+            out.append(d)
+        return out
+
+
+async def list_admin_notifications(
+    limit: int = 50,
+    unread_only: bool = False,
+) -> List[Dict[str, Any]]:
+    """List admin notifications."""
+    async with get_portal_session() as session:
+        # Ensure table exists
+        await session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS admin_notifications (
+                    id BIGSERIAL PRIMARY KEY,
+                    request_id BIGINT,
+                    notification_type TEXT DEFAULT 'info',
+                    title TEXT,
+                    message TEXT,
+                    read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+                """
+            )
+        )
+        query = "SELECT * FROM admin_notifications"
+        if unread_only:
+            query += " WHERE read = FALSE"
+        query += " ORDER BY created_at DESC LIMIT :limit"
+        result = await session.execute(text(query), {"limit": limit})
+        return [dict(r) for r in result.mappings().all()]
+
+
+async def get_request_audit_log(request_id: int) -> List[Dict[str, Any]]:
+    """Get audit log entries for a specific portal request."""
+    async with get_portal_session() as session:
+        # Ensure table exists
+        await session.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS portal_audit_log (
+                    id BIGSERIAL PRIMARY KEY,
+                    request_id BIGINT,
+                    action TEXT NOT NULL,
+                    actor TEXT DEFAULT 'system',
+                    details JSONB,
+                    ip_address TEXT,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+                """
+            )
+        )
+        result = await session.execute(
+            text(
+                """
+                SELECT * FROM portal_audit_log
+                WHERE request_id = :rid
+                ORDER BY created_at ASC
+                """
+            ),
+            {"rid": request_id},
+        )
+        return [dict(r) for r in result.mappings().all()]

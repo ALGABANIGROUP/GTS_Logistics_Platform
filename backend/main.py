@@ -956,7 +956,7 @@ else:
 if public_api_router:
     app.include_router(public_api_router, prefix="/api/v1")
 
-OFFLINE = os.getenv("OFFLINE", "true").lower() in ("1", "true", "yes")
+OFFLINE = os.getenv("OFFLINE", "false").lower() in ("1", "true", "yes")
 HEARTBEAT_INTERVAL_SEC = int(os.getenv("VIZION_HEARTBEAT_SEC", "30"))
 INTERNAL_BASE_URL = os.getenv("INTERNAL_BASE_URL", "http://localhost:8000").rstrip("/")
 

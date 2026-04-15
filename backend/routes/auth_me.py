@@ -32,17 +32,13 @@ class ChangePasswordPayload(BaseModel):
     new_password: str = Field(..., min_length=8)
 
 
-@router.post("/token")
-async def auth_token_compat(
+async def _do_login(
     request: Request,
-    db: AsyncSession = Depends(get_db_async),
+    db: AsyncSession,
 ) -> Dict[str, Any]:
     """
-    Compatibility login endpoint.
-
-    The main login implementation lives in backend.routes.auth, but that router has
-    historically been sensitive to optional imports during startup. This wrapper keeps
-    `/api/v1/auth/token` available from the always-mounted auth router.
+    Shared login logic used by both /auth/login and /auth/token endpoints.
+    Accepts JSON body {"email": ..., "password": ...} or form-encoded data.
     """
     content_type = request.headers.get("content-type", "").lower()
     email = None
@@ -142,11 +138,29 @@ async def auth_token_compat(
     except HTTPException:
         raise
     except Exception as e:
-        log.error("[auth_me] token compatibility login failed: %s", e, exc_info=True)
+        log.error("[auth_me] login failed: %s", e, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Login is temporarily unavailable",
         ) from e
+
+
+@router.post("/login")
+async def auth_login(
+    request: Request,
+    db: AsyncSession = Depends(get_db_async),
+) -> Dict[str, Any]:
+    """Primary JSON login endpoint at /api/v1/auth/login."""
+    return await _do_login(request, db)
+
+
+@router.post("/token")
+async def auth_token_compat(
+    request: Request,
+    db: AsyncSession = Depends(get_db_async),
+) -> Dict[str, Any]:
+    """Compatibility login endpoint at /api/v1/auth/token."""
+    return await _do_login(request, db)
 
 
 @router.get("/me")
