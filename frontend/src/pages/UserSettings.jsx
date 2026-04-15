@@ -236,7 +236,7 @@ const UserSettings = () => {
             setTwoFactorLoading(true);
             setTwoFactorError('');
             setTwoFactorMessage('');
-            const response = await axiosClient.post('/auth/2fa/setup');
+            const response = await axiosClient.post('/api/v1/auth/2fa/setup');
             setTwoFactorSetup(response.data || null);
             setTwoFactorMessage('2FA setup created. Scan the QR code or use the manual key, then verify.');
         } catch (err) {
@@ -257,7 +257,7 @@ const UserSettings = () => {
             setTwoFactorLoading(true);
             setTwoFactorError('');
             setTwoFactorMessage('');
-            await axiosClient.post('/auth/2fa/verify', { token: twoFactorCode.trim() });
+            await axiosClient.post('/api/v1/auth/2fa/verify', { token: twoFactorCode.trim() });
             setTwoFactorMessage('Two-factor authentication has been verified successfully.');
             setTwoFactorCode('');
             fetchUserDetails();
