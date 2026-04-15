@@ -8,7 +8,7 @@ File-backed Documents Manager routes.
 - Stores per-document metadata in sidecar JSON files next to uploaded documents
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import asyncio
@@ -55,7 +55,7 @@ class SignDocumentRequest(BaseModel):
 
 
 def _utc_now() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 def _meta_path(file_path: Path) -> Path:
@@ -299,7 +299,7 @@ def _load_record(file_path: Path) -> Dict[str, Any]:
         "type": metadata.get("type") or _guess_document_category(original_name),
         "status": metadata.get("status") or "uploaded",
         "size": stat.st_size,
-        "uploaded_at": metadata.get("uploaded_at") or datetime.fromtimestamp(stat.st_mtime, tz=UTC).isoformat(),
+        "uploaded_at": metadata.get("uploaded_at") or datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
         "uploaded_by": metadata.get("uploaded_by") or "system",
         "file_path": str(file_path),
         "expires_at": metadata.get("expires_at"),
