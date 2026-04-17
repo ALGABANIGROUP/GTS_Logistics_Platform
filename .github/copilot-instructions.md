@@ -55,7 +55,7 @@
 - `search-seo-system/`: Search/SEO submodule
 
 ## Support & Contact
-- **Technical Support**: support@gabanistore.com
+- **Technical Support**: support@gabanilogistics.com
 - **Operations Team**: operations@gabanilogistics.com
 - **Platform Issues**: Check logs in `backend/logs/` or contact support
 
