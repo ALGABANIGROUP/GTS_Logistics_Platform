@@ -11,9 +11,9 @@ from backend.email_service.intelligent_router import IntelligentEmailRouter
         ("customers@gabanilogistics.com", "customer_service"),
         ("freight@gabanilogistics.com", "freight_broker"),
         ("doccontrol@gabanilogistics.com", "documents_manager"),
-        ("driver@gabanistore.com", "operations_manager"),
-        ("safety@gabanistore.com", "safety_manager"),
-        ("security@gabanistore.com", "security_manager"),
+        ("driver@gabanilogistics.com", "operations_manager"),
+        ("safety@gabanilogistics.com", "safety_manager"),
+        ("security@gabanilogistics.com", "security_manager"),
     ],
 )
 def test_processor_routing_by_recipient(to_email, expected_bot):
