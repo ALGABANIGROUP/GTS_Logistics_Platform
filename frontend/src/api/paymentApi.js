@@ -3,9 +3,9 @@ import axiosClient from './axiosClient';
 const API_BASE = '/api/v1/payments';
 const DEFAULT_CURRENCY = 'USD';
 const DEFAULT_GATEWAY = 'stripe';
-const USE_MOCK_DATA = true;
 
 const paymentApi = {
+    _useMockData: false,
     async create(data) {
         try {
             console.log('Creating payment:', data);
@@ -88,7 +88,7 @@ const paymentApi = {
     },
 
     async getUserHistory(options = {}) {
-        if (USE_MOCK_DATA) {
+        if (this._useMockData) {
             return {
                 transactions: [
                     { id: 1, customer: "Fast Freight Inc.", amount: 12500, status: "completed", date: new Date().toISOString(), method: "credit_card", type: "payment" },
@@ -128,7 +128,7 @@ const paymentApi = {
     },
 
     async getStats(options = {}) {
-        if (USE_MOCK_DATA) {
+        if (this._useMockData) {
             return {
                 total_payments: 156,
                 total_amount: 284500,

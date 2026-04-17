@@ -274,4 +274,36 @@ describe('paymentApi helpers', () => {
 
         logSpy.mockRestore();
     });
+
+    it('returns mock user history when _useMockData is enabled', async () => {
+        paymentApi._useMockData = true;
+        try {
+            const result = await paymentApi.getUserHistory();
+
+            expect(result.transactions).toHaveLength(4);
+            expect(result.total).toBe(4);
+            expect(result.balance).toBe(261100);
+            expect(result.items).toHaveLength(4);
+            expect(result.items[0].payment_gateway).toBe('credit_card');
+        } finally {
+            paymentApi._useMockData = false;
+        }
+    });
+
+    it('returns mock stats when _useMockData is enabled', async () => {
+        paymentApi._useMockData = true;
+        try {
+            const result = await paymentApi.getStats();
+
+            expect(result.total_payments).toBe(156);
+            expect(result.total_amount).toBe(284500);
+            expect(result.success_rate).toBe(94.2);
+            expect(result.pending_invoices).toBe(3);
+            expect(result.recent_payments).toHaveLength(4);
+            expect(result.payment_methods).toHaveLength(3);
+            expect(result.items).toHaveLength(4);
+        } finally {
+            paymentApi._useMockData = false;
+        }
+    });
 });

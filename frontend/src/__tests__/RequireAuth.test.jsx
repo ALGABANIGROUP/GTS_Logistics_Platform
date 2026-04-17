@@ -132,4 +132,30 @@ describe('RequireAuth', () => {
 
         expect(screen.getByText('UNAUTHORIZED_PAGE')).toBeInTheDocument();
     });
+
+    it('grants access to super_admin regardless of allowed roles', () => {
+        useAuth.mockReturnValue({
+            user: { effective_role: 'super_admin' },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        renderWithRoutes('/private', ['dispatcher']);
+
+        expect(screen.getByText('PRIVATE_PAGE')).toBeInTheDocument();
+    });
+
+    it('grants access when user has super_admin in roles array', () => {
+        useAuth.mockReturnValue({
+            user: { roles: ['super_admin', 'manager'] },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        renderWithRoutes('/private', ['dispatcher']);
+
+        expect(screen.getByText('PRIVATE_PAGE')).toBeInTheDocument();
+    });
 });
