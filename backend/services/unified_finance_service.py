@@ -96,7 +96,7 @@ class UnifiedFinanceService:
             amount=5000.0,
             currency="USD",
             gateway="stripe",
-            description="Demo invoice settlement",
+            description="Example invoice settlement",
             posted_by=posted_by,
         )
         if not payment_result.get("success"):
@@ -106,7 +106,7 @@ class UnifiedFinanceService:
         return {
             "success": True,
             "created": True,
-            "message": "Demo finance data created successfully.",
+            "message": "Example finance data created successfully.",
             "data": created,
         }
 

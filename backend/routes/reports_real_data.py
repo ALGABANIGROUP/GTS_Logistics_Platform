@@ -249,7 +249,7 @@ async def _build_reports_catalog(session: AsyncSession) -> Tuple[List[Dict[str, 
         _build_report(
             "marketing-campaigns",
             "Marketing Campaigns",
-            "Campaign performance placeholder ready for live marketing data integration.",
+            "Campaign performance scaffold ready for live marketing data integration.",
             "marketing",
             "draft",
             system_updated_at,

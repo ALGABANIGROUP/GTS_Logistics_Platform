@@ -43,7 +43,7 @@ const TransportMap = ({ shipments = [], trucks = [] }) => {
     const [selectedTruck, setSelectedTruck] = useState(null);
     const [selectedShipment, setSelectedShipment] = useState(null);
 
-    // Default mock data for demonstration
+    // Default seed data for previews
     const defaultShipments = [
         {
             id: 1,

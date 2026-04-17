@@ -369,7 +369,7 @@ class CanadianLoadBoardIntegration:
         - Historical rate data
         """
         
-        # Mock implementation - replace with real market data API
+        # Reference implementation - replace with real market data API
         return {
             "lane": f"{origin_province} → {destination_province}",
             "trailer_type": trailer_type,

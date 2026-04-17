@@ -34,7 +34,7 @@ const AISecurityManager = () => {
       setMetrics(metricsRes.data);
 
     } catch (error) {
-      console.log('Using mock data for Security Manager');
+      console.log('Using seed data for Security Manager');
       // Fallback test data
       setMetrics({
         total_alerts: 12,

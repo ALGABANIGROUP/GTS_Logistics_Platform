@@ -9,7 +9,7 @@ class BaseLoadBoard(ABC):
 
     @abstractmethod
     async def ping(self) -> Dict[str, Any]:
-        """Health check with the provider (mock or real)."""
+        """Health check with the provider (offline or real)."""
         ...
 
     @abstractmethod

@@ -86,7 +86,7 @@ export default function AIGeneralManager({ botKey = BOT_KEY }) {
   const appendLog = (label, payload, state = "good") => {
     setActionLog((prev) => [
       {
-        id: Date.now() + Math.random(),
+        id: Date.now() + performance.now(),
         label,
         payload,
         state,

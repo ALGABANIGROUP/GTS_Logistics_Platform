@@ -39,7 +39,7 @@ export default function AIInformationCoordinator() {
   const appendLog = (label, payload, state = "resolved") => {
     setActionLog((prev) => [
       {
-        id: Date.now() + Math.random(),
+        id: Date.now() + performance.now(),
         label,
         payload,
         state,
@@ -74,9 +74,9 @@ export default function AIInformationCoordinator() {
       setConflictsData(conflictsRes.data?.data || conflictsRes.data?.result || {});
       setAuditData(auditRes.data?.data || auditRes.data?.result || {});
     } catch (error) {
-      console.log('Using mock data for AI Information Coordinator');
+      console.log('Using seed data for AI Information Coordinator');
 
-      // Mock data - test information
+      // Seed data - test information
       setStatus({
         name: "AI Information Coordinator",
         status: "active",

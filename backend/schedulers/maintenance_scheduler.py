@@ -14,7 +14,7 @@ scheduler = AsyncIOScheduler(timezone="UTC")
 async def health_check_and_log():
     # Create a maintenance run entry (issue creation is optional)
     async with wrap_session_factory() as session:
-        run = await create_maintenance_run(session, None)  # placeholder payload
+        run = await create_maintenance_run(session, None)  # scaffold payload
         logger.info(f"Maintenance run created: {run}")
         # Example issue flow:
         # issue = await create_maintenance_issue(session, ...)

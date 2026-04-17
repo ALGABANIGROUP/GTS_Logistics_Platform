@@ -94,7 +94,7 @@ export default function PlatformExpenses() {
                         });
                         const fields = res?.data?.fields || {};
                         return {
-                            id: Date.now() + Math.random(),
+                            id: Date.now() + performance.now(),
                             invoiceNumber: fields.invoice_number || file.name,
                             date: fields.issue_date ? formatDate(fields.issue_date) : new Date().toISOString().slice(0, 10),
                             amount: fields.amount || 0,
@@ -104,7 +104,7 @@ export default function PlatformExpenses() {
                         };
                     } catch (err) {
                         return {
-                            id: Date.now() + Math.random(),
+                            id: Date.now() + performance.now(),
                             invoiceNumber: file.name,
                             date: new Date().toISOString().slice(0, 10),
                             amount: 0,

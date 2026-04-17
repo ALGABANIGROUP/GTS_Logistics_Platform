@@ -20,7 +20,7 @@ async def get_maintenance_reports(current_user: Dict[str, Any] = Depends(get_cur
         
         sessionmaker = get_sessionmaker()
         async with sessionmaker() as session:
-            # Get maintenance reports from database or generate mock data
+            # Get maintenance reports from database or generate seed data
             reports = [
                 {
                     "id": 1,

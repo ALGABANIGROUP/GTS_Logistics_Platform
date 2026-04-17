@@ -150,7 +150,7 @@ const AnalyticsDashboard = () => {
             <div className="document-distribution">
                 <h3> Document Type Distribution</h3>
                 <div className="distribution-container">
-                    <div className="chart-placeholder">
+                    <div className="chart-panel">
                         <div className="pie-chart">
                             {documentTypeData.map((item, idx) => (
                                 <div key={idx} className="pie-segment" style={{

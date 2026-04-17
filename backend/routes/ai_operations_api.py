@@ -263,6 +263,6 @@ async def trigger_load_import(
     status_snapshot = await _build_status(session)
     return {
         "status": "disabled",
-        "message": "Legacy mock load import has been removed. Use the live AI operations endpoints instead.",
+        "message": "Legacy offline load import has been removed. Use the live AI operations endpoints instead.",
         "status_snapshot": status_snapshot,
     }

@@ -28,7 +28,7 @@ class MLDataCollector:
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=days)
             
-            # This is a placeholder - adjust based on your actual Shipment model
+            # This is a scaffold - adjust based on your actual Shipment model
             # from backend.models.shipment import Shipment
             
             patterns = {
@@ -54,7 +54,7 @@ class MLDataCollector:
         Returns: List of driver analytics
         """
         try:
-            # Placeholder for driver performance collection
+            # Reserved for driver performance collection
             # Adjust based on your actual Driver/Trip models
             
             driver_stats = []

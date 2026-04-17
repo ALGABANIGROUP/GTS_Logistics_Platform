@@ -104,7 +104,7 @@ const ConfigurableDashboard = ({ layout = 'default' }) => {
     };
 
     const renderWidget = (widget) => {
-        // Simple placeholder rendering - in real implementation, these would be actual components
+        // Simple scaffold rendering - in real implementation, these would be actual components
         return (
             <div className={`glass-card p-4 ${getSizeClasses(widget.size)}`}>
                 <h3 className="text-lg font-semibold text-white mb-2">{widget.title}</h3>

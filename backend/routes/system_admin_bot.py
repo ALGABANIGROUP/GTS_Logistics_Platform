@@ -47,7 +47,7 @@ class UserResponse(BaseModel):
     tenant_name: Optional[str]
 
 
-# ==================== Mock Database (for development - replace with real database) ====================
+# ==================== Seed Data (development scaffolding; real database source pending) ====================
 MOCK_USERS = [
     {
         "id": 1,

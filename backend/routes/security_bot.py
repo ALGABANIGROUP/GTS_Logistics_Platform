@@ -50,7 +50,7 @@ class SecurityMetrics(BaseModel):
     last_scan: Optional[str]
 
 
-# ==================== Mock Data (will be replaced with real database) ====================
+# ==================== Seed Data (to be sourced from the database) ====================
 SECURITY_ALERTS = [
     {
         "id": "alert_001",

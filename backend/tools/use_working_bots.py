@@ -60,7 +60,7 @@ def demonstrate_working_system():
 
         # Test one scenario
         test_message = bot['scenarios'][0]
-        payload = {"message": test_message, "context": {"demo": True}}
+        payload = {"message": test_message, "context": {"preview": True}}
 
         try:
             response = requests.post(

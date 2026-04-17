@@ -8,7 +8,7 @@ const CustomerServiceDemo = () => {
   return (
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white">Customer Service Learning Demo</h1>
+        <h1 className="text-3xl font-bold text-white">Customer Service Learning Preview</h1>
         <p className="mt-2 text-slate-400">
           This chat records response performance, errors, and user feedback for the
           `customer_service` learning profile.

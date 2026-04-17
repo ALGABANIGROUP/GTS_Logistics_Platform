@@ -7,7 +7,7 @@ from .rules import PRIORITY_RULES
 
 
 class EmailClassifier:
-	"""Simple keyword-based email classifier placeholder."""
+	"""Minimal keyword-based email classifier scaffold."""
 
 	def analyze_email(self, email: Dict[str, Any]) -> Dict[str, Any]:
 		subject = email.get("subject", "") or ""
@@ -21,7 +21,7 @@ class EmailClassifier:
 
 
 class PriorityQueue:
-	"""Minimal priority queue placeholder for routing."""
+	"""Minimal priority queue scaffold for routing."""
 
 	def __init__(self) -> None:
 		self.items: List[Dict[str, Any]] = []

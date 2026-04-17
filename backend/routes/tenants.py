@@ -51,7 +51,7 @@ class TenantResponse(BaseModel):
     user_count: int = 0
 
 
-# ==================== Mock Data (temporary until database exists) =====================
+# ==================== Seed Data (temporary until database source is available) =====================
 MOCK_TENANTS = [
     {
         "id": 1,
@@ -107,11 +107,11 @@ MOCK_TENANTS = [
     },
     {
         "id": 5,
-        "name": "Demo Tenant",
-        "domain": "demo.gtsdispatcher.com",
-        "email": "demo@gtsdispatcher.com",
+        "name": "Example Tenant",
+        "domain": "example.gtsdispatcher.com",
+        "email": "example@gtsdispatcher.com",
         "phone": "+1-800-555-1213",
-        "address": "202 Demo Lane, San Francisco, CA 94105",
+        "address": "202 Example Lane, San Francisco, CA 94105",
         "subscription_tier": "basic",
         "is_active": False,
         "created_at": "2024-03-01T00:00:00",

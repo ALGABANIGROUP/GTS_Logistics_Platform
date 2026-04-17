@@ -205,9 +205,9 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
         if (usingMockData) {
             const mockResult = {
                 ok: true,
-                mode: "mock",
+                mode: "offline",
                 action,
-                message: `${action} completed in mock mode`,
+                message: `${action} completed in offline mode`,
                 generated_at: new Date().toISOString(),
             };
 
@@ -300,7 +300,7 @@ export default function GeneralManagerControlPanel({ mode = "active" }) {
                                     : "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
                                     }`}
                             >
-                                {usingMockData ? " Mock Data" : connected ? " Connected" : " Offline Mode"}
+                                {usingMockData ? " Seed Data" : connected ? " Connected" : " Offline Mode"}
                             </span>
                             {lastUpdate && (
                                 <span className="text-xs text-gray-500 dark:text-gray-400">

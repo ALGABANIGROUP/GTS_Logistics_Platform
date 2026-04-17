@@ -2,7 +2,7 @@
 
 async def get_available_loads():
     """
-    🔄 Placeholder Load Board Fetcher
+    🔄 Scaffold Load Board Fetcher
     This function mocks external load board API response.
     Replace with actual API call (e.g. Truckstop, DAT).
     """

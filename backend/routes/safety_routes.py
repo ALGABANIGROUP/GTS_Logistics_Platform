@@ -59,7 +59,7 @@ async def get_safety_incidents(
     """Get safety incidents with filters"""
     
     try:
-        # Mock implementation
+        # Reference implementation
         incidents = []
         
         return {

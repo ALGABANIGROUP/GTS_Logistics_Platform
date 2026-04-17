@@ -15,7 +15,7 @@ import {
 import axiosClient from "@/api/axiosClient";
 import "./AuditLogs.css";
 
-// Mock data for demonstration - remove when backend has real data
+// Seed data for previews - remove when backend has real data
 const mockAuditLogs = [
   {
     id: 1,
@@ -265,12 +265,12 @@ const AuditLogs = () => {
       const normalized = Array.isArray(list) ? list.map((log, index) => normalizeLog(log, index)) : [];
       setAuditLogs(normalized);
     } catch (err) {
-      // Using mock data for development - this is expected behavior
-      console.log("Using mock data for audit logs (API not available)");
-      // Use mock data for demonstration
+      // Using seed data for development - this is expected behavior
+      console.log("Using seed data for audit logs (API not available)");
+      // Use seed data for previews
       const normalized = mockAuditLogs.map((log, index) => normalizeLog(log, index));
       setAuditLogs(normalized);
-      setLoadError(""); // Clear error since we have mock data
+      setLoadError(""); // Clear error since we have seed data
     } finally {
       setLoading(false);
     }

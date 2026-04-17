@@ -2,7 +2,7 @@
 ChatGPT integration service.
 
 This service only uses a real OpenAI-compatible provider when explicitly
-configured. It no longer returns mock conversational responses in production
+configured. It no longer returns canned conversational responses in production
 paths, because that created misleading behavior for users and operators.
 """
 

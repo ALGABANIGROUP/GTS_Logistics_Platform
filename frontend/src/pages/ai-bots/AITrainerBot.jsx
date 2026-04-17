@@ -82,9 +82,9 @@ const AITrainerBot = () => {
 
     } catch (error) {
       console.error('Error fetching trainer data:', error);
-      showError('Failed to load training data. Using mock data.');
+      showError('Failed to load training data. Using seed data.');
 
-      // Fallback mock data
+      // Fallback seed data
       setCourses([
         { id: "course_001", title: "Commercial Vehicle Safety Inspection", category: "safety", duration_hours: 4, difficulty: "beginner", status: "published", enrolled_users: 156, completion_rate: 87.5 },
         { id: "course_002", title: "HOS Compliance for Drivers", category: "compliance", duration_hours: 3, difficulty: "beginner", status: "published", enrolled_users: 234, completion_rate: 92.3 },

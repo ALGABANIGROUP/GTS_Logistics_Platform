@@ -42,6 +42,6 @@ async def get_general_manager_report():
         "next_actions": [
             "Refine frontend API URLs to all use VITE_API_BASE_URL / VITE_WS_BASE_URL.",
             "Wire this endpoint to the actual GeneralManagerBot for dynamic analysis.",
-            "Gradually phase out the demo fallback in the frontend once this is stable.",
+            "Gradually phase out the trial fallback in the frontend once this is stable.",
         ],
     }

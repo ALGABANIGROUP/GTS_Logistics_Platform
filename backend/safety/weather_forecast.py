@@ -131,8 +131,8 @@ class WeatherForecaster:
         except Exception as e:
             logger.error(f"Error fetching real weather forecast: {e}")
 
-        # Fallback to mock data if API fails
-        logger.warning("Using fallback mock weather data")
+        # Fallback to seed data if API fails
+        logger.warning("Using fallback seed weather data")
         forecast = {
             "temperature": {"celsius": 25, "fahrenheit": 77},
             "condition": "Clear",

@@ -1,6 +1,6 @@
 export class Report {
     constructor(data = {}) {
-        this.id = data.id || `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        this.id = data.id || `report_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`;
         this.name = data.name || "Untitled Report";
         this.description = data.description || "";
         this.type = data.type || "custom"; // predefined, custom, scheduled

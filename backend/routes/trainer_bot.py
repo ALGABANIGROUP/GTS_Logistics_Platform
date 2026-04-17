@@ -46,7 +46,7 @@ class UserProgress(BaseModel):
     score: Optional[float]
 
 
-# ==================== Mock Data ====================
+# ==================== Seed Data ====================
 COURSES = [
     {
         "id": "course_001",

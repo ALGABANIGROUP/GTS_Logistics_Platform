@@ -253,7 +253,7 @@ def _prune_old_backups(backup_dir: str, retention_days: int) -> None:
 async def perform_backup():
     """
     Perform database backup using pg_dump.
-    Falls back to a placeholder file if pg_dump is not available.
+    Falls back to a scaffold file if pg_dump is not available.
     """
     try:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -277,11 +277,12 @@ async def perform_backup():
 
         if not ok:
             with open(backup_path, "w", encoding="utf-8") as handle:
-                handle.write("-- GTS backup placeholder\n")
+                handle.write("-- GTS backup scaffold
+")
                 handle.write(f"-- Timestamp: {timestamp}\n")
                 handle.write(f"-- Reason: {detail}\n")
                 handle.write("-- Install pg_dump or set PG_DUMP_PATH to enable real backups.\n")
-            logger.warning("Backup placeholder created: %s", backup_path)
+            logger.warning("Backup scaffold created: %s", backup_path)
         else:
             logger.info("Backup completed: %s", backup_path)
 

@@ -37,7 +37,7 @@ export default function AIOperationsManager() {
   const appendLog = (label, payload, state = "active") => {
     setActionLog((prev) => [
       {
-        id: Date.now() + Math.random(),
+        id: Date.now() + performance.now(),
         label,
         payload,
         state,
@@ -66,7 +66,7 @@ export default function AIOperationsManager() {
       setDashboard(dashboardRes.data?.data || dashboardRes.data?.result || {});
       setLearningStats(learningRes.data || {});
     } catch (error) {
-      console.log('Using mock data - Backend not available');
+      console.log('Using seed data - Backend not available');
       // Test data
       setStatus({
         status: "active",

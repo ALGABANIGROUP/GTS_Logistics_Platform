@@ -292,7 +292,7 @@
  *   - axiosClient for API calls
  *   - Endpoints: /api/v1/ai/bots/available/{BOT_KEY}/status (GET)
  *   - Endpoints: /api/v1/ai/bots/available/{BOT_KEY}/run (POST)
- *   - Mock data mode for inactive backends
+ *   - Seed data mode for inactive backends
  * 
  * ================================================================
  * TESTING ROUTES

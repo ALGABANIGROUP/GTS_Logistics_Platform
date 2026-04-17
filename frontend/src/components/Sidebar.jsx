@@ -135,7 +135,7 @@ export default function Sidebar() {
             <div className="text-[11px] text-slate-200/70 leading-tight truncate">Command Center</div>
           </div>
         </div>
-        {/* Expand/collapse button placeholder */}
+        {/* Expand/collapse button scaffold */}
         <button type="button" className="glass-btn-secondary glass-btn-icon hover:-translate-y-[1px]" aria-label="Collapse Sidebar" title="Collapse Sidebar" disabled>
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>

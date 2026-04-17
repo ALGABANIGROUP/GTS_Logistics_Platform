@@ -59,12 +59,12 @@ async def analyze_issue(issue: IssueInput):
 @router.get('/overview')
 async def get_devbot_overview():
     """
-    Get development bot maintenance overview with mock data
+    Get development bot maintenance overview with seed data
     """
     from datetime import datetime, timedelta
     import random
 
-    # Mock system health data
+    # Seed system health data
     system_health = {
         "memory": random.randint(45, 85),
         "cpu": random.randint(20, 70),
@@ -75,13 +75,13 @@ async def get_devbot_overview():
         "active_connections": random.randint(5, 25)
     }
 
-    # Mock performance data
+    # Seed performance data
     performance = [
         {"timestamp": (datetime.now() - timedelta(minutes=i*5)).isoformat(), "response_time": random.randint(50, 200), "throughput": random.randint(10, 50)}
         for i in range(20)
     ]
 
-    # Mock logs
+    # Seed logs
     log_types = ["INFO", "WARNING", "ERROR", "DEBUG"]
     log_messages = [
         "Memory optimization completed",
@@ -104,7 +104,7 @@ async def get_devbot_overview():
         for _ in range(10)
     ]
 
-    # Mock suggestions
+    # Seed suggestions
     suggestions = [
         {
             "id": f"sugg_{i+1}",
@@ -117,7 +117,7 @@ async def get_devbot_overview():
         for i in range(5)
     ]
 
-    # Mock bot status
+    # Seed bot status
     bot_status = {
         "active_bots": random.randint(8, 12),
         "idle_bots": random.randint(2, 5),

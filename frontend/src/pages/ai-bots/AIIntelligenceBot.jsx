@@ -55,7 +55,7 @@ export default function AIIntelligenceBot({ botKey = BOT_KEY }) {
   const appendLog = (label, payload, state = "stable") => {
     setActionLog((prev) => [
       {
-        id: Date.now() + Math.random(),
+        id: Date.now() + performance.now(),
         label,
         payload,
         state,

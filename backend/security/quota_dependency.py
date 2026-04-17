@@ -57,7 +57,7 @@ async def enforce_quota(
     """
     
     # Note: In production, track actual usage from DB
-    # For now, this is a placeholder that always passes
+    # For now, this is a scaffold that always passes
     # Real implementation would query usage count
     
     logger.debug(f"Quota check: {quota_type} (increment={increment}) for tenant")

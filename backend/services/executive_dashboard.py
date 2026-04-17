@@ -168,13 +168,13 @@ class ExecutiveDashboard:
                 "status": "in_transit",
                 "location": "Toronto",
                 "estimated_delivery": (datetime.utcnow() + timedelta(hours=5)).isoformat(),
-                "driver": "Demo Driver",
+                "driver": "Example Driver",
                 "history": [],
             }
         if entity == "partner":
             return {
                 "partner_id": entity_id,
-                "name": "Demo Partner",
+                "name": "Example Partner",
                 "tier": "Gold",
                 "total_deals": 45,
                 "total_commission": 12500,

@@ -18,13 +18,13 @@ except Exception:
         raise RuntimeError("DB session unavailable")
     DB_AVAILABLE = False
 
-# ---------- Provider registry (TruckerPath live/mock) ----------
+# ---------- Provider registry (TruckerPath live/offline) ----------
 try:
     from backend.integrations.loadboards.registry import get_provider  # type: ignore
 except Exception:
     get_provider = None  # type: ignore
 
-# ---------- Mock source as last resort ----------
+# ---------- Offline source as last resort ----------
 try:
     from backend.integrations.loadboards.mock_truckerpath import get_mock_loads  # type: ignore
 except Exception:

@@ -725,7 +725,7 @@ function OutreachAutomationTab({ panelData, onAction, disabled }) {
 function GeographicAnalysisTab({ panelData, provinces }) {
     return (
         <div className="space-y-4">
-            {/* Canadian Map Placeholder */}
+            {/* Canadian Map Scaffold */}
             <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur">
                 <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
                     <span></span> Canadian Market Heat Map

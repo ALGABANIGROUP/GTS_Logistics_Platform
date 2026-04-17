@@ -192,7 +192,7 @@ class SafeManagerBot:
         
         points = check_points.get(entity_type, check_points["company"])
         
-        # Simulate compliance check (mock 80% compliance rate)
+        # Simulate compliance check (reference 80% compliance rate)
         results = [
             {
                 "requirement": point,

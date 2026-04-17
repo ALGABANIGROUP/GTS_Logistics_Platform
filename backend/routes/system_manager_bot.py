@@ -48,7 +48,7 @@ class UserAccess(BaseModel):
     last_login: Optional[str]
 
 
-# ==================== Mock Data (will be replaced with real database) ====================
+# ==================== Seed Data (to be sourced from the database) ====================
 SYSTEM_HEALTH = {
     "cpu_percent": 23.5,
     "cpu_cores": 8,

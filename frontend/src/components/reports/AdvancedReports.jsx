@@ -42,7 +42,7 @@ const AdvancedReports = ({ userType = 'shipper' }) => {
     });
     const [selectedMetrics, setSelectedMetrics] = useState(['revenue', 'shipments']);
 
-    // Dummy report data
+    // Sample report data
     const reportData = {
         monthly: [
             { month: 'January', shipments: 45, revenue: 245000, expenses: 180000, profit: 65000 },
@@ -165,7 +165,7 @@ const AdvancedReports = ({ userType = 'shipper' }) => {
                         </Grid>
                     </Grid>
                 </Grid>
-                {/* Chart placeholder */}
+                {/* Chart panel */}
                 <Grid item xs={12} md={8}>
                     <Card sx={{ height: 400 }}>
                         <CardContent>

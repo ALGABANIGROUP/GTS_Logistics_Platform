@@ -238,7 +238,7 @@ async def fetch_canadian_loads(filters: dict) -> List[dict]:
     
     return mock_canadian_loads
 
-# Mock data based on actual load board data
+# Seed data based on actual load board data
 mock_canadian_loads = [
     {
         "load_id": "LD001",

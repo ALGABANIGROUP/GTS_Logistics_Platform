@@ -21,8 +21,8 @@ def _get_registry():
 
 
 @dataclass
-class PlaceholderBot:
-    """Registered bot placeholder (returns 501 for run)."""
+class ScaffoldBot:
+    """Registered bot scaffold (returns 501 for run)."""
 
     name: str
 
@@ -37,7 +37,7 @@ class PlaceholderBot:
     async def status(self) -> Dict[str, Any]:
         return {
             "bot_key": self.name,
-            "status": "registered_placeholder",
+            "status": "registered_scaffold",
             "implemented": False,
         }
 
@@ -103,13 +103,13 @@ def ensure_all_bots_registered(registry=None) -> Dict[str, Any]:
         if key in ALIAS_MAP:
             target = ALIAS_MAP[key]
             if target not in registry.list():
-                registry.register(PlaceholderBot(name=target))
+                registry.register(ScaffoldBot(name=target))
             registry.register(AliasBot(name=key, target_key=target))
             added.append((key, f"alias->{target}"))
             continue
 
-        registry.register(PlaceholderBot(name=key))
-        added.append((key, "placeholder"))
+        registry.register(ScaffoldBot(name=key))
+        added.append((key, "scaffold"))
 
     return {
         "expected": len(expected_keys),

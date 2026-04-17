@@ -3192,6 +3192,7 @@ async def _debug_admin_users(_user: dict = Depends(require_roles(["super_admin"]
 async def root():
     """Root endpoint"""
     return {
+        "ok": True,
         "message": "GTS Logistics Platform API",
         "version": "2.0.0",
         "status": "operational",

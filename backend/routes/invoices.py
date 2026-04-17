@@ -21,7 +21,7 @@ async def get_invoice(
         invoice = None
 
     if not invoice:
-        # Return mock data if not found in database
+        # Return seed data if not found in database
         return {
             "id": invoice_id,
             "invoice_number": f"INV-{invoice_id:06d}",

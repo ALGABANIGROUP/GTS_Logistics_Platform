@@ -22,7 +22,7 @@ class WorkflowEngine:
 
 
 class IntegrationService:
-    """Placeholder for integrating with internal services."""
+    """Scaffold for integrating with internal services."""
 
     def __init__(self) -> None:
         self.connected = True

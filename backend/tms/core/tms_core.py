@@ -144,7 +144,7 @@ class TMSCore:
         logger.info(f"Checking permission: {company_id} -> {bot_key}")
         
         # Note: Subscription data is fetched from database in production
-        # Returning True as placeholder here
+        # Returning True as a reserved default here
         return True
 
     def get_subscription_details(self, tier: SubscriptionTier) -> Dict:

@@ -10,7 +10,7 @@ headers = {
 }
 
 payload = {
-    "carrier_name": "Demo Carrier",
+    "carrier_name": "Example Carrier",
     "carrier_phone": "+13463263104",
     "carrier_email": "operations@gabanilogistics.com",
     "pick_up": {

@@ -35,8 +35,8 @@ def _bot_status(registry: Any, bot_key: str) -> str:
         return "inactive"
 
     name = bot.__class__.__name__.lower()
-    # Treat placeholder/alias registrations as available so UI can list them.
-    if "placeholder" in name:
+    # Treat scaffold/alias registrations as available so UI can list them.
+    if "scaffold" in name:
         return "active"
     if "alias" in name:
         return "active"

@@ -190,7 +190,7 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
   const appendLog = (label, payload, state = "info") => {
     setActionLog((prev) => [
       {
-        id: Date.now() + Math.random(),
+        id: Date.now() + performance.now(),
         label,
         payload,
         state,
@@ -488,7 +488,7 @@ export default function AISystemAdmin({ botKey = BOT_KEY }) {
         <div className="max-w-lg rounded-3xl border border-rose-500/20 bg-rose-500/10 p-6 text-center shadow-xl shadow-black/30">
           <h1 className="text-xl font-bold text-white">Access Restricted</h1>
           <p className="mt-3 text-sm text-rose-100">
-            AI System Manager is available only to admin roles. This page no longer shows placeholder zeros for non-admin users.
+            AI System Manager is available only to admin roles. This page no longer shows zeroed-out values for non-admin users.
           </p>
         </div>
       </div>

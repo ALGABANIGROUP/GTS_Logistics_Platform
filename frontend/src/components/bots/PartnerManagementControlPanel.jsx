@@ -847,7 +847,7 @@ const PartnerManagementControlPanel = () => {
                                             <span className="font-medium text-white">{log.action}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded ${log.status === 'success' ? 'bg-green-100 text-green-800' :
                                                 log.status === 'error' ? 'bg-red-100 text-red-800' :
-                                                    log.status === 'mock' ? 'bg-gray-100 text-gray-800' :
+                                                    log.status === 'offline' ? 'bg-gray-100 text-gray-800' :
                                                         'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {log.status}

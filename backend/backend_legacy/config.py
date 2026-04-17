@@ -4,7 +4,7 @@ Thin compatibility layer for database access.
 
 This module exposes:
 - get_db_async: the standard FastAPI async dependency for DB sessions.
-- get_db: a legacy sync-style dependency placeholder (not supported).
+- get_db: a legacy sync-style dependency scaffold (not supported).
 - engine
 - AsyncSessionLocal
 - Base
@@ -43,7 +43,7 @@ from database.config import get_db_async
 
 def get_db() -> Generator[AsyncSession, None, None]:
     """
-    Legacy sync-style dependency placeholder.
+    Legacy sync-style dependency scaffold.
 
     This project is fully async; using this function is not supported in the
     current setup. It is kept only for backwards compatibility with older code

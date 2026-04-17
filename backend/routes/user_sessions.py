@@ -103,7 +103,7 @@ async def get_user_sessions(
 
     sessions = []
     for token in tokens:
-        # For demo purposes, we'll create mock device/location info
+        # For preview purposes, we'll create seed device/location info
         # In a real implementation, you'd store this in the token or a separate session table
         device_info = _extract_device_info(None)  # Would need to be stored
         location = _extract_location_from_ip(None)  # Would need to be stored

@@ -1,7 +1,7 @@
 // frontend/src/stores/useRealDataStore.js
 /**
  * Store for Real Data from Backend API
- * Fetches actual data from database instead of mock data
+ * Fetches actual data from database instead of seed data
  * Includes market intelligence and analytics
  */
 
