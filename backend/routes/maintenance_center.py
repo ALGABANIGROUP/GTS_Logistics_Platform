@@ -58,7 +58,7 @@ class SystemHealth(BaseModel):
     uptime_seconds: float
 
 
-# ==================== Mock Data ====================
+# ==================== Seed Data ====================
 MAINTENANCE_REPORTS = [
     {
         "id": "report_001",
@@ -413,7 +413,7 @@ async def run_maintenance_check(
     MAINTENANCE_REPORTS.insert(0, new_report)
 
     # Simulate completion after some time (in real implementation, this would be async)
-    # For demo purposes, we'll mark it as completed immediately
+    # For preview purposes, we'll mark it as completed immediately
     new_report["status"] = "completed"
     new_report["issues_found"] = 2
     new_report["checks_performed"] = 25

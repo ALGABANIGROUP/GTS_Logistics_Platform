@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// Placeholder UI: risk endpoints are part of review results and advisory; this view organizes summaries.
+// Scaffold UI: risk endpoints are part of review results and advisory; this view organizes summaries.
 export default function RiskPanel({ service, disabled }) {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(false);

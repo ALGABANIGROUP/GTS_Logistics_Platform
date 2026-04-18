@@ -174,14 +174,14 @@ export function SupportAdminDashboard() {
                         <div className="bg-white rounded-lg shadow-md p-6">
                             <h2 className="text-xl font-bold mb-4">Ticket Distribution by Status</h2>
                             <div className="h-64 bg-gradient-to-r from-blue-100 to-blue-200 rounded flex items-center justify-center">
-                                <p className="text-gray-500">Chart placeholder</p>
+                                <p className="text-gray-500">Chart panel</p>
                             </div>
                         </div>
 
                         <div className="bg-white rounded-lg shadow-md p-6">
                             <h2 className="text-xl font-bold mb-4">Average Response Time</h2>
                             <div className="h-64 bg-gradient-to-r from-green-100 to-green-200 rounded flex items-center justify-center">
-                                <p className="text-gray-500">Chart placeholder</p>
+                                <p className="text-gray-500">Chart panel</p>
                             </div>
                         </div>
                     </div>

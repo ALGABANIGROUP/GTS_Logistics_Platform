@@ -511,10 +511,10 @@ def get_subscription_summary(subscription_tier: str) -> Dict:
     """
     tier_info = {
         "demo": {
-            "name_ar": "Demo",
-            "name_en": "Demo",
+            "name_ar": "Trial",
+            "name_en": "Trial",
             "total_bots": 2,
-            "description_ar": "Demo access with limited capabilities",
+            "description_ar": "Trial access with limited capabilities",
         },
         "basic": {
             "name_ar": "Basic",

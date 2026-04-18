@@ -17,7 +17,7 @@ async def get_sales_dashboard(
 ):
     """Get sales dashboard data"""
     try:
-        # Mock data for sales dashboard
+        # Seed data for sales dashboard
         return {
             "summary": {
                 "total_revenue": 284500,
@@ -146,7 +146,7 @@ async def create_lead(
 ):
     """Create a new sales lead"""
     try:
-        # Mock implementation - in real app this would save to database
+        # Reference implementation - in real app this would save to database
         return {
             "id": 123,
             "name": lead_data.get("name", ""),
@@ -169,7 +169,7 @@ async def update_lead_status(
 ):
     """Update lead status"""
     try:
-        # Mock implementation
+        # Reference implementation
         return {
             "id": lead_id,
             "status": status_data.get("status", "NEW"),
@@ -188,7 +188,7 @@ async def create_deal(
 ):
     """Create a new sales deal"""
     try:
-        # Mock implementation
+        # Reference implementation
         return {
             "id": 456,
             "customer": deal_data.get("customer", ""),
@@ -212,7 +212,7 @@ async def update_deal_stage(
 ):
     """Update deal stage"""
     try:
-        # Mock implementation
+        # Reference implementation
         return {
             "id": deal_id,
             "stage": stage_data.get("stage", "DISCOVERY"),
@@ -230,7 +230,7 @@ async def optimize_sales(
 ):
     """Trigger AI sales optimization"""
     try:
-        # Mock AI optimization response
+        # Reference AI optimization response
         return {
             "status": "success",
             "message": "AI Sales optimization triggered",

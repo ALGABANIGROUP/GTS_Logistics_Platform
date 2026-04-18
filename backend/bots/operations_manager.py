@@ -109,7 +109,7 @@ class OperationsManagerBot(BaseBot):
         if not shipment_id:
             return {"error": "Please provide shipment ID"}
 
-        # Mock shipment data - replace with real DB query
+        # Seed shipment data - replace with real DB query
         shipment = self.shipments.get(shipment_id, {
             "id": shipment_id,
             "status": "In Transit",

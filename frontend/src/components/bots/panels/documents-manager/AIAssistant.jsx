@@ -95,7 +95,7 @@ const AIAssistant = () => {
             }
         ];
 
-        const response = assistantResponses[Math.floor(Math.random() * assistantResponses.length)];
+        const response = assistantResponses[Math.floor((crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296) * assistantResponses.length)];
 
         const assistantMessage = {
             id: messages.length + 2,

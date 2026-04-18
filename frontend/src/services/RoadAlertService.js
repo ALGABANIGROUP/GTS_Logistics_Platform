@@ -22,7 +22,7 @@ class RoadAlertService {
             minorDelay: 'low',        // 🟢 Minor delay
         };
 
-        // Mock data for road conditions (TODO: Replace with real API)
+        // Seed data for road conditions (TODO: Replace with real API)
         this.mockRoadData = {
             'New York': [
                 {

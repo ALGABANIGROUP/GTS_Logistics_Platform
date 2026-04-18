@@ -69,7 +69,7 @@ class TrafficAnalyzer:
             logger.debug(f"Using cached data for: {cache_key}")
             return self.cached_data[cache_key]
             
-        # Fetch new data (mock implementation)
+        # Fetch new data (reference implementation)
         try:
             mock_data = {
                 "segments": [

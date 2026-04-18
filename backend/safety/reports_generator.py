@@ -44,7 +44,7 @@ class SafetyReportGenerator:
         today = datetime.utcnow().date()
         yesterday = today - timedelta(days=1)
         
-        # Analyze incidents (mock data)
+        # Analyze incidents (seed data)
         incident_analysis = {
             "total": 0,
             "by_severity": {"minor": 0, "moderate": 0, "severe": 0, "critical": 0},

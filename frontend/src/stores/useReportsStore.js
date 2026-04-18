@@ -269,7 +269,7 @@ export const useReportsStore = create(
 
                 const duplicated = new Report({
                     ...original,
-                    id: `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    id: `report_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`,
                     name: newName || `${original.name} (Copy)`,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),

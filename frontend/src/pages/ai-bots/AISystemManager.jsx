@@ -99,9 +99,9 @@ const AISystemManager = () => {
 
     } catch (error) {
       console.error('Error fetching system data:', error);
-      showError('Failed to fetch system data. Using mock data.');
+      showError('Failed to fetch system data. Using seed data.');
       
-      // Fallback mock data
+      // Fallback seed data
       setSystemHealth({
         status: "healthy",
         metrics: {

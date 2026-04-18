@@ -563,7 +563,7 @@ export default function LegalConsultantDashboard() {
   };
 
   const refreshLegalStatus = () => {
-    setAnalyzedDocuments((prev) => prev + Math.floor(Math.random() * 4));
+    setAnalyzedDocuments((prev) => prev + Math.floor((crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296) * 4));
     setStats((prev) => ({
       tax: Math.min(100, prev.tax + 1),
       transport: Math.min(100, prev.transport + 1),

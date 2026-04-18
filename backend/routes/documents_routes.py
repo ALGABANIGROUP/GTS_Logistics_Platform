@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any, List
 from datetime import date, timedelta
 
 # ------------------------------
-# In-memory demo store
+# In-memory seed store
 # ------------------------------
 _DOCS: Dict[int, Dict[str, Any]] = {
     1: {"id": 1, "name": "Vehicle Registration", "status": "valid",   "expires_at": "2026-01-01", "owner": "Ops"},

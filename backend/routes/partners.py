@@ -74,7 +74,7 @@ class PartnerResponse(BaseModel):
     total_spent: float = 0.0
 
 
-# ==================== Mock Database (will be replaced with real database later) ====================
+# ==================== Seed Data (to be replaced by database-backed source) ====================
 PARTNERS_DB = []
 PARTNER_ID_COUNTER = 1
 

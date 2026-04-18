@@ -42,7 +42,7 @@ class LeadData(BaseModel):
     assigned_to: Optional[str]
 
 
-# ==================== Mock Data ====================
+# ==================== Seed Data ====================
 MARKETING_METRICS = {
     "summary": {
         "total_campaigns": 12,

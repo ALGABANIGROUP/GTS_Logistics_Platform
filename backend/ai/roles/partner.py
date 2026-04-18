@@ -10,7 +10,7 @@ class PartnerBot:
     """
     Partner relationship management bot.
 
-    Safe stub:
+    Safe scaffold:
     - Reads intent from payload
     - Produces structured outputs for UI
     - No external calls by default

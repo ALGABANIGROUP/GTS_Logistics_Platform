@@ -188,7 +188,7 @@ export default function AILegalConsultant() {
   const appendLog = (label, payload, state = "good") => {
     setActionLog((prev) => [
       {
-        id: Date.now() + Math.random(),
+        id: Date.now() + performance.now(),
         label,
         payload,
         state,

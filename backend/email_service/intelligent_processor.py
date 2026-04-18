@@ -7,7 +7,7 @@ from .rules import PRIORITY_RULES
 
 
 class EmailClassifier:
-	"""Simple keyword-based email classifier placeholder."""
+	"""Minimal keyword-based email classifier scaffold."""
 
 	def analyze_email(self, email: Dict[str, Any]) -> Dict[str, Any]:
 		subject = email.get("subject", "") or ""
@@ -21,7 +21,7 @@ class EmailClassifier:
 
 
 class PriorityQueue:
-	"""Minimal priority queue placeholder for routing."""
+	"""Minimal priority queue scaffold for routing."""
 
 	def __init__(self) -> None:
 		self.items: List[Dict[str, Any]] = []
@@ -146,48 +146,53 @@ class IntelligentEmailProcessor:
 
 	def _determine_target_bot(self, email: Dict[str, Any], analysis: Dict[str, Any]) -> str:
 		keywords = analysis.get("keywords", set())
+		to_addr = (email.get("to") or "").strip().lower()
 		rules = {
 			"finance_bot": [
 				lambda: "invoice" in keywords,
 				lambda: "payment" in keywords,
 				lambda: "account" in keywords,
-				lambda: email.get("to") in {"accounts@gabanilogistics.com", "finance@gabanilogistics.com"},
+				lambda: to_addr in {"accounts@gabanilogistics.com", "finance@gabanilogistics.com"},
 			],
 			"customer_service": [
 				lambda: "support" in keywords,
 				lambda: "help" in keywords,
 				lambda: "complaint" in keywords,
-				lambda: email.get("to") == "customers@gabanilogistics.com",
+				lambda: to_addr == "customers@gabanilogistics.com",
 			],
 			"freight_broker": [
 				lambda: "shipment" in keywords,
 				lambda: "quote" in keywords,
 				lambda: "carrier" in keywords,
-				lambda: email.get("to") == "freight@gabanilogistics.com",
+				lambda: to_addr == "freight@gabanilogistics.com",
 			],
 			"documents_manager": [
 				lambda: "document" in keywords,
 				lambda: "approval" in keywords,
 				lambda: "sign" in keywords,
-				lambda: email.get("to") == "doccontrol@gabanilogistics.com",
+				lambda: to_addr == "doccontrol@gabanilogistics.com",
 			],
 			"operations_manager": [
 				lambda: "driver" in keywords,
 				lambda: "schedule" in keywords,
 				lambda: "dispatch" in keywords,
-				lambda: email.get("to") in {"driver@gabanilogistics.com", "operations@gabanilogistics.com"},
+				lambda: to_addr in {
+					"driver@gabanilogistics.com",
+					"operations@gabanilogistics.com",
+					"driver@gabanistore.com",
+				},
 			],
 			"safety_manager": [
 				lambda: "safety" in keywords,
 				lambda: "accident" in keywords,
 				lambda: "incident" in keywords,
-				lambda: email.get("to") == "safety@gabanilogistics.com",
+				lambda: to_addr in {"safety@gabanilogistics.com", "safety@gabanistore.com"},
 			],
 			"security_manager": [
 				lambda: "security" in keywords,
 				lambda: "breach" in keywords,
 				lambda: "investigation" in keywords,
-				lambda: email.get("to") == "security@gabanilogistics.com",
+				lambda: to_addr in {"security@gabanilogistics.com", "security@gabanistore.com"},
 			],
 		}
 		for bot_name, conditions in rules.items():

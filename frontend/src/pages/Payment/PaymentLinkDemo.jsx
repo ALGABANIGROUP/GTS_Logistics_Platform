@@ -22,7 +22,7 @@ export default function PaymentLinkDemo() {
             <FaLink />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Payment Link Demo</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Payment Link Preview</h1>
             <p className="text-sm text-slate-600 dark:text-slate-300">
               Open the secure payment link page using an existing payment id.
             </p>

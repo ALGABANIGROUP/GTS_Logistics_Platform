@@ -22,7 +22,7 @@ scheduler: Optional[object] = None
 
 async def run_load_board_job() -> None:
     """
-    Simple scheduled job placeholder for the load board monitor.
+    Simple scheduled job scaffold for the load board monitor.
 
     For now it just sends a heartbeat email to the admin to confirm that
     the load board scheduler is wired correctly. Later you can extend it

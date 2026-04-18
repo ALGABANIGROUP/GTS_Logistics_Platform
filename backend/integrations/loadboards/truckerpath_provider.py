@@ -57,9 +57,9 @@ class TruckerPathProvider(BaseLoadBoard):
             return {"ok": False, "status": resp.status_code, "error": data}
 
     async def ping(self) -> Dict[str, Any]:
-        # No official ping; return mock/ok
+        # No official ping; return offline/ok
         if self.enable_mock or not self.auth:
-            return {"ok": True, "mock": True, "message": "Ping OK (mock)"}
+            return {"ok": True, "mock": True, "message": "Ping OK (offline)"}
         return {"ok": True, "message": "Ping OK (no provider ping)"}
 
     async def create_company(self, payload: Dict[str, Any]) -> Dict[str, Any]:

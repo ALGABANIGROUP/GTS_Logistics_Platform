@@ -224,7 +224,7 @@ export default function LogsTab({
                 )}
             </div>
 
-            {/* Log Stream (placeholder for WebSocket) */}
+            {/* Log Stream (scaffold for WebSocket) */}
             {!isPreview && autoRefresh && (
                 <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-center text-xs text-blue-200">
                      Live updates enabled - refreshing every 5 seconds

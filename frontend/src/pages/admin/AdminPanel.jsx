@@ -32,7 +32,7 @@ const normalizeUserRecord = (payload) => {
 };
 
 const generateTemporaryPassword = () =>
-    `GTS!${Math.random().toString(36).slice(2, 8)}A9`;
+    `GTS!${crypto.randomUUID().replace(/-/g, '').slice(0, 6)}A9`;
 
 const AdminPanel = () => {
     const navigate = useNavigate();

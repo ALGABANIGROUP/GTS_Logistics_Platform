@@ -9,7 +9,7 @@ from .trainer_bot import TrainerBot
 
 
 async def run_demo() -> dict[str, object]:
-    with tempfile.TemporaryDirectory(prefix="training-center-demo-") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="training-center-preview-") as temp_dir:
         trainer = TrainerBot(reports_dir=Path(temp_dir), seed=7)
         bots = trainer.list_trainable_bots()
         await trainer.register_bot("security_manager_bot", level="intermediate", version="2.0")

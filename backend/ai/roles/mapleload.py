@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 
 class MapleLoadAIBot:
-    """MapleLoad AI - Canadian freight sourcing agent (extensible stub)."""
+    """MapleLoad AI - Canadian freight sourcing agent (extensible scaffold)."""
 
     name = "mapleload"
 
@@ -373,7 +373,7 @@ Best regards,
         return companies
 
     def _evaluate_company(self, company: Dict[str, Any], criteria: Dict[str, Any]) -> bool:
-        # Criteria placeholder for future rules; current logic is fixed.
+        # Criteria reserved for future rules; current logic is fixed.
         score = self._calculate_score(company)
         return score >= 60
 

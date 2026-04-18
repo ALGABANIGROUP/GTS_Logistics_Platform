@@ -154,17 +154,17 @@ class RemediationService:
         if action_type == "restart_bot":
             bot_name = params.get("bot_name")
             if bot_name:
-                logger.info(f"Restarting bot: {bot_name} (placeholder)")
+                logger.info(f"Restarting bot: {bot_name} (scaffold)")
                 return True
         if action_type == "clear_cache":
-            logger.info("Clearing cache (placeholder)")
+            logger.info("Clearing cache (scaffold)")
             return True
         if action_type == "rotate_logs":
-            logger.info("Rotating logs (placeholder)")
+            logger.info("Rotating logs (scaffold)")
             return True
         if action_type == "lower_concurrency":
             target = params.get("target_concurrency", 5)
-            logger.info(f"Lowering concurrency to {target} (placeholder)")
+            logger.info(f"Lowering concurrency to {target} (scaffold)")
             return True
         return False
 

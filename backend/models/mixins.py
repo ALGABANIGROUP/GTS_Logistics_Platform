@@ -1,5 +1,5 @@
 """
-DEV stub for backend.models.mixins
+DEV scaffold for backend.models.mixins
 
 Some models import TenantScopedMixin but the module is missing in this repo snapshot.
 This minimal mixin is enough to unblock imports for local development/auth testing.

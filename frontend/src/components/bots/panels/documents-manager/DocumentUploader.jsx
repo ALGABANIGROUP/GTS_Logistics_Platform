@@ -40,7 +40,7 @@ const DocumentUploader = ({ onUploadSuccess }) => {
     const handleFileSelect = (files) => {
         const newFiles = files.map(file => ({
             file,
-            id: Date.now() + Math.random(),
+            id: Date.now() + performance.now(),
             name: file.name,
             size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
             type: documentType,

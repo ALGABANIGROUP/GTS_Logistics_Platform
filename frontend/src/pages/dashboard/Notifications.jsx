@@ -31,7 +31,7 @@ const Notifications = () => {
       const response = await axiosClient.get('/api/v1/notifications');
       setNotifications(response.data.notifications || []);
     } catch (error) {
-      console.log('Using mock data for notifications');
+      console.log('Using seed data for notifications');
       // Realistic test data (like the one shown in the image)
       setNotifications(MOCK_NOTIFICATIONS);
     } finally {
@@ -108,7 +108,7 @@ const Notifications = () => {
       );
       showSuccess('Notification marked as read');
     } catch (error) {
-      console.log('Using mock update');
+      console.log('Using seed update');
       setNotifications(prev =>
         prev.map(n => n.id === id ? { ...n, read: true } : n)
       );

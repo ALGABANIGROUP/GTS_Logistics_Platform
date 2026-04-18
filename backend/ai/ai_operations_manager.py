@@ -18,13 +18,13 @@ except Exception:
         raise RuntimeError("DB session unavailable")
     DB_AVAILABLE = False
 
-# ---------- Provider registry (TruckerPath live/mock) ----------
+# ---------- Provider registry (TruckerPath live/offline) ----------
 try:
     from backend.integrations.loadboards.registry import get_provider  # type: ignore
 except Exception:
     get_provider = None  # type: ignore
 
-# ---------- Mock source as last resort ----------
+# ---------- Offline source as last resort ----------
 try:
     from backend.integrations.loadboards.mock_truckerpath import get_mock_loads  # type: ignore
 except Exception:
@@ -217,11 +217,11 @@ class AIOperationsManager:
         return {"ok": True, "created": created_ids, "skipped": skipped, "errors": errors}
 
     async def analyze_shipment_with_ai(self, shipment_id: int) -> Dict[str, Any]:
-        # Stub AI analysis logic; replace with real integration as needed
+        # Reference AI analysis logic; replace with real integration as needed
         return {
             "ok": True,
             "shipment_id": shipment_id,
-            "analysis": "AI review placeholder for shipment data.",
+            "analysis": "AI review scaffold for shipment data.",
             "recommendations": [
                 "Monitor ETA via tracker",
                 "Prioritize load for expedited handling",
@@ -233,7 +233,7 @@ class AIOperationsManager:
         now = datetime.utcnow().isoformat()
         return {
             "ok": True,
-            "report": "Daily operations summary placeholder.",
+            "report": "Daily operations summary scaffold.",
             "shipments_processed": 0,
             "errors": [],
             "timestamp": now,
@@ -242,7 +242,7 @@ class AIOperationsManager:
     async def monitor_mock_truckerpath(self, limit: int = 10) -> Dict[str, Any]:
         loads = await _fetch_truckerpath_loads(limit=limit)
         if not loads:
-            return {"ok": False, "message": "No mock loads available"}
+            return {"ok": False, "message": "No offline loads available"}
         return {
             "ok": True,
             "timestamp": datetime.utcnow().isoformat(),

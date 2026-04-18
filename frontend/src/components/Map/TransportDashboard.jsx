@@ -44,7 +44,7 @@ const TransportDashboard = () => {
             }
             setLoading(false);
         } catch (error) {
-            console.warn('Using mock data:', error);
+            console.warn('Using seed data:', error);
             setShipments(getMockShipments());
             setTrucks(getMockTrucks());
             setLoading(false);

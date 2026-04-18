@@ -133,7 +133,7 @@ const CurrencyConverter = ({ className = "" }) => {
                 {/* Exchange Rates Info */}
                 <div className="mt-4 text-xs text-slate-400">
                     <div>Last updated: {exchangeRates.lastUpdated ? new Date(exchangeRates.lastUpdated).toLocaleString() : 'Not updated'}</div>
-                    <div>Rates are fixed for demo - can be connected to external API</div>
+                    <div>Rates are fixed for preview - can be connected to external API</div>
                 </div>
             </div>
         </div>

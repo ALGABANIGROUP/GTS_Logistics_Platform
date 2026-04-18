@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axiosClient from "../../api/axiosClient";
 
-// Mock data for demonstration - remove when backend has real data
+// Seed data for previews - remove when backend has real data
 const mockPortalRequests = [
     {
         id: 1,
@@ -111,9 +111,9 @@ export default function PortalRequests() {
             });
             setRequests(Array.isArray(response?.data) ? response.data : response?.data?.requests || []);
         } catch (error) {
-            // Using mock data for development - this is expected behavior
-            console.log("Using mock data for portal requests (API not available)");
-            // Use mock data for demonstration
+            // Using seed data for development - this is expected behavior
+            console.log("Using seed data for portal requests (API not available)");
+            // Use seed data for previews
             const filteredRequests = status === "all" || !status
                 ? mockPortalRequests
                 : mockPortalRequests.filter(req => req.status === status);

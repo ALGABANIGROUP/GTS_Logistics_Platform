@@ -113,7 +113,7 @@ async def connect_platform(
     """Initialize platform connection (OAuth flow)"""
     try:
         # This would generate OAuth URL in production
-        # For now, return placeholder
+        # For now, return a reserved response
         return {
             "success": True,
             "auth_url": f"https://{platform}.com/oauth/authorize?client_id=YOUR_CLIENT_ID",

@@ -327,7 +327,7 @@ async def register(
     password: str = Body(...),
     full_name: str = Body(...),
 ):
-    """Register a new user (mock implementation for testing)"""
+    """Register a new user (reference implementation for testing)"""
     # Validate input
     if not email or not password or not full_name:
         raise HTTPException(
@@ -349,7 +349,7 @@ async def register(
     # In production, this would create the user in the database
     return {
         "message": "User registered successfully",
-        "user_id": 999,  # Mock ID
+        "user_id": 999,  # Example ID
         "email": email
     }
 

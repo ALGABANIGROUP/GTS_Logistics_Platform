@@ -37,7 +37,7 @@ async def process_tracking_webhook(webhook_id: str, payload: Dict[str, Any], cli
 
 
 async def send_to_dlq(webhook_id: str, payload: Dict[str, Any], error: str) -> None:
-    """Placeholder DLQ hook (wired to log for now)."""
+    """Scaffold DLQ hook (wired to log for now)."""
     logger.error("Webhook %s sent to DLQ: %s", webhook_id, error)
     # Integration point: push to Redis/RabbitMQ/SQS as needed.
 

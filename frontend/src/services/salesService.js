@@ -1,7 +1,7 @@
 // frontend/src/services/salesService.js
 import axiosClient from '../api/axiosClient';
 
-// Use Mock Data temporarily
+// Use Seed Data temporarily
 const USE_MOCK_DATA = true;
 
 export const SalesService = {

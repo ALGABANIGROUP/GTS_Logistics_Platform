@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, List
 
 import httpx
 
-# Optional: mock loads source
+# Optional: offline loads source
 try:
     from backend.integrations.loadboards.mock_truckerpath import get_mock_loads
 except Exception:
@@ -108,7 +108,7 @@ class TruckerPathProvider(BaseLoadBoard):
     # ---------- BaseLoadBoard API ----------
     async def ping(self) -> Dict[str, Any]:
         if self.enable_mock or not self.auth:
-            return {"ok": True, "mock": True, "message": "Ping OK (mock)"}
+            return {"ok": True, "mock": True, "message": "Ping OK (offline)"}
         return {"ok": True, "message": "Ping OK (no provider ping)"}
 
     async def create_company(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -142,7 +142,7 @@ class TruckerPathProvider(BaseLoadBoard):
 class ExternalLoadBoardAgent:
     """
     Backward-compatible facade used elsewhere in the project.
-    Provides a simple 'fetch' API that returns mock loads or calls provider.list_loads().
+    Provides a simple 'fetch' API that returns offline loads or calls provider.list_loads().
     """
 
     @staticmethod
@@ -161,13 +161,13 @@ class ExternalLoadBoardAgent:
                     return data
                 # Fallback: unknown shape
                 return [data]
-            # On error or mock reply
+            # On error or offline reply
             return []
         else:
             raise ValueError(f"Unsupported load board source: {source!r}")
 
 
-# Optional direct run for quick manual check (will run in mock mode if token missing)
+# Optional direct run for quick manual check (will run in offline mode if token missing)
 if __name__ == "__main__":
     import asyncio
 

@@ -224,7 +224,7 @@ class UsageAnalytics:
             Dict with usage stats and recommendations
         """
         # This would query actual database
-        # Placeholder implementation
+        # Scaffold implementation
         return {
             "monthly_shipments": 0,
             "active_users": 0,

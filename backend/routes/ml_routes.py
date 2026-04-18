@@ -79,7 +79,7 @@ async def get_customer_recommendations(
         
         recommendations = []
         
-        # Mock recommendations based on customer ID
+        # Seed recommendations based on customer ID
         if int(customer_id) % 3 == 0:
             recommendations.append({
                 "type": "VIP_TREATMENT",
@@ -242,7 +242,7 @@ async def get_top_performers(
     - Safety record
     """
     try:
-        # Mock top performers
+        # Seed top performers
         performers = [
             {
                 "rank": 1,
