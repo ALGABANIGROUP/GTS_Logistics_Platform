@@ -3,11 +3,22 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
-const RequireAuth = ({ roles, allowedRoles }) => {
+const RequireAuth = ({ children, roles, allowedRoles, requiredRole }) => {
   const { user, authReady, isAuthenticated, accountStatus } = useAuth();
   const location = useLocation();
 
-  const allowedList = roles ?? allowedRoles ?? [];
+  // Support all three prop styles that exist in the codebase today:
+  //   - <RequireAuth roles={[...]}>          (new layout-route / wrapper usage)
+  //   - <RequireAuth allowedRoles={[...]}>   (legacy wrapper usage)
+  //   - <RequireAuth requiredRole="admin">   (legacy wrapper usage, single role)
+  const allowedList =
+    roles ??
+    allowedRoles ??
+    (requiredRole ? [requiredRole] : []);
+
+  // Render whatever the route provides: explicit children when used as a wrapper,
+  // otherwise fall through to the React Router <Outlet /> for layout-route usage.
+  const renderAllowed = () => (children !== undefined ? children : <Outlet />);
 
   // Show a pending shell while auth state is being determined
   if (!authReady) {
@@ -38,7 +49,7 @@ const RequireAuth = ({ roles, allowedRoles }) => {
   // Super admin bypass
   if (singleRole === 'super_admin' || userRolesArray.includes('super_admin')) {
     console.log('[RequireAuth] Super admin granted access.');
-    return <Outlet />;
+    return renderAllowed();
   }
 
   // Check if current user role is permitted
@@ -54,7 +65,7 @@ const RequireAuth = ({ roles, allowedRoles }) => {
   }
 
   console.log('[RequireAuth] Access granted.');
-  return <Outlet />;
+  return renderAllowed();
 };
 
 export default RequireAuth;
