@@ -132,4 +132,115 @@ describe('RequireAuth', () => {
 
         expect(screen.getByText('UNAUTHORIZED_PAGE')).toBeInTheDocument();
     });
+
+    it('grants access to super_admin even without matching allowed roles', () => {
+        useAuth.mockReturnValue({
+            user: { effective_role: 'super_admin' },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        renderWithRoutes('/private', ['admin']);
+
+        expect(screen.getByText('PRIVATE_PAGE')).toBeInTheDocument();
+    });
+
+    it('grants access when super_admin is in user.roles array', () => {
+        useAuth.mockReturnValue({
+            user: { roles: ['super_admin'] },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        renderWithRoutes('/private', ['admin']);
+
+        expect(screen.getByText('PRIVATE_PAGE')).toBeInTheDocument();
+    });
+
+    it('renders children (legacy wrapper pattern) when authorized', () => {
+        useAuth.mockReturnValue({
+            user: { role: 'admin' },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/anything']}>
+                <RequireAuth roles={['admin']}>
+                    <div>WRAPPED_CHILD</div>
+                </RequireAuth>
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('WRAPPED_CHILD')).toBeInTheDocument();
+    });
+
+    it('honors legacy allowedRoles prop', () => {
+        useAuth.mockReturnValue({
+            user: { role: 'admin' },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/anything']}>
+                <Routes>
+                    <Route element={<RequireAuth allowedRoles={['admin']} />}>
+                        <Route path="/anything" element={<div>ALLOWED_ROLES_PAGE</div>} />
+                    </Route>
+                    <Route path="/unauthorized" element={<div>UNAUTHORIZED_PAGE</div>} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('ALLOWED_ROLES_PAGE')).toBeInTheDocument();
+    });
+
+    it('honors legacy requiredRole prop', () => {
+        useAuth.mockReturnValue({
+            user: { role: 'manager' },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/anything']}>
+                <Routes>
+                    <Route element={<RequireAuth requiredRole="manager" />}>
+                        <Route path="/anything" element={<div>MANAGER_PAGE</div>} />
+                    </Route>
+                    <Route path="/unauthorized" element={<div>UNAUTHORIZED_PAGE</div>} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('MANAGER_PAGE')).toBeInTheDocument();
+    });
+
+    it('rejects a mismatching requiredRole', () => {
+        useAuth.mockReturnValue({
+            user: { role: 'user' },
+            authReady: true,
+            isAuthenticated: true,
+            accountStatus: 'active',
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/anything']}>
+                <Routes>
+                    <Route element={<RequireAuth requiredRole="admin" />}>
+                        <Route path="/anything" element={<div>ADMIN_PAGE</div>} />
+                    </Route>
+                    <Route path="/unauthorized" element={<div>UNAUTHORIZED_PAGE</div>} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('UNAUTHORIZED_PAGE')).toBeInTheDocument();
+    });
 });
